@@ -18,6 +18,10 @@
                 <Button Content="Edit" Command="{Binding EditCommand}" Width="60" Margin="0,0,4,0"/>
                 <Button Content="Delete" Command="{Binding DeleteCommand}" Width="60" Margin="0,0,4,0"/>
                 <Button Content="Refresh" Command="{Binding RefreshCommand}" Width="65" Margin="0,0,4,0"/>
+                <Button Content="Export…" Command="{Binding ExportCommand}" Width="65" Margin="0,0,4,0"
+                        ToolTip="Save all rules to a JSON file, for example to copy them to another HemoIQ installation."/>
+                <Button Content="Import…" Command="{Binding ImportCommand}" Width="65" Margin="0,0,4,0"
+                        ToolTip="Read a rule file, preview what would be added or updated, and confirm before anything changes. Rules not in the file are kept."/>
                 <Button Content="Help" Width="60"
                         Command="{x:Static help:HelpCommands.ShowContext}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Self}}"

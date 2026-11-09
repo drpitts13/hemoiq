@@ -2462,8 +2462,35 @@ waiting, or list only those. Isolating a card left them mixed into the list.
   checkbox, and the label "Showing only items to review".
 - Behavior change: isolating another card now also hides Review items.
 
+## Iteration 112 (this change)
+
+**Deficiency:** Section 31 asks for controlled import and export of
+configuration and rules. Rules could only be typed in by hand on each
+installation. Copying a validated rule set to a second workstation, or
+restoring it, meant re-entering every count, zygosity choice and separation
+exemption, with room for transcription errors in settings that decide
+rule-outs.
+
+**Bounded improvement:**
+- `RuleTransfer.Export` writes a versioned JSON file (`format:
+  "hemoiq-rules"`, `version: 1`).
+- `RuleTransfer.Preview` checks the file and plans each entry:
+  - Add, Update (each changed field named), Unchanged, or Error (with the
+    reason);
+  - nothing is written;
+  - rules are matched by antibody with case kept;
+  - entries are validated with `RuleValidation` (known antigen in exact
+    case, name required, count 1–5, known exception antigen, no duplicate
+    antibody in the file);
+  - a foreign or newer file format is refused.
+- `RuleTransfer.Apply` writes adds and updates in one transaction through the
+  normal audited, permission-checked `AddRule` and `UpdateRule`. It is all or
+  nothing, and it never deletes rules missing from the file.
+- The Rules tab has **Export…** and **Import…** buttons. Import shows the
+  summary and asks for confirmation.
+
 ## Likely next tick
 
-The Specimen dialog regrouping noted in the Iteration 107 review, or making
-the separate Worklist kinds within Review filterable from the Find box
-(already possible by kind label).
+Export and import of clinical Preferences (the analysis settings in
+`ClinicalSnapshot`) using the same preview-then-confirm pattern. Or the
+Specimen dialog regrouping.
