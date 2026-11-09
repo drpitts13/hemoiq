@@ -2733,7 +2733,28 @@ cluster with one technologist, which is a training and competency signal.
 - The Analytics user-activity table has an **Overrides** column. The activity
   CSV gains "Warnings overridden".
 
+## Iteration 122 (this change)
+
+**Deficiency:** The Preferences dialog sized itself to its content, with 22
+rows of 36 px plus buttons (about 860 px), and had no scrolling. On a common
+1366×768 lab workstation, where the work area is about 728 px, the window ran
+past the bottom of the screen. Save and Cancel were unreachable by mouse;
+only Enter or Esc worked. Checked because Iteration 120 left the
+Preferences dialog without a layout test.
+
+**Bounded improvement:**
+- The button row is docked at the bottom.
+- The settings grid sits in a vertical `ScrollViewer`.
+- The window's `MaxHeight` is the screen work area minus 40 px, with a
+  minimum of 300.
+- Checked by rendering at a 420 px limit: the settings scroll and the
+  buttons stay visible.
+- `SettingsDialogLayoutTests`:
+  - the default cap is no taller than the work area;
+  - at 420 px the dialog stays within the limit, the settings scroll, and
+    Save is fully inside the window.
+
 ## Likely next tick
 
-One configuration bundle (rules and Preferences in a single file), or a fit
-test for the Preferences dialog like the Specimen dialog's.
+One configuration bundle combining rules and Preferences, or a sweep of the
+other dialogs that size to content.

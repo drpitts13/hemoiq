@@ -15,6 +15,8 @@ namespace HemoIQ.Views.Dialogs
         {
             _db = db;
             InitializeComponent();
+            // Never taller than the screen's working area, so Save and Cancel stay reachable on small displays.
+            MaxHeight = Math.Max(300, SystemParameters.WorkArea.Height - 40);
             var s = AppSettings.Current;
             LabNameBox.Text = s.LabName;
             DepartmentBox.Text = s.Department;

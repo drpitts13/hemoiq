@@ -2,6 +2,8 @@
 
 Open **Tools → Preferences** to set laboratory defaults. **Save** writes them to this computer. **Cancel** discards the dialog. **Help** opens this chapter.
 
+On a small screen the settings scroll; **Save**, **Cancel** and the other buttons stay at the bottom of the window.
+
 ## Identity and thresholds
 
 - **Lab name** and **Department** identify the laboratory on this workstation.

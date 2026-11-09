@@ -53,6 +53,10 @@ comparisons, the import schema check, and Final ID entries.
 - The Specimen tab is nearly full: there is room for only about one more 36 px row. Put new
   inputs beside related ones, as was done for encounter and sex, or on another tab.
 
+- The Preferences dialog sizes itself to its content, but is capped at the screen's working area.
+  Its settings scroll while the button row stays docked at the bottom.
+  `SettingsDialogLayoutTests` checks that Save stays visible at a 420 px limit.
+
 ## Tests
 
 - Use `IsolatedDatabase` for anything that touches the database.

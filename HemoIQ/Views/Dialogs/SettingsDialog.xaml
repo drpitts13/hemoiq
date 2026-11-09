@@ -5,8 +5,24 @@
         help:Help.Topic="preferences"
         Title="Lab Preferences" SizeToContent="WidthAndHeight" Width="460"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
-    <StackPanel Margin="16,12,16,12">
-        <Grid>
+    <!-- Buttons stay docked at the bottom; the settings scroll when the screen is shorter than the dialog. -->
+    <DockPanel Margin="16,12,16,12">
+        <StackPanel x:Name="ButtonBar" DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="Export…" Width="70" Margin="0,0,8,0" Click="ExportClick"
+                    ToolTip="Save the laboratory-wide Preferences (as last saved) to a JSON file, for example to copy them to another HemoIQ workstation."/>
+            <Button Content="Import…" Width="70" Margin="0,0,8,0" Click="ImportClick"
+                    ToolTip="Read a Preferences file, preview each change, and confirm before anything is applied. Out-of-range values are refused."/>
+            <Button Content="Users &amp; roles…" Width="110" Margin="0,0,8,0" Click="UsersClick"
+                    ToolTip="Register users by Windows login and assign Technologist, Supervisor, or Administrator roles."/>
+            <Button Content="Help" Width="84" Margin="0,0,8,0"
+                    Command="{x:Static help:HelpCommands.ShowContext}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource Self}}"
+                    ToolTip="Open help for this section (F1)"/>
+            <Button x:Name="SaveButton" Content="Save" Width="84" Margin="0,0,8,0" Click="SaveClick" IsDefault="True"/>
+            <Button Content="Cancel" Width="84" IsCancel="True"/>
+        </StackPanel>
+        <ScrollViewer x:Name="FieldsScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="0,0,4,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="180"/>
                 <ColumnDefinition Width="*"/>
@@ -137,20 +153,6 @@
                    ToolTip="Anti-D found within this many days after Rh immune globulin is flagged as possibly passive (1–365, default 84 = 12 weeks)."/>
             <TextBox x:Name="RhigWindowBox" Grid.Row="21" Grid.Column="1" VerticalAlignment="Center" Margin="0,2"/>
         </Grid>
-
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
-            <Button Content="Export…" Width="70" Margin="0,0,8,0" Click="ExportClick"
-                    ToolTip="Save the laboratory-wide Preferences (as last saved) to a JSON file, for example to copy them to another HemoIQ workstation."/>
-            <Button Content="Import…" Width="70" Margin="0,0,8,0" Click="ImportClick"
-                    ToolTip="Read a Preferences file, preview each change, and confirm before anything is applied. Out-of-range values are refused."/>
-            <Button Content="Users &amp; roles…" Width="110" Margin="0,0,8,0" Click="UsersClick"
-                    ToolTip="Register users by Windows login and assign Technologist, Supervisor, or Administrator roles."/>
-            <Button Content="Help" Width="84" Margin="0,0,8,0"
-                    Command="{x:Static help:HelpCommands.ShowContext}"
-                    CommandParameter="{Binding RelativeSource={RelativeSource Self}}"
-                    ToolTip="Open help for this section (F1)"/>
-            <Button Content="Save" Width="84" Margin="0,0,8,0" Click="SaveClick" IsDefault="True"/>
-            <Button Content="Cancel" Width="84" IsCancel="True"/>
-        </StackPanel>
-    </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
 </Window>
