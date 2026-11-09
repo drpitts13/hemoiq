@@ -321,7 +321,7 @@ namespace HemoIQ.ViewModels
                 ? times + " REVIEW: " + note
                 : times;
             var eluates = _db.GetEluatesFor(sid);
-            var receipt = Services.ReceiptChecklist.Evaluate(_selectedSpecimen);
+            var receipt = Services.ReceiptChecklist.Evaluate(_db, _selectedSpecimen);
             ReceiptText = Services.ReceiptChecklist.Summary(receipt);
             ReceiptDetail = Services.ReceiptChecklist.Detail(receipt);
             ReceiptIncomplete = !Services.ReceiptChecklist.RequiredComplete(receipt);

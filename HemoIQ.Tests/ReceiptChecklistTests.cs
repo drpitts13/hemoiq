@@ -93,4 +93,47 @@ public class ReceiptChecklistTests
         var text = iso.Reports.GeneratePreviewText(ReportType.ClinicalIdentification, "RC-4");
         Assert.Contains("Receipt checklist: 0 of 7: missing Patient MRN, Collection date/time, Transfusion status;", text);
     }
+
+    private static string Day(int daysAgo) => DateTime.Today.AddDays(-daysAgo).ToString("yyyy-MM-dd");
+
+    private static void Received(IsolatedDatabase iso, string acc, string status, string? lastTransfusion = null, int collectedDaysAgo = 0)
+    {
+        iso.Db.AddSpecimen(acc, "serum", null, createdDate: Day(collectedDaysAgo));
+        iso.Db.UpdateSpecimenMrn(acc, "MRN-RC");
+        iso.Db.UpdateSpecimenCollection(acc, Day(collectedDaysAgo) + " 07:00", null);
+        iso.Db.UpdateSpecimenTransfusion(acc, status, lastTransfusion);
+    }
+
+    [Fact]
+    public void TransfusionStatusContradictedByHistory_IsARequiredGap_AndHoldsTheReceivedStep()
+    {
+        using var iso = new IsolatedDatabase();
+        Received(iso, "RC-OLD", TransfusionStatus.Transfused, Day(10), collectedDaysAgo: 10);
+        Received(iso, "RC-NOW", TransfusionStatus.NotTransfused);
+        var now = iso.Db.GetSpecimen("RC-NOW")!;
+
+        var items = ReceiptChecklist.Evaluate(iso.Db, now);
+        Assert.False(ReceiptChecklist.RequiredComplete(items));
+        Assert.Contains("missing Transfusion status matches patient history", ReceiptChecklist.Summary(items));
+        Assert.Contains($"Required: Transfusion status matches patient history — RC-OLD records a red-cell transfusion on {Day(10)}, 10 day(s) before this collection",
+            ReceiptChecklist.Detail(items));
+
+        var st = InvestigationStatusService.Compute(iso.Db, now, requireReview: false);
+        Assert.False(st.Steps[0].Done);
+        Assert.Contains("Complete receipt (Transfusion status matches patient history)", st.NextAction);
+
+        // Without the database the checklist is unchanged: the history check is opt-in.
+        Assert.True(ReceiptChecklist.RequiredComplete(ReceiptChecklist.Evaluate(now)));
+    }
+
+    [Fact]
+    public void OlderTransfusedDateThanHistory_IsAdvisoryOnly()
+    {
+        using var iso = new IsolatedDatabase();
+        Received(iso, "RC-OLD2", TransfusionStatus.Transfused, Day(5), collectedDaysAgo: 5);
+        Received(iso, "RC-NOW2", TransfusionStatus.Transfused, Day(60));
+        var items = ReceiptChecklist.Evaluate(iso.Db, iso.Db.GetSpecimen("RC-NOW2")!);
+        Assert.True(ReceiptChecklist.RequiredComplete(items));
+        Assert.Contains("not recorded Last transfusion date matches patient history", ReceiptChecklist.Summary(items));
+    }
 }

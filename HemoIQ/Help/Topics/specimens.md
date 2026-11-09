@@ -78,6 +78,7 @@ The grey strip at the top of the detail pane shows where the investigation stand
 **Receipt** in Clinical Context is a checklist of what to record when the specimen arrives. It reads **Complete (8 of 8)** or lists what is missing, and hovering over it gives each item's reason.
 - **Required:** patient MRN, collection date/time, transfusion status, and the last transfusion date when the patient was transfused. These change how the analysis is read: patient history needs the MRN, and the transfusion window and specimen dating count from collection. While one is missing, the line is shaded amber, the **Received** step stays open, and the next action asks you to complete receipt with **Edit** before attaching a panel.
 - **Advisory:** received date/time, visual hemolysis, pregnancy status and DAT. These complete the record but do not hold the Received step.
+- **Patient history:** when another specimen with the same MRN records a red-cell transfusion within the recent-transfusion window, and this specimen says Not transfused or Unknown, **Transfusion status matches patient history** becomes a required gap. The same conflict appears as a REVIEW note on the analysis. A Transfused record whose date is older than the one on file adds an advisory item.
 - The checklist never blocks testing. The Clinical Identification worksheet prints the same line.
 
 **Awaiting additional testing** means the analysis is current but left questions that more testing could settle. Each analysis saves the open items, and **Next** lists them:

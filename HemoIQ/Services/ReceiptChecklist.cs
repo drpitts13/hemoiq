@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using HemoIQ.Data;
 using HemoIQ.Models;
 
 namespace HemoIQ.Services
@@ -15,7 +16,14 @@ namespace HemoIQ.Services
     /// </summary>
     public static class ReceiptChecklist
     {
-        public static List<ReceiptItem> Evaluate(Specimen s)
+        /// <summary>
+        /// The checklist including the cross-check against transfusions recorded on the patient's other
+        /// specimens (<see cref="TransfusionHistoryCheck"/>), using the Preferences transfusion window.
+        /// </summary>
+        public static List<ReceiptItem> Evaluate(DatabaseService db, Specimen s) =>
+            Evaluate(s, TransfusionHistoryCheck.Find(db, s, AppSettings.Current.RecentTransfusionWindowDays));
+
+        public static List<ReceiptItem> Evaluate(Specimen s, TransfusionHistoryFinding? history = null)
         {
             var transfusion = TransfusionStatus.Normalize(s.TransfusionStatus);
             var items = new List<ReceiptItem>
@@ -30,6 +38,13 @@ namespace HemoIQ.Services
             if (transfusion == TransfusionStatus.Transfused)
                 items.Add(new("Last transfusion date", !string.IsNullOrWhiteSpace(s.LastTransfusionDate), true,
                     "without it the phenotype is treated as unreliable and earlier phenotypes cannot be used"));
+            if (history != null)
+                items.Add(history.MakesPhenotypeUnreliable
+                    ? new("Transfusion status matches patient history", false, true,
+                        $"{history.SourceAccession} records a red-cell transfusion on {history.TransfusedOn:yyyy-MM-dd}, " +
+                        $"{history.DaysBeforeCollection} day(s) before this collection; until corrected, patient typing is treated as unreliable")
+                    : new("Last transfusion date matches patient history", false, false,
+                        $"{history.SourceAccession} records a later transfusion, on {history.TransfusedOn:yyyy-MM-dd}"));
             items.Add(new("Received date/time", !string.IsNullOrWhiteSpace(s.ReceivedAt), false,
                 "turnaround is otherwise counted from when the record was created"));
             items.Add(new("Visual hemolysis", SpecimenHemolysis.Normalize(s.Hemolysis) != SpecimenHemolysis.NotRecorded, false,

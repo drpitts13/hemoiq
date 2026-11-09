@@ -3337,6 +3337,58 @@ shown anywhere.
 
 All 1153 tests pass.
 
+## Iteration 138 (this change): product review of Iterations 134–137
+
+**What is now complete:**
+- Receipt to report: receipt checklist, consistency check on stored
+  reactions, amended-report marking, and the cross-specimen transfusion
+  check.
+- Every new check follows the same pattern: it reports with a reason, never
+  blocks, and has a route to fix the problem.
+
+**Fragmented (fixed here):** the Iteration 136 receipt checklist and the
+Iteration 137 history check did not know about each other. A specimen marked
+Not transfused, contradicted by a recent transfusion on the patient's other
+specimen, showed "Receipt: Complete" and a done Received step on the
+Specimens tab. The conflict appeared only on the Analysis tab, after testing.
+
+**Bounded improvement:**
+- `ReceiptChecklist.Evaluate(db, specimen)` adds the history finding:
+  - a contradiction or a filled-in Unknown becomes the required item
+    **Transfusion status matches patient history**, with the source
+    specimen, date and day count;
+  - an older Transfused date becomes an advisory item.
+- The status service, the Specimens detail pane and the worksheet use the
+  database-aware form. The specimen-only form is unchanged, for callers
+  without a database.
+
+**Other review findings (no change needed):**
+- Screens: the Specimens detail pane now carries Receipt, Collection,
+  Transfusion and Pregnancy lines. Its layout at 1366×768 was not checked in
+  this review; the dialog height guard does not cover panes.
+- Duplicated configuration: none new. The ACS list, windows and counts live
+  only in Preferences.
+- Testing: every check from Iterations 134–137 has database-level tests.
+  Specimens-pane bindings rely on the same view-model properties.
+- Database structures: none blocking.
+
+**Tests:** `ReceiptChecklistTests` (+2):
+- a contradicted status is a required gap, holds the Received step and names
+  the source in the next action, and the specimen-only form is unchanged;
+- an older Transfused date is advisory only.
+
+All 1155 tests pass.
+
+### Roadmap
+
+1. Configurable role permissions, only if requested.
+2. Reports: an optional "Report to" distribution list per specimen, so an
+   amended report can name who received the earlier one.
+3. Panels: lot comparison already exists. Next would be a warning when a new
+   lot drops an antigen the previous lot typed (antigen coverage
+   regression).
+
 ## Likely next tick
 
-Product review at Iteration 138.
+Roadmap item 3: antigen-coverage regression warning when a new lot is
+imported or activated.

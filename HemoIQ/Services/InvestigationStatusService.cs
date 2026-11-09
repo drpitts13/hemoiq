@@ -74,7 +74,7 @@ namespace HemoIQ.Services
             var staleReason = AnalysisCurrency.StaleReason(s, db.LastAnalysisConfigurationChange());
             var analysisCurrent = hasPanel && s.LastAnalyzedAt != null && staleReason == null;
 
-            var receipt = ReceiptChecklist.Evaluate(s);
+            var receipt = ReceiptChecklist.Evaluate(db, s);
             var receiptComplete = ReceiptChecklist.RequiredComplete(receipt);
             var steps = new List<InvestigationStep>
             {
