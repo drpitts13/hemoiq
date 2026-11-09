@@ -48,9 +48,10 @@ namespace HemoIQ.Data
                     login TEXT PRIMARY KEY COLLATE NOCASE CHECK (length(login) BETWEEN 1 AND 128),
                     initials TEXT NOT NULL CHECK (length(initials) BETWEEN 1 AND 12),
                     name TEXT,
-                    role TEXT NOT NULL CHECK (role IN ('technologist','supervisor','administrator')),
+                    role TEXT NOT NULL CHECK (role IN ('technologist','supervisor','administrator','readonly')),
                     active INTEGER NOT NULL DEFAULT 1
                 )");
+            MigrateUserRoles();
             ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_audit_entity ON audit_events(entity_type, entity_id)");
             DeactivateExpiredSpecimens();
             DeactivateExpiredPanels();
@@ -358,6 +359,29 @@ namespace HemoIQ.Data
                 )");
         }
 
+        /// <summary>Databases created before the Read-only role have a role CHECK without it; rebuild the table to allow it.</summary>
+        private void MigrateUserRoles()
+        {
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'";
+            var sql = cmd.ExecuteScalar() as string;
+            if (sql == null || sql.Contains("'readonly'")) return;
+            RunInTransaction(() =>
+            {
+                ExecNonQuery(@"
+                    CREATE TABLE users_v2 (
+                        login TEXT PRIMARY KEY COLLATE NOCASE CHECK (length(login) BETWEEN 1 AND 128),
+                        initials TEXT NOT NULL CHECK (length(initials) BETWEEN 1 AND 12),
+                        name TEXT,
+                        role TEXT NOT NULL CHECK (role IN ('technologist','supervisor','administrator','readonly')),
+                        active INTEGER NOT NULL DEFAULT 1
+                    )");
+                ExecNonQuery("INSERT INTO users_v2 (login, initials, name, role, active) SELECT login, initials, name, role, active FROM users");
+                ExecNonQuery("DROP TABLE users");
+                ExecNonQuery("ALTER TABLE users_v2 RENAME TO users");
+            });
+        }
+
         private void MigrateVendorPanelMetadata()
         {
             var panelCols = GetColumnNames("panels");
@@ -560,6 +584,7 @@ namespace HemoIQ.Data
             string? notes = null, string? phenotype = null, string? previousAntibodies = null, string? datResult = null,
             string? createdDate = null, string? genotype = null)
         {
+            EnsureCanRecord();
             var today = DateTime.Now.ToString("yyyy-MM-dd");
             var created = string.IsNullOrWhiteSpace(createdDate) ? today : createdDate.Trim();
             bool active = isActive ?? (expirationDate == null || string.Compare(expirationDate, today) >= 0);
@@ -616,6 +641,7 @@ namespace HemoIQ.Data
             string? notes = null, string? phenotype = null, string? previousAntibodies = null, string? datResult = null,
             string? genotype = null)
         {
+            EnsureCanRecord();
             var before = GetSpecimen(accessionNumber)
                          ?? throw new ArgumentException($"Specimen {accessionNumber} not found.");
             var changed = new Dictionary<string, (object? before, object? after)>();
@@ -665,6 +691,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void UpdateSpecimenTransfusionProducts(string accessionNumber, IEnumerable<string>? products, int? units)
         {
+            EnsureCanRecord();
             var before = GetSpecimen(accessionNumber)
                          ?? throw new ArgumentException($"Specimen {accessionNumber} not found.");
             var transfused = TransfusionStatus.Normalize(before.TransfusionStatus) == TransfusionStatus.Transfused;
@@ -687,6 +714,7 @@ namespace HemoIQ.Data
 
         public void UpdateSpecimenTransfusion(string accessionNumber, string? status, string? lastTransfusionDate)
         {
+            EnsureCanRecord();
             var code = TransfusionStatus.Normalize(status);
             string? date = null;
             if (code == TransfusionStatus.Transfused && !string.IsNullOrWhiteSpace(lastTransfusionDate))
@@ -723,6 +751,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void UpdateSpecimenDatSplit(string accessionNumber, string? igg, string? c3)
         {
+            EnsureCanRecord();
             static string? Clean(string? v, string name)
             {
                 if (string.IsNullOrWhiteSpace(v) || v.Trim().Equals("NT", StringComparison.OrdinalIgnoreCase))
@@ -753,6 +782,7 @@ namespace HemoIQ.Data
         /// <summary>Records the specimen's visual hemolysis. Audited; locked after a confirmed identification.</summary>
         public void UpdateSpecimenHemolysis(string accessionNumber, string? hemolysis)
         {
+            EnsureCanRecord();
             var level = Services.SpecimenHemolysis.Normalize(hemolysis);
             var before = GetSpecimen(accessionNumber)
                          ?? throw new ArgumentException($"Specimen {accessionNumber} not found.");
@@ -872,6 +902,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void SavePatient(Patient patient)
         {
+            EnsureCanRecord();
             var key = Services.PatientHistory.NormalizeMrn(patient.Mrn)
                       ?? throw new ArgumentException("MRN is required for a patient record.");
             if (key.Length > 64) throw new ArgumentException("MRN cannot be longer than 64 characters.");
@@ -971,6 +1002,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void SetEluateSource(string eluateAccession, string? sourceAccession)
         {
+            EnsureCanRecord();
             var eluate = GetSpecimen(eluateAccession)
                          ?? throw new ArgumentException($"Specimen {eluateAccession} not found.");
             var src = string.IsNullOrWhiteSpace(sourceAccession) ? null : sourceAccession.Trim();
@@ -1014,6 +1046,7 @@ namespace HemoIQ.Data
         public void UpdateSpecimenOrigin(string accessionNumber, string? collector, string? collectionLocation,
             string? orderingLocation, string? orderingProvider)
         {
+            EnsureCanRecord();
             static string? Clean(string? v, string label)
             {
                 var t = string.IsNullOrWhiteSpace(v) ? null : System.Text.RegularExpressions.Regex.Replace(v.Trim(), @"\s+", " ");
@@ -1055,6 +1088,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void UpdateSpecimenEncounter(string accessionNumber, string? encounter)
         {
+            EnsureCanRecord();
             var value = NormalizeEncounter(encounter);
             var before = GetSpecimen(accessionNumber)
                          ?? throw new ArgumentException($"Specimen {accessionNumber} not found.");
@@ -1099,6 +1133,7 @@ namespace HemoIQ.Data
 
         public void UpdateSpecimenCollection(string accessionNumber, string? collectedAt, string? receivedAt)
         {
+            EnsureCanRecord();
             var now = DateTime.Now;
             var collected = Services.SpecimenDating.Normalize(collectedAt, "Collection time", now);
             var received = Services.SpecimenDating.Normalize(receivedAt, "Received time", now);
@@ -1127,6 +1162,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void UpdateSpecimenPregnancy(string accessionNumber, string? status, string? endDate, string? rhigDate)
         {
+            EnsureCanRecord();
             static string? Day(string? text, string label)
             {
                 if (string.IsNullOrWhiteSpace(text)) return null;
@@ -1179,6 +1215,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void UpdateSpecimenMrn(string accessionNumber, string? mrn)
         {
+            EnsureCanRecord();
             var key = Services.PatientHistory.NormalizeMrn(mrn);
             if (key != null && key.Length > 64)
                 throw new ArgumentException("MRN cannot be longer than 64 characters.");
@@ -1199,6 +1236,7 @@ namespace HemoIQ.Data
 
         public void SetSpecimenActive(string accessionNumber, bool active)
         {
+            EnsureCanRecord();
             var before = GetSpecimen(accessionNumber);
             if (before == null || before.IsActive == active) return;
             AppendAudit("set_specimen_active", "specimen", accessionNumber, null,
@@ -1215,6 +1253,7 @@ namespace HemoIQ.Data
             string? antibodies, string? comment, string? identifiedBy,
             DateTime? identifiedAt = null, IReadOnlyList<string>? overrides = null)
         {
+            EnsureCanRecord();
             if (antibodies != null && GetSpecimen(accessionNumber)?.IsCancelled == true)
                 throw new RecordLockedException(accessionNumber, cancelled: true);
             using var cmd = _conn.CreateCommand();
@@ -1298,6 +1337,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void CancelInvestigation(string accessionNumber, string reason)
         {
+            EnsureCanRecord();
             if (string.IsNullOrWhiteSpace(reason))
                 throw new ArgumentException("A reason is required to cancel an investigation.", nameof(reason));
             var s = GetSpecimen(accessionNumber)
@@ -1362,6 +1402,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void DeleteSpecimen(string accessionNumber)
         {
+            EnsureCanRecord();
             var s = GetSpecimen(accessionNumber);
             if (s == null) return;
             if (s.HasFinalCall)
@@ -1552,6 +1593,7 @@ namespace HemoIQ.Data
             string? specialNotes = null, string? sourceSha256 = null, string? sourceArtifactPath = null,
             bool startTypedNegative = false)
         {
+            EnsureCanRecord();
             var today = DateTime.Now.ToString("yyyy-MM-dd");
             bool active = isActive ?? (expirationDate == null || string.Compare(expirationDate, today) >= 0);
             using var cmd = _conn.CreateCommand();
@@ -1626,6 +1668,7 @@ namespace HemoIQ.Data
             string? catalogNumber = null, string? productLine = null, bool enzymeTreated = false,
             string? specialNotes = null)
         {
+            EnsureCanRecord();
             // Keep the cells that stay in range, with their typing; add only new cells and
             // remove only cells that fall out of range. Removing a cell with recorded
             // reactions is refused so test history keeps its antigram.
@@ -1770,6 +1813,7 @@ namespace HemoIQ.Data
 
         public void SetPanelActive(int panelId, bool active)
         {
+            EnsureCanRecord();
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = "UPDATE panels SET is_active = $active WHERE panel_id = $id";
             cmd.Parameters.AddWithValue("$active", active ? 1 : 0);
@@ -1817,6 +1861,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void DeletePanel(int panelId)
         {
+            EnsureCanRecord();
             var usage = GetPanelUsage(panelId);
             if (usage.ProtectsHistory)
                 throw new InvalidOperationException(
@@ -1878,6 +1923,7 @@ namespace HemoIQ.Data
 
         public void UpdatePanelCellAntigen(int cellId, string antigen, string value)
         {
+            EnsureCanRecord();
             EnsurePanelEditableWithoutAudit(PanelIdOfCell(cellId));
             UpdatePanelCellAntigenCore(cellId, antigen, value);
         }
@@ -1946,6 +1992,7 @@ namespace HemoIQ.Data
         /// </summary>
         public List<string> SavePanelCellEdits(int panelId, IReadOnlyList<PanelCell> edited, string? reason = null)
         {
+            EnsureCanRecord();
             var changes = DescribePanelCellChanges(panelId, edited);
             if (changes.Count == 0) return changes;
             var usage = GetPanelUsage(panelId);
@@ -1974,6 +2021,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void UpdatePanelCell(PanelCell cell)
         {
+            EnsureCanRecord();
             EnsurePanelEditableWithoutAudit(PanelIdOfCell(cell.Id));
             UpdatePanelCellCore(cell);
         }
@@ -2013,6 +2061,9 @@ namespace HemoIQ.Data
                     "on the Panels tab, which asks for a reason and records the change.");
         }
 
+        /// <summary>Data changes need a registered user who may record results, once users are registered.</summary>
+        private void EnsureCanRecord() => Services.AccessControl.Demand(this, Services.Permission.RecordResults);
+
         private int? PanelIdOfCell(int cellId)
         {
             using var cmd = _conn.CreateCommand();
@@ -2024,6 +2075,7 @@ namespace HemoIQ.Data
 
         public void UpdatePanelCellMetadata(int cellId, string? donorId, string? rhPhenotype, string? specialTypes)
         {
+            EnsureCanRecord();
             EnsurePanelEditableWithoutAudit(PanelIdOfCell(cellId));
             UpdatePanelCellMetadataCore(cellId, donorId, rhPhenotype, specialTypes);
         }
@@ -2044,6 +2096,7 @@ namespace HemoIQ.Data
 
         public void DeletePanelCells(int panelId)
         {
+            EnsureCanRecord();
             EnsurePanelEditableWithoutAudit(panelId);
             DeletePanelCellsCore(panelId);
         }
@@ -2059,6 +2112,7 @@ namespace HemoIQ.Data
         /// <summary>Replaces every cell on a panel in one transaction; a failure keeps the old cells.</summary>
         public void ReplacePanelCells(int panelId, IReadOnlyList<PanelCell> cells)
         {
+            EnsureCanRecord();
             EnsurePanelEditableWithoutAudit(panelId);
             RunInTransaction(() => ReplacePanelCellsCore(panelId, cells));
         }
@@ -2133,6 +2187,7 @@ namespace HemoIQ.Data
 
         public void CopyPanelCells(int sourcePanelId, int targetPanelId)
         {
+            EnsureCanRecord();
             EnsurePanelEditableWithoutAudit(targetPanelId);
             DeletePanelCellsCore(targetPanelId);
             var agCols = string.Join(", ", AntigenMapper.AllColumns);
@@ -2239,6 +2294,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void SetPanelAntigenOrder(int panelId, IReadOnlyList<string> antigens)
         {
+            EnsureCanRecord();
             var previous = GetPanelAntigenOrder(panelId);
             SetPanelAntigenOrderCore(panelId, antigens);
             var current = GetPanelAntigenOrder(panelId);
@@ -2277,6 +2333,7 @@ namespace HemoIQ.Data
 
         public void CopyPanelAntigenOrder(int sourcePanelId, int targetPanelId)
         {
+            EnsureCanRecord();
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
                 DELETE FROM panel_antigen_order WHERE panel_id = $tgt;
@@ -2334,6 +2391,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void AddPanelExtraAntigen(int panelId, string antigen)
         {
+            EnsureCanRecord();
             if (!AntigenConstants.IsWarehouse(antigen)) return;
             int inserted;
             using (var cmd = _conn.CreateCommand())
@@ -2367,6 +2425,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void RemovePanelExtraAntigen(int panelId, string antigen)
         {
+            EnsureCanRecord();
             var typed = GetPanelCells(panelId)
                 .Where(c => c.HasTypedAntigen(antigen))
                 .ToDictionary(c => c.CellNumber, c => c.Antigens[antigen]);
@@ -2447,6 +2506,7 @@ namespace HemoIQ.Data
 
         public void LinkSpecimenPanel(string specimenId, int panelId)
         {
+            EnsureCanRecord();
             EnsureSpecimenUnlocked(specimenId);
             try
             {
@@ -2464,6 +2524,7 @@ namespace HemoIQ.Data
 
         public void UnlinkSpecimenPanel(string specimenId, int panelId)
         {
+            EnsureCanRecord();
             EnsureSpecimenUnlocked(specimenId);
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
@@ -2533,6 +2594,7 @@ namespace HemoIQ.Data
             SerumTreatment serumTreatment,
             string label = "")
         {
+            EnsureCanRecord();
             EnsureSpecimenUnlocked(specimenId);
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
@@ -2659,6 +2721,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void DeletePanelRun(int runId, string? reason = null)
         {
+            EnsureCanRecord();
             var run = GetPanelRun(runId);
             if (run == null) return;
             var snapshot = PrepareReactionDeletion(run, $"Deleting run '{run.DisplayLabel}'", reason);
@@ -2676,6 +2739,7 @@ namespace HemoIQ.Data
 
         public int CopyReactions(int sourceRunId, int targetRunId)
         {
+            EnsureCanRecord();
             var source = GetReactions(sourceRunId);
             foreach (var rxn in source)
                 SaveReaction(targetRunId, rxn.CellNumber, rxn.IS, rxn.C37, rxn.AHG, rxn.CC,
@@ -2723,6 +2787,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void SaveReactions(int runId, IReadOnlyList<ReactionInput> rows, string? reason = null)
         {
+            EnsureCanRecord();
             var run = GetPanelRun(runId);
             if (run != null && string.IsNullOrWhiteSpace(reason) &&
                 GetSpecimen(run.SpecimenId)?.LastAnalyzedAt != null)
@@ -2745,6 +2810,7 @@ namespace HemoIQ.Data
             string is_, string c37, string ahg, string cc,
             IReadOnlyDictionary<string, string>? extraPhases = null, string? reason = null)
         {
+            EnsureCanRecord();
             // Need specimen_id to call TouchSpecimenReactionsUpdated
             var run = GetPanelRun(runId);
             if (run != null) EnsureSpecimenUnlocked(run.SpecimenId);
@@ -2812,6 +2878,7 @@ namespace HemoIQ.Data
         public void SaveReaction(string specimenId, int panelId, string cellNumber,
             string is_, string c37, string ahg, string cc)
         {
+            EnsureCanRecord();
             var runId = GetOrCreateDefaultRun(specimenId, panelId);
             SaveReaction(runId, cellNumber, is_, c37, ahg, cc);
         }
@@ -2884,6 +2951,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void DeleteReactions(int runId, string? reason = null)
         {
+            EnsureCanRecord();
             var run = GetPanelRun(runId);
             if (run == null) return;
             if (GetReactions(runId).Count == 0) return;
@@ -2905,6 +2973,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void DeleteReactions(string specimenId, int panelId, string? reason = null)
         {
+            EnsureCanRecord();
             EnsureSpecimenUnlocked(specimenId);
             foreach (var run in GetPanelRuns(specimenId, panelId).Where(r => r.IsUntreated))
                 DeleteReactions(run.RunId, reason);
@@ -3197,6 +3266,7 @@ namespace HemoIQ.Data
         /// </summary>
         public void VerifyExtraAntigenTyping(int panelId, string antigen)
         {
+            EnsureCanRecord();
             Services.AccessControl.Demand(this, Services.Permission.SupervisorReview);
             if (!GetPanelExtraAntigens(panelId).Contains(antigen))
                 throw new ArgumentException($"{antigen} is not an extra antigen on panel #{panelId}.");
@@ -3922,6 +3992,7 @@ namespace HemoIQ.Data
 
         public RestoreResult RestoreArchive(string archivePath)
         {
+            EnsureCanRecord();
             var path = ResolveArchivePath(archivePath);
             using (var probe = OpenArchiveReadOnly(path))
                 EnsureArchiveSpecimensTable(probe);

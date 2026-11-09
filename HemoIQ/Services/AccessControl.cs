@@ -15,13 +15,17 @@ namespace HemoIQ.Services
         ConfigureRules,
         ManageUsers,
         PurgeData,
+        /// <summary>Record or change laboratory data: specimens, patients, panels, reactions, identifications.</summary>
+        RecordResults,
     }
 
     /// <summary>
     /// Role-based permissions over the local user registry. While no active user is
     /// registered, every action is allowed (the behavior before roles existed). Once
     /// users exist, the signed-in Windows login must be a registered, active user whose
-    /// role grants the permission.
+    /// role grants the permission. Every data change needs at least
+    /// <see cref="Permission.RecordResults"/>, so an unregistered login or a Read-only
+    /// user can view but not change anything.
     /// </summary>
     public static class AccessControl
     {
@@ -37,6 +41,7 @@ namespace HemoIQ.Services
             [Permission.ConfigureRules] = new[] { UserRole.Supervisor, UserRole.Administrator },
             [Permission.ManageUsers] = new[] { UserRole.Administrator },
             [Permission.PurgeData] = new[] { UserRole.Administrator },
+            [Permission.RecordResults] = new[] { UserRole.Technologist, UserRole.Supervisor, UserRole.Administrator },
         };
 
         public static string Describe(Permission p) => p switch
@@ -48,6 +53,7 @@ namespace HemoIQ.Services
             Permission.ConfigureRules => "add, edit, or delete analysis rules",
             Permission.ManageUsers => "manage users and roles",
             Permission.PurgeData => "purge specimens from the database",
+            Permission.RecordResults => "record or change laboratory data",
             _ => p.ToString(),
         };
 

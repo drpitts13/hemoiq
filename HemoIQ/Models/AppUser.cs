@@ -7,16 +7,19 @@ namespace HemoIQ.Models
         public const string Technologist = "technologist";
         public const string Supervisor = "supervisor";
         public const string Administrator = "administrator";
+        /// <summary>Views investigations, reports and analytics; cannot change laboratory data.</summary>
+        public const string ReadOnly = "readonly";
 
         public static readonly IReadOnlyList<(string Code, string Label)> Options = new[]
         {
             (Technologist, "Technologist"),
             (Supervisor, "Supervisor"),
             (Administrator, "Administrator"),
+            (ReadOnly, "Read-only"),
         };
 
         public static bool IsValid(string? code) =>
-            code is Technologist or Supervisor or Administrator;
+            code is Technologist or Supervisor or Administrator or ReadOnly;
 
         public static string Label(string? code)
         {

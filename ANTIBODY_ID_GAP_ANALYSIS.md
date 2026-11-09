@@ -48,6 +48,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | UI | Antigram freeze / slashes / run compare | Partial | Frozen cell; slashes; compare extras; Show dosage; filter/sort; panel lot compare | — |
 | UI | Explain Analysis panel | Present | Explain tab + Summary + clinical report assemble rule-out, support, conflict, phenotype, additional testing | Keep wording as evidence, not diagnosis |
 | Audit | Panel, reactions, rules, settings, final ID | Partial | Snapshots store rule-engine version, rules JSON, operator, and the adsorption comparison (conclusions plus ordinary-score exclusions) | Cross-panel enzyme/DTT pairing later |
+| Security | Roles and data-change permission | Present | Read-only, Technologist, Supervisor, Administrator; once users are registered every public data writer requires `RecordResults` (Technologist and above), so unregistered logins and Read-only users view only; guard test fails on any unguarded public writer; users table migrated to accept the new role | Role grants are fixed per role, not a configurable table; no Senior technologist or Medical director role |
 | Configuration | ACS antigen list | Present | Fixed core (Rh, Kell, Duffy, Kidd, Ss) plus lab-configured additions (default Lea, Leb, M, N), validated case-sensitively; used by ACS evaluation, open-testing list, untypeable classifier and clinical-significance flags; listed on the report, in the rule trace and in the clinical snapshot; transferred with Preferences | The core itself is fixed by design |
 | Configuration | Rules + Preferences transfer | Present | Separate rule and Preferences JSON exports; `ConfigurationBundle` exports both together; import previews both sections and the stored rules the file lacks, refuses a file with any refused entry, applies atomically with optional audited removal of local-only rules, one `import_configuration` audit | No signed or checksummed bundle; reaction grades and phases beyond extra phases are not yet configurable data |
 | Tests | Synthetic cases with intermediate reasoning | Partial | Enzyme and DTT cases cover unpaired runs, short comparisons, mixed loss/gain/persistence that fits no pattern, and a one-loss two-persistence case that stays a partial destroyed pattern | Expand case library |
@@ -3038,7 +3039,49 @@ Still in code:
 
 No existing test changed behavior (1117 passed).
 
+## Iteration 131 (this change)
+
+**Deficiency:** Once a lab registered users, only supervisor and
+administrator actions were checked. Specimens, panels, reactions,
+identifications and patient records could be changed by any Windows login,
+including one that was never registered. The audit log then names a login no
+one is accountable for. There was also no role for staff who should see but
+not change results, such as reporting staff, auditors or a medical director's
+delegate.
+
+**Bounded improvement:**
+- New permission `RecordResults`, granted to Technologist, Supervisor and
+  Administrator.
+- New role `Read-only` (`readonly`), which holds no permissions.
+- Every public `DatabaseService` method that changes laboratory data calls
+  `EnsureCanRecord()` first (44 method bodies, including both `DeleteReactions`
+  overloads). With no registered users, everything is still allowed, as
+  before.
+- Exempt: derived analysis output and snapshots, so a Read-only user can open
+  an analysis; and the empty default run needed to open the reaction grid.
+- Migration `MigrateUserRoles` rebuilds an existing `users` table in a
+  transaction, keeping its rows, so its role CHECK accepts `readonly`.
+- The Users dialog lists the new role automatically. A refused change shows
+  who the user is, their role, and the roles that are allowed.
+
+**Tests:** `RecordResultsPermissionTests` (6):
+- a Read-only user can read and run an analysis, but adding a specimen,
+  saving a reaction, confirming an ID, adding a panel or saving a patient is
+  refused and nothing changes;
+- an unregistered login is refused with a clear message;
+- a Technologist records results as before;
+- an empty registry still allows everything;
+- an old database's users table is migrated and keeps its users;
+- a source-scanning guard fails if any public writer lacks a permission check
+  and is not on its reviewed list. On its first run it found the unguarded
+  `DeleteReactions`.
+
+`AccessControlTests` setup now adds its specimen before registering users.
+
+All 1123 tests pass.
+
 ## Likely next tick
 
-A configurable role-to-permission table, if a senior-technologist role is
-needed; otherwise, return to workflow gaps from the roadmap.
+Return to workflow gaps from the roadmap, for example a visible
+signed-in-user and role indicator, with read-only screens disabling edit
+controls instead of refusing on save.

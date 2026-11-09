@@ -27,13 +27,13 @@ public class AccessControlTests
     private static IsolatedDatabase WithRegistry()
     {
         var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("AC-1", "serum", null);
         As("adm", () =>
         {
             iso.Db.SaveUser(new AppUser { Login = "adm", Initials = "AD", Name = "Admin", Role = UserRole.Administrator });
             iso.Db.SaveUser(new AppUser { Login = "sup", Initials = "SU", Name = "Sup", Role = UserRole.Supervisor });
             iso.Db.SaveUser(new AppUser { Login = "tech", Initials = "TE", Name = "Tech", Role = UserRole.Technologist });
         });
-        iso.Db.AddSpecimen("AC-1", "serum", null);
         As("tech", () => iso.Db.SetSpecimenFinalCall("AC-1", "anti-E", null, "TE"));
         return iso;
     }
