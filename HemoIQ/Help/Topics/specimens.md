@@ -25,6 +25,12 @@ The right pane follows the selected specimen.
 
 **Clinical Context** shows phenotype, genotype, previous antibodies, DAT, notes, and the confirmed final ID. These fields are edited from the specimen record.
 
+**Visual hemolysis** in the specimen dialog records how the specimen looked when received: Not recorded, None, Slight, Moderate, or Gross.
+- A grossly hemolyzed specimen always adds a **REVIEW** note to analysis. Hemolysis in the test tubes cannot be told apart from the specimen's own, and free hemoglobin can hide weak agglutination, so consider a new specimen.
+- Slight or moderate hemolysis adds a note only when a hemolysis (H) grade was recorded, naming those cells.
+- No grade is changed or excluded.
+- Changes are audited and shown on the Timeline. The field is locked once an identification is confirmed. The identification worksheet prints it.
+
 **Linked Panels** are the lots used for this workup. **Attach Panel** picks a lot. **Detach** removes the selected link. Linking a panel makes it available when you enter reactions.
 
 **Suspected Antibodies** and **Ruled-out Antibodies** are read-only summaries from the latest analysis. Change them by entering grades and running analysis, not by typing in these grids.
@@ -95,7 +101,7 @@ Expand **Timeline** to see the investigation in time order, with who did each st
 - Reactions entered. Saves on the same run less than 15 minutes apart are combined, for example *3 save(s), 2 cell(s) on Panel A, Untreated*.
 - Each analysis run, with the rule-engine version.
 - Identification confirmed, cleared (with the reason), and supervisor review.
-- Changes to MRN, transfusion record, DAT, and the patient record.
+- Changes to MRN, transfusion record, DAT, visual hemolysis, and the patient record.
 - Lab configuration changes made while the investigation was open: analysis rules added, changed or deleted, and changed clinical Preferences. Each entry names what changed, for example *Analysis rule changed: Jka dosage; minimum rule-out cells 3 → 2*. "Open" means after receipt, before an identification is confirmed or the investigation is cancelled, and again after one is cleared or reinstated. An analysis run before such an entry used the previous setting. The Worklist lists the investigation as **Stale analysis** until it is analyzed again.
 
 Receipt and run starts record only a date, so they show first on their day. The identification worksheet prints the same timeline. Panels attached before this version were not audited, so only their run start dates appear.

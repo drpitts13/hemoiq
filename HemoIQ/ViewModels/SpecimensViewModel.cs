@@ -366,6 +366,7 @@ namespace HemoIQ.ViewModels
             DatResult = dlg.DatResult,
             DatIgg = dlg.DatIgg,
             DatC3 = dlg.DatC3,
+            Hemolysis = dlg.Hemolysis,
             TransfusionStatus = dlg.TransfusionStatusCode,
             LastTransfusionDate = dlg.LastTransfusionDate,
             Mrn = dlg.Mrn,

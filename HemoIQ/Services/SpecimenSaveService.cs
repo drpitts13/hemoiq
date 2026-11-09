@@ -16,6 +16,7 @@ namespace HemoIQ.Services
         public string? DatResult { get; init; }
         public string? DatIgg { get; init; }
         public string? DatC3 { get; init; }
+        public string Hemolysis { get; init; } = string.Empty;
         public string TransfusionStatus { get; init; } = Models.TransfusionStatus.Unknown;
         public string? LastTransfusionDate { get; init; }
         public string? Mrn { get; init; }
@@ -51,6 +52,7 @@ namespace HemoIQ.Services
                         e.Notes, e.Phenotype, e.PreviousAntibodies, e.DatResult, e.Genotype);
                 db.UpdateSpecimenTransfusion(e.AccessionNumber, e.TransfusionStatus, e.LastTransfusionDate);
                 db.UpdateSpecimenDatSplit(e.AccessionNumber, e.DatIgg, e.DatC3);
+                db.UpdateSpecimenHemolysis(e.AccessionNumber, e.Hemolysis);
                 db.UpdateSpecimenMrn(e.AccessionNumber, e.Mrn);
                 db.SetEluateSource(e.AccessionNumber, e.SourceAccession);
                 db.UpdateSpecimenCollection(e.AccessionNumber, e.CollectedAt, e.ReceivedAt);

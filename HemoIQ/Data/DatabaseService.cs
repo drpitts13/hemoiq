@@ -242,6 +242,8 @@ namespace HemoIQ.Data
                 ExecNonQuery("ALTER TABLE specimens ADD COLUMN dat_igg TEXT");
             if (!cols.Contains("dat_c3"))
                 ExecNonQuery("ALTER TABLE specimens ADD COLUMN dat_c3 TEXT");
+            if (!cols.Contains("hemolysis"))
+                ExecNonQuery("ALTER TABLE specimens ADD COLUMN hemolysis TEXT");
             if (!cols.Contains("mrn"))
                 ExecNonQuery("ALTER TABLE specimens ADD COLUMN mrn TEXT");
             if (!cols.Contains("pregnancy_status"))
@@ -690,6 +692,24 @@ namespace HemoIQ.Data
             AppendAudit("update_dat", "specimen", accessionNumber, null,
                 JsonSerializer.Serialize(new { igg = before.DatIgg, c3 = before.DatC3 }),
                 JsonSerializer.Serialize(new { igg = newIgg, c3 = newC3 }));
+        }
+
+        /// <summary>Records the specimen's visual hemolysis. Audited; locked after a confirmed identification.</summary>
+        public void UpdateSpecimenHemolysis(string accessionNumber, string? hemolysis)
+        {
+            var level = Services.SpecimenHemolysis.Normalize(hemolysis);
+            var before = GetSpecimen(accessionNumber)
+                         ?? throw new ArgumentException($"Specimen {accessionNumber} not found.");
+            if (before.Hemolysis == level) return;
+            EnsureSpecimenUnlocked(accessionNumber);
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = "UPDATE specimens SET hemolysis = $h WHERE accession_number = $acc";
+            cmd.Parameters.AddWithValue("$h", level.Length == 0 ? DBNull.Value : level);
+            cmd.Parameters.AddWithValue("$acc", accessionNumber);
+            cmd.ExecuteNonQuery();
+            AppendAudit("update_hemolysis", "specimen", accessionNumber, null,
+                JsonSerializer.Serialize(new { hemolysis = before.Hemolysis }),
+                JsonSerializer.Serialize(new { hemolysis = level }));
         }
 
         public List<AppUser> GetUsers()
@@ -3331,6 +3351,7 @@ namespace HemoIQ.Data
             RhigDate = SafeGetString(r, "rhig_date"),
             ReceivedAt = SafeGetString(r, "received_at"),
             DatC3 = SafeGetString(r, "dat_c3"),
+            Hemolysis = Services.SpecimenHemolysis.Normalize(SafeGetString(r, "hemolysis")),
             FinalAntibodies = SafeGetString(r, "final_antibodies"),
             FinalComment = SafeGetString(r, "final_comment"),
             IdentifiedBy = SafeGetString(r, "identified_by"),

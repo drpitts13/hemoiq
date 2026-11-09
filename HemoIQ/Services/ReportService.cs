@@ -245,6 +245,7 @@ namespace HemoIQ.Services
             sb.AppendLine($"Transfusion: {s.TransfusionDisplay}");
             sb.AppendLine($"Pregnancy: {s.PregnancyDisplay}");
             sb.AppendLine($"DAT: {s.DatDisplay}");
+            sb.AppendLine($"Visual hemolysis: {SpecimenHemolysis.Label(s.Hemolysis)}");
             if (!string.IsNullOrWhiteSpace(s.Notes))
                 sb.AppendLine($"Notes: {s.Notes}");
             AppendPatientHistory(sb, s);

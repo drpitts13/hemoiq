@@ -67,6 +67,8 @@ namespace HemoIQ.Models
         /// <summary>Polyspecific DAT (the original single DAT value).</summary>
         public string? DatResult { get; set; }
         public string? DatIgg { get; set; }
+        /// <summary>Visual hemolysis as received: "", none, slight, moderate, gross. See <see cref="Services.SpecimenHemolysis"/>.</summary>
+        public string Hemolysis { get; set; } = string.Empty;
         public string? DatC3 { get; set; }
         public DatProfile Dat => new() { Polyspecific = DatResult, IgG = DatIgg, C3 = DatC3 };
         public string DatDisplay => Dat.Describe();

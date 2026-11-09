@@ -2054,8 +2054,34 @@ These are candidates, lower in analytical effect.
 - The Patient dialog gains a type and date. The patient box and the
   Clinical Identification report print it.
 
+## Iteration 98 (this change)
+
+**Deficiency:** The prompt lists visual hemolysis as a specimen property,
+and HemoIQ had nowhere to record it. A grossly hemolyzed specimen makes an
+H grade, or weak agglutination read through free hemoglobin, hard to
+interpret, and analysis gave no warning.
+
+**Bounded improvement:**
+- `Specimen.Hemolysis` takes the values not recorded, none, slight,
+  moderate or gross (migration: `specimens.hemolysis`).
+- `UpdateSpecimenHemolysis` normalizes common wordings. It is audited as
+  `update_hemolysis` and shown on the timeline, a no-op save writes
+  nothing, and it is locked after a confirmed identification. It is saved
+  in the specimen dialog's transaction.
+- `SpecimenHemolysis.ReviewNotes`:
+  - **Gross:** always adds a REVIEW note.
+  - **Slight or moderate:** adds one only when an H grade is recorded,
+    naming those cells.
+  - Grades are never changed.
+- The Clinical Identification worksheet prints the hemolysis level.
+
+**Still not modelled:**
+- testing methodology per specimen;
+- products and units transfused;
+- encounter or account identifiers.
+
 ## Likely next tick
 
-Visual hemolysis on the specimen, which affects how H (hemolysis) grades and
-DAT are read, as a structured field with a REVIEW note when it is grossly
-hemolyzed.
+A product review of the investigation workflow and statuses against the
+prompt's list (Created → Amended → Cancelled). Is "Technologist review"
+distinct and visible, and does every status lead to a Worklist next step?

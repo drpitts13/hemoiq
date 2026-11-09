@@ -49,6 +49,9 @@ namespace HemoIQ.Views.Dialogs
         public string? DatResult => DatBox.SelectedItem?.ToString();
         public string? DatIgg => DatIggBox.SelectedItem?.ToString();
         public string? DatC3 => DatC3Box.SelectedItem?.ToString();
+        public string Hemolysis => (HemolysisBox.SelectedItem as HemolysisOption)?.Code ?? string.Empty;
+
+        private sealed record HemolysisOption(string Code, string Label);
         public string TransfusionStatusCode =>
             (TransfusionBox.SelectedItem as TransfusionOption)?.Code ?? Models.TransfusionStatus.Unknown;
         public string? LastTransfusionDate =>
@@ -76,6 +79,9 @@ namespace HemoIQ.Views.Dialogs
             DatC3Box.ItemsSource = AntigenConstants.DatResults;
             DatIggBox.SelectedIndex = 0;
             DatC3Box.SelectedIndex = 0;
+            var hemolysisOptions = Services.SpecimenHemolysis.Options.Select(o => new HemolysisOption(o.Code, o.Label)).ToList();
+            HemolysisBox.ItemsSource = hemolysisOptions;
+            HemolysisBox.SelectedItem = hemolysisOptions[0];
             var transfusionOptions = new System.Collections.Generic.List<TransfusionOption>();
             foreach (var (code, label) in Models.TransfusionStatus.Options)
                 transfusionOptions.Add(new TransfusionOption(code, label));
@@ -142,6 +148,8 @@ namespace HemoIQ.Views.Dialogs
                 DatBox.SelectedIndex = datIdx;
                 SelectGrade(DatIggBox, existing.DatIgg);
                 SelectGrade(DatC3Box, existing.DatC3);
+                HemolysisBox.SelectedItem = hemolysisOptions.FirstOrDefault(o => o.Code == Services.SpecimenHemolysis.Normalize(existing.Hemolysis))
+                                            ?? hemolysisOptions[0];
 
                 var status = Models.TransfusionStatus.Normalize(existing.TransfusionStatus);
                 for (int i = 0; i < transfusionOptions.Count; i++)

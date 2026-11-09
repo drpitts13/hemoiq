@@ -88,6 +88,9 @@ namespace HemoIQ.Services
                 OperatorNote = AnalysisRuleTrace.FormatOperatorNote(AppSettings.Current),
             };
             var transfusion = ApplyPatientTyping(specimenId, result);
+            if (_db.GetSpecimen(specimenId) is Specimen hemolysisSource)
+                result.TransfusionRequirementNotes.InsertRange(0,
+                    SpecimenHemolysis.ReviewNotes(hemolysisSource.Hemolysis, reactions));
             result.SpecialReactionNotes = DescribeSpecialGrades(reactions);
             result.SpecialReactionNotes.AddRange(
                 TransfusionContext.DescribeMixedFieldAutocontrol(reactions, transfusion));

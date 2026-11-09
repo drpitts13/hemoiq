@@ -269,6 +269,7 @@ namespace HemoIQ.Services
                                        (string.IsNullOrWhiteSpace(a.Reason) ? "" : $"; {a.Reason}"),
                 "update_transfusion" => $"Transfusion record set: {TransfusionStatus.Label(Prop(a.AfterJson, "status"))}" +
                                         (Prop(a.AfterJson, "lastTransfusionDate") is string d ? $", last {d}" : ""),
+                "update_hemolysis" => $"Visual hemolysis recorded: {SpecimenHemolysis.Label(Prop(a.AfterJson, "hemolysis"))}",
                 "update_dat" => $"DAT updated: IgG {Prop(a.AfterJson, "igg") ?? "NT"}, C3 {Prop(a.AfterJson, "c3") ?? "NT"}",
                 "update_mrn" => $"MRN set to {Prop(a.AfterJson, "mrn") ?? "(blank)"}",
                 "report_output" => DescribeReport(a),
