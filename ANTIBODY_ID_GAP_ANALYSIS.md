@@ -2905,7 +2905,42 @@ the same MRN; since Iteration 109 it was only displayed in history lines.
 
 No existing test changed behavior (1101 passed).
 
+## Iteration 128 (this change): product review of historical-record mutation
+
+**Review scope:** every path that can change data a confirmed identification
+relied on.
+- Specimen fields lock after confirmation (since earlier iterations).
+- Patient, rule and Preferences changes are audited and mark analyses stale.
+- **Defect found:** panel typing. The Panels tab edit was already reasoned and
+  audited (`SavePanelCellEdits`). The public direct writers did not check
+  history, though: `UpdatePanelCell`, `UpdatePanelCellAntigen`,
+  `UpdatePanelCellMetadata`, `DeletePanelCells`, `ReplacePanelCells` and
+  `CopyPanelCells`. Any future caller could therefore silently rewrite the
+  antigram behind a confirmed identification, against "never silently
+  overwrite clinically important historical information".
+
+**Bounded improvement:**
+- Each direct writer now refuses a panel that was used for a confirmed
+  identification. The message points the user to the reasoned Edit on the
+  Panels tab.
+- The SQL moved into private `…Core` methods, which the audited edit calls.
+- App callers (imports, copy, seeders) only write to panels they just
+  created, so they are unaffected.
+- The guard covers confirmed identifications only, not panels with reactions
+  alone. Those remain editable directly, because the analyzer re-reads typing
+  on every run and an unconfirmed workup is not yet a record. The audited edit
+  still asks for a reason on them.
+- `AuditCoverageGuardTests` lists the `…Core` methods, with the reason that
+  their public wrappers refuse confirmed panels.
+
+**Tests:** `PanelTypingEditTests` (+2):
+- every direct writer is refused on a confirmed panel and the typing is
+  unchanged;
+- the reasoned edit still saves.
+
+No existing test changed behavior (1103 passed).
+
 ## Likely next tick
 
-A product review (the last was at Iteration 124), then one configuration
-bundle for rules and Preferences.
+One configuration bundle for rules and Preferences (export and import as a
+single reviewed package), then a product review at Iteration 133.

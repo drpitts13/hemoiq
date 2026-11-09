@@ -1878,6 +1878,12 @@ namespace HemoIQ.Data
 
         public void UpdatePanelCellAntigen(int cellId, string antigen, string value)
         {
+            EnsurePanelEditableWithoutAudit(PanelIdOfCell(cellId));
+            UpdatePanelCellAntigenCore(cellId, antigen, value);
+        }
+
+        private void UpdatePanelCellAntigenCore(int cellId, string antigen, string value)
+        {
             if (AntigenConstants.IsWarehouse(antigen))
             {
                 UpsertExtraCellAntigen(cellId, antigen, value);
@@ -1952,7 +1958,7 @@ namespace HemoIQ.Data
             RunInTransaction(() =>
             {
                 foreach (var cell in edited.Where(c => storedIds.Contains(c.Id)))
-                    UpdatePanelCell(cell);
+                    UpdatePanelCellCore(cell);
                 AppendAudit("edit_panel_typing", "panel", panelId.ToString(),
                     string.IsNullOrWhiteSpace(reason) ? null : reason.Trim(),
                     usage.LinkedSpecimens.Count == 0 ? null : JsonSerializer.Serialize(new { linkedSpecimens = usage.LinkedSpecimens }),
@@ -1961,28 +1967,68 @@ namespace HemoIQ.Data
             return changes;
         }
 
+        /// <summary>
+        /// Writes one cell's typing directly, without an audit entry. Refused when the panel was used
+        /// for a confirmed identification: such edits must go through <see cref="SavePanelCellEdits"/>,
+        /// which requires a reason and audits the change.
+        /// </summary>
         public void UpdatePanelCell(PanelCell cell)
+        {
+            EnsurePanelEditableWithoutAudit(PanelIdOfCell(cell.Id));
+            UpdatePanelCellCore(cell);
+        }
+
+        private void UpdatePanelCellCore(PanelCell cell)
         {
             foreach (var ag in AntigenConstants.Antigens)
             {
                 if (cell.Antigens.TryGetValue(ag, out var value) &&
                     (AntigenConstants.IsTypedAntigenValue(value) ||
                      value == AntigenConstants.AntigenNotTested))
-                    UpdatePanelCellAntigen(cell.Id, ag, value);
+                    UpdatePanelCellAntigenCore(cell.Id, ag, value);
                 else
-                    UpdatePanelCellAntigen(cell.Id, ag, AntigenConstants.AntigenNotTested);
+                    UpdatePanelCellAntigenCore(cell.Id, ag, AntigenConstants.AntigenNotTested);
             }
             foreach (var ag in AntigenConstants.WarehouseAntigens)
             {
                 if (cell.Antigens.TryGetValue(ag, out var extra) &&
                     (AntigenConstants.IsTypedAntigenValue(extra) ||
                      extra == AntigenConstants.AntigenNotTested))
-                    UpdatePanelCellAntigen(cell.Id, ag, extra);
+                    UpdatePanelCellAntigenCore(cell.Id, ag, extra);
             }
-            UpdatePanelCellMetadata(cell.Id, cell.DonorId, cell.RhPhenotype, cell.SpecialTypes);
+            UpdatePanelCellMetadataCore(cell.Id, cell.DonorId, cell.RhPhenotype, cell.SpecialTypes);
+        }
+
+        /// <summary>
+        /// A panel behind a confirmed identification keeps its typing unless a reasoned, audited edit
+        /// (<see cref="SavePanelCellEdits"/>) changes it. The direct, unaudited cell writers call this first.
+        /// </summary>
+        private void EnsurePanelEditableWithoutAudit(int? panelId)
+        {
+            if (panelId is not int id) return;
+            var usage = GetPanelUsage(id);
+            if (usage.ConfirmedSpecimens.Count > 0)
+                throw new InvalidOperationException(
+                    $"Panel #{id} was used for confirmed identification(s) ({usage.Describe()}). Change its typing with Edit " +
+                    "on the Panels tab, which asks for a reason and records the change.");
+        }
+
+        private int? PanelIdOfCell(int cellId)
+        {
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = "SELECT panel_id FROM panel_cells WHERE id = $id";
+            cmd.Parameters.AddWithValue("$id", cellId);
+            var v = cmd.ExecuteScalar();
+            return v == null || v == DBNull.Value ? null : Convert.ToInt32(v);
         }
 
         public void UpdatePanelCellMetadata(int cellId, string? donorId, string? rhPhenotype, string? specialTypes)
+        {
+            EnsurePanelEditableWithoutAudit(PanelIdOfCell(cellId));
+            UpdatePanelCellMetadataCore(cellId, donorId, rhPhenotype, specialTypes);
+        }
+
+        private void UpdatePanelCellMetadataCore(int cellId, string? donorId, string? rhPhenotype, string? specialTypes)
         {
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
@@ -1998,6 +2044,12 @@ namespace HemoIQ.Data
 
         public void DeletePanelCells(int panelId)
         {
+            EnsurePanelEditableWithoutAudit(panelId);
+            DeletePanelCellsCore(panelId);
+        }
+
+        private void DeletePanelCellsCore(int panelId)
+        {
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = "DELETE FROM panel_cells WHERE panel_id = $id";
             cmd.Parameters.AddWithValue("$id", panelId);
@@ -2005,12 +2057,15 @@ namespace HemoIQ.Data
         }
 
         /// <summary>Replaces every cell on a panel in one transaction; a failure keeps the old cells.</summary>
-        public void ReplacePanelCells(int panelId, IReadOnlyList<PanelCell> cells) =>
+        public void ReplacePanelCells(int panelId, IReadOnlyList<PanelCell> cells)
+        {
+            EnsurePanelEditableWithoutAudit(panelId);
             RunInTransaction(() => ReplacePanelCellsCore(panelId, cells));
+        }
 
         private void ReplacePanelCellsCore(int panelId, IReadOnlyList<PanelCell> cells)
         {
-            DeletePanelCells(panelId);
+            DeletePanelCellsCore(panelId);
             int numeric = 0;
             bool includeAc = false;
             int startCell = 1;
@@ -2062,7 +2117,7 @@ namespace HemoIQ.Data
                 cell.DonorId = imported.DonorId;
                 cell.RhPhenotype = imported.RhPhenotype;
                 cell.SpecialTypes = imported.SpecialTypes;
-                UpdatePanelCell(cell);
+                UpdatePanelCellCore(cell);
             }
 
             using var cmd = _conn.CreateCommand();
@@ -2078,7 +2133,8 @@ namespace HemoIQ.Data
 
         public void CopyPanelCells(int sourcePanelId, int targetPanelId)
         {
-            DeletePanelCells(targetPanelId);
+            EnsurePanelEditableWithoutAudit(targetPanelId);
+            DeletePanelCellsCore(targetPanelId);
             var agCols = string.Join(", ", AntigenMapper.AllColumns);
             using (var cmd = _conn.CreateCommand())
             {

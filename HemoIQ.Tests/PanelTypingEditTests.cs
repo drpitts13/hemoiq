@@ -95,4 +95,41 @@ public class PanelTypingEditTests
         var timeline = InvestigationTimeline.Build(iso.Db, iso.Db.GetSpecimen("PT-2")!);
         Assert.Contains(timeline, e => e.What == "Panel Typing (lot T-5) typing edited: 1 change(s); reason: vendor corrected antigram");
     }
+
+    [Fact]
+    public void ConfirmedPanel_DirectUnauditedWriters_AreRefused_AndTypingUnchanged()
+    {
+        using var iso = new IsolatedDatabase();
+        var id = Panel(iso, "T-6");
+        iso.Db.AddSpecimen("PT-3", "serum", null);
+        iso.Db.LinkSpecimenPanel("PT-3", id);
+        iso.Db.SetSpecimenFinalCall("PT-3", "anti-Jka", null, "TE");
+        var cell = iso.Db.GetPanelCells(id).First(c => c.CellNumber == "1");
+
+        Assert.Contains("confirmed identification",
+            Assert.Throws<InvalidOperationException>(() => iso.Db.UpdatePanelCellAntigen(cell.Id, "Jka", "-")).Message);
+        Assert.Throws<InvalidOperationException>(() => iso.Db.UpdatePanelCellMetadata(cell.Id, "D-1", null, null));
+        Assert.Throws<InvalidOperationException>(() => iso.Db.DeletePanelCells(id));
+        Assert.Throws<InvalidOperationException>(() => iso.Db.ReplacePanelCells(id, new List<PanelCell>()));
+        var other = iso.Db.AddPanel("Other", "T-6b", "V", 3, null, false);
+        Assert.Throws<InvalidOperationException>(() => iso.Db.CopyPanelCells(other, id));
+
+        var cells = iso.Db.GetPanelCells(id);
+        Assert.Equal(3, cells.Count);
+        Assert.All(cells, c => Assert.Equal("+", c.Antigens["Jka"]));
+        Assert.Null(cells.First(c => c.CellNumber == "1").DonorId);
+    }
+
+    [Fact]
+    public void ConfirmedPanel_ReasonedEdit_StillSaves()
+    {
+        using var iso = new IsolatedDatabase();
+        var id = Panel(iso, "T-7");
+        iso.Db.AddSpecimen("PT-4", "serum", null);
+        iso.Db.LinkSpecimenPanel("PT-4", id);
+        iso.Db.SetSpecimenFinalCall("PT-4", "anti-Jka", null, "TE");
+
+        Assert.Single(iso.Db.SavePanelCellEdits(id, EditJka(iso, id, "3", "-"), "lot sheet erratum"));
+        Assert.Equal("-", iso.Db.GetPanelCells(id).First(c => c.CellNumber == "3").Antigens["Jka"]);
+    }
 }

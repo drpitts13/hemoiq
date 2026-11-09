@@ -46,6 +46,10 @@ comparisons, the import schema check, and Final ID entries.
   or INSERT must call `AppendAudit` or be on the test's reviewed list with a reason, such as
   derived analysis output, a timestamp, or a helper whose callers audit.
 - Specimen fields lock after a confirmed identification (`EnsureSpecimenUnlocked`).
+- Panel typing behind a confirmed identification changes only through `SavePanelCellEdits`, which
+  requires a reason and audits the change. The direct writers (`UpdatePanelCell`,
+  `UpdatePanelCellAntigen`, `UpdatePanelCellMetadata`, `DeletePanelCells`, `ReplacePanelCells`,
+  `CopyPanelCells`) refuse such a panel. They stay available for new panels, imports and seed data.
 - Rules and lab-wide Preferences are audited, and changing them marks open analyses stale
   (`AnalysisCurrency`, `LastAnalysisConfigurationChange`).
 
