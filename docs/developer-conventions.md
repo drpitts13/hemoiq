@@ -57,6 +57,10 @@ comparisons, the import schema check, and Final ID entries.
   Its settings scroll while the button row stays docked at the bottom.
   `SettingsDialogLayoutTests` checks that Save stays visible at a 420 px limit.
 
+- `DialogHeightGuardTests` shows each dialog off-screen and fails if its natural height exceeds
+  728 px, the work area of a 1366×768 screen, unless the dialog scrolls and caps itself. When
+  adding a dialog, add it to that test.
+
 ## Tests
 
 - Use `IsolatedDatabase` for anything that touches the database.

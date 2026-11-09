@@ -2754,7 +2754,33 @@ Preferences dialog without a layout test.
   - at 420 px the dialog stays within the limit, the settings scroll, and
     Save is fully inside the window.
 
+## Iteration 123 (this change)
+
+**Deficiency:** Iteration 122 found Preferences taller than a 1366×768
+screen. The other dialogs that size to their content had never been
+measured, and nothing would catch a future field addition pushing one past
+the screen.
+
+**Result:** Each dialog was measured off-screen with no height cap:
+
+| Dialog | Height (px) |
+|---|---|
+| Specimen | 549 |
+| Patient | 459 |
+| Panel | 491 |
+| Rule | 419 |
+| Purge database | 279 |
+| Preferences, uncapped | 875 |
+
+Preferences is already fixed. Every other dialog fits the roughly 728 px work
+area, so no layout changes were needed.
+
+**Guard:** `DialogHeightGuardTests` shows every dialog off-screen and fails
+when its natural height exceeds 728 px, unless the dialog caps itself and
+scrolls. The measurement was checked against uncapped Preferences, which it
+flags. Developer conventions say to add new dialogs to the test.
+
 ## Likely next tick
 
-One configuration bundle combining rules and Preferences, or a sweep of the
-other dialogs that size to content.
+One configuration bundle combining rules and Preferences, or a product review
+(the last was at Iteration 119).
