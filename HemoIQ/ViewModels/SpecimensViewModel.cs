@@ -256,6 +256,29 @@ namespace HemoIQ.ViewModels
             private set => SetField(ref _datingText, value);
         }
 
+        private string _receiptText = string.Empty;
+        /// <summary>Receipt checklist summary: complete, or what is missing.</summary>
+        public string ReceiptText
+        {
+            get => _receiptText;
+            private set => SetField(ref _receiptText, value);
+        }
+
+        private string _receiptDetail = string.Empty;
+        /// <summary>Each missing receipt item and why it matters (tooltip).</summary>
+        public string ReceiptDetail
+        {
+            get => _receiptDetail;
+            private set => SetField(ref _receiptDetail, value);
+        }
+
+        private bool _receiptIncomplete;
+        public bool ReceiptIncomplete
+        {
+            get => _receiptIncomplete;
+            private set => SetField(ref _receiptIncomplete, value);
+        }
+
         private string _eluateLinkText = string.Empty;
         /// <summary>"Eluate of X" for an eluate, or "Eluates: A, B" for a source specimen.</summary>
         public string EluateLinkText
@@ -298,6 +321,10 @@ namespace HemoIQ.ViewModels
                 ? times + " REVIEW: " + note
                 : times;
             var eluates = _db.GetEluatesFor(sid);
+            var receipt = Services.ReceiptChecklist.Evaluate(_selectedSpecimen);
+            ReceiptText = Services.ReceiptChecklist.Summary(receipt);
+            ReceiptDetail = Services.ReceiptChecklist.Detail(receipt);
+            ReceiptIncomplete = !Services.ReceiptChecklist.RequiredComplete(receipt);
             EluateLinkText = _selectedSpecimen.SourceAccession is string src
                 ? $"Eluate of {src}"
                 : eluates.Count > 0 ? "Eluates: " + string.Join(", ", eluates.Select(e => e.AccessionNumber)) : "None";

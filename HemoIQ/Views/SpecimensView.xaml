@@ -162,6 +162,20 @@
                         <Run FontWeight="SemiBold" Text="Collection: "/>
                         <Run Text="{Binding DatingText, Mode=OneWay}"/>
                     </TextBlock>
+                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,2"
+                               ToolTip="{Binding ReceiptDetail}" ToolTipService.ShowOnDisabled="True">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ReceiptIncomplete}" Value="True">
+                                        <Setter Property="Background" Value="#FFF3CD"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                        <Run FontWeight="SemiBold" Text="Receipt: "/>
+                        <Run Text="{Binding ReceiptText, Mode=OneWay}"/>
+                    </TextBlock>
                     <TextBlock TextWrapping="Wrap" Margin="0,0,0,2">
                         <Run FontWeight="SemiBold" Text="Eluate link: "/>
                         <Run Text="{Binding EluateLinkText, Mode=OneWay}"/>

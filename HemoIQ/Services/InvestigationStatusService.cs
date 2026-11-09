@@ -74,9 +74,11 @@ namespace HemoIQ.Services
             var staleReason = AnalysisCurrency.StaleReason(s, db.LastAnalysisConfigurationChange());
             var analysisCurrent = hasPanel && s.LastAnalyzedAt != null && staleReason == null;
 
+            var receipt = ReceiptChecklist.Evaluate(s);
+            var receiptComplete = ReceiptChecklist.RequiredComplete(receipt);
             var steps = new List<InvestigationStep>
             {
-                new() { Name = "Received", Done = true },
+                new() { Name = "Received", Done = receiptComplete },
                 new() { Name = "Panel attached", Done = hasPanel },
                 new() { Name = "Reactions complete", Done = reactionsDone },
                 new() { Name = "Analysis current", Done = analysisCurrent },
@@ -123,7 +125,10 @@ namespace HemoIQ.Services
             if (!hasPanel)
             {
                 label = AwaitingPanel;
-                next = "Attach a panel on the Specimens tab.";
+                next = receiptComplete
+                    ? "Attach a panel on the Specimens tab."
+                    : "Complete receipt (" + string.Join(", ", receipt.Where(i => i.Required && !i.Done).Select(i => i.Name)) +
+                      ") with Edit, then attach a panel on the Specimens tab.";
             }
             else if (!reactionsDone)
             {

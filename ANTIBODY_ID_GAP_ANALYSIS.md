@@ -48,6 +48,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | UI | Antigram freeze / slashes / run compare | Partial | Frozen cell; slashes; compare extras; Show dosage; filter/sort; panel lot compare | — |
 | UI | Explain Analysis panel | Present | Explain tab + Summary + clinical report assemble rule-out, support, conflict, phenotype, additional testing | Keep wording as evidence, not diagnosis |
 | Audit | Panel, reactions, rules, settings, final ID | Partial | Snapshots store rule-engine version, rules JSON, operator, and the adsorption comparison (conclusions plus ordinary-score exclusions) | Cross-panel enzyme/DTT pairing later |
+| Workflow | Specimen-receipt checklist | Present | `ReceiptChecklist`: required MRN, collection time, transfusion status (+ last transfusion date when transfused); advisory receipt time, hemolysis, pregnancy, DAT. Drives the Received step and the Awaiting-panel next action; shaded line with reasons on the Specimens detail pane; printed on the worksheet | Required items are fixed, not configurable per lab |
 | Reporting | Amended report marking | Present | Clinical Identification header shows AMENDED REPORT or PREVIOUS IDENTIFICATION WITHDRAWN when an identification was ever cleared; Amendment history lists each earlier identification, its confirmer, who cleared it, when and why, from `clear_final_call` audit entries | Text and PDF only; no separate amendment notification to recipients |
 | Data integrity | Reaction/specimen/panel consistency | Present | Detaching a panel with grades is refused; `DataConsistencyCheck` lists legacy reactions on detached panels, grades for cells the panel lacks, and unrecognized grade values as Worklist "Data inconsistency" items with an Open target | Check runs on Worklist refresh only; no scheduled report |
 | Security | Roles and data-change permission | Present | Read-only, Technologist, Supervisor, Administrator; once users are registered every public data writer requires `RecordResults` (Technologist and above), so unregistered logins and Read-only users view only; guard test fails on any unguarded public writer; users table migrated to accept the new role | Role grants are fixed per role, not a configurable table; no Senior technologist or Medical director role. Status bar names the session; view-only sessions have change commands disabled (Iteration 132) |
@@ -3255,10 +3256,53 @@ All 1143 tests pass.
 
 ### Roadmap
 
-1. A specimen-receipt checklist tying patient, specimen, screen and panels
-   before testing starts.
-2. Configurable role permissions, only if requested.
+1. Configurable role permissions, only if requested.
+
+## Iteration 136 (this change)
+
+**Deficiency:** The investigation's first step, "Received", was always
+marked done. A specimen could go to testing and analysis with no MRN, no
+collection time and an Unknown transfusion status. Without the MRN there is
+no patient history or transfusion requirements. Without the collection time
+the transfusion window and specimen dating cannot be counted. With an Unknown
+transfusion status the phenotype cannot be judged. Nothing told the
+technologist this at receipt.
+
+**Bounded improvement:**
+- `ReceiptChecklist.Evaluate`:
+  - required: MRN, collection date/time, transfusion status, and the last
+    transfusion date when the patient was transfused;
+  - advisory: received date/time, visual hemolysis, pregnancy status, DAT.
+  Each item states why it matters. `Summary` lists the missing required
+  items first, then the advisory ones; `Detail` gives the reasons for the
+  tooltip.
+- Investigation status:
+  - the **Received** step is done only when the required items are
+    present;
+  - the Awaiting-panel next action names the missing items and says to
+    complete them with Edit.
+- Specimens detail pane: a **Receipt** line, shaded amber when required
+  items are missing, with a tooltip listing the reasons.
+- The Clinical Identification worksheet prints the same line.
+- It reports only and never blocks testing.
+
+**Tests:** `ReceiptChecklistTests` (6):
+- a complete specimen;
+- a new specimen's ordered gaps and the reason text;
+- a transfused specimen without a date is incomplete, and a not-transfused
+  one needs no date;
+- advisory gaps do not hold the step;
+- the status step and next action follow the checklist;
+- the worksheet line.
+
+Three `InvestigationStatusTests` now record the required receipt items first.
+That is the intended change: a bare new specimen is no longer "Received" in
+full.
+
+All 1149 tests pass.
 
 ## Likely next tick
 
-Roadmap item 1: a specimen-receipt checklist.
+A product review is due at Iteration 138. Before then, a small slice: check
+whether earlier specimens with the same MRN have receipt data a new specimen
+could reuse, such as transfusion history.

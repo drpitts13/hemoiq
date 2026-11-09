@@ -10,6 +10,14 @@ public class InvestigationStatusTests
     private static InvestigationStatus StatusOf(IsolatedDatabase iso, string acc) =>
         InvestigationStatusService.Compute(iso.Db, iso.Db.GetSpecimen(acc)!);
 
+    /// <summary>Records the required receipt items (MRN, collection time, transfusion status).</summary>
+    private static void Receive(IsolatedDatabase iso, string acc)
+    {
+        iso.Db.UpdateSpecimenMrn(acc, "MRN-" + acc);
+        iso.Db.UpdateSpecimenCollection(acc, DateTime.Today.ToString("yyyy-MM-dd") + " 00:00", null);
+        iso.Db.UpdateSpecimenTransfusion(acc, TransfusionStatus.NotTransfused, null);
+    }
+
     private static int AttachTwoCellPanel(IsolatedDatabase iso, string acc)
     {
         var panelId = iso.Db.AddPanel("Panel A", "L-" + acc, "V", 2, null, false);
@@ -22,6 +30,7 @@ public class InvestigationStatusTests
     {
         using var iso = new IsolatedDatabase();
         iso.Db.AddSpecimen("ST-1", "serum", null);
+        Receive(iso, "ST-1");
         var st = StatusOf(iso, "ST-1");
         Assert.Equal(InvestigationStatusService.AwaitingPanel, st.Label);
         Assert.Contains("Attach a panel", st.NextAction);
@@ -71,6 +80,7 @@ public class InvestigationStatusTests
     {
         using var iso = new IsolatedDatabase();
         iso.Db.AddSpecimen("ST-4", "serum", null);
+        Receive(iso, "ST-4");
         var panelId = AttachTwoCellPanel(iso, "ST-4");
         iso.Db.SaveReaction("ST-4", panelId, "1", "0", "0", "2+", "NT");
         iso.Db.SaveReaction("ST-4", panelId, "2", "0", "0", "0", "2+");
@@ -117,6 +127,7 @@ public class InvestigationStatusTests
     {
         using var iso = new IsolatedDatabase();
         iso.Db.AddSpecimen("ST-7", "serum", null);
+        Receive(iso, "ST-7");
         var report = new ReportService(iso.Db).GeneratePreviewText(ReportType.ClinicalIdentification, "ST-7");
         Assert.Contains("Investigation status: Awaiting panel — Next: Attach a panel", report);
     }

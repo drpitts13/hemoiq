@@ -75,6 +75,11 @@ The grey strip at the top of the detail pane shows where the investigation stand
 - **Status:** Awaiting panel, Testing in progress, Analysis needed, **Awaiting additional testing**, Awaiting identification, Completed, **Amended** (an identification was cleared and confirmed again), **Reopened** (cleared and not yet confirmed again), or Inactive – not completed.
 - **Next:** the specific next action, for example `Finish reactions: Panel A (1/2).`
 
+**Receipt** in Clinical Context is a checklist of what to record when the specimen arrives. It reads **Complete (8 of 8)** or lists what is missing, and hovering over it gives each item's reason.
+- **Required:** patient MRN, collection date/time, transfusion status, and the last transfusion date when the patient was transfused. These change how the analysis is read: patient history needs the MRN, and the transfusion window and specimen dating count from collection. While one is missing, the line is shaded amber, the **Received** step stays open, and the next action asks you to complete receipt with **Edit** before attaching a panel.
+- **Advisory:** received date/time, visual hemolysis, pregnancy status and DAT. These complete the record but do not hold the Received step.
+- The checklist never blocks testing. The Clinical Identification worksheet prints the same line.
+
 **Awaiting additional testing** means the analysis is current but left questions that more testing could settle. Each analysis saves the open items, and **Next** lists them:
 - clinically significant antibodies the panels type that are not yet ruled out;
 - suspected antibodies that have not met the identification rule;
