@@ -36,10 +36,13 @@
                     <TextBox x:Name="AccessionBox" Grid.Row="0" Grid.Column="1"
                              VerticalAlignment="Center" Margin="0,2"/>
 
-                    <Label Content="MRN:" Grid.Row="1"/>
-                    <TextBox x:Name="MrnBox" Grid.Row="1" Grid.Column="1" MaxLength="64"
-                             VerticalAlignment="Center" Margin="0,2"
-                             ToolTip="Medical record number. Specimens with the same MRN share history: confirmed antibodies on earlier specimens appear in analysis as historical evidence."/>
+                    <Label Content="MRN / encounter:" Grid.Row="1"/>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBox x:Name="MrnBox" Width="150" MaxLength="64" VerticalContentAlignment="Center"
+                                 ToolTip="Medical record number. Specimens with the same MRN share history: confirmed antibodies on earlier specimens appear in analysis as historical evidence."/>
+                        <TextBox x:Name="EncounterBox" Width="145" Margin="6,0,0,0" MaxLength="64" VerticalContentAlignment="Center"
+                                 ToolTip="Encounter or account number the specimen was drawn under (optional). Searchable and printed on reports. You are warned if it is already on another patient's specimen."/>
+                    </StackPanel>
 
                     <Label Content="Type:" Grid.Row="2"/>
                     <ComboBox x:Name="TypeBox" Grid.Row="2" Grid.Column="1"

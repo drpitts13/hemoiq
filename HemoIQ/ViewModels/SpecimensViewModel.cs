@@ -339,6 +339,7 @@ namespace HemoIQ.ViewModels
                     SelectSpecimen(dlg.AccessionNumber);
                 return;
             }
+            if (!ConfirmEncounter(dlg.AccessionNumber, dlg.EncounterNumber, dlg.Mrn)) return;
             try
             {
                 Services.SpecimenSaveService.Save(_db, ToEdit(dlg, dlg.AccessionNumber), isNew: true);
@@ -351,6 +352,17 @@ namespace HemoIQ.ViewModels
                 MessageBox.Show($"The specimen was not added. Nothing was saved.\n\n{ex.Message}", "Specimen not saved",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        /// <summary>Warns, without blocking, when the encounter number is already on another patient's specimen.</summary>
+        private bool ConfirmEncounter(string accession, string? encounter, string? mrn)
+        {
+            string? warning;
+            try { warning = Services.EncounterCheck.Describe(_db, accession, encounter, mrn); }
+            catch (System.ArgumentException) { return true; } // the save reports the invalid value
+            if (warning == null) return true;
+            return MessageBox.Show(warning + "\n\nSave anyway?", "Encounter on another patient",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
         }
 
         private static Services.SpecimenEdit ToEdit(Views.Dialogs.SpecimenDialog dlg, string accession) => new()
@@ -379,6 +391,7 @@ namespace HemoIQ.ViewModels
             CollectionLocation = dlg.CollectionLocation,
             OrderingLocation = dlg.OrderingLocation,
             OrderingProvider = dlg.OrderingProvider,
+            EncounterNumber = dlg.EncounterNumber,
             PregnancyStatus = dlg.PregnancyStatusCode,
             PregnancyEndDate = dlg.PregnancyEndDate,
             RhigDate = dlg.RhigDate,
@@ -389,6 +402,7 @@ namespace HemoIQ.ViewModels
             if (SelectedSpecimen == null) return;
             var dlg = new Views.Dialogs.SpecimenDialog(SelectedSpecimen);
             if (dlg.ShowDialog() != true) return;
+            if (!ConfirmEncounter(SelectedSpecimen.AccessionNumber, dlg.EncounterNumber, dlg.Mrn)) return;
             try
             {
                 Services.SpecimenSaveService.Save(_db, ToEdit(dlg, SelectedSpecimen.AccessionNumber), isNew: false);

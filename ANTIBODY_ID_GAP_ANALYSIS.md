@@ -39,7 +39,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | Search | Investigation search | Present | Search tab › Investigations: accession, MRN, patient name/DOB, final/previous antibodies, technologist; every word must match; inclusive date range; status column; Open jumps to Specimens | Panel lot/manufacturer used in an investigation not yet searchable |
 | Workflow | Investigation status and next step | Partial | `InvestigationStatusService` derives five steps and a status (awaiting panel → testing → analysis needed → awaiting ID → completed / amended / reopened / inactive) from panels, grades, analysis time, final call, and audit; shown on Specimens and the worksheet; Worklist shares the completeness check | Optional supervisor review step (two-person, audited, invalidated by clear/re-confirm, Worklist queue); audited Cancel/Reinstate with reason, locked and off work queues; local users/roles enforce review, clear, reinstate, Preferences, user management |
 | Patient | Permanent record and transfusion requirements | Present | `patients` table (MRN, name, DOB, comments, free-text requirements, structured `antigen_negative`); `AntigenNegativeRequirement` parses codes (case-sensitive C/c, E/e, K/k, S/s; Fy(a-) notation) and refuses non-antigens; audited add/update; Edit Patient on Specimens; reports and detail pane print E−, K−, Fy(a−); analysis raises REVIEW when a known antibody's antigen is not in the structured list, and asks to add it when only free text mentions it | Expiry or source of each requirement; product-level requirements (irradiated, CMV-safe) remain free text |
-| Patient | MRN and cross-specimen history | Partial | Indexed `specimens.mrn`; audited; confirmed final calls on the same MRN become Historical evidence citing the source accession; detail pane and reports list other specimens | Encounter, location, ordering provider, sex, pregnancy history |
+| Patient | MRN and cross-specimen history | Partial | Indexed `specimens.mrn`; audited; confirmed final calls on the same MRN become Historical evidence citing the source accession; detail pane and reports list other specimens | Sex (encounter, location, ordering provider and pregnancy are now recorded on the specimen) |
 | Specimen | DAT polyspecific / IgG / C3 | Present | `DatProfile` on specimen; MF grade; audited IgG/C3; positive if any reactive, negative only if all recorded negative; C3-only caveat on autoantibody notes; MF DAT donor-cell note | Eluate specimens link to their source; `EluateEvidence` reads specificity, panreactivity, and nonreactivity against DAT and transfusion |
 | Analysis | Panreactive / cold / warm / HTLA / auto / HFA / LFA models | Partial | DAT scores; named LFA/pan cells; enzyme lost/gained/resistant; DTT lost/resistant vs untreated. Unpaired runs, comparisons with fewer than 3 paired cells, and comparisons that meet no threshold are each named | Cells tested on only one of the paired runs stay unnamed |
 | Analysis | Selected-cell recommendations with “why” | Partial | Unused in-date vials preferred; P1−/Ch−/Sd(a−) selected cells ranked when neutralization favors soluble substance | More ISBT alleles later |
@@ -2214,8 +2214,31 @@ known".
   validation. `TransfusionDisplay` (detail pane, history, reports) lists
   them.
 
+## Iteration 103 (this change)
+
+**Deficiency:** A specimen had no encounter or account number. The prompt
+lists "Encounter/account identifiers" under patient information. Without one,
+a technologist cannot search by the visit number on the order, and nothing
+catches an encounter number that also appears under a different MRN, which is
+a sign of a mislabeled specimen or a mistyped number.
+
+**Bounded improvement:**
+- `specimens.encounter_number` (migration, CHECK length <= 64, NOCASE index).
+- `UpdateSpecimenEncounter`:
+  - removes whitespace, and blank clears the value;
+  - is audited as `update_encounter` and appears on the timeline;
+  - an unchanged save writes nothing;
+  - it is locked after confirmation.
+- `GetSpecimensByEncounter` and `EncounterCheck.Describe` warn when the
+  encounter is already on another MRN's specimen. Saves from the specimen
+  dialog ask for confirmation, and nothing is blocked.
+- The specimen dialog has an Encounter box beside MRN, saved in the same
+  transaction as the other fields.
+- `OriginDisplay` begins with "Encounter X", so the detail pane and the
+  worksheet Origin line show it. Search matches it.
+
 ## Likely next tick
 
-Encounter or account identifier on the specimen (searchable, on reports).
-After that, a Worklist "Awaiting testing" queue limited to investigations
-past the turnaround threshold.
+A Worklist "Awaiting testing" queue limited to investigations past the
+turnaround threshold, or patient sex where it affects pregnancy-related
+context.

@@ -6,7 +6,7 @@ Use this dialog to add or edit an accession. Open it with **Add** or **Edit** on
 
 The fields are on four tabs. Press Ctrl+Tab and Ctrl+Shift+Tab to move between them.
 
-- **Specimen**: accession, MRN, type, eluate source, collection and receipt, origin, expiration, and Active.
+- **Specimen**: accession, MRN and encounter, type, eluate source, collection and receipt, origin, expiration, and Active.
 - **Clinical context**: transfusion status and date, pregnancy, and RhIG.
 - **Serology**: DAT results, phenotype, genotype, and previous antibodies.
 - **Notes**: free text.
@@ -18,6 +18,8 @@ The **Context** line under the tabs always lists what is recorded on Clinical co
 - **Accession Number** identifies the specimen. Use the accession your laboratory already uses.
 - **MRN** is the patient's medical record number. It is stored in capitals. Specimens with the same MRN share history: an antibody confirmed on an earlier specimen appears on this specimen's Patient Typing tab as historical evidence, with the accession it came from. Suspected antibodies that were never confirmed are not carried forward. MRN changes are audited and locked after an identification is confirmed.
 - **Collected** and **Received** are date and time (HH:mm, 24-hour). Received defaults to now on a new specimen. Neither may be in the future, and Received cannot be before Collected. On a new specimen, choosing a collection date sets Expiration to collection + the Preferences specimen-dating days. Changes are audited and locked after an identification is confirmed.
+- **Encounter** (beside MRN) is the encounter or account number the specimen was drawn under. It is optional, up to 64 characters, and spaces are removed. It is searchable on Search, prints on the worksheet's Origin line, and appears on the Timeline. Changes are audited and locked after an identification is confirmed.
+  - If the same encounter number is already on a specimen with a different MRN, you are warned before saving, because one of the specimens may be mislabeled or the number mistyped. You can save anyway or go back.
 - **Collected by / at** is who collected the specimen and where (unit, clinic, or draw site). **Ordered by / from** is the ordering provider and ordering location. Each is optional free text of up to 128 characters. They print on the worksheet, are searchable on Search, and the ordering location feeds **By ordering location** on Analytics. Changes are audited and locked after an identification is confirmed.
 - **Type** is serum, plasma, or eluate.
 - **Eluate of** is available when Type is eluate. Enter the accession of the serum or plasma specimen whose red cells were eluted. The eluate's results then appear in that specimen's analysis as reviewable notes (see *Eluate evidence* in the Specimens chapter). The link is audited and cannot point to the eluate itself or to another eluate. The default comes from Preferences.

@@ -37,12 +37,15 @@ namespace HemoIQ.Models
         /// <summary>Ordering location (unit or clinic the order came from).</summary>
         public string? OrderingLocation { get; set; }
         public string? OrderingProvider { get; set; }
-        /// <summary>One-line collector, locations and provider; empty when none is recorded.</summary>
+        /// <summary>Encounter or account number the specimen was drawn under.</summary>
+        public string? EncounterNumber { get; set; }
+        /// <summary>One-line encounter, collector, locations and provider; empty when none is recorded.</summary>
         public string OriginDisplay
         {
             get
             {
                 var parts = new System.Collections.Generic.List<string>();
+                if (EncounterNumber != null) parts.Add($"Encounter {EncounterNumber}");
                 if (Collector != null || CollectionLocation != null)
                     parts.Add("Collected" + (Collector != null ? $" by {Collector}" : "") +
                               (CollectionLocation != null ? $" at {CollectionLocation}" : ""));

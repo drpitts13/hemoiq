@@ -281,6 +281,8 @@ namespace HemoIQ.Services
                                       (Prop(a.AfterJson, "rhigDate") is string rh ? $"; RhIG {rh}" : ""),
                 "update_collection" => $"Collection/receipt recorded: collected {Prop(a.AfterJson, "collectedAt") ?? "—"}, received {Prop(a.AfterJson, "receivedAt") ?? "—"}",
                 "update_origin" => "Origin recorded: " + OriginText(a.AfterJson),
+                "update_encounter" => Prop(a.AfterJson, "encounter") is string enc
+                    ? $"Encounter / account recorded: {enc}" : "Encounter / account cleared",
                 "clear_reactions" => $"Reactions cleared on {Prop(a.BeforeJson, "panel") ?? "panel"}, {Prop(a.BeforeJson, "run") ?? "run"}: " +
                                      $"{Prop(a.BeforeJson, "gradedCells") ?? "0"} graded cell(s)" +
                                      (string.IsNullOrWhiteSpace(a.Reason) ? "" : $"; reason: {a.Reason}"),

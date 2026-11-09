@@ -16,6 +16,7 @@ namespace HemoIQ.Views.Dialogs
         public string? CollectionLocation => CollectionLocationBox.Text;
         public string? OrderingLocation => OrderingLocationBox.Text;
         public string? OrderingProvider => OrderingProviderBox.Text;
+        public string? EncounterNumber => EncounterBox.Text;
 
         private bool _isNew;
 
@@ -153,6 +154,7 @@ namespace HemoIQ.Views.Dialogs
                 CollectorBox.Text = existing.Collector ?? "";
                 CollectionLocationBox.Text = existing.CollectionLocation ?? "";
                 OrderingProviderBox.Text = existing.OrderingProvider ?? "";
+                EncounterBox.Text = existing.EncounterNumber ?? "";
                 OrderingLocationBox.Text = existing.OrderingLocation ?? "";
                 SourceBox.Text = existing.SourceAccession ?? "";
                 PhenotypeBox.Text = existing.Phenotype ?? "";

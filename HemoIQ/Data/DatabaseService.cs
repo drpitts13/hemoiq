@@ -266,7 +266,10 @@ namespace HemoIQ.Data
                     ExecNonQuery($"ALTER TABLE specimens ADD COLUMN {col} TEXT CHECK ({col} IS NULL OR length({col}) <= {OriginMaxLength})");
             if (!cols.Contains("source_accession"))
                 ExecNonQuery("ALTER TABLE specimens ADD COLUMN source_accession TEXT");
+            if (!cols.Contains("encounter_number"))
+                ExecNonQuery($"ALTER TABLE specimens ADD COLUMN encounter_number TEXT CHECK (encounter_number IS NULL OR length(encounter_number) <= {EncounterMaxLength})");
             ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_specimens_source ON specimens(source_accession)");
+            ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_specimens_encounter ON specimens(encounter_number COLLATE NOCASE)");
             ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_specimens_mrn ON specimens(mrn)");
         }
 
@@ -1016,6 +1019,57 @@ namespace HemoIQ.Data
                 JsonSerializer.Serialize(new { collector = before.Collector, collectionLocation = before.CollectionLocation,
                     orderingLocation = before.OrderingLocation, orderingProvider = before.OrderingProvider }),
                 JsonSerializer.Serialize(new { collector = c, collectionLocation = cl, orderingLocation = ol, orderingProvider = op }));
+        }
+
+        public const int EncounterMaxLength = 64;
+
+        /// <summary>
+        /// Records the encounter or account number the specimen was drawn under. Trimmed,
+        /// inner whitespace removed; blank clears it; at most 64 characters. Audited as
+        /// update_encounter; locked after a final call.
+        /// </summary>
+        public void UpdateSpecimenEncounter(string accessionNumber, string? encounter)
+        {
+            var value = NormalizeEncounter(encounter);
+            var before = GetSpecimen(accessionNumber)
+                         ?? throw new ArgumentException($"Specimen {accessionNumber} not found.");
+            if (before.EncounterNumber == value) return;
+            EnsureSpecimenUnlocked(accessionNumber);
+
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = "UPDATE specimens SET encounter_number = $e WHERE accession_number = $acc";
+            cmd.Parameters.AddWithValue("$e", (object?)value ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$acc", accessionNumber);
+            cmd.ExecuteNonQuery();
+            AppendAudit("update_encounter", "specimen", accessionNumber, null,
+                JsonSerializer.Serialize(new { encounter = before.EncounterNumber }),
+                JsonSerializer.Serialize(new { encounter = value }));
+        }
+
+        public static string? NormalizeEncounter(string? encounter)
+        {
+            if (string.IsNullOrWhiteSpace(encounter)) return null;
+            var t = System.Text.RegularExpressions.Regex.Replace(encounter, @"\s+", "");
+            if (t.Length > EncounterMaxLength)
+                throw new ArgumentException($"Encounter / account number is longer than {EncounterMaxLength} characters.");
+            return t;
+        }
+
+        /// <summary>
+        /// Other specimens recorded under the same encounter number (ignoring case),
+        /// oldest first. Used to catch an encounter shared across different MRNs.
+        /// </summary>
+        public List<Specimen> GetSpecimensByEncounter(string encounter)
+        {
+            var list = new List<Specimen>();
+            var value = NormalizeEncounter(encounter);
+            if (value == null) return list;
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = "SELECT * FROM specimens WHERE encounter_number = $e COLLATE NOCASE ORDER BY created_date, accession_number";
+            cmd.Parameters.AddWithValue("$e", value);
+            using var r = cmd.ExecuteReader();
+            while (r.Read()) list.Add(ReadSpecimen(r));
+            return list;
         }
 
         public void UpdateSpecimenCollection(string accessionNumber, string? collectedAt, string? receivedAt)
@@ -3379,6 +3433,7 @@ namespace HemoIQ.Data
             CollectionLocation = SafeGetString(r, "collection_location"),
             OrderingLocation = SafeGetString(r, "ordering_location"),
             OrderingProvider = SafeGetString(r, "ordering_provider"),
+            EncounterNumber = SafeGetString(r, "encounter_number"),
             PregnancyStatus = PregnancyStatus.Normalize(SafeGetString(r, "pregnancy_status")),
             PregnancyEndDate = SafeGetString(r, "pregnancy_end_date"),
             RhigDate = SafeGetString(r, "rhig_date"),

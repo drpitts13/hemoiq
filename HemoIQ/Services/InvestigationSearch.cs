@@ -20,7 +20,7 @@ namespace HemoIQ.Services
 
     /// <summary>
     /// Finds investigations by accession, MRN, patient name or DOB, final
-    /// antibodies, technologist, previous antibodies, collector, locations, or
+    /// antibodies, technologist, previous antibodies, collector, locations, encounter, or
     /// ordering provider. Every word of the
     /// query must match at least one field (case-insensitive substring).
     /// </summary>
@@ -48,7 +48,7 @@ namespace HemoIQ.Services
                 {
                     s.AccessionNumber, s.Mrn, p?.Name, p?.DateOfBirth, s.FinalAntibodies,
                     s.IdentifiedBy, s.PreviousAntibodies, s.FinalComment,
-                    s.Collector, s.CollectionLocation, s.OrderingLocation, s.OrderingProvider,
+                    s.Collector, s.CollectionLocation, s.OrderingLocation, s.OrderingProvider, s.EncounterNumber,
                 };
                 if (!words.All(w => TextFilter.Matches(w, fields))) continue;
 

@@ -31,6 +31,7 @@ namespace HemoIQ.Services
         public string? CollectionLocation { get; init; }
         public string? OrderingLocation { get; init; }
         public string? OrderingProvider { get; init; }
+        public string? EncounterNumber { get; init; }
         public string PregnancyStatus { get; init; } = Models.PregnancyStatus.Unknown;
         public string? PregnancyEndDate { get; init; }
         public string? RhigDate { get; init; }
@@ -63,6 +64,7 @@ namespace HemoIQ.Services
                 db.UpdateSpecimenCollection(e.AccessionNumber, e.CollectedAt, e.ReceivedAt);
                 db.UpdateSpecimenOrigin(e.AccessionNumber, e.Collector, e.CollectionLocation,
                     e.OrderingLocation, e.OrderingProvider);
+                db.UpdateSpecimenEncounter(e.AccessionNumber, e.EncounterNumber);
                 db.UpdateSpecimenPregnancy(e.AccessionNumber, e.PregnancyStatus, e.PregnancyEndDate, e.RhigDate);
             });
         }
