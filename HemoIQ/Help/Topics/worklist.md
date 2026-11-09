@@ -33,6 +33,8 @@ Row colors match the category: amber for incomplete, orange for stale, yellow fo
 
 The worklist does not include a confirmed identification as unfinished work. After you confirm an ID, incomplete and stale rows for that specimen drop off.
 
+**Overdue testing** items list investigations whose status is **Awaiting additional testing** and that were received more days ago than the Preferences **Turnaround threshold**. The detail gives the received date, the age, and the testing the last analysis left open, for example clinically significant antibodies not yet ruled out or recommended selected cells. Open goes to Analysis. The item clears when the testing is recorded and analysis no longer leaves anything open, or when the identification is confirmed, cancelled, or the specimen made inactive. Investigations awaiting testing within the threshold are not listed; the status strip already shows them.
+
 **Supervisor review** items appear only when Preferences requires supervisor review. Each lists a confirmed identification that has not been reviewed yet. Open goes to the specimen, where **Supervisor Review…** records the review.
 
 **Expired reagent** items list open investigations (not yet confirmed, or confirmed but not supervisor-reviewed) with reactions recorded on a panel lot after its expiration date. The recording date is the last day graded results were saved on that run. Open goes to Analysis, where the same finding is a **REVIEW** note at the top of the suggestions. HemoIQ does not exclude the results; the laboratory decides whether they may be used. The item clears once the investigation is confirmed and supervisor-reviewed.

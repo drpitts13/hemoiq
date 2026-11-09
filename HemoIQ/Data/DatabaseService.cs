@@ -2915,6 +2915,10 @@ namespace HemoIQ.Data
                     }
                 }
 
+                if (Services.OverdueTesting.Item(this, s, Services.AppSettings.Current.TurnaroundThresholdDays, DateTime.Now)
+                    is WorklistItem overdue)
+                    items.Add(overdue);
+
                 // Only specimens tested on a lot that has expired by now can have expired-reagent results.
                 if ((!s.HasFinalCall || !s.IsReviewed) && panels.Any(p => p.IsExpired) &&
                     Services.ExpiredReagentCheck.Check(this, s.AccessionNumber) is { Count: > 0 } expired)

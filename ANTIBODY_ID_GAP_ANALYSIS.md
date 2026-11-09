@@ -2237,8 +2237,28 @@ a sign of a mislabeled specimen or a mistyped number.
 - `OriginDisplay` begins with "Encounter X", so the detail pane and the
   worksheet Origin line show it. Search matches it.
 
+## Iteration 104 (this change)
+
+**Deficiency:** "Awaiting additional testing" appeared only on the status
+strip of each investigation. The Worklist had no queue for workups waiting on
+selected cells, typing or adsorptions, so a case stuck there for days was
+visible only on the Analytics overdue table and gave no next step. Listing
+every awaiting case had been deferred as too noisy.
+
+**Bounded improvement:**
+- `WorklistKind.OverdueAdditionalTesting` and `OverdueTesting.Item`.
+- A case is listed only when all of these hold:
+  - it has no confirmed identification;
+  - it is active and not cancelled;
+  - it is older than the Preferences `TurnaroundThresholdDays`, counted from
+    `ReceivedAt`, or from the created date when no received time is recorded;
+  - its computed status is Awaiting additional testing.
+- The detail gives the received date, the age, the threshold and the open
+  needs from the latest analysis snapshot. Open goes to Analysis.
+- The status is computed only for open cases past the threshold, so the
+  Worklist does not compute it for every specimen.
+
 ## Likely next tick
 
-A Worklist "Awaiting testing" queue limited to investigations past the
-turnaround threshold, or patient sex where it affects pregnancy-related
-context.
+Patient sex where it affects pregnancy-related context, or showing the
+encounter number in Patient history rows and Search results.
