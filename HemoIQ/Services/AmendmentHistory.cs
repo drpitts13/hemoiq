@@ -16,6 +16,15 @@ namespace HemoIQ.Services
         string? PreviouslyConfirmedBy,
         string? PreviouslyConfirmedAt);
 
+    /// <summary>A Clinical Identification report printed or exported before the last clear, from the audit log.</summary>
+    public sealed record IssuedReport(
+        string IssuedAt,
+        string IssuedBy,
+        string Output,
+        string? File,
+        string? IdentificationAtIssue,
+        string? Fingerprint);
+
     /// <summary>
     /// The amendment record for a specimen's clinical report: every confirmed identification that
     /// was cleared, with who cleared it, when and why, oldest first. Built from
@@ -33,6 +42,47 @@ namespace HemoIQ.Services
                 .OrderBy(e => e.Id)
                 .Select(Read)
                 .ToList();
+
+        /// <summary>
+        /// Clinical Identification reports printed or exported before the identification was last cleared,
+        /// oldest first. These copies carry an identification that has since been withdrawn; the amended
+        /// report lists them so they can be recalled or marked superseded. Empty when never cleared.
+        /// </summary>
+        public static List<IssuedReport> SupersededReports(DatabaseService db, string accession)
+        {
+            var events = db.GetAuditEventsForEntity("specimen", accession);
+            var lastClear = events.Where(e => e.Action == "clear_final_call").Select(e => (long?)e.Id).Max();
+            if (lastClear == null) return new List<IssuedReport>();
+            return events
+                .Where(e => e.Id < lastClear && e.Action == "report_output" &&
+                            Prop(e.AfterJson, "reportType") == "ClinicalIdentification")
+                .OrderBy(e => e.Id)
+                .Select(e => new IssuedReport(
+                    LocalTime(e.OccurredAtUtc),
+                    string.IsNullOrWhiteSpace(e.Operator) ? "unknown" : e.Operator,
+                    Prop(e.AfterJson, "output") ?? "output",
+                    Prop(e.AfterJson, "file"),
+                    Prop(e.AfterJson, "finalAntibodies"),
+                    Prop(e.AfterJson, "sha256") is string sha && sha.Length >= 8 ? sha[..8] : null))
+                .ToList();
+        }
+
+        public static IEnumerable<string> SupersededLines(IReadOnlyList<IssuedReport> reports) =>
+            reports.Select(r =>
+                $"  - {r.IssuedAt} {r.Output}{(r.File == null ? "" : $" ({r.File})")} by {r.IssuedBy}; " +
+                $"identification at issue: {(string.IsNullOrWhiteSpace(r.IdentificationAtIssue) ? "none confirmed" : r.IdentificationAtIssue)}" +
+                (r.Fingerprint == null ? "" : $"; fingerprint {r.Fingerprint}…"));
+
+        private static string? Prop(string? json, string name)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return null;
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                return doc.RootElement.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+            }
+            catch (JsonException) { return null; }
+        }
 
         /// <summary>The banner for the report header, or null when the identification was never cleared.</summary>
         public static string? Banner(bool hasFinalCall, IReadOnlyCollection<AmendmentEntry> history) =>

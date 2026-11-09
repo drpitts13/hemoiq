@@ -51,7 +51,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | Panels | Antigen-coverage check at activation | Present | `PanelActivationCoverage` compares the lot being activated with the previous vendor/product-line lot; gaps (fewer or no typed cells) and affected ACS antigens shown in the activation prompt; acknowledged gaps recorded on the `activate_panel` audit from every activation path | Previous lot chosen by vendor/product line only; no comparison for panels without a vendor |
 | Analysis | Cross-specimen transfusion check | Present | `TransfusionHistoryCheck`: a red-cell transfusion within the window on another same-MRN specimen contradicts Not transfused (REVIEW note) and fills Unknown, making typing unreliable with the source named; a stale Transfused date gets an update note | Uses only transfusions recorded in HemoIQ, not an external transfusion service |
 | Workflow | Specimen-receipt checklist | Present | `ReceiptChecklist`: required MRN, collection time, transfusion status (+ last transfusion date when transfused); advisory receipt time, hemolysis, pregnancy, DAT. Drives the Received step and the Awaiting-panel next action; shaded line with reasons on the Specimens detail pane; printed on the worksheet | Required items are fixed, not configurable per lab |
-| Reporting | Amended report marking | Present | Clinical Identification header shows AMENDED REPORT or PREVIOUS IDENTIFICATION WITHDRAWN when an identification was ever cleared; Amendment history lists each earlier identification, its confirmer, who cleared it, when and why, from `clear_final_call` audit entries | Text and PDF only; no separate amendment notification to recipients |
+| Reporting | Amended report marking | Present | Clinical Identification header shows AMENDED REPORT or PREVIOUS IDENTIFICATION WITHDRAWN when an identification was ever cleared; Amendment history lists each earlier identification, its confirmer, who cleared it, when and why, from `clear_final_call` audit entries | Text and PDF only; superseded issued copies are listed (Iteration 140), but recipients are not recorded |
 | Data integrity | Reaction/specimen/panel consistency | Present | Detaching a panel with grades is refused; `DataConsistencyCheck` lists legacy reactions on detached panels, grades for cells the panel lacks, and unrecognized grade values as Worklist "Data inconsistency" items with an Open target | Check runs on Worklist refresh only; no scheduled report |
 | Security | Roles and data-change permission | Present | Read-only, Technologist, Supervisor, Administrator; once users are registered every public data writer requires `RecordResults` (Technologist and above), so unregistered logins and Read-only users view only; guard test fails on any unguarded public writer; users table migrated to accept the new role | Role grants are fixed per role, not a configurable table; no Senior technologist or Medical director role. Status bar names the session; view-only sessions have change commands disabled (Iteration 132) |
 | Configuration | ACS antigen list | Present | Fixed core (Rh, Kell, Duffy, Kidd, Ss) plus lab-configured additions (default Lea, Leb, M, N), validated case-sensitively; used by ACS evaluation, open-testing list, untypeable classifier and clinical-significance flags; listed on the report, in the rule trace and in the clinical snapshot; transferred with Preferences | The core itself is fixed by design |
@@ -3423,7 +3423,46 @@ rule out anti-Fya, and the audit did not record that anyone accepted it.
 
 All 1159 tests pass.
 
+## Iteration 140 (this change)
+
+**Deficiency:** An amended Clinical Identification report (Iteration 135)
+said what was cleared and why. It did not say which earlier copies were out
+there, although every print and export is audited. Recalling the earlier
+report meant searching the audit log for the right entries.
+
+**Choice:** The roadmap item proposed a per-specimen "Report to" list. A new
+free-text recipient field would add data entry and a schema change, and it
+would only be as complete as people kept it. The audit log already records
+each issue with its time, operator, output, file name, SHA-256 and the
+identification at issue. This iteration uses that record instead.
+Recipients remain unrecorded.
+
+**Bounded improvement:**
+- `AmendmentHistory.SupersededReports` lists the Clinical Identification
+  `report_output` entries issued before the last `clear_final_call`, oldest
+  first. Each entry has when it was issued, the output and file, who issued
+  it, the identification at issue, and an 8-character fingerprint. Other
+  report types, and reports issued after the clear, are excluded.
+  Unreadable entries are tolerated.
+- The amended report adds **Superseded reports (N)**, under the amendment
+  history, with the instruction to recall these copies or mark them
+  superseded.
+
+**Tests:** `AmendmentHistoryTests` (+2):
+- only the clinical report issued before the clear is listed, with its
+  output, identification, fingerprint and issuer, and the report text shows
+  the section;
+- with no clear there is nothing, and broken audit JSON and an issue
+  without an identification are handled.
+
+All 1161 tests pass.
+
+### Roadmap
+
+1. Configurable role permissions, only if requested.
+2. Recipients for reports, if labs need them beyond the issue record.
+
 ## Likely next tick
 
-Roadmap item 2: a per-specimen "Report to" list, so an amended report can
-name who received the earlier one.
+Look again at the analysis engine for remaining unsafe behavior. Candidate:
+dosage handling for antigens whose heterozygous status is unknown ("+?").

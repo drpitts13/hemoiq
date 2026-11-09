@@ -38,4 +38,6 @@ A Clinical Identification report for a specimen whose identification was ever cl
 - **AMENDED REPORT** when an identification is confirmed again. Under the final identification, an **Amendment history** lists each earlier identification in order: what it was, who confirmed it and when, who cleared it and when, and the reason given.
 - **PREVIOUS IDENTIFICATION WITHDRAWN** when no identification is confirmed now. The same history appears in the interpretation.
 
+Below the history, **Superseded reports** lists each Clinical Identification report printed or exported before the identification was last cleared. Each entry shows when it was issued, how (print, PDF or CSV) and the file name, who issued it, the identification it carried, and the start of its fingerprint, so those copies can be found and recalled or marked superseded. Reports issued after the clear are not listed.
+
 The history comes from the audit log, so the report and the log always agree.

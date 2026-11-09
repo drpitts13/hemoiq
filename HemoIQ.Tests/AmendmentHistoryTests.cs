@@ -86,4 +86,44 @@ public class AmendmentHistoryTests
         Assert.Equal(AmendmentHistory.AmendedBanner, AmendmentHistory.Banner(true, history));
         Assert.Null(AmendmentHistory.Banner(true, Array.Empty<AmendmentEntry>()));
     }
+
+    [Fact]
+    public void ReportsIssuedBeforeTheClear_AreListedAsSuperseded_LaterOnesAreNot()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("AM-5", "serum", null);
+        iso.Db.SetSpecimenFinalCall("AM-5", "anti-E", null, "TE");
+        iso.Reports.RecordPrint(ReportType.ClinicalIdentification, "AM-5", null, "first issue");
+        iso.Reports.RecordPrint(ReportType.SpecimenSummary, "AM-5", null, "not a clinical report");
+        iso.Db.ClearSpecimenFinalCall("AM-5", "anti-K missed");
+        iso.Db.SetSpecimenFinalCall("AM-5", "anti-E, anti-K", null, "TE");
+        iso.Reports.RecordPrint(ReportType.ClinicalIdentification, "AM-5", null, "corrected issue");
+
+        var superseded = AmendmentHistory.SupersededReports(iso.Db, "AM-5");
+        var r = Assert.Single(superseded);
+        Assert.Equal("print", r.Output);
+        Assert.Equal("anti-E", r.IdentificationAtIssue);
+        Assert.Equal(8, r.Fingerprint!.Length);
+        Assert.Equal(AccessControl.CurrentLogin, r.IssuedBy);
+
+        var text = Report(iso, "AM-5");
+        Assert.Contains("  Superseded reports (1): issued before the identification was cleared. Recall these copies or mark them superseded:", text);
+        Assert.Contains($"print by {r.IssuedBy}; identification at issue: anti-E; fingerprint {r.Fingerprint}…", text);
+    }
+
+    [Fact]
+    public void NoClear_NoSupersededReports_AndUnreadableEntriesAreTolerated()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("AM-6", "serum", null);
+        iso.Reports.RecordPrint(ReportType.ClinicalIdentification, "AM-6", null, "issue");
+        Assert.Empty(AmendmentHistory.SupersededReports(iso.Db, "AM-6"));
+
+        iso.Db.AppendAudit("report_output", "specimen", "AM-6", null, null, "{broken");
+        iso.Db.AppendAudit("clear_final_call", "specimen", "AM-6", "legacy", null, null);
+        var list = AmendmentHistory.SupersededReports(iso.Db, "AM-6");
+        var issued = Assert.Single(list);
+        Assert.Null(issued.IdentificationAtIssue);
+        Assert.Contains("identification at issue: none confirmed", AmendmentHistory.SupersededLines(list).Single());
+    }
 }

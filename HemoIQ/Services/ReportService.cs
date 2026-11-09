@@ -216,11 +216,17 @@ namespace HemoIQ.Services
             return sb.ToString();
         }
 
-        private static void AppendAmendmentHistory(StringBuilder sb, IReadOnlyList<AmendmentEntry> amendments)
+        private void AppendAmendmentHistory(StringBuilder sb, IReadOnlyList<AmendmentEntry> amendments, string accession)
         {
             if (amendments.Count == 0) return;
             sb.AppendLine("  Amendment history (earlier identifications, cleared with a reason):");
             foreach (var line in AmendmentHistory.Lines(amendments))
+                sb.AppendLine(line);
+            var superseded = AmendmentHistory.SupersededReports(_db, accession);
+            if (superseded.Count == 0) return;
+            sb.AppendLine($"  Superseded reports ({superseded.Count}): issued before the identification was cleared. " +
+                          "Recall these copies or mark them superseded:");
+            foreach (var line in AmendmentHistory.SupersededLines(superseded))
                 sb.AppendLine(line);
         }
 
@@ -310,7 +316,7 @@ namespace HemoIQ.Services
                     sb.AppendLine("  Supervisor review: PENDING");
                 if (!string.IsNullOrWhiteSpace(s.FinalComment))
                     sb.AppendLine($"  Comment: {s.FinalComment}");
-                AppendAmendmentHistory(sb, amendments);
+                AppendAmendmentHistory(sb, amendments, s.AccessionNumber);
                 sb.AppendLine();
                 sb.AppendLine("Analyzer suspected (for reference):");
                 if (analysis.Suspected.Count > 0)
@@ -327,7 +333,7 @@ namespace HemoIQ.Services
             {
                 if (amendments.Count > 0)
                 {
-                    AppendAmendmentHistory(sb, amendments);
+                    AppendAmendmentHistory(sb, amendments, s.AccessionNumber);
                     sb.AppendLine();
                 }
                 if (analysis.Acs.Antigens.Count > 0 && (analysis.Acs.IsEligible || analysis.Acs.IsEligibleWithException))
