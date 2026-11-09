@@ -120,6 +120,7 @@ namespace HemoIQ.ViewModels
             OnPropertyChanged(nameof(SessionText));
             OnPropertyChanged(nameof(SessionDetail));
             OnPropertyChanged(nameof(SessionViewOnly));
+            ReactionsVM.NotifySessionChanged();
             System.Windows.Input.CommandManager.InvalidateRequerySuggested();
         }
 

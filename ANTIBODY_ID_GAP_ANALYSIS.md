@@ -3121,8 +3121,61 @@ application thought was signed in.
 
 All 1132 tests pass.
 
+## Iteration 133 (this change): product review after the access-control series
+
+**What is now complete:**
+- **Access chain**, built over Iterations 128–132. Registered users and
+  roles, with every data writer permission-checked. Confirmed panels cannot
+  be silently rewritten. The session is visible on the status bar, and change
+  commands are disabled for view-only sessions.
+- **Configuration chain**, from Iterations 129–130. Rules, Preferences and
+  the ACS list are data, transferred together, audited, and they mark
+  analyses stale.
+
+**Fragmented or inconsistent:**
+- Reaction entry in view-only sessions. **Fixed here.** The grid still
+  accepted typing, grade hot-keys and Ctrl+V paste, and it wrote local
+  recovery drafts. Those drafts could never be saved, and the next
+  technologist at that workstation would be offered them as "unsaved work".
+- Specimen and patient dialogs open from Edit, which is now disabled for
+  view-only sessions. Read-only users read the same details in the detail
+  pane, so no separate read-only dialog is needed yet.
+- Role grants are a fixed table in code. No lab has asked for Senior
+  technologist or Medical director roles; revisit if one does.
+
+**Lacking automated tests:** WPF behavior (enabled state, grid edit mode) is
+covered by source checks, not UI automation. This is accepted, consistent
+with earlier UI guards.
+
+**Database structures limiting future work:** none found in this review.
+
+**Bounded improvement:**
+- `ReactionsViewModel.GradesReadOnly` is true when the session may not
+  record. The grid binds `IsReadOnly` to it, and `PreviewKeyDown` ignores
+  grade keys and paste.
+- `WriteDraft` writes nothing, and the progress line starts with a
+  "View only" note.
+- `MainViewModel.RefreshSession` notifies the Reactions view, so a role
+  change in Preferences applies immediately.
+
+**Tests:** `SessionAccessTests` (+2):
+- source checks for the grid binding, the key-handler guard, the draft guard
+  and the session notification;
+- the wording of the view-only note.
+
+All 1134 tests pass.
+
+### Roadmap (after the Iteration 133 review)
+
+1. Workflow: a specimen-receipt checklist tying patient, specimen, screen
+   and panels before testing starts.
+2. Reporting: an amended-report marker and the reason on reprints after an
+   identification is cleared and re-confirmed.
+3. Data integrity: a periodic consistency check (orphaned runs, reactions on
+   unlinked panels) shown on the Worklist Review category.
+4. Configuration: a role-to-permission table, only if requested.
+
 ## Likely next tick
 
-A product review is due at Iteration 133. Suggested focus: reaction entry for
-view-only sessions (the grid is still typeable, though it cannot be saved),
-and whether any workflow remains fragmented across tabs.
+Roadmap item 3: a data-consistency check surfaced in the Worklist Review
+category.

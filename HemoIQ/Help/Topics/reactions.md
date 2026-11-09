@@ -29,6 +29,7 @@ The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cel
   - **Run Analysis** on the Analysis tab, for the same specimen, explains that analysis uses saved grades only. **Yes** saves them first, with the usual expired-lot and change-reason checks. **No** analyzes without them. **Cancel** does nothing.
   - Quitting HemoIQ lists the unsaved grades, and an unfinished antigram edit on Panels, and asks before quitting. **No** is the default.
 - **Recovery after a crash:** while grades are unsaved, HemoIQ keeps a recovery copy on this computer, in `%LocalAppData%\HemoIQ\drafts`.
+- **View only:** when the status bar says "view only" (a Read-only user, or a login that is not registered once users exist), the grid shows grades but cannot be edited. Grade keys and paste do nothing, Save and Fill negatives are disabled, no recovery copy is written, and the progress line starts with "View only".
   - **Save**, discarding the grades, or quitting normally removes it.
   - If HemoIQ closed unexpectedly (a crash, power loss, or the process ended), the next start says which specimen, panel and run, how many cells, and when they were last edited.
   - **Yes** puts the grades back on the Reactions tab, still unsaved, for you to review and **Save**. **No** discards them.

@@ -360,6 +360,7 @@ namespace HemoIQ.Views
 
         private void ReactionsGrid_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (_vm?.GradesReadOnly == true) return; // view-only session: no grade keys or paste
             if (ReactionsGrid.CurrentItem is not ReactionRow row) return;
             var header = ReactionsGrid.CurrentColumn?.Header as string;
             var extra = ExtraPhaseParser.Parse(AppSettings.Current.ExtraPhases);

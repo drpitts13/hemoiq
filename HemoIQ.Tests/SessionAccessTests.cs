@@ -101,4 +101,32 @@ public class SessionAccessTests
             Assert.Contains("SessionAccess.CanRecord", m.Groups["args"].Value);
         }
     }
+
+    private static string Source(params string[] parts)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "HemoIQ", "HemoIQ.csproj"))) dir = dir.Parent;
+        return File.ReadAllText(Path.Combine(new[] { dir!.FullName, "HemoIQ" }.Concat(parts).ToArray()));
+    }
+
+    [Fact]
+    public void ReactionGrid_IsReadOnly_KeysAndPasteIgnored_AndNoDraft_WhenViewOnly()
+    {
+        Assert.Contains("IsReadOnly=\"{Binding GradesReadOnly}\"", Source("Views", "ReactionsView.xaml"));
+        var keys = Source("Views", "ReactionsView.xaml.cs");
+        var handler = keys.Substring(keys.IndexOf("private void ReactionsGrid_PreviewKeyDown", StringComparison.Ordinal));
+        Assert.StartsWith("private void ReactionsGrid_PreviewKeyDown(object sender, KeyEventArgs e)", handler);
+        Assert.Contains("if (_vm?.GradesReadOnly == true) return;", handler.Substring(0, 200));
+        var vm = Source("ViewModels", "ReactionsViewModel.cs");
+        Assert.Contains("public bool GradesReadOnly => !SessionAccess.CanRecord;", vm);
+        Assert.Contains("|| GradesReadOnly) return;", vm.Substring(vm.IndexOf("private void WriteDraft()", StringComparison.Ordinal), 200));
+        Assert.Contains("ReactionsVM.NotifySessionChanged();", Source("ViewModels", "MainViewModel.cs"));
+    }
+
+    [Fact]
+    public void ViewOnlyNote_PrefixesTheEntryProgressWording()
+    {
+        Assert.Equal("View only: grades are shown but cannot be changed in this session. ", HemoIQ.ViewModels.ReactionsViewModel.ViewOnlyNote);
+        Assert.Equal("Grades entered: 3 of 11 cells.", HemoIQ.ViewModels.ReactionsViewModel.FormatEntryProgress(3, 11));
+    }
 }

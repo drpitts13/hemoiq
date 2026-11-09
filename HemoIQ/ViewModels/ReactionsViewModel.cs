@@ -347,8 +347,23 @@ namespace HemoIQ.ViewModels
             get
             {
                 if (Rows.Count == 0) return string.Empty;
-                return FormatEntryProgress(Rows.Count(r => r.HasEnteredGrade), Rows.Count);
+                return (GradesReadOnly ? ViewOnlyNote : "") + FormatEntryProgress(Rows.Count(r => r.HasEnteredGrade), Rows.Count);
             }
+        }
+
+        public const string ViewOnlyNote = "View only: grades are shown but cannot be changed in this session. ";
+
+        /// <summary>
+        /// True when the signed-in session may not record results (Read-only role or unregistered login):
+        /// the grid is read-only, grade keys and paste do nothing, and no recovery draft is written.
+        /// </summary>
+        public bool GradesReadOnly => !SessionAccess.CanRecord;
+
+        /// <summary>Called when the signed-in user or role may have changed.</summary>
+        public void NotifySessionChanged()
+        {
+            OnPropertyChanged(nameof(GradesReadOnly));
+            RefreshEntryProgress();
         }
 
         public static string FormatEntryProgress(int entered, int total)
@@ -376,7 +391,7 @@ namespace HemoIQ.ViewModels
 
         private void WriteDraft()
         {
-            if (SelectedSpecimen == null || SelectedRun == null) return;
+            if (SelectedSpecimen == null || SelectedRun == null || GradesReadOnly) return;
             Drafts.Save(new ReactionDraft
             {
                 SpecimenId = SelectedSpecimen.AccessionNumber,

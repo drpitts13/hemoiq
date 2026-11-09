@@ -198,6 +198,7 @@
             </Grid.RowDefinitions>
         <DataGrid x:Name="ReactionsGrid"
                   ItemsSource="{Binding VisibleRows}"
+                  IsReadOnly="{Binding GradesReadOnly}"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False" CanUserDeleteRows="False"
                   GridLinesVisibility="All" HeadersVisibility="Column"
