@@ -48,6 +48,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | UI | Antigram freeze / slashes / run compare | Partial | Frozen cell; slashes; compare extras; Show dosage; filter/sort; panel lot compare | — |
 | UI | Explain Analysis panel | Present | Explain tab + Summary + clinical report assemble rule-out, support, conflict, phenotype, additional testing | Keep wording as evidence, not diagnosis |
 | Audit | Panel, reactions, rules, settings, final ID | Partial | Snapshots store rule-engine version, rules JSON, operator, and the adsorption comparison (conclusions plus ordinary-score exclusions) | Cross-panel enzyme/DTT pairing later |
+| Reporting | Amended report marking | Present | Clinical Identification header shows AMENDED REPORT or PREVIOUS IDENTIFICATION WITHDRAWN when an identification was ever cleared; Amendment history lists each earlier identification, its confirmer, who cleared it, when and why, from `clear_final_call` audit entries | Text and PDF only; no separate amendment notification to recipients |
 | Data integrity | Reaction/specimen/panel consistency | Present | Detaching a panel with grades is refused; `DataConsistencyCheck` lists legacy reactions on detached panels, grades for cells the panel lacks, and unrecognized grade values as Worklist "Data inconsistency" items with an Open target | Check runs on Worklist refresh only; no scheduled report |
 | Security | Roles and data-change permission | Present | Read-only, Technologist, Supervisor, Administrator; once users are registered every public data writer requires `RecordResults` (Technologist and above), so unregistered logins and Read-only users view only; guard test fails on any unguarded public writer; users table migrated to accept the new role | Role grants are fixed per role, not a configurable table; no Senior technologist or Medical director role. Status bar names the session; view-only sessions have change commands disabled (Iteration 132) |
 | Configuration | ACS antigen list | Present | Fixed core (Rh, Kell, Duffy, Kidd, Ss) plus lab-configured additions (default Lea, Leb, M, N), validated case-sensitively; used by ACS evaluation, open-testing list, untypeable classifier and clinical-significance flags; listed on the report, in the rule trace and in the clinical snapshot; transferred with Preferences | The core itself is fixed by design |
@@ -3217,7 +3218,47 @@ silent.
 
 All 1139 tests pass.
 
+## Iteration 135 (this change)
+
+**Deficiency:** After a confirmed identification was cleared, with a reason,
+and confirmed again, the status said "Amended" and asked for the report to be
+reissued. The reissued Clinical Identification report, though, looked
+exactly like an original. It did not say it was amended, which
+identification it replaced, or why. A clinician comparing two printed
+reports could not tell which was current, or what had changed.
+
+**Bounded improvement:**
+- `AmendmentHistory.For` reads each `clear_final_call` audit entry, oldest
+  first. For each one it records:
+  - the identification before the clear, with who confirmed it and when;
+  - who cleared it and when;
+  - the reason.
+  Unreadable older snapshots say "not recorded" rather than failing.
+- The report header carries a banner:
+  - **AMENDED REPORT** when an identification is confirmed again;
+  - **PREVIOUS IDENTIFICATION WITHDRAWN** when none is confirmed now.
+- The interpretation lists a numbered **Amendment history**, under the final
+  identification or, when none is confirmed, at the top of the
+  interpretation.
+- PDF export uses the same text, so it carries the banner too.
+
+**Tests:** `AmendmentHistoryTests` (4):
+- a never-cleared identification has no banner;
+- cleared and re-confirmed: the banner is in the header, and the history
+  names the replaced identification, its confirmer, the clearer and the
+  reason;
+- cleared and not re-confirmed: the withdrawn banner;
+- several clears are numbered oldest first, and an unreadable snapshot says
+  "not recorded".
+
+All 1143 tests pass.
+
+### Roadmap
+
+1. A specimen-receipt checklist tying patient, specimen, screen and panels
+   before testing starts.
+2. Configurable role permissions, only if requested.
+
 ## Likely next tick
 
-Roadmap item 2: mark amended reports, with the amendment reason, when an
-identification is cleared and re-confirmed.
+Roadmap item 1: a specimen-receipt checklist.

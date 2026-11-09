@@ -216,6 +216,14 @@ namespace HemoIQ.Services
             return sb.ToString();
         }
 
+        private static void AppendAmendmentHistory(StringBuilder sb, IReadOnlyList<AmendmentEntry> amendments)
+        {
+            if (amendments.Count == 0) return;
+            sb.AppendLine("  Amendment history (earlier identifications, cleared with a reason):");
+            foreach (var line in AmendmentHistory.Lines(amendments))
+                sb.AppendLine(line);
+        }
+
         private string ClinicalIdentificationText(string? specimenId)
         {
             if (specimenId == null) return "No specimen selected.";
@@ -233,6 +241,9 @@ namespace HemoIQ.Services
                 sb.AppendLine(settings.Department);
             sb.AppendLine("ANTIBODY IDENTIFICATION WORKSHEET");
             sb.AppendLine(new string('=', 78));
+            var amendments = AmendmentHistory.For(_db, specimenId);
+            if (AmendmentHistory.Banner(s.HasFinalCall, amendments) is string banner)
+                sb.AppendLine(banner);
             sb.AppendLine(AnalysisTraceLine(specimenId));
             sb.AppendLine($"Accession: {s.AccessionNumber,-16} Type: {s.Type,-10} Date: {DateTime.Now:yyyy-MM-dd}");
             sb.AppendLine($"MRN: {s.Mrn ?? "Not recorded"}");
@@ -298,6 +309,7 @@ namespace HemoIQ.Services
                     sb.AppendLine("  Supervisor review: PENDING");
                 if (!string.IsNullOrWhiteSpace(s.FinalComment))
                     sb.AppendLine($"  Comment: {s.FinalComment}");
+                AppendAmendmentHistory(sb, amendments);
                 sb.AppendLine();
                 sb.AppendLine("Analyzer suspected (for reference):");
                 if (analysis.Suspected.Count > 0)
@@ -312,6 +324,11 @@ namespace HemoIQ.Services
             }
             else
             {
+                if (amendments.Count > 0)
+                {
+                    AppendAmendmentHistory(sb, amendments);
+                    sb.AppendLine();
+                }
                 if (analysis.Acs.Antigens.Count > 0 && (analysis.Acs.IsEligible || analysis.Acs.IsEligibleWithException))
                     sb.AppendLine("Clinically significant antibodies evaluated (lab-configured): " +
                                   string.Join(", ", analysis.Acs.Antigens.Select(ag => "anti-" + ag)) + ".");
