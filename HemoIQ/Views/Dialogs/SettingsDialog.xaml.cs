@@ -26,6 +26,7 @@ namespace HemoIQ.Views.Dialogs
             if (idCount < 1 || idCount > 3) idCount = 3;
             IdRuleBox.SelectedItem = $"{idCount} + {idCount}";
             AcsRuleoutBox.Text = s.AcsRuleoutCount.ToString();
+            AcsAntigensBox.Text = s.AcsAdditionalAntigens;
             SeparationBox.Text = s.SeparationCellCount.ToString();
             DefaultRuleoutBox.Text = s.DefaultMinRuleoutCount.ToString();
             DefaultTypeBox.ItemsSource = AntigenConstants.SpecimenTypes;
@@ -170,6 +171,12 @@ namespace HemoIQ.Views.Dialogs
                 AcsRuleoutBox.Focus();
                 return;
             }
+            if (!AntigenConstants.TryParseAcsAdditions(AcsAntigensBox.Text, out var acsAdditions, out var acsProblem))
+            {
+                MessageBox.Show($"ACS antigens added: {acsProblem}.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                AcsAntigensBox.Focus();
+                return;
+            }
             if (!int.TryParse(DefaultRuleoutBox.Text.Trim(), out var defaultRuleouts) ||
                 defaultRuleouts < 1 || defaultRuleouts > 5)
             {
@@ -238,6 +245,7 @@ namespace HemoIQ.Views.Dialogs
             AppSettings.Current.IdentificationCellCount =
                 idRule.StartsWith("1") ? 1 : idRule.StartsWith("2") ? 2 : 3;
             AppSettings.Current.AcsRuleoutCount = acsCount;
+            AppSettings.Current.AcsAdditionalAntigens = acsAdditions;
             AppSettings.Current.SeparationCellCount = separationCount;
             AppSettings.Current.DefaultMinRuleoutCount = defaultRuleouts;
             AppSettings.Current.DefaultSpecimenType = DefaultTypeBox.SelectedItem?.ToString() ?? "serum";

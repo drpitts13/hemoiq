@@ -1033,7 +1033,7 @@ namespace HemoIQ.ViewModels
         public static bool IsClinicallySignificantAntibody(string? antibody)
         {
             if (string.IsNullOrWhiteSpace(antibody)) return false;
-            foreach (var ag in AntigenConstants.ClinicallySignificantAntigens)
+            foreach (var ag in AppSettings.Current.AcsAntigenList())
             {
                 if (RuleoutPolicy.SameAntibody(antibody, $"anti-{ag}"))
                     return true;

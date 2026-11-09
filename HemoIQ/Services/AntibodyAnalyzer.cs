@@ -59,7 +59,7 @@ namespace HemoIQ.Services
             if (updateDb && _db.IsSpecimenLocked(specimenId))
                 throw new RecordLockedException(specimenId);
 
-            var untypedCs = AntigenConstants.ClinicallySignificantAntigens
+            var untypedCs = AppSettings.Current.AcsAntigenList()
                 .Where(ag => !antigens.Contains(ag))
                 .ToList();
             var untypeable = UntypeableSpecificityClassifier.Classify(antigens);
@@ -1127,8 +1127,9 @@ namespace HemoIQ.Services
             var required = AppSettings.Current.AcsRuleoutCount;
             if (required < 1 || required > 5) required = 3;
 
-            var acs = new AcsEvaluation { RequiredRuleoutCount = required };
-            foreach (var ag in AntigenConstants.ClinicallySignificantAntigens)
+            var acsAntigens = AppSettings.Current.AcsAntigenList();
+            var acs = new AcsEvaluation { RequiredRuleoutCount = required, Antigens = acsAntigens.ToList() };
+            foreach (var ag in acsAntigens)
             {
                 var antibody = $"anti-{ag}";
                 ruledOut.TryGetValue(antibody, out var count);

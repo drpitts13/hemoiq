@@ -25,8 +25,8 @@ namespace HemoIQ.Models
         };
 
         /// <summary>
-        /// Antigens that must be ruled out (at or above the ACS rule-out count)
-        /// before a specimen can result as All Clinically Significant Antibodies Ruled Out.
+        /// The default ACS list (core plus <see cref="AcsDefaultAdditionalAntigens"/>). Analysis uses
+        /// the lab's configured list, <see cref="LabSettings.AcsAntigenList"/>.
         /// </summary>
         public static readonly IReadOnlyList<string> ClinicallySignificantAntigens = new[]
         {
@@ -34,6 +34,51 @@ namespace HemoIQ.Models
             "K", "k", "Fya", "Fyb", "Jka", "Jkb",
             "S", "s", "Lea", "Leb", "M", "N"
         };
+
+        /// <summary>
+        /// The part of the ACS list a laboratory cannot remove: Rh, Kell, Duffy, Kidd and Ss antigens.
+        /// Further antigens (by default Lea, Leb, M, N) are the lab's choice, in
+        /// <see cref="LabSettings.AcsAdditionalAntigens"/>.
+        /// </summary>
+        public static readonly IReadOnlyList<string> AcsCoreAntigens = new[]
+        {
+            "D", "C", "c", "E", "e",
+            "K", "k", "Fya", "Fyb", "Jka", "Jkb",
+            "S", "s"
+        };
+
+        public const string AcsDefaultAdditionalAntigens = "Lea, Leb, M, N";
+
+        /// <summary>
+        /// Reads a comma- or space-separated list of antigens to add to the ACS core. Names are
+        /// exact-case known antigens; core antigens and repeats are dropped. Returns false, with the
+        /// problem, when a name is not a known antigen. <paramref name="normalized"/> lists the
+        /// accepted names in antigram order.
+        /// </summary>
+        public static bool TryParseAcsAdditions(string? text, out string normalized, out string? problem)
+        {
+            var names = (text ?? string.Empty)
+                .Split(new[] { ',', ';', ' ' }, System.StringSplitOptions.RemoveEmptyEntries)
+                .Select(n => n.Trim())
+                .Where(n => n.Length > 0)
+                .ToList();
+            var unknown = names.Where(n => !IsKnown(n)).Distinct(System.StringComparer.Ordinal).ToList();
+            var accepted = AllKnownAntigens
+                .Where(ag => names.Contains(ag, System.StringComparer.Ordinal) && !AcsCoreAntigens.Contains(ag))
+                .ToList();
+            normalized = string.Join(", ", accepted);
+            problem = unknown.Count == 0 ? null
+                : $"{string.Join(", ", unknown)} {(unknown.Count == 1 ? "is not a known antigen" : "are not known antigens")} (names are case-sensitive)";
+            return problem == null;
+        }
+
+        /// <summary>The antigens the ACS result covers: the core plus the lab's additions.</summary>
+        public static IReadOnlyList<string> AcsAntigens(string? additions)
+        {
+            TryParseAcsAdditions(additions, out var normalized, out _);
+            var extra = normalized.Split(", ", System.StringSplitOptions.RemoveEmptyEntries);
+            return AcsCoreAntigens.Concat(extra).ToList();
+        }
 
         public const string AcsResultText = "All Clinically Significant Antibodies Ruled Out";
         public const double AcsProbabilityCutoff = 0.95;

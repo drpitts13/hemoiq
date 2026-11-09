@@ -312,6 +312,9 @@ namespace HemoIQ.Services
             }
             else
             {
+                if (analysis.Acs.Antigens.Count > 0 && (analysis.Acs.IsEligible || analysis.Acs.IsEligibleWithException))
+                    sb.AppendLine("Clinically significant antibodies evaluated (lab-configured): " +
+                                  string.Join(", ", analysis.Acs.Antigens.Select(ag => "anti-" + ag)) + ".");
                 if (analysis.Acs.IsEligible)
                 {
                     sb.AppendLine("All clinically significant antibodies are ruled out.");

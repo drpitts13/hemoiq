@@ -55,7 +55,7 @@ namespace HemoIQ.Services
                             (c.Kind == PatientTypingKind.Predicted && c.PatientValue == "+"))
                 .Select(c => c.Antibody)
                 .ToHashSet(System.StringComparer.Ordinal);
-            var notRuledOut = AntigenConstants.ClinicallySignificantAntigens
+            var notRuledOut = AppSettings.Current.AcsAntigenList()
                 .Where(ag => !result.UntypedClinicallySignificant.Contains(ag))
                 .Select(ag => "anti-" + ag)
                 .Where(ab => !result.RuledOut.ContainsKey(ab) && !identified.Contains(ab) && !short_.Contains(ab) &&

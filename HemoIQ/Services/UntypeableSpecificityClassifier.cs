@@ -19,7 +19,7 @@ namespace HemoIQ.Services
             if (typed.Count == 0)
                 return new List<UntypeableSpecificity>();
 
-            var cs = new HashSet<string>(AntigenConstants.ClinicallySignificantAntigens, StringComparer.Ordinal);
+            var cs = new HashSet<string>(AppSettings.Current.AcsAntigenList(), StringComparer.Ordinal);
             var list = new List<UntypeableSpecificity>();
             foreach (var ag in AntigenConstants.Antigens)
             {

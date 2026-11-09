@@ -104,6 +104,8 @@ namespace HemoIQ.Models
         public bool IsEligible { get; set; }
         public bool IsEligibleWithException { get; set; }
         public int RequiredRuleoutCount { get; set; }
+        /// <summary>The antigens evaluated: the fixed core plus the lab's configured additions.</summary>
+        public List<string> Antigens { get; set; } = new();
         public List<AcsShortfall> Shortfalls { get; set; } = new();
         public List<AcsExceptionAntibody> Exceptions { get; set; } = new();
         public string SuggestedCombinedResult { get; set; } = string.Empty;

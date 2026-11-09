@@ -22,6 +22,7 @@ namespace HemoIQ.Services
                 RuleEngineVersion = EngineVersion,
                 settings.DefaultMinRuleoutCount,
                 settings.AcsRuleoutCount,
+                AcsAntigens = settings.AcsAntigenList(),
                 settings.IdentificationCellCount,
                 settings.SeparationCellCount,
                 Rules = (rules ?? Array.Empty<Rule>())
@@ -49,7 +50,9 @@ namespace HemoIQ.Services
                 .Append(settings.DefaultMinRuleoutCount)
                 .Append("; ACS requires ")
                 .Append(settings.AcsRuleoutCount)
-                .Append(" observed qualifying cells; identification rule is ")
+                .Append(" observed qualifying cells for anti-")
+                .Append(string.Join(", anti-", settings.AcsAntigenList()))
+                .Append("; identification rule is ")
                 .Append(settings.IdentificationRuleLabel)
                 .Append(settings.SeparationCellCount > 0
                     ? $"; multiple-antibody separation suggests {settings.SeparationCellCount} isolated reactive cell(s) per co-identified antibody"

@@ -83,6 +83,11 @@ namespace HemoIQ.Services
             }),
             Int("identificationCellCount", 1, 3, s => s.IdentificationCellCount, (s, v) => s.IdentificationCellCount = v),
             Int("acsRuleoutCount", 1, 5, s => s.AcsRuleoutCount, (s, v) => s.AcsRuleoutCount = v),
+            Text("acsAdditionalAntigens", 400, s => s.AcsAdditionalAntigens, (s, v) =>
+            {
+                AntigenConstants.TryParseAcsAdditions(v, out var normalized, out _);
+                s.AcsAdditionalAntigens = normalized;
+            }, v => AntigenConstants.TryParseAcsAdditions(v, out _, out var problem) ? null : problem),
             Int("separationCellCount", 0, 5, s => s.SeparationCellCount, (s, v) => s.SeparationCellCount = v),
             Int("defaultMinRuleoutCount", 1, 5, s => s.DefaultMinRuleoutCount, (s, v) => s.DefaultMinRuleoutCount = v),
             Text("defaultSpecimenType", 40,s => s.DefaultSpecimenType, (s, v) => s.DefaultSpecimenType = v,

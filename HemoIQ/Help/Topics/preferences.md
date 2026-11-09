@@ -11,6 +11,11 @@ On a small screen the settings scroll; **Save**, **Cancel** and the other button
 - **ID cell rule** is how many antigen-positive reactive cells and antigen-negative nonreactive cells are required before a row is marked as meeting the identification rule. AABB 3 + 3 is the usual standard. The Suspected Antibodies tab turns those rows green.
 - **Multiple-Ab separation** applies when two or more antibodies are called together. It is the number of reactive cells each antibody needs that carry its antigen and are negative for every other called antigen. For anti-e, anti-f, and anti-Lea, that means reactive e+ f- Lea- cells, reactive e- f+ Lea- cells, and reactive e- f- Lea+ cells. The range is 0 to 5; 0 turns the check off, and the default is 1. An antibody known from patient history needs no cells of its own, and a rule on the Rules tab can exempt an antibody. This is a suggested criterion: HemoIQ warns but does not block.
 - **ACS rule-outs** is how many times each clinically significant antibody must be ruled out before the application can suggest that all clinically significant antibodies are ruled out. The range is 1 to 5.
+- **ACS antigens added** lists the antigens, beyond the fixed core, that the all-ruled-out result also covers:
+  - The core, which cannot be removed, is D, C, c, E, e, K, k, Fya, Fyb, Jka, Jkb, S and s.
+  - The default additions are Lea, Leb, M and N. Add others your procedure requires, such as P1 or Kpa, or clear the box to use the core only.
+  - Names are case-sensitive and must be known antigens; an unknown name is refused when you save.
+  - The analysis report lists the antibodies evaluated, the rule trace records the list, and changing it marks open analyses as stale.
 - **Default rule-outs** is the minimum number of qualifying antigen-positive nonreactive cells required to rule out an antibody when no custom rule exists. The range is 1 to 5. A rule on the Rules tab overrides this for that antibody.
 
 ## Specimens and the database
@@ -55,7 +60,7 @@ When users are registered, the initials entered for a supervisor review must be 
 **Export…** saves the laboratory-wide Preferences, as last saved, to a JSON file. Use it to set up a second workstation the same way, or to keep a copy with your procedure documents. The file covers:
 - lab name and department;
 - probability threshold;
-- identification, ACS, separation and default rule-out counts;
+- identification, ACS, separation and default rule-out counts, and the ACS antigens added;
 - default specimen type;
 - expiration warning, specimen dating, transfusion window, dating look-back and RhIG window;
 - supervisor review and turnaround threshold;

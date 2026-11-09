@@ -10,6 +10,15 @@ namespace HemoIQ.Models
         public int IdentificationCellCount { get; set; } = 3;
         public int AcsRuleoutCount { get; set; } = 3;
         /// <summary>
+        /// Antigens added to the fixed ACS core (<see cref="AntigenConstants.AcsCoreAntigens"/>): an antibody
+        /// to each must also be ruled out before All Clinically Significant Antibodies Ruled Out is suggested.
+        /// </summary>
+        public string AcsAdditionalAntigens { get; set; } = AntigenConstants.AcsDefaultAdditionalAntigens;
+
+        /// <summary>Every antigen the ACS result covers under these settings.</summary>
+        public System.Collections.Generic.IReadOnlyList<string> AcsAntigenList() =>
+            AntigenConstants.AcsAntigens(AcsAdditionalAntigens);
+        /// <summary>
         /// Suggested multiple-antibody criterion: reactive cells each called antibody needs that are
         /// negative for every other called antigen. 0 turns the check off.
         /// </summary>
@@ -104,6 +113,8 @@ namespace HemoIQ.Models
                 DefaultSpecimenType = "serum";
             DefaultIdentifiedBy = NormalizeInitials(DefaultIdentifiedBy);
             ExtraPhases = ExtraPhaseParser.NormalizeList(ExtraPhases);
+            AntigenConstants.TryParseAcsAdditions(AcsAdditionalAntigens, out var acsAdditions, out _);
+            AcsAdditionalAntigens = acsAdditions;
         }
 
         /// <summary>
@@ -190,6 +201,7 @@ namespace HemoIQ.Models
             ProbabilityThreshold,
             IdentificationCellCount,
             AcsRuleoutCount,
+            AcsAdditionalAntigens,
             DefaultMinRuleoutCount,
             SeparationCellCount,
             ExtraPhases,

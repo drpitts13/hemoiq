@@ -48,6 +48,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | UI | Antigram freeze / slashes / run compare | Partial | Frozen cell; slashes; compare extras; Show dosage; filter/sort; panel lot compare | — |
 | UI | Explain Analysis panel | Present | Explain tab + Summary + clinical report assemble rule-out, support, conflict, phenotype, additional testing | Keep wording as evidence, not diagnosis |
 | Audit | Panel, reactions, rules, settings, final ID | Partial | Snapshots store rule-engine version, rules JSON, operator, and the adsorption comparison (conclusions plus ordinary-score exclusions) | Cross-panel enzyme/DTT pairing later |
+| Configuration | ACS antigen list | Present | Fixed core (Rh, Kell, Duffy, Kidd, Ss) plus lab-configured additions (default Lea, Leb, M, N), validated case-sensitively; used by ACS evaluation, open-testing list, untypeable classifier and clinical-significance flags; listed on the report, in the rule trace and in the clinical snapshot; transferred with Preferences | The core itself is fixed by design |
 | Configuration | Rules + Preferences transfer | Present | Separate rule and Preferences JSON exports; `ConfigurationBundle` exports both together; import previews both sections and the stored rules the file lacks, refuses a file with any refused entry, applies atomically with optional audited removal of local-only rules, one `import_configuration` audit | No signed or checksummed bundle; reaction grades and phases beyond extra phases are not yet configurable data |
 | Tests | Synthetic cases with intermediate reasoning | Partial | Enzyme and DTT cases cover unpaired runs, short comparisons, mixed loss/gain/persistence that fits no pattern, and a one-loss two-persistence case that stays a partial destroyed pattern | Expand case library |
 
@@ -2982,9 +2983,62 @@ exported and imported separately, and with gaps:
 
 No existing test changed behavior (1109 passed).
 
+## Iteration 130 (this change): product review of configurable laboratory policy
+
+**Review:** which laboratory choices are data, and which are still in code.
+
+Configured as data:
+- per-antibody rules (count, heterozygous, exception, separation exemption);
+- lab Preferences (score threshold, ID, ACS, separation and default counts,
+  windows, review, turnaround, extra phases);
+- users and roles;
+- warehouse antigens on panels;
+- since Iteration 129, all of the above transfer together.
+
+Still in code:
+
+| Item | Assessment |
+|---|---|
+| ACS antigen list | **Fixed in this iteration.** It decides when "All Clinically Significant Antibodies Ruled Out" is suggested, and labs differ on Lea/Leb/M/N/P1. |
+| Reaction grades | Fixed. They are standard serology, and changing them would break stored reactions; not worth configuring. |
+| Standard phases (IS/37/AHG/CC) | Fixed, with configurable extras. Adequate. |
+| Ficin/DTT antigen effects | Fixed and published; low value to configure. |
+| Dosage (antithetical pairs) | Fixed and genetic; per-antibody rules already govern heterozygous use. |
+| Role-to-permission grants | Fixed by role. A configurable grant table is a candidate if labs need a senior-technologist role. |
+| Antigram system grouping | Fixed. Display only. |
+
+**Bounded improvement:**
+- The ACS list is now a fixed core (D, C, c, E, e, K, k, Fya, Fyb, Jka, Jkb,
+  S, s) plus `LabSettings.AcsAdditionalAntigens`, defaulting to Lea, Leb, M,
+  N. With the default, behavior is unchanged.
+- `AntigenConstants.TryParseAcsAdditions` accepts known antigens in exact
+  case, drops core antigens and repeats, and orders the rest as on the
+  antigram. Unknown names are refused in Preferences and in Preferences
+  import. When settings load, unknown names are dropped.
+- Every consumer uses the configured list:
+  - ACS evaluation;
+  - the open-testing list;
+  - the untypeable-specificity classifier;
+  - the clinical-significance flag on rule-out rows.
+- `AcsEvaluation.Antigens` records the antibodies evaluated. The clinical
+  report lists them when ACS is suggested.
+- The rule trace (`Serialize` and `Explain`) and `ClinicalSnapshot` include
+  the list, so changing it is audited and open analyses become stale.
+
+**Tests:** `AcsAntigenConfigurationTests` (8):
+- the default equals the previous list;
+- parsing (order, core and repeats dropped, wrong case refused, blank means
+  core only);
+- core-only makes ACS eligible without Lewis/MN rule-outs;
+- an added P1 must be ruled out;
+- the rule trace serializes and explains the list;
+- the snapshot changes when the list changes;
+- `Clamp` drops unknown names;
+- Preferences transfer carries the list and refuses unknown names.
+
+No existing test changed behavior (1117 passed).
+
 ## Likely next tick
 
-A product review at Iteration 130 (four iterations since 124 plus the
-historical-mutation sweep at 128): check that rules, Preferences, phases and
-reaction grades are configured as data rather than in code, and record which
-are still fixed.
+A configurable role-to-permission table, if a senior-technologist role is
+needed; otherwise, return to workflow gaps from the roadmap.
