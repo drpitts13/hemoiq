@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using HemoIQ.Data;
 
 namespace HemoIQ.Services
@@ -32,6 +33,8 @@ namespace HemoIQ.Services
         public string? OrderingLocation { get; init; }
         public string? OrderingProvider { get; init; }
         public string? EncounterNumber { get; init; }
+        /// <summary>Save-time warnings the user chose to save past (encounter on another patient, pregnancy for a male patient).</summary>
+        public IReadOnlyList<string> SavedPastWarnings { get; init; } = Array.Empty<string>();
         public string PregnancyStatus { get; init; } = Models.PregnancyStatus.Unknown;
         public string? PregnancyEndDate { get; init; }
         public string? RhigDate { get; init; }
@@ -66,6 +69,8 @@ namespace HemoIQ.Services
                     e.OrderingLocation, e.OrderingProvider);
                 db.UpdateSpecimenEncounter(e.AccessionNumber, e.EncounterNumber);
                 db.UpdateSpecimenPregnancy(e.AccessionNumber, e.PregnancyStatus, e.PregnancyEndDate, e.RhigDate);
+                foreach (var warning in e.SavedPastWarnings.Where(w => !string.IsNullOrWhiteSpace(w)))
+                    db.AppendAudit("save_override", "specimen", e.AccessionNumber, warning.Trim());
             });
         }
     }

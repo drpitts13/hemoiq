@@ -2639,7 +2639,27 @@ drill-down to the cases, and Analytics had neither.
 - The drill-down Detail column is wider, and Export CSV adds a "Confirmed past
   warnings" section.
 
+## Iteration 118 (this change)
+
+**Deficiency:** Iteration 116 recorded Confirm ID overrides. The two
+specimen-save warnings could still be saved past without any record: an
+encounter number already on another patient's specimen (Iteration 103), and
+a pregnancy for a patient recorded as male (Iteration 105). Both are
+data-quality and misidentification signals that a supervisor should be able
+to review.
+
+**Bounded improvement:**
+- `SpecimenEdit.SavedPastWarnings`: the specimen dialog collects each warning
+  the user saved past.
+- `SpecimenSaveService.Save` records each as a `save_override` audit entry,
+  with the warning as the reason, inside the same transaction. A failed save
+  records nothing.
+- The Timeline shows "Saved past a warning: …".
+- `OverrideAnalytics` now lists save overrides alongside confirmation
+  overrides, newest first. The Analytics card is renamed **Warnings
+  overridden**, and the CSV section is renamed to match.
+
 ## Likely next tick
 
-A product review, since several workflow pieces are now complete. Or the
-Specimen dialog regrouping.
+A product review (the last was at Iteration 114), or the Specimen dialog
+regrouping.

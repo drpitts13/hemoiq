@@ -339,11 +339,12 @@ namespace HemoIQ.ViewModels
                     SelectSpecimen(dlg.AccessionNumber);
                 return;
             }
-            if (!ConfirmEncounter(dlg.AccessionNumber, dlg.EncounterNumber, dlg.Mrn)) return;
-            if (!ConfirmPregnancy(dlg.Mrn, dlg.PregnancyStatusCode)) return;
+            var savedPast = new System.Collections.Generic.List<string>();
+            if (!ConfirmEncounter(dlg.AccessionNumber, dlg.EncounterNumber, dlg.Mrn, savedPast)) return;
+            if (!ConfirmPregnancy(dlg.Mrn, dlg.PregnancyStatusCode, savedPast)) return;
             try
             {
-                Services.SpecimenSaveService.Save(_db, ToEdit(dlg, dlg.AccessionNumber), isNew: true);
+                Services.SpecimenSaveService.Save(_db, ToEdit(dlg, dlg.AccessionNumber, savedPast), isNew: true);
                 _main.SetStatus($"Specimen {dlg.AccessionNumber} added.");
                 NotifySpecimensChanged();
                 SelectedSpecimen = Specimens.FirstOrDefault(s => s.AccessionNumber == dlg.AccessionNumber);
@@ -356,29 +357,37 @@ namespace HemoIQ.ViewModels
         }
 
         /// <summary>Warns, without blocking, when the encounter number is already on another patient's specimen.</summary>
-        private bool ConfirmEncounter(string accession, string? encounter, string? mrn)
+        private bool ConfirmEncounter(string accession, string? encounter, string? mrn,
+            System.Collections.Generic.List<string> savedPast)
         {
             string? warning;
             try { warning = Services.EncounterCheck.Describe(_db, accession, encounter, mrn); }
             catch (System.ArgumentException) { return true; } // the save reports the invalid value
             if (warning == null) return true;
-            return MessageBox.Show(warning + "\n\nSave anyway?", "Encounter on another patient",
-                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+            if (MessageBox.Show(warning + "\n\nSave anyway?", "Encounter on another patient",
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return false;
+            savedPast.Add(warning);
+            return true;
         }
 
         /// <summary>Warns, without blocking, when a pregnancy is recorded for a patient recorded as male.</summary>
-        private bool ConfirmPregnancy(string? mrn, string pregnancyStatus)
+        private bool ConfirmPregnancy(string? mrn, string pregnancyStatus,
+            System.Collections.Generic.List<string> savedPast)
         {
             if (mrn == null) return true;
             var patient = _db.GetPatient(mrn);
             if (Services.PatientSexCheck.PregnancyConflict(patient?.Sex, pregnancyStatus, mrn) is not string warning) return true;
-            return MessageBox.Show(warning + "\n\nSave anyway?", "Pregnancy and patient sex",
-                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+            if (MessageBox.Show(warning + "\n\nSave anyway?", "Pregnancy and patient sex",
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return false;
+            savedPast.Add(warning);
+            return true;
         }
 
-        private static Services.SpecimenEdit ToEdit(Views.Dialogs.SpecimenDialog dlg, string accession) => new()
+        private static Services.SpecimenEdit ToEdit(Views.Dialogs.SpecimenDialog dlg, string accession,
+            System.Collections.Generic.IReadOnlyList<string>? savedPast = null) => new()
         {
             AccessionNumber = accession,
+            SavedPastWarnings = savedPast ?? System.Array.Empty<string>(),
             Type = dlg.SpecimenType,
             ExpirationDate = dlg.ExpirationDate,
             IsActive = dlg.ItemIsActive,
@@ -413,11 +422,12 @@ namespace HemoIQ.ViewModels
             if (SelectedSpecimen == null) return;
             var dlg = new Views.Dialogs.SpecimenDialog(SelectedSpecimen);
             if (dlg.ShowDialog() != true) return;
-            if (!ConfirmEncounter(SelectedSpecimen.AccessionNumber, dlg.EncounterNumber, dlg.Mrn)) return;
-            if (!ConfirmPregnancy(dlg.Mrn, dlg.PregnancyStatusCode)) return;
+            var savedPast = new System.Collections.Generic.List<string>();
+            if (!ConfirmEncounter(SelectedSpecimen.AccessionNumber, dlg.EncounterNumber, dlg.Mrn, savedPast)) return;
+            if (!ConfirmPregnancy(dlg.Mrn, dlg.PregnancyStatusCode, savedPast)) return;
             try
             {
-                Services.SpecimenSaveService.Save(_db, ToEdit(dlg, SelectedSpecimen.AccessionNumber), isNew: false);
+                Services.SpecimenSaveService.Save(_db, ToEdit(dlg, SelectedSpecimen.AccessionNumber, savedPast), isNew: false);
                 _main.SetStatus($"Specimen {SelectedSpecimen.AccessionNumber} updated.");
                 NotifySpecimensChanged();
             }

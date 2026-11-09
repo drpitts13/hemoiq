@@ -17,13 +17,14 @@ namespace HemoIQ.Services
     public static class OverrideAnalytics
     {
         public static List<AnalyticsCase> Cases(DatabaseService db, DateTime? from, DateTime? to) =>
-            Cases(db.GetAuditEventsByAction(new[] { "confirm_final_call" }), from, to,
+            Cases(db.GetAuditEventsByAction(new[] { "confirm_final_call", "save_override" }), from, to,
                 acc => db.GetSpecimen(acc));
 
         public static List<AnalyticsCase> Cases(IEnumerable<AuditEvent> confirmations, DateTime? from, DateTime? to,
             Func<string, Specimen?> specimen)
         {
-            var events = confirmations.Where(e => e.Action == "confirm_final_call" && e.EntityId != null).ToList();
+            var all = confirmations.ToList();
+            var events = all.Where(e => e.Action == "confirm_final_call" && e.EntityId != null).ToList();
             var latestByAccession = events
                 .GroupBy(e => e.EntityId!, StringComparer.Ordinal)
                 .ToDictionary(g => g.Key, g => g.Max(e => e.Id), StringComparer.Ordinal);
@@ -44,7 +45,19 @@ namespace HemoIQ.Services
                              string.Join(" ", overrides),
                 });
             }
-            return cases;
+            // Specimen saves past a data-quality warning (encounter on another patient, pregnancy for a male patient).
+            foreach (var e in all.Where(e => e.Action == "save_override" && e.EntityId != null && !string.IsNullOrWhiteSpace(e.Reason)))
+            {
+                if (!UserActivityService.InRange(e.OccurredAtUtc, from, to)) continue;
+                cases.Add(new AnalyticsCase
+                {
+                    Accession = e.EntityId!,
+                    Date = LocalDate(e.OccurredAtUtc),
+                    FinalAntibodies = specimen(e.EntityId!)?.FinalAntibodies ?? string.Empty,
+                    Detail = $"Specimen saved past a warning by {(string.IsNullOrWhiteSpace(e.Operator) ? "—" : e.Operator)}: {e.Reason}",
+                });
+            }
+            return cases.OrderByDescending(c => c.Date, StringComparer.Ordinal).ToList();
         }
 
         private static string LocalDate(string utcText) =>

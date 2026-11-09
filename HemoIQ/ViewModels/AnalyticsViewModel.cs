@@ -30,7 +30,7 @@ namespace HemoIQ.ViewModels
         public ICommand ShowOverridesCommand { get; }
 
         private List<AnalyticsCase> _overrideCases = new();
-        /// <summary>Identifications confirmed past Confirm ID warnings in the range.</summary>
+        /// <summary>Confirm ID and specimen-save warnings continued past in the range.</summary>
         public int OverrideCount => _overrideCases.Count;
 
         public ObservableCollection<OverdueInvestigation> Overdue { get; } = new();
@@ -197,7 +197,7 @@ namespace HemoIQ.ViewModels
             ExportCsvCommand = new RelayCommand(ExportCsv);
             OpenOverdueCommand = new RelayCommand(OpenOverdue, () => SelectedOverdue != null);
             ShowOverridesCommand = new RelayCommand(() =>
-                ShowDrill($"Confirmed past warnings ({RangeLabel})", _overrideCases));
+                ShowDrill($"Warnings overridden ({RangeLabel})", _overrideCases));
             OpenDrillCaseCommand = new RelayCommand(OpenDrillCase, () => SelectedDrillCase != null);
             _fromDate = DateTime.Today.AddYears(-1);
             _toDate = DateTime.Today;
@@ -310,8 +310,8 @@ namespace HemoIQ.ViewModels
         {
             static string Q(string v) => "\"" + v.Replace("\"", "\"\"") + "\"";
             yield return "";
-            yield return "Confirmed past warnings";
-            yield return "Accession,Confirmed,Final ID,Detail";
+            yield return "Warnings overridden";
+            yield return "Accession,Date,Final ID,Detail";
             foreach (var c in cases)
                 yield return $"{Q(c.Accession)},{Q(c.Date)},{Q(c.FinalAntibodies)},{Q(c.Detail)}";
         }

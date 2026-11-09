@@ -66,7 +66,7 @@ public class OverrideAnalyticsTests
         Assert.Contains("Confirmed without an analysis.", c.Detail);
 
         var csv = HemoIQ.ViewModels.AnalyticsViewModel.OverrideCsvLines(cases).ToList();
-        Assert.Contains("Accession,Confirmed,Final ID,Detail", csv);
+        Assert.Contains("Accession,Date,Final ID,Detail", csv);
         Assert.Contains(csv, l => l.StartsWith("\"OA-1\","));
     }
 }

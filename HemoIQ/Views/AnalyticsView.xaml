@@ -102,14 +102,14 @@
                 </StackPanel>
             </Border>
             <Border Style="{StaticResource StatCard}" Background="#FFF3E0" BorderBrush="#FFCC80" Margin="0"
-                    ToolTip="Identifications confirmed in the range past one or more Confirm ID warnings: stale or missing analysis, testing still open, or the multiple-antibody separation criterion not met.">
+                    ToolTip="Warnings a user chose to continue past in the range: identifications confirmed with a stale or missing analysis, testing still open, or the separation criterion not met; and specimens saved with an encounter already on another patient or a pregnancy for a male patient.">
                 <StackPanel>
-                    <TextBlock Text="Confirmed past warnings" FontSize="11" Foreground="#37474F"/>
+                    <TextBlock Text="Warnings overridden" FontSize="11" Foreground="#37474F"/>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding OverrideCount}" FontSize="20" FontWeight="Bold" Foreground="#E65100"/>
                         <Button Content="Show cases" Command="{Binding ShowOverridesCommand}" Margin="10,0,0,0"
                                 Padding="6,0" VerticalAlignment="Center"
-                                ToolTip="List these confirmations below with the warnings that were overridden."/>
+                                ToolTip="List these cases below with the warnings that were overridden."/>
                     </StackPanel>
                 </StackPanel>
             </Border>

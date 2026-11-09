@@ -283,6 +283,7 @@ namespace HemoIQ.Services
                                       (Prop(a.AfterJson, "rhigDate") is string rh ? $"; RhIG {rh}" : ""),
                 "update_collection" => $"Collection/receipt recorded: collected {Prop(a.AfterJson, "collectedAt") ?? "—"}, received {Prop(a.AfterJson, "receivedAt") ?? "—"}",
                 "update_origin" => "Origin recorded: " + OriginText(a.AfterJson),
+                "save_override" => "Saved past a warning: " + a.Reason,
                 "update_encounter" => Prop(a.AfterJson, "encounter") is string enc
                     ? $"Encounter / account recorded: {enc}" : "Encounter / account cleared",
                 "clear_reactions" => $"Reactions cleared on {Prop(a.BeforeJson, "panel") ?? "panel"}, {Prop(a.BeforeJson, "run") ?? "run"}: " +
