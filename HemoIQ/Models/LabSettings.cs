@@ -106,6 +106,21 @@ namespace HemoIQ.Models
             ExtraPhases = ExtraPhaseParser.NormalizeList(ExtraPhases);
         }
 
+        /// <summary>
+        /// Reads a decimal typed with either a decimal point or, as on comma-decimal regional
+        /// settings, a single decimal comma ("0.70" or "0,70"). Thousands separators are refused.
+        /// </summary>
+        public static bool TryParseDecimal(string? text, out double value)
+        {
+            value = 0;
+            var t = (text ?? string.Empty).Trim();
+            if (t.Length == 0) return false;
+            if (t.Contains(',') && !t.Contains('.') && t.Count(ch => ch == ',') == 1) t = t.Replace(',', '.');
+            if (t.Contains(',')) return false;
+            return double.TryParse(t, System.Globalization.NumberStyles.AllowLeadingSign | System.Globalization.NumberStyles.AllowDecimalPoint,
+                System.Globalization.CultureInfo.InvariantCulture, out value);
+        }
+
         public static string NormalizeInitials(string? initials)
         {
             var t = (initials ?? string.Empty).Trim();

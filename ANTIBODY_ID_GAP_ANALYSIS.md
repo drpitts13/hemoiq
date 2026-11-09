@@ -2827,7 +2827,31 @@ and future site in one place:
    threshold, use the invariant culture. The Preferences threshold already
    does.
 
+## Iteration 125 (this change)
+
+**Sweep:** Following the date fix in Iteration 124, numbers were checked
+under comma-decimal regional settings (de-DE).
+- No data corruption: Preferences are stored as JSON, database values are
+  typed parameters, and the turnaround CSV already used the invariant
+  culture.
+- Two defects were fixed.
+
+**Fixes:**
+1. **Score threshold input.** Preferences accepted only "0.70". A user on
+   comma-decimal settings typing "0,70" was told the value must be "between
+   0.30 and 0.95". `LabSettings.TryParseDecimal` now accepts a decimal point
+   or a single decimal comma, and refuses thousands separators and ambiguous
+   text.
+2. **Antibody-count CSV.** The percentage column was written with the local
+   format ("12,5%", quoted), unlike the other CSV sections. The From and To
+   dates were also culture-formatted. Both now use the invariant culture.
+
+**Tests:** `CommaDecimalCultureTests` (10):
+- the decimal parser cases, also run under German settings;
+- the turnaround CSV, the antibody CSV (which fails without fix 2) and the
+  Preferences export round trip, all run under German settings.
+
 ## Likely next tick
 
-Roadmap item 2: a sweep of stored-number formatting under a comma-decimal
-culture (for example de-DE).
+One configuration bundle for rules and Preferences, or the encounter and
+override drill-down by technologist.

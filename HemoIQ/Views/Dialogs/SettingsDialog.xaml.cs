@@ -147,8 +147,7 @@ namespace HemoIQ.Views.Dialogs
                     return;
                 }
             }
-            if (!double.TryParse(ThresholdBox.Text.Trim(), NumberStyles.Float,
-                    CultureInfo.InvariantCulture, out var threshold) ||
+            if (!LabSettings.TryParseDecimal(ThresholdBox.Text, out var threshold) ||
                 threshold < 0.3 || threshold > 0.95)
             {
                 MessageBox.Show("Score threshold must be a number between 0.30 and 0.95.",

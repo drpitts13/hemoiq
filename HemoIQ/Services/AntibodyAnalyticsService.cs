@@ -133,8 +133,8 @@ namespace HemoIQ.Services
             DateTime? to,
             string filePath)
         {
-            var fromText = from?.ToString("yyyy-MM-dd") ?? "";
-            var toText = to?.ToString("yyyy-MM-dd") ?? "";
+            var fromText = from?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "";
+            var toText = to?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "";
             var config = new CsvConfiguration(CultureInfo.InvariantCulture);
             using var writer = new StreamWriter(filePath, false, Encoding.UTF8);
             using var csv = new CsvWriter(writer, config);
@@ -142,7 +142,7 @@ namespace HemoIQ.Services
             {
                 r.Antibody,
                 r.Count,
-                PercentOfIds = r.PercentDisplay,
+                PercentOfIds = r.PercentOfIds.ToString("F1", CultureInfo.InvariantCulture) + "%",
                 r.Specimens,
                 From = fromText,
                 To = toText

@@ -31,6 +31,11 @@ comparisons, the import schema check, and Final ID entries.
 - Prefer `CultureInfo.InvariantCulture` when formatting a stored date in new code.
   `AppCultureTests` checks the normalization and that startup applies it.
 
+- Numbers written to files (CSV exports, the Preferences export) use `CultureInfo.InvariantCulture`,
+  so they have a decimal point under every regional setting. Typed decimals go through
+  `LabSettings.TryParseDecimal`, which accepts "0.70" or "0,70". `CommaDecimalCultureTests` runs
+  the exports under German settings.
+
 ## Clinically important changes are audited, never silent
 
 - Each specimen, patient, rule and settings change goes through a `DatabaseService` method. The
