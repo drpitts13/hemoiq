@@ -521,17 +521,17 @@ namespace HemoIQ.ViewModels
             LoadCommand = new RelayCommand(LoadReactions,
                 () => SelectedSpecimen != null && SelectedRun != null);
             SaveCommand = new RelayCommand(SaveGradesOnly,
-                () => SelectedSpecimen != null && SelectedRun != null && Rows.Count > 0);
+                () => SessionAccess.CanRecord && (SelectedSpecimen != null && SelectedRun != null && Rows.Count > 0));
             SaveAnalyzeCommand = new RelayCommand(SaveAndAnalyze,
-                () => SelectedSpecimen != null && SelectedRun != null && Rows.Count > 0);
+                () => SessionAccess.CanRecord && (SelectedSpecimen != null && SelectedRun != null && Rows.Count > 0));
             ClearCommand = new RelayCommand(ClearReactions,
-                () => SelectedSpecimen != null && SelectedRun != null);
+                () => SessionAccess.CanRecord && (SelectedSpecimen != null && SelectedRun != null));
             FillNegativesCommand = new RelayCommand(FillRemainingNegatives,
-                () => Rows.Count > 0);
+                () => SessionAccess.CanRecord && (Rows.Count > 0));
             AddRunCommand = new RelayCommand(AddRun,
-                () => SelectedSpecimen != null && SelectedPanel != null);
+                () => SessionAccess.CanRecord && (SelectedSpecimen != null && SelectedPanel != null));
             DeleteRunCommand = new RelayCommand(DeleteRun,
-                () => SelectedRun != null && !(SelectedRun?.IsUntreated ?? true));
+                () => SessionAccess.CanRecord && (SelectedRun != null && !(SelectedRun?.IsUntreated ?? true)));
 
             RefreshSpecimens();
         }

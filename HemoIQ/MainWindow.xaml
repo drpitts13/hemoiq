@@ -51,6 +51,21 @@
 
         <!-- Status bar -->
         <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem DockPanel.Dock="Right" ToolTip="{Binding SessionDetail}">
+                <Border Padding="6,1" CornerRadius="2">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SessionViewOnly}" Value="True">
+                                    <Setter Property="Background" Value="#FFF3CD"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding SessionText}"/>
+                </Border>
+            </StatusBarItem>
+            <Separator DockPanel.Dock="Right"/>
             <StatusBarItem>
                 <TextBlock Text="{Binding StatusText}" Margin="4,0"/>
             </StatusBarItem>

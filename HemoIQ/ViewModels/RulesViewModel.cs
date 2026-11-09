@@ -33,12 +33,12 @@ namespace HemoIQ.ViewModels
         {
             _db = db;
             _main = main;
-            AddCommand = new RelayCommand(AddRule);
-            EditCommand = new RelayCommand(EditRule, () => SelectedRule != null);
-            DeleteCommand = new RelayCommand(DeleteRule, () => SelectedRule != null);
+            AddCommand = new RelayCommand(AddRule, () => SessionAccess.CanRecord);
+            EditCommand = new RelayCommand(EditRule, () => SessionAccess.CanRecord && (SelectedRule != null));
+            DeleteCommand = new RelayCommand(DeleteRule, () => SessionAccess.CanRecord && (SelectedRule != null));
             RefreshCommand = new RelayCommand(Refresh);
             ExportCommand = new RelayCommand(ExportRules, () => Rules.Count > 0);
-            ImportCommand = new RelayCommand(ImportRules);
+            ImportCommand = new RelayCommand(ImportRules, () => SessionAccess.CanRecord);
             Refresh();
         }
 

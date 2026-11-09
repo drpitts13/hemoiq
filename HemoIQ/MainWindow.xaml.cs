@@ -61,6 +61,9 @@ namespace HemoIQ
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             AcknowledgeIntendedUseIfNeeded();
+            ViewModel.RefreshSession();
+            if (ViewModel.SessionViewOnly)
+                ViewModel.SetStatus(ViewModel.SessionText + ". Commands that change laboratory data are disabled.");
             ViewModel.ReactionsVM.OfferDraftRecovery();
             ViewModel.NotifyCapacityIfNeeded();
             if (!ViewModel.IsDatabaseNearCapacity) return;
@@ -153,7 +156,9 @@ namespace HemoIQ
         private void ShowSettings()
         {
             var dlg = new Views.Dialogs.SettingsDialog(ViewModel.Database) { Owner = this };
-            if (dlg.ShowDialog() == true)
+            var saved = dlg.ShowDialog() == true;
+            ViewModel.RefreshSession(); // users and roles may have changed even when Preferences were cancelled
+            if (saved)
             {
                 ViewModel.SetStatus("Preferences saved.");
                 ViewModel.NotifyCapacityIfNeeded();

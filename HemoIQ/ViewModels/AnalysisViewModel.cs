@@ -208,8 +208,8 @@ namespace HemoIQ.ViewModels
 
             AnalyzeCommand = new RelayCommand(RunAnalysis, () => SelectedSpecimen != null);
             RefreshSpecimensCommand = new RelayCommand(Refresh);
-            ConfirmIdCommand = new RelayCommand(ConfirmId, () => SelectedSpecimen != null);
-            ClearConfirmationCommand = new RelayCommand(ClearConfirmation, () => SelectedSpecimen != null);
+            ConfirmIdCommand = new RelayCommand(ConfirmId, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
+            ClearConfirmationCommand = new RelayCommand(ClearConfirmation, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
             AddSelectedToFinalIdCommand = new RelayCommand(AddSelectedToFinalId,
                 () => SelectedSpecimen != null && SelectedSuspected != null);
             OpenReactionsCommand = new RelayCommand(OpenReactions, () => SelectedSpecimen != null);

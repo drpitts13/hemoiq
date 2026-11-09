@@ -99,22 +99,22 @@ namespace HemoIQ.ViewModels
         {
             _db = db;
             _main = main;
-            AddCommand = new RelayCommand(AddPanel, () => !IsEditingAntigens);
-            EditCommand = new RelayCommand(BeginEditAntigens, () => SelectedPanel != null && !IsEditingAntigens);
-            EditDetailsCommand = new RelayCommand(EditPanel, () => SelectedPanel != null && !IsEditingAntigens);
-            DeleteCommand = new RelayCommand(DeletePanel, () => SelectedPanel != null && !IsEditingAntigens);
-            CopyCommand = new RelayCommand(CopyPanel, () => SelectedPanel != null && !IsEditingAntigens);
-            ImportCsvCommand = new RelayCommand(ImportCsv, () => !IsEditingAntigens);
-            DownloadVendorCommand = new RelayCommand(DownloadFromVendor, () => !IsEditingAntigens);
+            AddCommand = new RelayCommand(AddPanel, () => SessionAccess.CanRecord && (!IsEditingAntigens));
+            EditCommand = new RelayCommand(BeginEditAntigens, () => SessionAccess.CanRecord && (SelectedPanel != null && !IsEditingAntigens));
+            EditDetailsCommand = new RelayCommand(EditPanel, () => SessionAccess.CanRecord && (SelectedPanel != null && !IsEditingAntigens));
+            DeleteCommand = new RelayCommand(DeletePanel, () => SessionAccess.CanRecord && (SelectedPanel != null && !IsEditingAntigens));
+            CopyCommand = new RelayCommand(CopyPanel, () => SessionAccess.CanRecord && (SelectedPanel != null && !IsEditingAntigens));
+            ImportCsvCommand = new RelayCommand(ImportCsv, () => SessionAccess.CanRecord && (!IsEditingAntigens));
+            DownloadVendorCommand = new RelayCommand(DownloadFromVendor, () => SessionAccess.CanRecord && (!IsEditingAntigens));
             ExportCsvCommand = new RelayCommand(ExportCsv, () => SelectedPanel != null && !IsEditingAntigens);
             PrintAntigramCommand = new RelayCommand(PrintAntigram, () => SelectedPanel != null && !IsEditingAntigens);
-            AddExtraAntigenCommand = new RelayCommand(AddExtraAntigen, () => SelectedPanel != null && !IsEditingAntigens);
-            RemoveExtraAntigenCommand = new RelayCommand(RemoveExtraAntigen, () => SelectedPanel != null && !IsEditingAntigens && ExtraAntigens.Count > 0);
+            AddExtraAntigenCommand = new RelayCommand(AddExtraAntigen, () => SessionAccess.CanRecord && (SelectedPanel != null && !IsEditingAntigens));
+            RemoveExtraAntigenCommand = new RelayCommand(RemoveExtraAntigen, () => SessionAccess.CanRecord && (SelectedPanel != null && !IsEditingAntigens && ExtraAntigens.Count > 0));
             SaveCellsCommand = new RelayCommand(SaveAllCells, () => IsEditingAntigens);
             CancelEditCommand = new RelayCommand(CancelEdit, () => IsEditingAntigens);
             RefreshCommand = new RelayCommand(Refresh);
             ActivateCommand = new RelayCommand(ActivatePanel,
-                () => SelectedPanel != null && !SelectedPanel.IsActive && !IsEditingAntigens);
+                () => SessionAccess.CanRecord && (SelectedPanel != null && !SelectedPanel.IsActive && !IsEditingAntigens));
             ViewArtifactCommand = new RelayCommand(ViewArtifact,
                 () => SelectedPanel != null && SelectedPanel.HasImportArtifact && !IsEditingAntigens);
             CompareCommand = new RelayCommand(ComparePanels,

@@ -1,3 +1,4 @@
+using HemoIQ.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -69,20 +70,20 @@ namespace HemoIQ.ViewModels
             _db = db;
             _main = main;
 
-            AddCommand = new RelayCommand(AddSpecimen);
+            AddCommand = new RelayCommand(AddSpecimen, () => SessionAccess.CanRecord);
             CancelInvestigationCommand = new RelayCommand(CancelInvestigation,
-                () => SelectedSpecimen is { IsCancelled: false, HasFinalCall: false });
+                () => SessionAccess.CanRecord && (SelectedSpecimen is { IsCancelled: false, HasFinalCall: false }));
             ReinstateInvestigationCommand = new RelayCommand(ReinstateInvestigation,
                 () => SelectedSpecimen is { IsCancelled: true });
             SupervisorReviewCommand = new RelayCommand(SupervisorReview,
                 () => SelectedSpecimen is { HasFinalCall: true, IsReviewed: false });
             EditPatientCommand = new RelayCommand(EditPatient,
-                () => !string.IsNullOrWhiteSpace(SelectedSpecimen?.Mrn));
-            EditCommand = new RelayCommand(EditSpecimen, () => SelectedSpecimen != null);
-            DeleteCommand = new RelayCommand(DeleteSpecimen, () => SelectedSpecimen != null);
-            AttachPanelCommand = new RelayCommand(AttachPanel, () => SelectedSpecimen != null);
+                () => SessionAccess.CanRecord && (!string.IsNullOrWhiteSpace(SelectedSpecimen?.Mrn)));
+            EditCommand = new RelayCommand(EditSpecimen, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
+            DeleteCommand = new RelayCommand(DeleteSpecimen, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
+            AttachPanelCommand = new RelayCommand(AttachPanel, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
             DetachPanelCommand = new RelayCommand(DetachPanel,
-                () => SelectedSpecimen != null && SelectedLinkedPanel != null);
+                () => SessionAccess.CanRecord && (SelectedSpecimen != null && SelectedLinkedPanel != null));
             RefreshCommand = new RelayCommand(Refresh);
             OpenReactionsCommand = new RelayCommand(OpenReactions, () => SelectedSpecimen != null);
             OpenAnalysisCommand = new RelayCommand(OpenAnalysis, () => SelectedSpecimen != null);

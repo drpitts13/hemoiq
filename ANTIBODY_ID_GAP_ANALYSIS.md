@@ -48,7 +48,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | UI | Antigram freeze / slashes / run compare | Partial | Frozen cell; slashes; compare extras; Show dosage; filter/sort; panel lot compare | — |
 | UI | Explain Analysis panel | Present | Explain tab + Summary + clinical report assemble rule-out, support, conflict, phenotype, additional testing | Keep wording as evidence, not diagnosis |
 | Audit | Panel, reactions, rules, settings, final ID | Partial | Snapshots store rule-engine version, rules JSON, operator, and the adsorption comparison (conclusions plus ordinary-score exclusions) | Cross-panel enzyme/DTT pairing later |
-| Security | Roles and data-change permission | Present | Read-only, Technologist, Supervisor, Administrator; once users are registered every public data writer requires `RecordResults` (Technologist and above), so unregistered logins and Read-only users view only; guard test fails on any unguarded public writer; users table migrated to accept the new role | Role grants are fixed per role, not a configurable table; no Senior technologist or Medical director role |
+| Security | Roles and data-change permission | Present | Read-only, Technologist, Supervisor, Administrator; once users are registered every public data writer requires `RecordResults` (Technologist and above), so unregistered logins and Read-only users view only; guard test fails on any unguarded public writer; users table migrated to accept the new role | Role grants are fixed per role, not a configurable table; no Senior technologist or Medical director role. Status bar names the session; view-only sessions have change commands disabled (Iteration 132) |
 | Configuration | ACS antigen list | Present | Fixed core (Rh, Kell, Duffy, Kidd, Ss) plus lab-configured additions (default Lea, Leb, M, N), validated case-sensitively; used by ACS evaluation, open-testing list, untypeable classifier and clinical-significance flags; listed on the report, in the rule trace and in the clinical snapshot; transferred with Preferences | The core itself is fixed by design |
 | Configuration | Rules + Preferences transfer | Present | Separate rule and Preferences JSON exports; `ConfigurationBundle` exports both together; import previews both sections and the stored rules the file lacks, refuses a file with any refused entry, applies atomically with optional audited removal of local-only rules, one `import_configuration` audit | No signed or checksummed bundle; reaction grades and phases beyond extra phases are not yet configurable data |
 | Tests | Synthetic cases with intermediate reasoning | Partial | Enzyme and DTT cases cover unpaired runs, short comparisons, mixed loss/gain/persistence that fits no pattern, and a one-loss two-persistence case that stays a partial destroyed pattern | Expand case library |
@@ -3080,8 +3080,49 @@ delegate.
 
 All 1123 tests pass.
 
+## Iteration 132 (this change)
+
+**Deficiency:** After Iteration 131, a Read-only user or an unregistered
+login could not change data, but nothing on screen showed this. Every change
+button looked available, and the refusal came only after the user had filled
+in a dialog or typed a reaction grid. Nor did any screen show who the
+application thought was signed in.
+
+**Bounded improvement:**
+- `SessionAccess.Describe` reports the session as one of:
+  - users not registered: all actions allowed;
+  - a named user and role, who may record;
+  - a named Read-only user: view only;
+  - an unregistered login: view only.
+  The description includes a detail tooltip. `Refresh` caches it for
+  screens.
+- Status bar: the session label sits at the right and turns amber when the
+  session is view only. It refreshes at startup, after Preferences closes
+  (users and roles are managed there) and on Refresh All. A view-only
+  startup also says so in the status text.
+- Change commands require `SessionAccess.CanRecord`, so their buttons are
+  disabled for view-only sessions:
+  - Specimens (7 commands);
+  - Panels (10 commands);
+  - Reactions (6 commands);
+  - Analysis (Confirm ID, Clear);
+  - Rules (4 commands).
+- Navigation, Refresh, print, export, analysis and reports stay available.
+- The database permission check from Iteration 131 remains the enforcement.
+  A stale cached state can only hide a button, never allow a change.
+
+**Tests:** `SessionAccessTests` (9):
+- empty registry;
+- named Technologist, with case-insensitive login matching;
+- Read-only user and unregistered login are view only;
+- `Refresh` updates the cache, which is reset afterwards;
+- a source check, per view model, that each change command's can-execute
+  includes `SessionAccess.CanRecord`.
+
+All 1132 tests pass.
+
 ## Likely next tick
 
-Return to workflow gaps from the roadmap, for example a visible
-signed-in-user and role indicator, with read-only screens disabling edit
-controls instead of refusing on save.
+A product review is due at Iteration 133. Suggested focus: reaction entry for
+view-only sessions (the grid is still typeable, though it cannot be saved),
+and whether any workflow remains fragmented across tabs.

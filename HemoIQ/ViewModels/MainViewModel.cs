@@ -108,8 +108,24 @@ namespace HemoIQ.ViewModels
 
         public void SetStatus(string message) => StatusText = message;
 
+        private SessionInfo _session = SessionAccess.Current;
+        public string SessionText => _session.Text;
+        public string SessionDetail => _session.Detail;
+        public bool SessionViewOnly => _session.ViewOnly;
+
+        /// <summary>Re-reads who is signed in and what they may do; change commands follow on the next requery.</summary>
+        public void RefreshSession()
+        {
+            _session = SessionAccess.Refresh(Database);
+            OnPropertyChanged(nameof(SessionText));
+            OnPropertyChanged(nameof(SessionDetail));
+            OnPropertyChanged(nameof(SessionViewOnly));
+            System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+        }
+
         public void RefreshAll()
         {
+            RefreshSession();
             WorklistVM.Refresh();
             SpecimensVM.Refresh();
             PanelsVM.Refresh();
