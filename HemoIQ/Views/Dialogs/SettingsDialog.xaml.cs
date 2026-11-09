@@ -78,6 +78,56 @@ namespace HemoIQ.Views.Dialogs
             _syncingPhases = false;
         }
 
+        private void ExportClick(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Export Preferences",
+                Filter = "HemoIQ Preferences (*.json)|*.json",
+                FileName = $"hemoiq-preferences-{DateTime.Now:yyyyMMdd}.json",
+            };
+            if (dlg.ShowDialog(this) != true) return;
+            System.IO.File.WriteAllText(dlg.FileName, PreferenceTransfer.Export(AppSettings.Current, DateTime.Now));
+            MessageBox.Show("Preferences as last saved were exported. Unsaved edits in this window are not included.",
+                "Export Preferences", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void ImportClick(object sender, RoutedEventArgs e)
+        {
+            if (_db == null) return;
+            var dlg = new Microsoft.Win32.OpenFileDialog { Title = "Import Preferences", Filter = "HemoIQ Preferences (*.json)|*.json" };
+            if (dlg.ShowDialog(this) != true) return;
+            PreferencePreview preview;
+            try
+            {
+                preview = PreferenceTransfer.Preview(System.IO.File.ReadAllText(dlg.FileName), AppSettings.Current);
+            }
+            catch (Exception ex) when (ex is ArgumentException or System.IO.IOException)
+            {
+                MessageBox.Show(ex.Message, "Preferences not imported", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            var summary = PreferenceTransfer.Summarize(preview);
+            if (preview.Changes.Count == 0)
+            {
+                MessageBox.Show("Nothing to change.\n\n" + summary, "Import Preferences", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (MessageBox.Show(summary + "\n\nRefused values are skipped. Apply these changes now? This window closes and unsaved edits in it are discarded.",
+                    "Import Preferences", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            try
+            {
+                PreferenceTransfer.Apply(_db, AppSettings.Current, preview, System.IO.Path.GetFileName(dlg.FileName));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Preferences", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            SettingsService.Save();
+            DialogResult = true;
+        }
+
         private void UsersClick(object sender, RoutedEventArgs e)
         {
             if (_db == null) return;

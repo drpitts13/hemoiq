@@ -2489,8 +2489,36 @@ rule-outs.
 - The Rules tab has **Export…** and **Import…** buttons. Import shows the
   summary and asks for confirmation.
 
+## Iteration 113 (this change)
+
+**Deficiency:** Following Iteration 112, rules could move between
+installations but the laboratory-wide Preferences could not. Those
+Preferences decide analysis: probability threshold, ID rule, default
+rule-out count, separation cells, transfusion, dating and RhIG windows, and
+extra phases. Setting up a second workstation meant retyping them, and a
+mismatch would make the same reactions analyze differently on two
+workstations.
+
+**Bounded improvement:**
+- `PreferenceTransfer.Export` writes a versioned JSON file (`format:
+  "hemoiq-preferences"`) of the laboratory-wide settings. Workstation and
+  personal settings are excluded: initials, Worklist filters, display
+  toggles and the database size.
+- `PreferenceTransfer.Preview` lists each change as old → new without
+  writing anything:
+  - each setting is checked against its own range and type, and refused
+    rather than clamped;
+  - unknown names are listed as not transferred;
+  - foreign files and newer versions are rejected.
+- `PreferenceTransfer.Apply`:
+  - requires the Preferences permission;
+  - audits `import_preferences` with every changed value;
+  - audits `update_settings` (the clinical snapshot) only when analysis
+    settings changed, so staleness behaves exactly as after a manual edit.
+- The Preferences dialog has **Export…** and **Import…** buttons. Import
+  confirms, saves and closes the dialog.
+
 ## Likely next tick
 
-Export and import of clinical Preferences (the analysis settings in
-`ClinicalSnapshot`) using the same preview-then-confirm pattern. Or the
-Specimen dialog regrouping.
+A product review (the last was at Iteration 107), or the Specimen dialog
+regrouping.

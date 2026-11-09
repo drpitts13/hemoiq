@@ -47,3 +47,25 @@ Changes apply to the next analysis and to new specimens. They do not rewrite ide
 While **no user is registered**, everyone may do everything, as in earlier versions. Once the first user is saved, the rules apply to every Windows login, and an unregistered login can do only Technologist work. To start, select **Use my login**, enter your initials, and save yourself as an **Administrator**. The first user must be an Administrator, the last active Administrator cannot be demoted or deactivated, and initials must be unique among active users.
 
 When users are registered, the initials entered for a supervisor review must be the signed-in user's own. Every audit entry records the signed-in Windows login, and user changes are audited.
+
+## Export and import
+
+**Export…** saves the laboratory-wide Preferences, as last saved, to a JSON file. Use it to set up a second workstation the same way, or to keep a copy with your procedure documents. The file covers:
+- lab name and department;
+- probability threshold;
+- identification, ACS, separation and default rule-out counts;
+- default specimen type;
+- expiration warning, specimen dating, transfusion window, dating look-back and RhIG window;
+- supervisor review and turnaround threshold;
+- extra phases.
+
+Personal and workstation settings are not included: default initials, Worklist filters, display toggles and the database size limit.
+
+**Import…** reads such a file and changes nothing until you confirm:
+1. HemoIQ lists each setting it would change, as old → new.
+2. It also lists values it refuses, such as a count outside its allowed range, the wrong kind of value or a blank lab name, and names it does not transfer. Out-of-range values are refused, never adjusted.
+3. When you confirm, the changes are applied and saved, and this window closes. Unsaved edits in the window are discarded.
+4. Every import is written to the audit log. If analysis settings changed, open investigations analyzed before the import appear as **Stale analysis** on the Worklist, as after a manual change.
+5. Importing needs the Administrator role once users are registered.
+
+Analysis rules are exported and imported separately, on the Rules tab.
