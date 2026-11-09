@@ -290,15 +290,18 @@ namespace HemoIQ.ViewModels
             var hash = string.IsNullOrWhiteSpace(SelectedPanel.SourceSha256)
                 ? "no source hash"
                 : SelectedPanel.SourceSha256;
+            var coverage = Services.PanelActivationCoverage.Check(_db, SelectedPanel);
             if (MessageBox.Show(
                     $"Activate '{SelectedPanel.Name}' (lot {SelectedPanel.LotNumber ?? "—"}) for analysis?\n\n" +
                     $"Source SHA-256: {hash}\n\n" +
+                    (coverage == null ? "" : "ANTIGEN COVERAGE: " + coverage.Message + "\n\n") +
                     "Activate only after reviewing the antigram. This is decision support, not a diagnosis.",
                     "Activate imported panel",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                    MessageBoxButton.YesNo, coverage == null ? MessageBoxImage.Question : MessageBoxImage.Warning) != MessageBoxResult.Yes)
                 return;
-            _db.SetPanelActive(SelectedPanel.PanelId, true);
-            _main.SetStatus($"Activated panel '{SelectedPanel.Name}'.");
+            _db.SetPanelActive(SelectedPanel.PanelId, true, coverage);
+            _main.SetStatus($"Activated panel '{SelectedPanel.Name}'." +
+                            (coverage == null ? "" : $" Coverage gaps against {coverage.PriorLabel} were recorded in the audit log."));
             NotifyPanelsChanged();
         }
 
@@ -456,7 +459,7 @@ namespace HemoIQ.ViewModels
                 Owner = Application.Current?.MainWindow
             };
             if (reviewDlg.ShowDialog() == true && reviewDlg.ActivateRequested)
-                _db.SetPanelActive(outcome.PanelId, true);
+                _db.SetPanelActive(outcome.PanelId, true, Services.PanelActivationCoverage.Check(_db, _db.GetPanel(outcome.PanelId)!));
 
             ShowInactive = true;
             NotifyPanelsChanged();

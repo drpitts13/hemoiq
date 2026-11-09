@@ -48,6 +48,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | UI | Antigram freeze / slashes / run compare | Partial | Frozen cell; slashes; compare extras; Show dosage; filter/sort; panel lot compare | — |
 | UI | Explain Analysis panel | Present | Explain tab + Summary + clinical report assemble rule-out, support, conflict, phenotype, additional testing | Keep wording as evidence, not diagnosis |
 | Audit | Panel, reactions, rules, settings, final ID | Partial | Snapshots store rule-engine version, rules JSON, operator, and the adsorption comparison (conclusions plus ordinary-score exclusions) | Cross-panel enzyme/DTT pairing later |
+| Panels | Antigen-coverage check at activation | Present | `PanelActivationCoverage` compares the lot being activated with the previous vendor/product-line lot; gaps (fewer or no typed cells) and affected ACS antigens shown in the activation prompt; acknowledged gaps recorded on the `activate_panel` audit from every activation path | Previous lot chosen by vendor/product line only; no comparison for panels without a vendor |
 | Analysis | Cross-specimen transfusion check | Present | `TransfusionHistoryCheck`: a red-cell transfusion within the window on another same-MRN specimen contradicts Not transfused (REVIEW note) and fills Unknown, making typing unreliable with the source named; a stale Transfused date gets an update note | Uses only transfusions recorded in HemoIQ, not an external transfusion service |
 | Workflow | Specimen-receipt checklist | Present | `ReceiptChecklist`: required MRN, collection time, transfusion status (+ last transfusion date when transfused); advisory receipt time, hemolysis, pregnancy, DAT. Drives the Received step and the Awaiting-panel next action; shaded line with reasons on the Specimens detail pane; printed on the worksheet | Required items are fixed, not configurable per lab |
 | Reporting | Amended report marking | Present | Clinical Identification header shows AMENDED REPORT or PREVIOUS IDENTIFICATION WITHDRAWN when an identification was ever cleared; Amendment history lists each earlier identification, its confirmer, who cleared it, when and why, from `clear_final_call` audit entries | Text and PDF only; no separate amendment notification to recipients |
@@ -3388,7 +3389,41 @@ All 1155 tests pass.
    lot drops an antigen the previous lot typed (antigen coverage
    regression).
 
+## Iteration 139 (this change)
+
+**Deficiency:** The import review compared a new lot's antigen coverage with
+the previous lot, but only once, in the dialog at import. Activation often
+comes later, from the Panels tab, and showed only the source hash. Lots
+entered by hand or copied were never compared. Activating a lot that types
+Fya on fewer cells, or not at all, silently reduced the cells available to
+rule out anti-Fya, and the audit did not record that anyone accepted it.
+
+**Bounded improvement:**
+- `PanelActivationCoverage.Check` takes the previous lot
+  (`FindPriorVendorPanel`; never the lot itself) and runs the existing
+  `PanelComparer` coverage comparison. It returns the gaps (fewer typed
+  cells, or none) and the affected ACS antigens.
+- The activation prompt shows an **ANTIGEN COVERAGE** paragraph, with a
+  warning icon, naming the ACS antibodies that will have fewer rule-out
+  cells.
+- `SetPanelActive(id, true, coverage)` records the gaps on `activate_panel`:
+  - the reason "Activated with coverage gaps against lot X";
+  - `priorPanelId` and `coverageGaps` in the after-JSON.
+- All three activation paths pass the check: the Panels tab, Activate now
+  after a file import, and Activate now after a vendor download. A plain
+  activation keeps its original audit shape.
+
+**Tests:** `PanelActivationCoverageTests` (4):
+- partial and absent typing are reported, with the ACS antigen named in the
+  message;
+- activating anyway records the reason, the previous lot and the gaps;
+- no report when coverage matches, the vendor differs or there is no vendor,
+  and a plain activation's audit is unchanged;
+- an antigen added by the new lot is not a gap.
+
+All 1159 tests pass.
+
 ## Likely next tick
 
-Roadmap item 3: antigen-coverage regression warning when a new lot is
-imported or activated.
+Roadmap item 2: a per-specimen "Report to" list, so an amended report can
+name who received the earlier one.

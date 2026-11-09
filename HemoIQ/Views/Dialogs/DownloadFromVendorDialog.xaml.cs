@@ -153,7 +153,7 @@ namespace HemoIQ.Views.Dialogs
             ImportedPanelName = parsed.Name;
             var reviewDlg = new ImportReviewDialog(outcome.Review) { Owner = this };
             if (reviewDlg.ShowDialog() == true && reviewDlg.ActivateRequested)
-                _db.SetPanelActive(outcome.PanelId, true);
+                _db.SetPanelActive(outcome.PanelId, true, Services.PanelActivationCoverage.Check(_db, _db.GetPanel(outcome.PanelId)!));
             StatusText.Text = $"Imported '{parsed.Name}' ({parsed.Cells.Count} cells). {outcome.Review.Explanation}";
             DialogResult = true;
         }

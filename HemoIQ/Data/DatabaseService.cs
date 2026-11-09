@@ -1811,7 +1811,11 @@ namespace HemoIQ.Data
             return r.Read() ? ReadPanel(r) : null;
         }
 
-        public void SetPanelActive(int panelId, bool active)
+        /// <summary>
+        /// Activates or deactivates a panel. <paramref name="acknowledgedCoverage"/> records, on activation,
+        /// the antigen-coverage gaps against the previous lot that the user reviewed and accepted.
+        /// </summary>
+        public void SetPanelActive(int panelId, bool active, Services.ActivationCoverage? acknowledgedCoverage = null)
         {
             EnsureCanRecord();
             using var cmd = _conn.CreateCommand();
@@ -1819,8 +1823,12 @@ namespace HemoIQ.Data
             cmd.Parameters.AddWithValue("$active", active ? 1 : 0);
             cmd.Parameters.AddWithValue("$id", panelId);
             cmd.ExecuteNonQuery();
+            var gaps = active ? acknowledgedCoverage : null;
             AppendAudit(active ? "activate_panel" : "deactivate_panel", "panel", panelId.ToString(),
-                null, afterJson: JsonSerializer.Serialize(new { active }));
+                gaps == null ? null : $"Activated with coverage gaps against {gaps.PriorLabel}",
+                afterJson: gaps == null
+                    ? JsonSerializer.Serialize(new { active })
+                    : JsonSerializer.Serialize(new { active, priorPanelId = gaps.Prior.PanelId, coverageGaps = gaps.Gaps }));
         }
 
         /// <summary>How a panel has been used: linked specimens, recorded reaction rows, and

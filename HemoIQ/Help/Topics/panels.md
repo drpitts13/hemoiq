@@ -21,6 +21,7 @@ The Panels tab stores panel lots and the antigen profile of each cell. Analysis 
 - **Import** creates a panel from a CSV lot sheet. The file uses a header row such as Cell, D, C, c, and the rest of the antigens.
 - **Download…** opens the vendor catalog, or lets you import a vendor PDF or CSV you already have.
 - After an import, the review dialog lets you **Activate now** or **Keep inactive**. You can also select an inactive lot later and click **Activate**.
+- **Antigen coverage at activation:** activating a lot compares it with the previous lot from the same vendor and product line. The prompt lists antigens the previous lot typed on every cell but this lot types on fewer cells, or none, for example "Fya (2 of 3 cells)". Antigens on the ACS list are named, because fewer cells will be available to rule them out. Untyped cells stay NT and are never used as antigen-negative. If you activate anyway, from the Panels tab or **Activate now** after an import, the audit log records the gaps and the previous lot.
 - **Artifact** opens the retained import file and its SHA-256 hash.
 - **Export** saves the selected antigen grid as CSV. **Antigram** saves a bench-copy PDF.
 
