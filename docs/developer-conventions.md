@@ -46,6 +46,13 @@ comparisons, the import schema check, and Final ID entries.
 - Add a `CHECK` constraint where the value set or length is fixed.
 - New columns go at the end of the table, because the archive copies tables with `SELECT *`.
 
+## Dialog layout
+
+- The Specimen dialog uses fixed-height tabs. `SpecimenDialogSectionsTests.EveryTab_FitsWithoutClipping`
+  renders the dialog off-screen and fails if a tab's fields need more height than the tab has.
+- The Specimen tab is nearly full: there is room for only about one more 36 px row. Put new
+  inputs beside related ones, as was done for encounter and sex, or on another tab.
+
 ## Tests
 
 - Use `IsolatedDatabase` for anything that touches the database.

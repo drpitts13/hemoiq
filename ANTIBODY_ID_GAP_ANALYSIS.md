@@ -2697,6 +2697,29 @@ start).
 2. One configuration bundle for rules and Preferences.
 3. Overrides by technologist on Analytics.
 
+## Iteration 120 (this change)
+
+**Roadmap item checked:** "Specimen dialog regrouping (dense)", carried since
+Iteration 107. The dialog was rendered off-screen to images, one per tab, and
+inspected. All four tabs (Specimen, Clinical context, Serology, Notes) fit,
+with no clipped or crowded fields, so no regrouping was made. The roadmap
+item is closed.
+
+**Found while checking:**
+- The Clinical context note still said a recent transfusion always makes the
+  phenotype unusable. Since Iteration 102 a transfusion of only platelets,
+  plasma or cryoprecipitate does not. The text is corrected.
+- The Iteration 119 reviewed-list claim was verified: both callers of
+  `UpdatePanelCell` (typing edits and import replacement) audit. The
+  method stays public because tests use it to set up data.
+
+**Guard:** `SpecimenDialogSectionsTests.EveryTab_FitsWithoutClipping` renders
+the dialog with the most content (transfused with products, recent
+pregnancy). It fails if any tab needs more height than it has. The Specimen
+tab has about one row of spare room, which is documented in
+`docs/developer-conventions.md`.
+
 ## Likely next tick
 
-Roadmap item 1: Specimen dialog regrouping, verified in the running app.
+Overrides by technologist on Analytics, or one configuration bundle for rules
+and Preferences.

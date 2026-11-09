@@ -107,4 +107,44 @@ public class SpecimenDialogSectionsTests
         Assert.Contains("RhIG 2026-10-01", dlg.ContextSummary);
         dlg.Close();
     });
+
+    /// <summary>
+    /// Every tab's fields fit inside the fixed-height tab area, so adding a field cannot push others
+    /// out of sight. Rendered off-screen with the most content (transfused with products, recent pregnancy).
+    /// </summary>
+    [Fact]
+    public void EveryTab_FitsWithoutClipping() => OnSta(() =>
+    {
+        var dlg = new SpecimenDialog(new Specimen
+        {
+            AccessionNumber = "SD-FIT", Type = "serum", CreatedDate = "2026-11-01", Mrn = "MRN-1", EncounterNumber = "V100",
+            TransfusionStatus = TransfusionStatus.Transfused, LastTransfusionDate = "2026-10-30",
+            TransfusionProducts = "rbc,platelets,plasma", TransfusionUnits = 3,
+            PregnancyStatus = PregnancyStatus.Recent, PregnancyEndDate = "2026-09-01",
+        })
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual, Left = -10000, Top = -10000,
+            ShowInTaskbar = false, ShowActivated = false,
+        };
+        dlg.Show();
+        try
+        {
+            var tabs = (TabControl)dlg.FindName("Sections");
+            foreach (TabItem tab in tabs.Items)
+            {
+                tabs.SelectedItem = tab;
+                dlg.UpdateLayout();
+                var content = (FrameworkElement)tab.Content;
+                var host = (FrameworkElement)System.Windows.Media.VisualTreeHelper.GetParent(content);
+                content.Measure(new Size(content.ActualWidth, double.PositiveInfinity));
+                var needed = content.DesiredSize.Height;
+                Assert.True(needed <= host.ActualHeight + 0.5,
+                    $"Tab '{tab.Header}' needs {needed:0} px but has {host.ActualHeight:0} px; its last fields would be clipped.");
+            }
+        }
+        finally
+        {
+            dlg.Close();
+        }
+    });
 }

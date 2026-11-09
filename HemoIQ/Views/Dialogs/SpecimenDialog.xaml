@@ -146,7 +146,7 @@
                                 ToolTip="Date Rh immune globulin was last given. Anti-D within the Preferences RhIG window is flagged as possibly passive."/>
 
                     <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Margin="4,12,0,0" TextWrapping="Wrap" Foreground="DimGray"
-                               Text="Recent transfusion or pregnancy turns on the specimen-dating check, and recent transfusion makes the serologic phenotype unusable for ruling out antibodies. Analysis names each effect as a REVIEW note."/>
+                               Text="Recent transfusion or pregnancy turns on the specimen-dating check, and a recent transfusion makes the serologic phenotype unusable for ruling out antibodies, unless the products recorded are only platelets, plasma or cryoprecipitate. Analysis names each effect as a REVIEW note."/>
                 </Grid>
             </TabItem>
 
