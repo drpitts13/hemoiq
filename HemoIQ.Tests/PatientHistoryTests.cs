@@ -121,6 +121,34 @@ public class PatientHistoryTests
     }
 
     [Fact]
+    public void HistoryLines_ShowEncounterAndEarlierPhenotypeAndGenotype_OnlyWhenRecorded()
+    {
+        var lines = PatientHistory.Describe(new[]
+        {
+            new Specimen { AccessionNumber = "H-1", CreatedDate = "2026-03-01", EncounterNumber = "V100",
+                           Phenotype = " E- K- ", Genotype = "RHCE*ce/ce" },
+            new Specimen { AccessionNumber = "H-2", CreatedDate = "2026-01-01" },
+        });
+        Assert.StartsWith("H-1 (2026-03-01, encounter V100): no confirmed identification;", lines[0]);
+        Assert.EndsWith("; phenotype E- K-; genotype RHCE*ce/ce", lines[0]);
+        Assert.StartsWith("H-2 (2026-01-01): no confirmed identification;", lines[1]);
+        Assert.DoesNotContain("phenotype", lines[1]);
+        Assert.DoesNotContain("genotype", lines[1]);
+    }
+
+    [Fact]
+    public void Report_PatientHistory_IncludesEncounterOfEarlierSpecimen()
+    {
+        using var iso = new IsolatedDatabase();
+        AddReactiveSpecimen(iso, "OLD-E", "MRN-E", "2026-02-01");
+        iso.Db.UpdateSpecimenEncounter("OLD-E", "ACC-1");
+        AddReactiveSpecimen(iso, "NEW-E", "MRN-E", "2026-11-03");
+
+        var summary = new ReportService(iso.Db).GeneratePreviewText(ReportType.SpecimenSummary, "NEW-E");
+        Assert.Contains("OLD-E (2026-02-01, encounter ACC-1):", summary);
+    }
+
+    [Fact]
     public void SpecimenFilter_MatchesMrn()
     {
         Assert.True(new Specimen { AccessionNumber = "X", Mrn = "MRN-55" }.MatchesFilter("mrn-55"));

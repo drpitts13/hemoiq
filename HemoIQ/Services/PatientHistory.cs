@@ -75,12 +75,21 @@ namespace HemoIQ.Services
             return antigen.Length == 0 ? null : "anti-" + antigen;
         }
 
-        /// <summary>One line per other specimen, newest first, for the detail pane and reports.</summary>
+        /// <summary>
+        /// One line per other specimen, newest first, for the detail pane and reports: accession,
+        /// date and encounter, the confirmed identification, DAT, transfusion, and the phenotype and
+        /// genotype recorded on that specimen when there is one (an earlier phenotype can be the
+        /// pre-transfusion typing when the current one is unreliable).
+        /// </summary>
         public static List<string> Describe(IEnumerable<Specimen> others) =>
             others.Select(s =>
             {
                 var final = s.HasFinalCall ? $"confirmed {s.FinalAntibodies}" : "no confirmed identification";
-                return $"{s.AccessionNumber} ({s.CreatedDate}): {final}; DAT {s.DatDisplay}; {s.TransfusionDisplay}";
+                var when = s.EncounterNumber == null ? s.CreatedDate : $"{s.CreatedDate}, encounter {s.EncounterNumber}";
+                var line = $"{s.AccessionNumber} ({when}): {final}; DAT {s.DatDisplay}; {s.TransfusionDisplay}";
+                if (!string.IsNullOrWhiteSpace(s.Phenotype)) line += $"; phenotype {s.Phenotype!.Trim()}";
+                if (!string.IsNullOrWhiteSpace(s.Genotype)) line += $"; genotype {s.Genotype!.Trim()}";
+                return line;
             }).ToList();
     }
 }

@@ -47,7 +47,7 @@ The note is a prompt; HemoIQ never changes the expiration itself.
 
 ## Patient history
 
-When the specimen has an MRN, the detail pane lists the patient's other specimens, newest first. Each line shows the confirmed identification, DAT, and transfusion status. Specimen Summary and the identification worksheet print the same list. Search and the specimen filter match MRN.
+When the specimen has an MRN, the detail pane lists the patient's other specimens, newest first. Each line shows the date and encounter number, the confirmed identification, DAT, transfusion status, and the phenotype and genotype recorded on that specimen. An earlier phenotype can be the pre-transfusion typing to compare with when the current phenotype is unreliable after a transfusion; HemoIQ shows it for review and does not use it in analysis. Specimen Summary and the identification worksheet print the same list. Search and the specimen filter match MRN.
 
 ## Patient record
 

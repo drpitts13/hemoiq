@@ -39,7 +39,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | Search | Investigation search | Present | Search tab › Investigations: accession, MRN, patient name/DOB, final/previous antibodies, technologist; every word must match; inclusive date range; status column; Open jumps to Specimens | Panel lot/manufacturer used in an investigation not yet searchable |
 | Workflow | Investigation status and next step | Partial | `InvestigationStatusService` derives five steps and a status (awaiting panel → testing → analysis needed → awaiting ID → completed / amended / reopened / inactive) from panels, grades, analysis time, final call, and audit; shown on Specimens and the worksheet; Worklist shares the completeness check | Optional supervisor review step (two-person, audited, invalidated by clear/re-confirm, Worklist queue); audited Cancel/Reinstate with reason, locked and off work queues; local users/roles enforce review, clear, reinstate, Preferences, user management |
 | Patient | Permanent record and transfusion requirements | Present | `patients` table (MRN, name, DOB, comments, free-text requirements, structured `antigen_negative`); `AntigenNegativeRequirement` parses codes (case-sensitive C/c, E/e, K/k, S/s; Fy(a-) notation) and refuses non-antigens; audited add/update; Edit Patient on Specimens; reports and detail pane print E−, K−, Fy(a−); analysis raises REVIEW when a known antibody's antigen is not in the structured list, and asks to add it when only free text mentions it | Expiry or source of each requirement; product-level requirements (irradiated, CMV-safe) remain free text |
-| Patient | MRN and cross-specimen history | Partial | Indexed `specimens.mrn`; audited; confirmed final calls on the same MRN become Historical evidence citing the source accession; detail pane and reports list other specimens | Encounter in Patient history rows (Search shows it; sex is on the patient record; encounter, location, ordering provider and pregnancy are on the specimen) |
+| Patient | MRN and cross-specimen history | Partial | Indexed `specimens.mrn`; audited; confirmed final calls on the same MRN become Historical evidence citing the source accession; detail pane and reports list other specimens | Structured historical phenotype as analysis evidence (history lines now show encounter, earlier phenotype and genotype; sex is on the patient record) |
 | Specimen | DAT polyspecific / IgG / C3 | Present | `DatProfile` on specimen; MF grade; audited IgG/C3; positive if any reactive, negative only if all recorded negative; C3-only caveat on autoantibody notes; MF DAT donor-cell note | Eluate specimens link to their source; `EluateEvidence` reads specificity, panreactivity, and nonreactivity against DAT and transfusion |
 | Analysis | Panreactive / cold / warm / HTLA / auto / HFA / LFA models | Partial | DAT scores; named LFA/pan cells; enzyme lost/gained/resistant; DTT lost/resistant vs untreated. Unpaired runs, comparisons with fewer than 3 paired cells, and comparisons that meet no threshold are each named | Cells tested on only one of the paired runs stay unnamed |
 | Analysis | Selected-cell recommendations with “why” | Partial | Unused in-date vials preferred; P1−/Ch−/Sd(a−) selected cells ranked when neutralization favors soluble substance | More ISBT alleles later |
@@ -2392,7 +2392,24 @@ free text. That allowed:
   order is fixed.
 - The Rules tab shows the refusal message when a save is refused.
 
+## Iteration 109 (this change)
+
+**Deficiency:** Patient history lines showed the accession, date, confirmed
+identification, DAT and transfusion status for each earlier specimen. They did
+not show the encounter number, or the phenotype or genotype recorded on that
+specimen. The prompt asks for previous phenotype and previous genotype.
+When the current phenotype is unreliable after a transfusion, an earlier
+(often pre-transfusion) phenotype is what a technologist looks for. To find
+it, they had to open each older specimen.
+
+**Bounded improvement:**
+- `PatientHistory.Describe` adds the encounter after the date, and the
+  phenotype and genotype when recorded.
+- These lines are shown in the detail pane, Specimen Summary and the
+  identification worksheet.
+- They are shown for review only. Analysis does not use an earlier phenotype
+  as evidence, because its date and reliability are not structured.
+
 ## Likely next tick
 
-The encounter number in Patient history rows. After that, direct tests for
-`StructuredPanelParser` and `XlsxGridReader` edge cases.
+Direct tests for `StructuredPanelParser` and `XlsxGridReader` edge cases.
