@@ -27,6 +27,11 @@ namespace HemoIQ.ViewModels
         public ICommand RefreshCommand { get; }
         public ICommand ExportCsvCommand { get; }
         public ICommand OpenOverdueCommand { get; }
+        public ICommand ShowOverridesCommand { get; }
+
+        private List<AnalyticsCase> _overrideCases = new();
+        /// <summary>Identifications confirmed past Confirm ID warnings in the range.</summary>
+        public int OverrideCount => _overrideCases.Count;
 
         public ObservableCollection<OverdueInvestigation> Overdue { get; } = new();
         public ObservableCollection<TechnologistWorkload> Workload { get; } = new();
@@ -191,6 +196,8 @@ namespace HemoIQ.ViewModels
             RefreshCommand = new RelayCommand(Refresh);
             ExportCsvCommand = new RelayCommand(ExportCsv);
             OpenOverdueCommand = new RelayCommand(OpenOverdue, () => SelectedOverdue != null);
+            ShowOverridesCommand = new RelayCommand(() =>
+                ShowDrill($"Confirmed past warnings ({RangeLabel})", _overrideCases));
             OpenDrillCaseCommand = new RelayCommand(OpenDrillCase, () => SelectedDrillCase != null);
             _fromDate = DateTime.Today.AddYears(-1);
             _toDate = DateTime.Today;
@@ -238,6 +245,8 @@ namespace HemoIQ.ViewModels
             foreach (var w in WorkloadService.ComputeByLocation(specimens, FromDate, ToDate)) LocationWorkload.Add(w);
             UserActivity.Clear();
             foreach (var a in UserActivityService.Compute(_db, FromDate, ToDate)) UserActivity.Add(a);
+            _overrideCases = OverrideAnalytics.Cases(_db, FromDate, ToDate);
+            OnPropertyChanged(nameof(OverrideCount));
 
             OnPropertyChanged(nameof(IsAllTime));
             OnPropertyChanged(nameof(RangeLabel));
@@ -297,6 +306,16 @@ namespace HemoIQ.ViewModels
                 yield return $"{Q(a.Login)},{Q(a.Name)},{a.ReactionEntries},{a.ReactionChanges},{a.Specimens},{a.Confirmations},{a.Clears},{a.Reviews}";
         }
 
+        public static IEnumerable<string> OverrideCsvLines(IEnumerable<AnalyticsCase> cases)
+        {
+            static string Q(string v) => "\"" + v.Replace("\"", "\"\"") + "\"";
+            yield return "";
+            yield return "Confirmed past warnings";
+            yield return "Accession,Confirmed,Final ID,Detail";
+            foreach (var c in cases)
+                yield return $"{Q(c.Accession)},{Q(c.Date)},{Q(c.FinalAntibodies)},{Q(c.Detail)}";
+        }
+
         private void OpenOverdue()
         {
             if (SelectedOverdue == null || _main == null) return;
@@ -327,6 +346,7 @@ namespace HemoIQ.ViewModels
                 File.AppendAllLines(dlg.FileName, WorkloadCsvLines(Workload));
                 File.AppendAllLines(dlg.FileName, LocationCsvLines(LocationWorkload));
                 File.AppendAllLines(dlg.FileName, UserActivityCsvLines(UserActivity));
+                File.AppendAllLines(dlg.FileName, OverrideCsvLines(_overrideCases));
                 _main?.SetStatus($"CSV exported: {dlg.FileName}");
                 MessageBox.Show("CSV exported successfully.", "Export",
                     MessageBoxButton.OK, MessageBoxImage.Information);

@@ -95,7 +95,8 @@ namespace HemoIQ.Services
             }
         }
 
-        private static bool InRange(string utcText, DateTime? from, DateTime? to)
+        /// <summary>True when an audit timestamp (UTC) falls on a local date within the range, ends included.</summary>
+        internal static bool InRange(string utcText, DateTime? from, DateTime? to)
         {
             if (!DateTime.TryParse(utcText, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var utc))
                 return false;

@@ -2618,7 +2618,28 @@ the status strip.
 - They are read from the latest confirmation only, so a clean
   re-confirmation after a clear shows none. Audit history is kept.
 
+## Iteration 117 (this change)
+
+**Deficiency:** Iteration 116 recorded each warning confirmed past at Confirm
+ID. The operational dashboard asks for the "number of manual overrides" with
+drill-down to the cases, and Analytics had neither.
+
+**Bounded improvement:**
+- `OverrideAnalytics.Cases` reads `confirm_final_call` audit entries that
+  carry overrides, by confirmation date in the selected range, newest first.
+  - Each case has the accession, date, Final ID, confirmer and the overridden
+    warnings.
+  - Confirmations that were later cleared, or replaced by a newer
+    confirmation, still count and are marked "No longer the current
+    identification."
+- The date-range test `UserActivityService.InRange` is now shared.
+- Analytics has a fifth stat card, **Confirmed past warnings**, showing the
+  count. **Show cases** fills the existing drill-down list, and Open goes to
+  the specimen.
+- The drill-down Detail column is wider, and Export CSV adds a "Confirmed past
+  warnings" section.
+
 ## Likely next tick
 
-Count of overridden confirmations on Analytics (management reports: "number
-of manual overrides"), with drill-down to the cases.
+A product review, since several workflow pieces are now complete. Or the
+Specimen dialog regrouping.

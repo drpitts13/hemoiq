@@ -41,6 +41,10 @@ The purple and red cards measure workflow time for investigations **received** i
 - **Received → confirmed** is the median time from the received date to the confirmed identification, in days, with the 90th percentile and the number of investigations. When a received time is recorded on the specimen it is used exactly; otherwise the received date is counted from midnight and the figure is an upper bound.
 - **Confirmed → reviewed** is the median time from confirmation to supervisor review, in hours, for investigations that have a review.
 - **Overdue open investigations** counts active investigations with no confirmed identification that are older than the Preferences **Turnaround threshold (days)**, default 3.
+- **Confirmed past warnings** counts identifications confirmed in the range after the technologist chose to confirm anyway at a Confirm ID warning. The warnings are: analysis missing or out of date, testing still open, or the multiple-antibody separation criterion not met.
+  - **Show cases** lists them in the investigations list below, newest first, with the warnings that were overridden and who confirmed. Select one and choose **Open**.
+  - A confirmation that was later cleared still counts, because the override happened; its detail starts "No longer the current identification."
+  - **Export CSV** adds the list at the end.
 
 The overdue list at the bottom shows each case, oldest first, with its current status. Select one and choose **Open** to go to it. **Export CSV** adds the turnaround figures and the overdue list after the antibody counts. The 90th percentile uses the nearest-rank method.
 

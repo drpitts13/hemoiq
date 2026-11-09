@@ -78,7 +78,7 @@
             </Border>
         </UniformGrid>
 
-        <UniformGrid DockPanel.Dock="Top" Columns="4" Margin="0,0,0,8">
+        <UniformGrid DockPanel.Dock="Top" Columns="5" Margin="0,0,0,8">
             <Border Style="{StaticResource StatCard}" Background="#F3E5F5" BorderBrush="#CE93D8"
                     ToolTip="Received date to confirmed identification, for investigations received in the range. Received is a date only, so this is an upper bound. Cancelled investigations are excluded.">
                 <StackPanel>
@@ -94,11 +94,23 @@
                     <TextBlock Text="{Binding ReviewMedian}" FontSize="20" FontWeight="Bold" Foreground="#6A1B9A"/>
                 </StackPanel>
             </Border>
-            <Border Style="{StaticResource StatCard}" Background="#FFEBEE" BorderBrush="#EF9A9A" Margin="0"
+            <Border Style="{StaticResource StatCard}" Background="#FFEBEE" BorderBrush="#EF9A9A"
                     ToolTip="Active investigations in the range with no confirmed identification, older than the Preferences turnaround threshold.">
                 <StackPanel>
                     <TextBlock Text="Overdue open investigations" FontSize="11" Foreground="#37474F"/>
                     <TextBlock Text="{Binding OverdueLabel}" FontSize="20" FontWeight="Bold" Foreground="#C62828"/>
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource StatCard}" Background="#FFF3E0" BorderBrush="#FFCC80" Margin="0"
+                    ToolTip="Identifications confirmed in the range past one or more Confirm ID warnings: stale or missing analysis, testing still open, or the multiple-antibody separation criterion not met.">
+                <StackPanel>
+                    <TextBlock Text="Confirmed past warnings" FontSize="11" Foreground="#37474F"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding OverrideCount}" FontSize="20" FontWeight="Bold" Foreground="#E65100"/>
+                        <Button Content="Show cases" Command="{Binding ShowOverridesCommand}" Margin="10,0,0,0"
+                                Padding="6,0" VerticalAlignment="Center"
+                                ToolTip="List these confirmations below with the warnings that were overridden."/>
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </UniformGrid>
@@ -213,7 +225,7 @@
                             <DataGridTextColumn Header="Accession" Binding="{Binding Accession}" Width="110"/>
                             <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="90"/>
                             <DataGridTextColumn Header="Final ID" Binding="{Binding FinalAntibodies}" Width="*"/>
-                            <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="120"/>
+                            <DataGridTextColumn Header="Detail" Binding="{Binding Detail}" Width="2*"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </DockPanel>
