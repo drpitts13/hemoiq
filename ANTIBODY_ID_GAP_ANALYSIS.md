@@ -2868,7 +2868,44 @@ log. The operational dashboard asks for drill-down from metrics to cases.
   with that user's override cases. Open goes to each case. The selection
   clears when the date range changes.
 
+## Iteration 127 (this change)
+
+**Deficiency:** The prompt asks for historical phenotype and asks that
+analysis account for an unreliable serologic phenotype after transfusion.
+When a recent transfusion made the current phenotype unusable, analysis lost
+all patient-typing evidence. The patient's earlier phenotype, typed before
+the transfusion, was ignored even when recorded on an earlier specimen with
+the same MRN; since Iteration 109 it was only displayed in history lines.
+
+**Bounded improvement:**
+- `HistoricalPhenotype.Find` returns the most recent earlier specimen with a
+  phenotype, under these rules:
+  - it applies only when the current phenotype is unreliable or empty;
+  - the earlier specimen was collected before the current last-transfusion
+    date, or before the current specimen when it is not transfused;
+  - the earlier specimen's own transfusion assessment was reliable;
+  - a current specimen marked Transfused with no date is skipped, because the
+    earlier typing cannot be shown to predate the transfusion;
+  - allogeneic HPC transplant patients are skipped.
+- Its Supporting and Against considerations are added to the analysis, each
+  labelled with the source accession and date. The transfusion note states
+  that the earlier phenotype is used instead.
+- Existing consumers then apply it as reliable typing:
+  - the suspected-but-patient-positive WARNING;
+  - the open-testing list;
+  - selected-cell ranking.
+
+**Tests:** `HistoricalPhenotypeTests` (4):
+- the earlier phenotype is used and labelled;
+- in a full analysis, the consideration and the note appear;
+- it is not used for an earlier specimen after the transfusion, or one that
+  was itself recently transfused, and a valid older one is picked instead;
+- it is not used when the transfusion date is missing, after an allogeneic
+  transplant, or when the current typing is usable.
+
+No existing test changed behavior (1101 passed).
+
 ## Likely next tick
 
-A product review (the last was at Iteration 124), or one configuration
+A product review (the last was at Iteration 124), then one configuration
 bundle for rules and Preferences.

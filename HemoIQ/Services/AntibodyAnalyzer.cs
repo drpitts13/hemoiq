@@ -1392,6 +1392,13 @@ namespace HemoIQ.Services
             result.PatientPhenotypeUnreliable = typing.PhenotypeUnreliable;
             result.TransfusionContextNote = transfusion.Explanation;
             result.PatientTypingConsiderations = PatientTypingParser.Evaluate(typing);
+            if (HistoricalPhenotype.Find(_db, specimen, typing, AppSettings.Current.RecentTransfusionWindowDays) is { } earlier)
+            {
+                result.PatientTypingConsiderations.AddRange(earlier.Considerations);
+                result.TransfusionContextNote = (string.IsNullOrEmpty(result.TransfusionContextNote) ? "" : result.TransfusionContextNote + " ") +
+                    $"The patient's earlier phenotype from {earlier.Specimen.AccessionNumber} ({earlier.CollectedOn}, \"{earlier.Specimen.Phenotype!.Trim()}\"), " +
+                    "typed before this transfusion context, is used as patient-typing evidence instead.";
+            }
             var priorConfirmed = PatientHistory.ConfirmedAntibodies(PatientHistory.OtherSpecimens(_db, specimen));
             var known = typing.HistoricalAntibodies
                 .Concat(priorConfirmed.Select(p => p.Antibody))
