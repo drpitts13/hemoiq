@@ -2408,6 +2408,31 @@ namespace HemoIQ.Data
             return string.IsNullOrWhiteSpace(p.LotNumber) ? p.Name : $"{p.Name} (lot {p.LotNumber})";
         }
 
+        /// <summary>
+        /// Every panel each specimen was tested on (linked panels and panel runs), keyed by
+        /// accession, in one query for Search. Each entry is (name, vendor, lot), ordered by name.
+        /// </summary>
+        public Dictionary<string, List<(string Name, string? Vendor, string? Lot)>> GetPanelsBySpecimen()
+        {
+            var map = new Dictionary<string, List<(string, string?, string?)>>(StringComparer.OrdinalIgnoreCase);
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = @"
+                SELECT u.specimen_id, p.name, p.vendor, p.lot_number FROM (
+                    SELECT specimen_id, panel_id FROM specimen_panels
+                    UNION
+                    SELECT specimen_id, panel_id FROM panel_runs
+                ) u JOIN panels p ON p.panel_id = u.panel_id
+                ORDER BY u.specimen_id, p.name, p.panel_id";
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
+            {
+                var acc = r.GetString(0);
+                if (!map.TryGetValue(acc, out var list)) map[acc] = list = new List<(string, string?, string?)>();
+                list.Add((r.GetString(1), r.IsDBNull(2) ? null : r.GetString(2), r.IsDBNull(3) ? null : r.GetString(3)));
+            }
+            return map;
+        }
+
         public List<Panel> GetSpecimenPanels(string specimenId)
         {
             var list = new List<Panel>();

@@ -33,8 +33,10 @@
                         <DataGridTextColumn Header="MRN" Binding="{Binding Mrn}" Width="100"/>
                         <DataGridTextColumn Header="Patient" Binding="{Binding Patient}" Width="160"/>
                         <DataGridTextColumn Header="DOB" Binding="{Binding DateOfBirth}" Width="90"/>
+                        <DataGridTextColumn Header="Encounter" Binding="{Binding Encounter}" Width="90"/>
                         <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="90"/>
                         <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="160"/>
+                        <DataGridTextColumn Header="Panels" Binding="{Binding Panels}" Width="200"/>
                         <DataGridTextColumn Header="Final ID" Binding="{Binding FinalId}" Width="*"/>
                         <DataGridTextColumn Header="By" Binding="{Binding IdentifiedBy}" Width="60"/>
                     </DataGrid.Columns>
