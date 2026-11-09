@@ -8,6 +8,7 @@ namespace HemoIQ.Tests;
 /// <summary>
 /// Software controls that support FDA 510(k) device-software documentation.
 /// </summary>
+[Collection("PersistentDatabase")]
 public class Fda510kControlTests
 {
     [Fact]

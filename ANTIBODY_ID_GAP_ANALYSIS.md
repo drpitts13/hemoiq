@@ -2080,8 +2080,47 @@ interpret, and analysis gave no warning.
 - products and units transfused;
 - encounter or account identifiers.
 
+## Iteration 99 (this change) — investigation workflow review
+
+**Review findings:**
+- Statuses map to the prompt's list as follows:
+  - Created → Awaiting panel;
+  - Testing in progress;
+  - Analysis available → Awaiting identification (this is the
+    technologist-review step);
+  - Supervisor review;
+  - Completed;
+  - Amended / Reopened;
+  - Cancelled.
+- "Awaiting additional testing" is not derived. It would need the analysis
+  result, not just recorded work. Candidate.
+- The real defect is that four places each had their own staleness rule:
+  the Analysis banner, the status strip, the Pending Work report and the
+  Worklist. Only the Worklist (iteration 86) counted rule and Preferences
+  changes. The strip could show "✓ Analysis current / Awaiting
+  identification" while the Worklist said "Stale analysis", and the
+  banner's text always said "reactions".
+- Confirm ID did not check staleness at all. An identification could be
+  confirmed from an analysis that predated the current grades or
+  configuration, or that never ran.
+- Seven test classes mutated `AppSettings.Current` outside the
+  `PersistentDatabase` collection. That race showed up as an intermittent
+  HTLA titration failure.
+
+**Bounded improvement:**
+- `AnalysisCurrency.StaleReason` is now the single rule: reactions saved
+  after the analysis, or a configuration change for an unconfirmed
+  investigation.
+- All four places use it, plus `DatabaseService.AnalysisStaleReason`. The
+  banner and Pending Work state the reason.
+- Confirm ID prompts, with No as the default, when the analysis is stale or
+  never ran.
+- The seven settings-mutating test classes now run in the serialized
+  collection.
+- No schema change.
+
 ## Likely next tick
 
-A product review of the investigation workflow and statuses against the
-prompt's list (Created → Amended → Cancelled). Is "Technologist review"
-distinct and visible, and does every status lead to a Worklist next step?
+Derive "Awaiting additional testing" from the latest analysis snapshot: open
+investigations whose last analysis recommends selected cells or other
+tests, with the recommendation as the next action.

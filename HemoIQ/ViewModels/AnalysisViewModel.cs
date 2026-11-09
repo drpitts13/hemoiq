@@ -92,6 +92,21 @@ namespace HemoIQ.ViewModels
             set => SetField(ref _isStale, value);
         }
 
+        private string _staleMessage = string.Empty;
+        /// <summary>Banner text: why the shown analysis is out of date.</summary>
+        public string StaleMessage
+        {
+            get => _staleMessage;
+            private set => SetField(ref _staleMessage, value);
+        }
+
+        private void RefreshStale()
+        {
+            var reason = SelectedSpecimen == null ? null : _db.AnalysisStaleReason(SelectedSpecimen.AccessionNumber);
+            IsStale = reason != null;
+            StaleMessage = reason == null ? string.Empty : $"⚠ Analysis is stale — {reason} Run Analysis again.";
+        }
+
         public ICommand AnalyzeCommand { get; }
         public ICommand RefreshSpecimensCommand { get; }
         public ICommand ConfirmIdCommand { get; }
@@ -238,7 +253,7 @@ namespace HemoIQ.ViewModels
         public void OnTabSelected()
         {
             if (SelectedSpecimen != null)
-                IsStale = _db.IsSpecimenAnalysisStale(SelectedSpecimen.AccessionNumber);
+                RefreshStale();
         }
 
         /// <summary>
@@ -255,7 +270,7 @@ namespace HemoIQ.ViewModels
                 return;
             }
 
-            IsStale = _db.IsSpecimenAnalysisStale(SelectedSpecimen.AccessionNumber);
+            RefreshStale();
             LoadFinalCall(SelectedSpecimen);
 
             // Only auto-populate if a previous analysis run exists
@@ -292,7 +307,7 @@ namespace HemoIQ.ViewModels
                 var result = _analyzer.AnalyzeSpecimen(SelectedSpecimen.AccessionNumber, updateDb: true);
                 PopulateFromResult(result);
                 OfferAcsException(result);
-                IsStale = false;
+                RefreshStale();
                 _main.SetStatus($"Analysis complete — {SuspectedRows.Count} suspected, {RuleoutRows.Count} ruled out.");
                 _main.SpecimensVM.Refresh();
                 _main.WorklistVM.Refresh();
@@ -578,6 +593,17 @@ namespace HemoIQ.ViewModels
             _main.SetStatus($"Added {SelectedSuspected.Antibody} to Final ID.");
         }
 
+        /// <summary>The Confirm ID warning when the analysis behind it is missing or out of date, or null.</summary>
+        public static string? ConfirmStalePrompt(string? staleReason, bool neverAnalyzed)
+        {
+            if (neverAnalyzed)
+                return "This specimen has not been analyzed, so no rule-out or suspected-antibody evidence supports this identification.\n\n" +
+                       "Confirm the identification anyway?";
+            if (staleReason == null) return null;
+            return $"The analysis is out of date: {staleReason}\n\nThe suspected antibodies, rule-outs and suggestions shown may not " +
+                   "reflect the current grades or configuration. Run Analysis again before confirming, or confirm anyway?";
+        }
+
         private void ConfirmId()
         {
             if (SelectedSpecimen == null) return;
@@ -593,6 +619,15 @@ namespace HemoIQ.ViewModels
             {
                 MessageBox.Show("Initials are required to confirm identification.", "Validation",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (ConfirmStalePrompt(SelectedSpecimen.LastAnalyzedAt == null ? null : _db.AnalysisStaleReason(SelectedSpecimen.AccessionNumber),
+                    SelectedSpecimen.LastAnalyzedAt == null) is string staleWarning &&
+                MessageBox.Show(staleWarning, "Analysis out of date",
+                    MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            {
+                _main.SetStatus("Not confirmed: run analysis again first.");
                 return;
             }
 

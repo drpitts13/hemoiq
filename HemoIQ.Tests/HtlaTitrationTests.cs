@@ -4,6 +4,8 @@ using HemoIQ.Tests.Infrastructure;
 
 namespace HemoIQ.Tests;
 
+[Collection("PersistentDatabase")]
+
 public class HtlaTitrationTests
 {
     [Fact]

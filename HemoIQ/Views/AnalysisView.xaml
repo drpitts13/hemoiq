@@ -29,7 +29,7 @@
                       DisplayMemberPath="ListDisplay"
                       IsEditable="True" IsTextSearchEnabled="True"/>
             <TextBlock Grid.Column="5" Margin="10,0,0,0" VerticalAlignment="Center"
-                       Text="⚠ Analysis is stale — reactions have been updated since last analysis."
+                       Text="{Binding StaleMessage}" TextWrapping="Wrap"
                        Foreground="OrangeRed" FontWeight="Bold"
                        Visibility="{Binding IsStale, Converter={x:Static local:BoolToVisibilityConverter.Instance}}"/>
             <Button Grid.Column="6" Content="Enter Reactions" Command="{Binding OpenReactionsCommand}"

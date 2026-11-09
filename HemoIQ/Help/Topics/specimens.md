@@ -67,7 +67,7 @@ When an antibody is known for the MRN (Previous antibodies, a confirmed call on 
 
 The grey strip at the top of the detail pane shows where the investigation stands. It is worked out from what has been recorded, so it cannot fall out of date:
 
-- **Steps:** ✓ Received, Panel attached, Reactions complete, Analysis current, ID confirmed. ○ marks a step that is not done.
+- **Steps:** ✓ Received, Panel attached, Reactions complete, Analysis current, ID confirmed. ○ marks a step that is not done. **Analysis current** follows the same rule as the Analysis tab warning and the Worklist: it clears when grades, analysis rules or clinical Preferences change after the last analysis.
 - **Status:** Awaiting panel, Testing in progress, Analysis needed, Awaiting identification, Completed, **Amended** (an identification was cleared and confirmed again), **Reopened** (cleared and not yet confirmed again), or Inactive – not completed.
 - **Next:** the specific next action, for example `Finish reactions: Panel A (1/2).`
 

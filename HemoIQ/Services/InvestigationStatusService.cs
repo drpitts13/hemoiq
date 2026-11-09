@@ -70,7 +70,8 @@ namespace HemoIQ.Services
 
             var hasPanel = panels.Count > 0;
             var reactionsDone = hasPanel && incomplete.Count == 0;
-            var analysisCurrent = hasPanel && s.LastAnalyzedAt != null && !s.IsAnalysisStale;
+            var staleReason = AnalysisCurrency.StaleReason(s, db.LastAnalysisConfigurationChange());
+            var analysisCurrent = hasPanel && s.LastAnalyzedAt != null && staleReason == null;
 
             var steps = new List<InvestigationStep>
             {
@@ -133,7 +134,7 @@ namespace HemoIQ.Services
                 label = AnalysisNeeded;
                 next = s.LastAnalyzedAt == null
                     ? "Run analysis."
-                    : "Reactions changed since the last analysis; run analysis again.";
+                    : $"{staleReason} Run analysis again.";
             }
             else
             {

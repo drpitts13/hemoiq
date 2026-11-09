@@ -5,6 +5,8 @@ using HemoIQ.ViewModels;
 
 namespace HemoIQ.Tests;
 
+[Collection("PersistentDatabase")]
+
 public class AcsEvaluationTests
 {
     private static readonly (string First, string Second)[] CsPairs =

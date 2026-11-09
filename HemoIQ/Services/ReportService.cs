@@ -463,11 +463,11 @@ namespace HemoIQ.Services
             return sb.ToString();
         }
 
-        private static string GetSpecimenStatus(Specimen s)
+        private string GetSpecimenStatus(Specimen s)
         {
             if (s.HasFinalCall) return "Confirmed";
             if (s.LastAnalyzedAt == null) return "Not analyzed";
-            if (s.IsAnalysisStale) return "Stale";
+            if (AnalysisCurrency.StaleReason(s, _db.LastAnalysisConfigurationChange()) != null) return "Stale";
             return "Analyzed";
         }
 
@@ -487,8 +487,9 @@ namespace HemoIQ.Services
             sb.AppendLine();
 
             var notAnalyzed = pending.Where(s => s.LastAnalyzedAt == null).ToList();
-            var stale = pending.Where(s => s.LastAnalyzedAt != null && s.IsAnalysisStale).ToList();
-            var analyzed = pending.Where(s => s.LastAnalyzedAt != null && !s.IsAnalysisStale).ToList();
+            var configChanged = _db.LastAnalysisConfigurationChange();
+            var stale = pending.Where(s => AnalysisCurrency.StaleReason(s, configChanged) != null).ToList();
+            var analyzed = pending.Where(s => s.LastAnalyzedAt != null && AnalysisCurrency.StaleReason(s, configChanged) == null).ToList();
 
             if (notAnalyzed.Count > 0)
             {
@@ -502,11 +503,14 @@ namespace HemoIQ.Services
 
             if (stale.Count > 0)
             {
-                sb.AppendLine($"STALE ANALYSIS — REACTIONS UPDATED ({stale.Count}):");
+                sb.AppendLine($"STALE ANALYSIS ({stale.Count}):");
                 sb.AppendLine($"  {"Accession",-20} {"Type",-8} {"Expiration",-12} {"Last Analyzed"}");
                 sb.AppendLine("  " + new string('-', 64));
                 foreach (var s in stale)
+                {
                     sb.AppendLine($"  {s.AccessionNumber,-20} {s.Type,-8} {s.ExpirationDate ?? "N/A",-12} {s.LastAnalyzedAt ?? "—"}");
+                    sb.AppendLine($"    {AnalysisCurrency.StaleReason(s, configChanged)}");
+                }
                 sb.AppendLine();
             }
 

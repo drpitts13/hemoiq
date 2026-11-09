@@ -25,7 +25,7 @@ Green rows meet that rule. Yellow rows do not. Double-click a row to add it to *
 - **Add selected** appends the highlighted row.
 - **Comment** is an optional note stored with the confirmation.
 - **Initials** identifies who confirmed the ID. Preferences can pre-fill this, and a successful confirmation updates the default initials.
-- **Confirm ID** locks the identification onto the specimen. When Final ID lists two or more antibodies and one falls short of the separation criterion, HemoIQ lists the shortfall and asks whether to confirm anyway. It does not block confirmation. Reports, Analytics, and the Worklist then treat the specimen as confirmed.
+- **Confirm ID** locks the identification onto the specimen. If the specimen was never analyzed, or the analysis is out of date (the orange warning), HemoIQ says why and asks whether to confirm anyway, with **No** as the default. When Final ID lists two or more antibodies and one falls short of the separation criterion, HemoIQ lists the shortfall and asks whether to confirm anyway. It does not block confirmation. Reports, Analytics, and the Worklist then treat the specimen as confirmed.
 - **Clear** removes a confirmed ID. You must enter a reason. The reason is written to the audit log.
 
 Confirm only after you agree with the evidence. The software does not confirm an identification for you.

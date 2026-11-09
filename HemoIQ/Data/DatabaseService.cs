@@ -1310,6 +1310,12 @@ namespace HemoIQ.Data
             cmd.ExecuteNonQuery();
         }
 
+        /// <summary>Why the specimen's last analysis is out of date, or null. See <see cref="Services.AnalysisCurrency"/>.</summary>
+        public string? AnalysisStaleReason(string specimenId) =>
+            GetSpecimen(specimenId) is Specimen s
+                ? Services.AnalysisCurrency.StaleReason(s, LastAnalysisConfigurationChange())
+                : null;
+
         public bool IsSpecimenAnalysisStale(string specimenId)
         {
             using var cmd = _conn.CreateCommand();
@@ -2806,22 +2812,15 @@ namespace HemoIQ.Data
                         }
                     }
 
-                    var configNewer = s.LastAnalyzedAt != null && configChanged != null &&
-                                      string.Compare(configChanged, s.LastAnalyzedAt, StringComparison.Ordinal) > 0;
-                    if (s.IsAnalysisStale || (s.LastAnalyzedAt == null && panels.Count > 0) || configNewer)
+                    var staleReason = Services.AnalysisCurrency.StaleReason(s, configChanged);
+                    if (staleReason != null || (s.LastAnalyzedAt == null && panels.Count > 0))
                     {
                         items.Add(new WorklistItem
                         {
                             Kind = WorklistKind.StaleAnalysis,
                             KindLabel = "Stale analysis",
                             Title = s.AccessionNumber,
-                            Detail = s.LastAnalyzedAt == null
-                                ? "Never analyzed."
-                                : string.Join(" ", new[]
-                                {
-                                    s.IsAnalysisStale ? "Reactions changed since last analysis." : null,
-                                    configNewer ? $"Analysis rules or Preferences changed {configChanged!.Replace('T', ' ')}, after the last analysis." : null,
-                                }.Where(x => x != null)),
+                            Detail = staleReason ?? "Never analyzed.",
                             UrgencyLabel = "Re-analyze",
                             SortOrder = 2,
                             AccessionNumber = s.AccessionNumber,

@@ -5,6 +5,8 @@ using HemoIQ.ViewModels;
 
 namespace HemoIQ.Tests;
 
+[Collection("PersistentDatabase")]
+
 public class RuleoutEvaluationTests
 {
     [Fact]
