@@ -22,7 +22,7 @@ Rules are optional, per-antibody overrides of the default rule-out settings. Whe
 2. Rules are matched by antibody, so a file rule for anti-K updates your anti-K rule whatever it is named.
 3. Entries are refused when the antibody is not a known antigen in its exact case, the name is missing, the count is outside 1–5, the exception antigen is unknown, or the file has two rules for one antibody.
 4. When you confirm, the adds and updates are written together. Each is audited like a manual add or edit. If any write fails, none are kept.
-5. Rules that are not in the file are kept; import never deletes a rule.
+5. Rules that are not in the file are kept; this import never deletes a rule. To copy rules and Preferences together, and optionally remove rules the file lacks, use **Tools > Import Lab Configuration…** (see Preferences help).
 6. Importing needs the same role as editing rules. Open investigations analyzed before the import appear as **Stale analysis** on the Worklist.
 
 ## The detail pane

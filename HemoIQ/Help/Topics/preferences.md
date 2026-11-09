@@ -70,4 +70,15 @@ Personal and workstation settings are not included: default initials, Worklist f
 4. Every import is written to the audit log. If analysis settings changed, open investigations analyzed before the import appear as **Stale analysis** on the Worklist, as after a manual change.
 5. Importing needs the Administrator role once users are registered.
 
-Analysis rules are exported and imported separately, on the Rules tab.
+Analysis rules are exported and imported separately, on the Rules tab, or together with these Preferences (see below).
+
+## Whole lab configuration
+
+**Tools > Export Lab Configuration…** saves the rules and these Preferences together in one file. Analysis depends on both, so this is the safer way to set up a second workstation or restore one.
+
+**Tools > Import Lab Configuration…** previews both sections, then applies them in one step:
+- The preview shows the same rule and Preferences changes as the separate imports. It also lists your stored rules that are not in the file.
+- If the file has any refused entry, nothing is applied, because a partial copy would not match the source configuration.
+- You choose whether to keep or remove stored rules that are not in the file. Removing them makes your rules match the file exactly; each removal is audited.
+- Everything is written together. If any part fails, for example because of a missing role, nothing changes.
+- Importing needs the role for rule changes, and the Administrator role when Preferences change.

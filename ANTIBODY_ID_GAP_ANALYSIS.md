@@ -48,6 +48,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | UI | Antigram freeze / slashes / run compare | Partial | Frozen cell; slashes; compare extras; Show dosage; filter/sort; panel lot compare | — |
 | UI | Explain Analysis panel | Present | Explain tab + Summary + clinical report assemble rule-out, support, conflict, phenotype, additional testing | Keep wording as evidence, not diagnosis |
 | Audit | Panel, reactions, rules, settings, final ID | Partial | Snapshots store rule-engine version, rules JSON, operator, and the adsorption comparison (conclusions plus ordinary-score exclusions) | Cross-panel enzyme/DTT pairing later |
+| Configuration | Rules + Preferences transfer | Present | Separate rule and Preferences JSON exports; `ConfigurationBundle` exports both together; import previews both sections and the stored rules the file lacks, refuses a file with any refused entry, applies atomically with optional audited removal of local-only rules, one `import_configuration` audit | No signed or checksummed bundle; reaction grades and phases beyond extra phases are not yet configurable data |
 | Tests | Synthetic cases with intermediate reasoning | Partial | Enzyme and DTT cases cover unpaired runs, short comparisons, mixed loss/gain/persistence that fits no pattern, and a one-loss two-persistence case that stays a partial destroyed pattern | Expand case library |
 
 ## Iteration 1 (this change)
@@ -2940,7 +2941,50 @@ relied on.
 
 No existing test changed behavior (1103 passed).
 
+## Iteration 129 (this change)
+
+**Deficiency:** Rule-outs depend on both the rules (Rules tab) and the
+laboratory-wide Preferences (counts, windows, thresholds). These were
+exported and imported separately, and with gaps:
+- A workstation could take one without the other and reach different
+  rule-outs from the same reactions.
+- Rule import kept stored rules missing from the file, without listing them.
+  A local extra rule could therefore silently change rule-outs after a
+  "copy of the reference configuration".
+- Each import skipped refused entries and applied the rest.
+
+**Bounded improvement:**
+- `ConfigurationBundle.Export` writes one file (`hemoiq-configuration`, v1)
+  that nests the existing rule and Preferences formats.
+- `Preview` reuses both existing previews and adds `LocalOnlyRules`, the
+  stored rules with no counterpart in the file. It writes nothing.
+- `Apply`:
+  - refuses a file with any refused rule or Preference;
+  - checks the needed roles before writing;
+  - writes rule adds and updates, optional audited removals of local-only
+    rules, Preference audits and one `import_configuration` audit in a single
+    transaction;
+  - changes the live settings only after the commit.
+  Preference changes are audited as `update_settings`, so open analyses
+  become stale as after a manual edit.
+- UI: Tools > Export Lab Configuration… and Import Lab Configuration…. The
+  import shows one combined preview, a Yes/No/Cancel choice to remove or keep
+  local-only rules, and a final confirmation. On success, Preferences are
+  saved and the Rules tab and Worklist refresh.
+
+**Tests:** `ConfigurationBundleTests` (6):
+- the round trip reproduces rules and Preferences, with the audits;
+- local-only rules are listed, kept by default and removed on request;
+- a file with a refused value changes nothing;
+- wrong format, newer version and a missing section are refused;
+- a Supervisor cannot apply Preference changes, and the rules roll back too;
+- a mid-apply failure rolls everything back and leaves the settings untouched.
+
+No existing test changed behavior (1109 passed).
+
 ## Likely next tick
 
-One configuration bundle for rules and Preferences (export and import as a
-single reviewed package), then a product review at Iteration 133.
+A product review at Iteration 130 (four iterations since 124 plus the
+historical-mutation sweep at 128): check that rules, Preferences, phases and
+reaction grades are configured as data rather than in code, and record which
+are still fixed.

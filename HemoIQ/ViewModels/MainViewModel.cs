@@ -35,6 +35,8 @@ namespace HemoIQ.ViewModels
         public ICommand? ShowPurgeDatabaseCommand { get; set; }
         public ICommand? ShowOpenArchiveCommand { get; set; }
         public ICommand? ShowAuditLogCommand { get; set; }
+        public ICommand? ExportConfigurationCommand { get; set; }
+        public ICommand? ImportConfigurationCommand { get; set; }
 
         private string _statusText = "Ready";
         public string StatusText

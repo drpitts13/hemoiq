@@ -32,6 +32,8 @@ namespace HemoIQ
             vm.ShowPurgeDatabaseCommand = new RelayCommand(ShowPurgeDatabase);
             vm.ShowOpenArchiveCommand = new RelayCommand(ShowOpenArchive);
             vm.ShowAuditLogCommand = new RelayCommand(ShowAuditLog);
+            vm.ExportConfigurationCommand = new RelayCommand(ExportConfiguration);
+            vm.ImportConfigurationCommand = new RelayCommand(ImportConfiguration);
 
             Loaded += MainWindow_Loaded;
 
@@ -220,6 +222,77 @@ namespace HemoIQ
         {
             var dlg = new Views.Dialogs.AuditLogDialog(ViewModel.Database) { Owner = this };
             dlg.ShowDialog();
+        }
+
+        private void ExportConfiguration()
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Export Lab Configuration",
+                Filter = "HemoIQ configuration (*.json)|*.json",
+                FileName = $"hemoiq-configuration-{System.DateTime.Now:yyyyMMdd}.json",
+            };
+            if (dlg.ShowDialog(this) != true) return;
+            var rules = ViewModel.Database.GetAllRules();
+            System.IO.File.WriteAllText(dlg.FileName, ConfigurationBundle.Export(rules, AppSettings.Current, System.DateTime.Now));
+            ViewModel.SetStatus($"Lab configuration ({rules.Count} rule(s) and Preferences) exported to {System.IO.Path.GetFileName(dlg.FileName)}.");
+        }
+
+        private void ImportConfiguration()
+        {
+            var db = ViewModel.Database;
+            var dlg = new Microsoft.Win32.OpenFileDialog { Title = "Import Lab Configuration", Filter = "HemoIQ configuration (*.json)|*.json" };
+            if (dlg.ShowDialog(this) != true) return;
+            ConfigurationPreview preview;
+            try
+            {
+                preview = ConfigurationBundle.Preview(System.IO.File.ReadAllText(dlg.FileName), db.GetAllRules(),
+                    db.GetKnownAntigens(), AppSettings.Current);
+            }
+            catch (System.Exception ex) when (ex is System.ArgumentException or System.IO.IOException)
+            {
+                MessageBox.Show(ex.Message, "Configuration not imported", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            var summary = ConfigurationBundle.Summarize(preview);
+            if (preview.HasProblems)
+            {
+                MessageBox.Show("Nothing was changed: the file has refused entries, so it would not reproduce its configuration.\n\n" + summary,
+                    "Configuration not imported", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            var removeLocalOnly = false;
+            if (preview.LocalOnlyRules.Count > 0)
+            {
+                var answer = MessageBox.Show(summary + $"\n\n{preview.LocalOnlyRules.Count} stored rule(s) are not in the file. " +
+                        "Remove them so the rules match the file exactly?\n\nYes: remove them (audited). No: keep them.",
+                    "Import Lab Configuration", MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.No);
+                if (answer == MessageBoxResult.Cancel) return;
+                removeLocalOnly = answer == MessageBoxResult.Yes;
+            }
+            if (!preview.HasChanges && !removeLocalOnly)
+            {
+                MessageBox.Show("Nothing to change.\n\n" + summary, "Import Lab Configuration", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (MessageBox.Show(summary + "\n\nApply the rules and Preferences together now?", "Import Lab Configuration",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            ConfigurationImportResult result;
+            try
+            {
+                result = ConfigurationBundle.Apply(db, AppSettings.Current, preview, removeLocalOnly, System.IO.Path.GetFileName(dlg.FileName));
+            }
+            catch (System.Exception ex) when (ex is System.ArgumentException or System.UnauthorizedAccessException)
+            {
+                MessageBox.Show("Nothing was changed.\n\n" + ex.Message, "Configuration not imported", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            SettingsService.Save();
+            ViewModel.RulesVM.Refresh();
+            ViewModel.WorklistVM.Refresh();
+            ViewModel.SetStatus($"Lab configuration imported: {result.RulesAdded} rule(s) added, {result.RulesUpdated} updated, " +
+                                $"{result.RulesRemoved} removed, {result.PreferencesChanged} Preference(s) changed. " +
+                                "Open investigations analyzed before this change are listed on the Worklist as Stale analysis.");
         }
 
         private void AcknowledgeIntendedUseIfNeeded()

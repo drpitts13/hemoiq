@@ -31,6 +31,11 @@
                 <MenuItem Header="_Audit Log..." Command="{Binding ShowAuditLogCommand}"
                           ToolTip="View the append-only clinical audit trail"/>
                 <Separator/>
+                <MenuItem Header="E_xport Lab Configuration..." Command="{Binding ExportConfigurationCommand}"
+                          ToolTip="Save the rules and laboratory-wide Preferences together, so another workstation reaches the same rule-outs"/>
+                <MenuItem Header="_Import Lab Configuration..." Command="{Binding ImportConfigurationCommand}"
+                          ToolTip="Preview a configuration file's rules and Preferences, then apply them together in one step"/>
+                <Separator/>
                 <MenuItem Header="Load _Demo Data" Command="{Binding LoadDemoDataCommand}"
                           ToolTip="Seeds seven real-world scenarios for testing"/>
             </MenuItem>
