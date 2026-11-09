@@ -340,6 +340,7 @@ namespace HemoIQ.ViewModels
                 return;
             }
             if (!ConfirmEncounter(dlg.AccessionNumber, dlg.EncounterNumber, dlg.Mrn)) return;
+            if (!ConfirmPregnancy(dlg.Mrn, dlg.PregnancyStatusCode)) return;
             try
             {
                 Services.SpecimenSaveService.Save(_db, ToEdit(dlg, dlg.AccessionNumber), isNew: true);
@@ -362,6 +363,16 @@ namespace HemoIQ.ViewModels
             catch (System.ArgumentException) { return true; } // the save reports the invalid value
             if (warning == null) return true;
             return MessageBox.Show(warning + "\n\nSave anyway?", "Encounter on another patient",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+        }
+
+        /// <summary>Warns, without blocking, when a pregnancy is recorded for a patient recorded as male.</summary>
+        private bool ConfirmPregnancy(string? mrn, string pregnancyStatus)
+        {
+            if (mrn == null) return true;
+            var patient = _db.GetPatient(mrn);
+            if (Services.PatientSexCheck.PregnancyConflict(patient?.Sex, pregnancyStatus, mrn) is not string warning) return true;
+            return MessageBox.Show(warning + "\n\nSave anyway?", "Pregnancy and patient sex",
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
         }
 
@@ -403,6 +414,7 @@ namespace HemoIQ.ViewModels
             var dlg = new Views.Dialogs.SpecimenDialog(SelectedSpecimen);
             if (dlg.ShowDialog() != true) return;
             if (!ConfirmEncounter(SelectedSpecimen.AccessionNumber, dlg.EncounterNumber, dlg.Mrn)) return;
+            if (!ConfirmPregnancy(dlg.Mrn, dlg.PregnancyStatusCode)) return;
             try
             {
                 Services.SpecimenSaveService.Save(_db, ToEdit(dlg, SelectedSpecimen.AccessionNumber), isNew: false);

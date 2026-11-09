@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using HemoIQ.Models;
 
@@ -15,6 +16,9 @@ namespace HemoIQ.Views.Dialogs
             DobPicker.DisplayDateEnd = DateTime.Today;
             TransplantDatePicker.DisplayDateEnd = DateTime.Today;
             SelectTransplant(existing?.HpcTransplant);
+            SexBox.ItemsSource = Models.PatientSex.Options.Select(o => new { o.Code, o.Label }).ToList();
+            SexBox.SelectedValuePath = "Code";
+            SexBox.SelectedValue = Models.PatientSex.Normalize(existing?.Sex);
             if (existing == null) return;
             if (DateTime.TryParse(existing.HpcTransplantDate, out var td)) TransplantDatePicker.SelectedDate = td;
             NameBox.Text = existing.Name ?? "";
@@ -73,6 +77,7 @@ namespace HemoIQ.Views.Dialogs
                 Mrn = MrnBox.Text,
                 Name = Clean(NameBox.Text),
                 DateOfBirth = DobPicker.SelectedDate?.ToString("yyyy-MM-dd"),
+                Sex = SexBox.SelectedValue as string ?? Models.PatientSex.Unknown,
                 TransfusionRequirements = Clean(RequirementsBox.Text),
                 AntigenNegative = negative.Canonical,
                 BloodBankComments = Clean(CommentsBox.Text),

@@ -39,7 +39,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | Search | Investigation search | Present | Search tab › Investigations: accession, MRN, patient name/DOB, final/previous antibodies, technologist; every word must match; inclusive date range; status column; Open jumps to Specimens | Panel lot/manufacturer used in an investigation not yet searchable |
 | Workflow | Investigation status and next step | Partial | `InvestigationStatusService` derives five steps and a status (awaiting panel → testing → analysis needed → awaiting ID → completed / amended / reopened / inactive) from panels, grades, analysis time, final call, and audit; shown on Specimens and the worksheet; Worklist shares the completeness check | Optional supervisor review step (two-person, audited, invalidated by clear/re-confirm, Worklist queue); audited Cancel/Reinstate with reason, locked and off work queues; local users/roles enforce review, clear, reinstate, Preferences, user management |
 | Patient | Permanent record and transfusion requirements | Present | `patients` table (MRN, name, DOB, comments, free-text requirements, structured `antigen_negative`); `AntigenNegativeRequirement` parses codes (case-sensitive C/c, E/e, K/k, S/s; Fy(a-) notation) and refuses non-antigens; audited add/update; Edit Patient on Specimens; reports and detail pane print E−, K−, Fy(a−); analysis raises REVIEW when a known antibody's antigen is not in the structured list, and asks to add it when only free text mentions it | Expiry or source of each requirement; product-level requirements (irradiated, CMV-safe) remain free text |
-| Patient | MRN and cross-specimen history | Partial | Indexed `specimens.mrn`; audited; confirmed final calls on the same MRN become Historical evidence citing the source accession; detail pane and reports list other specimens | Sex (encounter, location, ordering provider and pregnancy are now recorded on the specimen) |
+| Patient | MRN and cross-specimen history | Partial | Indexed `specimens.mrn`; audited; confirmed final calls on the same MRN become Historical evidence citing the source accession; detail pane and reports list other specimens | Encounter in Patient history rows and Search result columns (sex is on the patient record; encounter, location, ordering provider and pregnancy are on the specimen) |
 | Specimen | DAT polyspecific / IgG / C3 | Present | `DatProfile` on specimen; MF grade; audited IgG/C3; positive if any reactive, negative only if all recorded negative; C3-only caveat on autoantibody notes; MF DAT donor-cell note | Eluate specimens link to their source; `EluateEvidence` reads specificity, panreactivity, and nonreactivity against DAT and transfusion |
 | Analysis | Panreactive / cold / warm / HTLA / auto / HFA / LFA models | Partial | DAT scores; named LFA/pan cells; enzyme lost/gained/resistant; DTT lost/resistant vs untreated. Unpaired runs, comparisons with fewer than 3 paired cells, and comparisons that meet no threshold are each named | Cells tested on only one of the paired runs stay unnamed |
 | Analysis | Selected-cell recommendations with “why” | Partial | Unused in-date vials preferred; P1−/Ch−/Sd(a−) selected cells ranked when neutralization favors soluble substance | More ISBT alleles later |
@@ -2258,7 +2258,30 @@ every awaiting case had been deferred as too noisy.
 - The status is computed only for open cases past the threshold, so the
   Worklist does not compute it for every specimen.
 
+## Iteration 105 (this change)
+
+**Deficiency:** The patient record had no sex. The prompt lists "Sex where
+operationally relevant". The relevant case is pregnancy. A specimen could be
+recorded as pregnant or recently pregnant for a male patient, which usually
+means a wrong-patient specimen or a data-entry error, and nothing noticed.
+
+**Bounded improvement:**
+- `PatientSex`: codes unknown, female, male and other. It accepts F, M and X
+  and labels them for display.
+- `patients.sex` migration: NOT NULL DEFAULT 'unknown', with a CHECK on the
+  code.
+- `SavePatient` normalizes and compares the sex. It is part of the audit
+  snapshot, so changes appear in update_patient with before and after values.
+- `Patient.Display` adds the sex label when it is known, so the detail pane
+  and reports show it.
+- Patient dialog: a Sex combo beside the date of birth.
+- `PatientSexCheck`:
+  - a REVIEW suggestion in analysis when the specimen records pregnant or
+    recently pregnant and the patient is recorded as male;
+  - a non-blocking confirmation when saving such a specimen.
+
 ## Likely next tick
 
-Patient sex where it affects pregnancy-related context, or showing the
-encounter number in Patient history rows and Search results.
+RhIG and anti-D: when anti-D is suspected or identified and RhIG is recorded
+within about 12 weeks before collection, analysis should say the anti-D may be
+passive. The recorded RhIG date is currently used only for specimen dating.

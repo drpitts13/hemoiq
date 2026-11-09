@@ -10,6 +10,8 @@ namespace HemoIQ.Models
         public string? Name { get; set; }
         /// <summary>yyyy-MM-dd.</summary>
         public string? DateOfBirth { get; set; }
+        /// <summary><see cref="PatientSex"/> code; "unknown" when not recorded.</summary>
+        public string Sex { get; set; } = PatientSex.Unknown;
         /// <summary>Permanent blood bank comments (e.g. "warm auto since 2024").</summary>
         public string? BloodBankComments { get; set; }
         /// <summary>Special transfusion requirements, e.g. "K-negative, E-negative; irradiated".</summary>
@@ -26,6 +28,7 @@ namespace HemoIQ.Models
         public string? UpdatedAt { get; set; }
 
         public string Display =>
-            string.IsNullOrWhiteSpace(Name) ? Mrn : $"{Name} ({Mrn}){(string.IsNullOrWhiteSpace(DateOfBirth) ? "" : $", DOB {DateOfBirth}")}";
+            (string.IsNullOrWhiteSpace(Name) ? Mrn : $"{Name} ({Mrn}){(string.IsNullOrWhiteSpace(DateOfBirth) ? "" : $", DOB {DateOfBirth}")}") +
+            (PatientSex.Normalize(Sex) == PatientSex.Unknown ? "" : $", {PatientSex.Label(Sex)}");
     }
 }

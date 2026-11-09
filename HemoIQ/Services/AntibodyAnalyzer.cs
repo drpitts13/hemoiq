@@ -89,8 +89,12 @@ namespace HemoIQ.Services
             };
             var transfusion = ApplyPatientTyping(specimenId, result);
             if (_db.GetSpecimen(specimenId) is Specimen hemolysisSource)
+            {
                 result.TransfusionRequirementNotes.InsertRange(0,
                     SpecimenHemolysis.ReviewNotes(hemolysisSource.Hemolysis, reactions));
+                result.TransfusionRequirementNotes.InsertRange(0,
+                    PatientSexCheck.ReviewNotes(_db.GetPatient(hemolysisSource.Mrn), hemolysisSource));
+            }
             result.SpecialReactionNotes = DescribeSpecialGrades(reactions);
             result.SpecialReactionNotes.AddRange(
                 TransfusionContext.DescribeMixedFieldAutocontrol(reactions, transfusion));

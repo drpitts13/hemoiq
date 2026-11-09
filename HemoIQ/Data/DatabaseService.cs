@@ -291,6 +291,9 @@ namespace HemoIQ.Data
                 ExecNonQuery("ALTER TABLE patients ADD COLUMN hpc_transplant TEXT NOT NULL DEFAULT 'none'");
             if (!patientCols.Contains("hpc_transplant_date"))
                 ExecNonQuery("ALTER TABLE patients ADD COLUMN hpc_transplant_date TEXT");
+            if (!patientCols.Contains("sex"))
+                ExecNonQuery("ALTER TABLE patients ADD COLUMN sex TEXT NOT NULL DEFAULT 'unknown' " +
+                             "CHECK (sex IN ('unknown','female','male','other'))");
             var ruleCols = GetColumnNames("rules");
             if (!ruleCols.Contains("separation_exempt"))
                 ExecNonQuery("ALTER TABLE rules ADD COLUMN separation_exempt INTEGER NOT NULL DEFAULT 0");
@@ -839,6 +842,7 @@ namespace HemoIQ.Data
                 AntigenNegative = SafeGetString(r, "antigen_negative"),
                 HpcTransplant = Services.HpcTransplant.Normalize(SafeGetString(r, "hpc_transplant")),
                 HpcTransplantDate = SafeGetString(r, "hpc_transplant_date"),
+                Sex = Models.PatientSex.Normalize(SafeGetString(r, "sex")),
                 UpdatedAt = SafeGetString(r, "updated_at"),
             };
         }
@@ -885,6 +889,7 @@ namespace HemoIQ.Data
                 HpcTransplantDate = transplantDate,
                 Name = Clean(patient.Name),
                 DateOfBirth = dob,
+                Sex = Models.PatientSex.Normalize(patient.Sex),
                 BloodBankComments = Clean(patient.BloodBankComments),
                 TransfusionRequirements = Clean(patient.TransfusionRequirements),
                 AntigenNegative = antigenNegative.Canonical,
@@ -894,17 +899,18 @@ namespace HemoIQ.Data
                 before.BloodBankComments == after.BloodBankComments &&
                 before.TransfusionRequirements == after.TransfusionRequirements &&
                 before.AntigenNegative == after.AntigenNegative &&
-                before.HpcTransplant == after.HpcTransplant && before.HpcTransplantDate == after.HpcTransplantDate)
+                before.HpcTransplant == after.HpcTransplant && before.HpcTransplantDate == after.HpcTransplantDate &&
+                before.Sex == after.Sex)
                 return;
 
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
                 INSERT INTO patients (mrn, name, date_of_birth, blood_bank_comments, transfusion_requirements, antigen_negative,
-                                      hpc_transplant, hpc_transplant_date, updated_at)
-                VALUES ($mrn, $name, $dob, $comments, $req, $neg, $hpc, $hpcdate, $at)
+                                      hpc_transplant, hpc_transplant_date, sex, updated_at)
+                VALUES ($mrn, $name, $dob, $comments, $req, $neg, $hpc, $hpcdate, $sex, $at)
                 ON CONFLICT(mrn) DO UPDATE SET name = $name, date_of_birth = $dob,
                     blood_bank_comments = $comments, transfusion_requirements = $req, antigen_negative = $neg,
-                    hpc_transplant = $hpc, hpc_transplant_date = $hpcdate, updated_at = $at";
+                    hpc_transplant = $hpc, hpc_transplant_date = $hpcdate, sex = $sex, updated_at = $at";
             cmd.Parameters.AddWithValue("$mrn", key);
             cmd.Parameters.AddWithValue("$name", (object?)after.Name ?? DBNull.Value);
             cmd.Parameters.AddWithValue("$dob", (object?)after.DateOfBirth ?? DBNull.Value);
@@ -913,11 +919,12 @@ namespace HemoIQ.Data
             cmd.Parameters.AddWithValue("$neg", (object?)after.AntigenNegative ?? DBNull.Value);
             cmd.Parameters.AddWithValue("$hpc", after.HpcTransplant);
             cmd.Parameters.AddWithValue("$hpcdate", (object?)after.HpcTransplantDate ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$sex", after.Sex);
             cmd.Parameters.AddWithValue("$at", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             cmd.ExecuteNonQuery();
             object? Snap(Patient? p) => p == null ? null : new
             {
-                name = p.Name, dateOfBirth = p.DateOfBirth,
+                name = p.Name, dateOfBirth = p.DateOfBirth, sex = p.Sex,
                 bloodBankComments = p.BloodBankComments, transfusionRequirements = p.TransfusionRequirements,
                 antigenNegative = p.AntigenNegative,
                 hpcTransplant = p.HpcTransplant, hpcTransplantDate = p.HpcTransplantDate,

@@ -32,8 +32,12 @@
                      VerticalAlignment="Center" Margin="0,2"/>
 
             <Label Content="Date of birth:" Grid.Row="2" VerticalAlignment="Center"/>
-            <DatePicker x:Name="DobPicker" Grid.Row="2" Grid.Column="1"
-                        VerticalAlignment="Center" Margin="0,2"/>
+            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <DatePicker x:Name="DobPicker" Width="150" Margin="0,2"/>
+                <TextBlock Text="Sex:" VerticalAlignment="Center" Margin="12,0,6,0"/>
+                <ComboBox x:Name="SexBox" Width="120" Margin="0,2" DisplayMemberPath="Label"
+                          ToolTip="Recorded sex. A pregnancy recorded on a specimen for a patient recorded as male is flagged for review."/>
+            </StackPanel>
 
             <Label Content="Antigen-negative units:" Grid.Row="3" VerticalAlignment="Center"/>
             <TextBox x:Name="AntigenNegativeBox" Grid.Row="3" Grid.Column="1" MaxLength="200"
