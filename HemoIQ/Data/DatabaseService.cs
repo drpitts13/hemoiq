@@ -427,6 +427,8 @@ namespace HemoIQ.Data
                 ExecNonQuery("ALTER TABLE analysis_snapshots ADD COLUMN analyzed_by TEXT");
             if (!cols.Contains("absorption_json"))
                 ExecNonQuery("ALTER TABLE analysis_snapshots ADD COLUMN absorption_json TEXT");
+            if (!cols.Contains("additional_testing_json"))
+                ExecNonQuery("ALTER TABLE analysis_snapshots ADD COLUMN additional_testing_json TEXT");
         }
 
         private void DeactivateExpiredSpecimens()
@@ -4160,15 +4162,15 @@ namespace HemoIQ.Data
         public void SaveAnalysisSnapshot(string specimenId, string softwareVersion, string settingsJson,
             string inputFingerprint, string? ruledOutJson, string? suspectedJson, string? acsJson,
             string? ruleEngineVersion = null, string? rulesJson = null, string? analyzedBy = null,
-            string? absorptionJson = null)
+            string? absorptionJson = null, string? additionalTestingJson = null)
         {
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
                 INSERT INTO analysis_snapshots
                     (specimen_id, analyzed_at_utc, software_version, settings_json, input_fingerprint,
                      ruled_out_json, suspected_json, acs_json, rule_engine_version, rules_json, analyzed_by,
-                     absorption_json)
-                VALUES ($sid, $at, $ver, $settings, $fp, $ro, $sus, $acs, $rev, $rules, $by, $abs)";
+                     absorption_json, additional_testing_json)
+                VALUES ($sid, $at, $ver, $settings, $fp, $ro, $sus, $acs, $rev, $rules, $by, $abs, $more)";
             cmd.Parameters.AddWithValue("$sid", specimenId);
             cmd.Parameters.AddWithValue("$at", DateTime.UtcNow.ToString("o"));
             cmd.Parameters.AddWithValue("$ver", softwareVersion);
@@ -4182,6 +4184,7 @@ namespace HemoIQ.Data
             cmd.Parameters.AddWithValue("$by",
                 (object?)(string.IsNullOrWhiteSpace(analyzedBy) ? null : analyzedBy.Trim()) ?? DBNull.Value);
             cmd.Parameters.AddWithValue("$abs", (object?)absorptionJson ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$more", (object?)additionalTestingJson ?? DBNull.Value);
             cmd.ExecuteNonQuery();
         }
 
@@ -4213,7 +4216,7 @@ namespace HemoIQ.Data
             cmd.CommandText = @"
                 SELECT id, specimen_id, analyzed_at_utc, software_version, settings_json, input_fingerprint,
                        ruled_out_json, suspected_json, acs_json, rule_engine_version, rules_json, analyzed_by,
-                       absorption_json
+                       absorption_json, additional_testing_json
                 FROM analysis_snapshots
                 WHERE specimen_id = $sid
                 ORDER BY id DESC
@@ -4235,7 +4238,8 @@ namespace HemoIQ.Data
                 RuleEngineVersion = r.FieldCount > 9 && !r.IsDBNull(9) ? r.GetString(9) : null,
                 RulesJson = r.FieldCount > 10 && !r.IsDBNull(10) ? r.GetString(10) : null,
                 AnalyzedBy = r.FieldCount > 11 && !r.IsDBNull(11) ? r.GetString(11) : null,
-                AbsorptionJson = r.FieldCount > 12 && !r.IsDBNull(12) ? r.GetString(12) : null
+                AbsorptionJson = r.FieldCount > 12 && !r.IsDBNull(12) ? r.GetString(12) : null,
+                AdditionalTestingJson = r.FieldCount > 13 && !r.IsDBNull(13) ? r.GetString(13) : null
             };
         }
 

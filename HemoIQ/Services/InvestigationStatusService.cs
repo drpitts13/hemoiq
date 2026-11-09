@@ -50,6 +50,7 @@ namespace HemoIQ.Services
         public const string TestingInProgress = "Testing in progress";
         public const string AnalysisNeeded = "Analysis needed";
         public const string AwaitingIdentification = "Awaiting identification";
+        public const string AwaitingAdditionalTesting = "Awaiting additional testing";
         public const string AwaitingSupervisorReview = "Awaiting supervisor review";
         public const string Completed = "Completed";
         public const string Amended = "Amended";
@@ -135,6 +136,11 @@ namespace HemoIQ.Services
                 next = s.LastAnalyzedAt == null
                     ? "Run analysis."
                     : $"{staleReason} Run analysis again.";
+            }
+            else if (db.GetLatestAnalysisSnapshot(s.AccessionNumber)?.AdditionalTesting is { Count: > 0 } needs)
+            {
+                label = AwaitingAdditionalTesting;
+                next = string.Join(" ", needs) + " Test further, or review the analysis and record the identification.";
             }
             else
             {

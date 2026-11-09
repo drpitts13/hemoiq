@@ -18,6 +18,13 @@ namespace HemoIQ.Models
         /// Serialized adsorption comparison and ordinary-score exclusions.
         /// </summary>
         public string? AbsorptionJson { get; set; }
+        /// <summary>JSON list of testing needs the analysis left open; null for analyses saved before this field.</summary>
+        public string? AdditionalTestingJson { get; set; }
+
+        public List<string> AdditionalTesting =>
+            string.IsNullOrEmpty(AdditionalTestingJson)
+                ? new List<string>()
+                : System.Text.Json.JsonSerializer.Deserialize<List<string>>(AdditionalTestingJson) ?? new List<string>();
     }
 
     /// <summary>

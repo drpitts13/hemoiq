@@ -207,7 +207,8 @@ namespace HemoIQ.Services
                 {
                     Conclusions = result.AbsorptionConclusions,
                     OrdinaryScoreExclusions = result.AdsorptionScoreExclusions
-                }));
+                }),
+                JsonSerializer.Serialize(AdditionalTestingNeeds.Compute(result)));
         }
 
         public static string ComputeInputFingerprint(IEnumerable<Reaction> reactions, IEnumerable<PanelRun> runs)

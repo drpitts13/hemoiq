@@ -50,7 +50,7 @@ public class AnalysisCurrencyTests
         iso.Analyzer.AnalyzeSpecimen("AC-S", updateDb: true);
 
         var current = InvestigationStatusService.Compute(iso.Db, iso.Db.GetSpecimen("AC-S")!, requireReview: false);
-        Assert.Equal(InvestigationStatusService.AwaitingIdentification, current.Label);
+        Assert.Equal(InvestigationStatusService.AwaitingAdditionalTesting, current.Label);
         Assert.Null(iso.Db.AnalysisStaleReason("AC-S"));
 
         Thread.Sleep(1100); // last_analyzed_at has one-second resolution

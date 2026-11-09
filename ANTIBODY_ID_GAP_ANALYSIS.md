@@ -2119,8 +2119,42 @@ interpret, and analysis gave no warning.
   collection.
 - No schema change.
 
+## Iteration 100 (this change)
+
+**Deficiency:**
+- The status went straight from "Analysis needed" to "Awaiting
+  identification" even when the analysis had left clinically significant
+  antibodies unresolved.
+- The analysis snapshot did not record the open questions, so status could
+  not tell "ready to identify" from "needs more cells".
+- While building this I found that "not yet ruled out" cannot be read from
+  `RuleoutEvaluations`. An antibody with no antigen-positive nonreactive
+  cell has no evaluation at all, though it is the clearest case for more
+  testing.
+
+**Bounded improvement:**
+- `AdditionalTestingNeeds.Compute` lists four kinds of open item:
+  - **Not yet ruled out:** clinically significant antibodies the panels
+    type that are not ruled out, identified or suspected. It skips any
+    the patient's own reliable typing or genotype argues against.
+  - **Identification rule:** suspected antibodies short of it.
+  - **Separation:** shortfalls.
+  - **Selected cells:** up to three in-date recommendations.
+- The list is saved with each analysis (migration:
+  `analysis_snapshots.additional_testing_json`). Older snapshots read as no
+  needs.
+- `InvestigationStatusService` shows **Awaiting additional testing** with
+  the needs as the next action when the analysis is current and the list is
+  not empty. It is a suggestion; identification is not blocked.
+- Two status tests with two-cell fixtures now expect it, which is correct:
+  those panels cannot rule out most antibodies.
+
+**Not in this tick:** a Worklist "Awaiting testing" queue. It needs real-lab
+judgement on noise first.
+
 ## Likely next tick
 
-Derive "Awaiting additional testing" from the latest analysis snapshot: open
-investigations whose last analysis recommends selected cells or other
-tests, with the recommendation as the next action.
+Product review (several iterations since the last). Candidates:
+- the awaiting-testing Worklist queue;
+- products and units transfused on the specimen;
+- encounter or account identifiers.

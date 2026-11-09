@@ -55,7 +55,8 @@ public class InvestigationStatusTests
 
         iso.Analyzer.AnalyzeSpecimen("ST-3", updateDb: true);
         var st = StatusOf(iso, "ST-3");
-        Assert.Equal(InvestigationStatusService.AwaitingIdentification, st.Label);
+        // Two cells cannot rule out most clinically significant antibodies, so more testing is suggested.
+        Assert.Equal(InvestigationStatusService.AwaitingAdditionalTesting, st.Label);
         Assert.True(st.Steps[3].Done);
 
         Thread.Sleep(1100); // timestamps have one-second resolution

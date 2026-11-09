@@ -68,8 +68,16 @@ When an antibody is known for the MRN (Previous antibodies, a confirmed call on 
 The grey strip at the top of the detail pane shows where the investigation stands. It is worked out from what has been recorded, so it cannot fall out of date:
 
 - **Steps:** ✓ Received, Panel attached, Reactions complete, Analysis current, ID confirmed. ○ marks a step that is not done. **Analysis current** follows the same rule as the Analysis tab warning and the Worklist: it clears when grades, analysis rules or clinical Preferences change after the last analysis.
-- **Status:** Awaiting panel, Testing in progress, Analysis needed, Awaiting identification, Completed, **Amended** (an identification was cleared and confirmed again), **Reopened** (cleared and not yet confirmed again), or Inactive – not completed.
+- **Status:** Awaiting panel, Testing in progress, Analysis needed, **Awaiting additional testing**, Awaiting identification, Completed, **Amended** (an identification was cleared and confirmed again), **Reopened** (cleared and not yet confirmed again), or Inactive – not completed.
 - **Next:** the specific next action, for example `Finish reactions: Panel A (1/2).`
+
+**Awaiting additional testing** means the analysis is current but left questions that more testing could settle. Each analysis saves the open items, and **Next** lists them:
+- clinically significant antibodies the panels type that are not yet ruled out;
+- suspected antibodies that have not met the identification rule;
+- multiple-antibody separation shortfalls;
+- up to three recommended selected cells.
+
+An antibody the patient's own reliable typing or genotype argues against is not listed. This is a suggestion, not a block: you can still record the identification. Analyses saved before this version show **Awaiting identification** until analysis is run again.
 
 The identification worksheet prints the same status line.
 
