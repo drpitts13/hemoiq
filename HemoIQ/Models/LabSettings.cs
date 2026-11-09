@@ -55,6 +55,8 @@ namespace HemoIQ.Models
         public bool WorklistShowStale { get; set; } = true;
         public bool WorklistShowExpiring { get; set; } = true;
         public bool WorklistShowExpired { get; set; } = true;
+        /// <summary>Review items: overdue testing, supervisor review, rule problems, reagent and typing checks.</summary>
+        public bool WorklistShowReview { get; set; } = true;
         public bool IntendedUseAcknowledged { get; set; }
         /// <summary>
         /// Comma-separated extra reaction phases (e.g. RT, PEG, Gel, Solid,
@@ -116,27 +118,57 @@ namespace HemoIQ.Models
             return today.Date.AddDays(datingDays);
         }
 
-        public bool ShowsWorklistKind(WorklistKind kind) => kind switch
+        /// <summary>The Worklist count cards, in display order.</summary>
+        public static readonly string[] WorklistCategories = { "Incomplete", "Stale", "Expiring", "Expired", "Review" };
+
+        /// <summary>The count card a Worklist kind belongs to. Every kind belongs to exactly one.</summary>
+        public static string WorklistCategory(WorklistKind kind) => kind switch
         {
-            WorklistKind.IncompleteReactions => WorklistShowIncomplete,
-            WorklistKind.StaleAnalysis => WorklistShowStale,
-            WorklistKind.ExpiringSpecimen or WorklistKind.ExpiringPanel => WorklistShowExpiring,
-            WorklistKind.ExpiredSpecimen or WorklistKind.ExpiredPanel => WorklistShowExpired,
+            WorklistKind.IncompleteReactions => "Incomplete",
+            WorklistKind.StaleAnalysis => "Stale",
+            WorklistKind.ExpiringSpecimen or WorklistKind.ExpiringPanel => "Expiring",
+            WorklistKind.ExpiredSpecimen or WorklistKind.ExpiredPanel => "Expired",
+            _ => "Review"
+        };
+
+        public bool ShowsWorklistCategory(string category) => category switch
+        {
+            "Incomplete" => WorklistShowIncomplete,
+            "Stale" => WorklistShowStale,
+            "Expiring" => WorklistShowExpiring,
+            "Expired" => WorklistShowExpired,
+            "Review" => WorklistShowReview,
             _ => true
         };
 
-        public bool IsWorklistCategoryIsolated(string category) => category switch
+        public void SetWorklistCategory(string category, bool show)
         {
-            "Incomplete" => WorklistShowIncomplete && !WorklistShowStale &&
-                            !WorklistShowExpiring && !WorklistShowExpired,
-            "Stale" => WorklistShowStale && !WorklistShowIncomplete &&
-                       !WorklistShowExpiring && !WorklistShowExpired,
-            "Expiring" => WorklistShowExpiring && !WorklistShowIncomplete &&
-                          !WorklistShowStale && !WorklistShowExpired,
-            "Expired" => WorklistShowExpired && !WorklistShowIncomplete &&
-                         !WorklistShowStale && !WorklistShowExpiring,
-            _ => false
-        };
+            switch (category)
+            {
+                case "Incomplete": WorklistShowIncomplete = show; break;
+                case "Stale": WorklistShowStale = show; break;
+                case "Expiring": WorklistShowExpiring = show; break;
+                case "Expired": WorklistShowExpired = show; break;
+                case "Review": WorklistShowReview = show; break;
+            }
+        }
+
+        public bool ShowsWorklistKind(WorklistKind kind) => ShowsWorklistCategory(WorklistCategory(kind));
+
+        /// <summary>True when this category is the only one shown.</summary>
+        public bool IsWorklistCategoryIsolated(string category) =>
+            ShowsWorklistCategory(category) &&
+            System.Linq.Enumerable.All(WorklistCategories, c => c == category || !ShowsWorklistCategory(c));
+
+        public bool ShowsAllWorklistCategories => System.Linq.Enumerable.All(WorklistCategories, ShowsWorklistCategory);
+
+        /// <summary>Shows only <paramref name="category"/>, or every category when it was already the only one.</summary>
+        public void IsolateOrRestoreWorklistCategory(string category)
+        {
+            if (System.Array.IndexOf(WorklistCategories, category) < 0) return;
+            var restore = IsWorklistCategoryIsolated(category);
+            foreach (var c in WorklistCategories) SetWorklistCategory(c, restore || c == category);
+        }
 
         public object ClinicalSnapshot() => new
         {
@@ -154,6 +186,7 @@ namespace HemoIQ.Models
             IsWorklistCategoryIsolated("Stale") ? "Showing only stale analyses." :
             IsWorklistCategoryIsolated("Expiring") ? "Showing only items nearing expiration." :
             IsWorklistCategoryIsolated("Expired") ? "Showing only expired specimens and panels." :
+            IsWorklistCategoryIsolated("Review") ? "Showing only items to review." :
             "";
     }
 }

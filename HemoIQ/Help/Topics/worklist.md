@@ -4,12 +4,13 @@ The Worklist is the operational list for specimens that still need work and for 
 
 ## Count cards
 
-Four cards sit across the top:
+Five cards sit across the top:
 
 - **Incomplete** — reaction grids that are not finished, for specimens that do not yet have a confirmed antibody ID.
 - **Stale analysis** — grades were saved after the last analysis, or analysis rules or clinical Preferences changed after it, so the evidence on the Analysis tab is out of date. The detail says which. Only investigations without a confirmed identification are listed.
 - **Expiring** — specimens or panel lots inside the expiration warning window from Preferences.
 - **Expired** — specimens or panel lots past their expiration date.
+- **Review** — every other item: overdue testing, supervisor review, expired reagent use, untyped cells, check typing, duplicate lots, rule problems, and inconsistent status. These are described below.
 
 Click a card to show only that category. Click the same card again to show every category that is still checked. A thicker border means that card is the active filter.
 
@@ -17,7 +18,7 @@ Click a card to show only that category. Click the same card again to show every
 
 - **Find** narrows the grid by accession, panel name, kind, urgency, or detail.
 - **Show all** clears the card filter.
-- The **Show** checkboxes turn Incomplete, Stale analysis, Expiring, and Expired on or off together.
+- The **Show** checkboxes turn Incomplete, Stale analysis, Expiring, Expired, and Review on or off.
 - **Open** goes to the selected row. Double-click a row, or press **Enter**, to do the same.
 - **Refresh** reloads the counts and the grid.
 - **Help** opens this chapter.

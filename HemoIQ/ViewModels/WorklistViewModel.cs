@@ -51,7 +51,27 @@ namespace HemoIQ.ViewModels
             private set => SetField(ref _expiredCount, value);
         }
 
+        private int _reviewCount;
+        /// <summary>Items in the Review category: every kind without its own card.</summary>
+        public int ReviewCount
+        {
+            get => _reviewCount;
+            private set => SetField(ref _reviewCount, value);
+        }
+
         public int TotalCount => _allItems.Count;
+
+        public bool ShowReview
+        {
+            get => AppSettings.Current.WorklistShowReview;
+            set
+            {
+                if (AppSettings.Current.WorklistShowReview == value) return;
+                AppSettings.Current.WorklistShowReview = value;
+                OnPropertyChanged();
+                PersistFilters();
+            }
+        }
 
         public bool ShowIncomplete
         {
@@ -112,6 +132,7 @@ namespace HemoIQ.ViewModels
         public bool StaleIsolated => AppSettings.Current.IsWorklistCategoryIsolated("Stale");
         public bool ExpiringIsolated => AppSettings.Current.IsWorklistCategoryIsolated("Expiring");
         public bool ExpiredIsolated => AppSettings.Current.IsWorklistCategoryIsolated("Expired");
+        public bool ReviewIsolated => AppSettings.Current.IsWorklistCategoryIsolated("Review");
         public string IsolatedKindLabel => AppSettings.Current.IsolatedWorklistLabel;
         public bool HasIsolatedKind => !string.IsNullOrEmpty(IsolatedKindLabel);
 
@@ -145,6 +166,7 @@ namespace HemoIQ.ViewModels
                 i.Kind is WorklistKind.ExpiringSpecimen or WorklistKind.ExpiringPanel);
             ExpiredCount = _allItems.Count(i =>
                 i.Kind is WorklistKind.ExpiredSpecimen or WorklistKind.ExpiredPanel);
+            ReviewCount = _allItems.Count(i => LabSettings.WorklistCategory(i.Kind) == "Review");
             OnPropertyChanged(nameof(TotalCount));
             NotifyFilterProperties();
             ApplyFilter(title, kind);
@@ -202,17 +224,13 @@ namespace HemoIQ.ViewModels
         private void ShowAllCategories()
         {
             var s = AppSettings.Current;
-            if (s.WorklistShowIncomplete && s.WorklistShowStale &&
-                s.WorklistShowExpiring && s.WorklistShowExpired)
+            if (s.ShowsAllWorklistCategories)
             {
                 ApplyFilter();
                 return;
             }
 
-            s.WorklistShowIncomplete = true;
-            s.WorklistShowStale = true;
-            s.WorklistShowExpiring = true;
-            s.WorklistShowExpired = true;
+            foreach (var c in LabSettings.WorklistCategories) s.SetWorklistCategory(c, true);
             NotifyFilterProperties();
             PersistFilters();
         }
@@ -221,35 +239,7 @@ namespace HemoIQ.ViewModels
         {
             var key = parameter as string;
             if (string.IsNullOrEmpty(key)) return;
-            var s = AppSettings.Current;
-            bool onlyThis = key switch
-            {
-                "Incomplete" => s.WorklistShowIncomplete && !s.WorklistShowStale &&
-                                !s.WorklistShowExpiring && !s.WorklistShowExpired,
-                "Stale" => s.WorklistShowStale && !s.WorklistShowIncomplete &&
-                           !s.WorklistShowExpiring && !s.WorklistShowExpired,
-                "Expiring" => s.WorklistShowExpiring && !s.WorklistShowIncomplete &&
-                              !s.WorklistShowStale && !s.WorklistShowExpired,
-                "Expired" => s.WorklistShowExpired && !s.WorklistShowIncomplete &&
-                             !s.WorklistShowStale && !s.WorklistShowExpiring,
-                _ => false
-            };
-
-            if (onlyThis)
-            {
-                s.WorklistShowIncomplete = true;
-                s.WorklistShowStale = true;
-                s.WorklistShowExpiring = true;
-                s.WorklistShowExpired = true;
-            }
-            else
-            {
-                s.WorklistShowIncomplete = key == "Incomplete";
-                s.WorklistShowStale = key == "Stale";
-                s.WorklistShowExpiring = key == "Expiring";
-                s.WorklistShowExpired = key == "Expired";
-            }
-
+            AppSettings.Current.IsolateOrRestoreWorklistCategory(key);
             NotifyFilterProperties();
             PersistFilters();
         }
@@ -260,6 +250,8 @@ namespace HemoIQ.ViewModels
             OnPropertyChanged(nameof(ShowStale));
             OnPropertyChanged(nameof(ShowExpiring));
             OnPropertyChanged(nameof(ShowExpired));
+            OnPropertyChanged(nameof(ShowReview));
+            OnPropertyChanged(nameof(ReviewIsolated));
             OnPropertyChanged(nameof(IncompleteIsolated));
             OnPropertyChanged(nameof(StaleIsolated));
             OnPropertyChanged(nameof(ExpiringIsolated));

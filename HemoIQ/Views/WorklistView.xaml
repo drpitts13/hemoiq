@@ -51,7 +51,7 @@
             </StackPanel>
         </DockPanel>
 
-        <UniformGrid DockPanel.Dock="Top" Columns="4" Margin="0,0,0,8">
+        <UniformGrid DockPanel.Dock="Top" Columns="5" Margin="0,0,0,8">
             <Button Margin="0,0,8,0" Background="#FFECB3"
                     Command="{Binding IsolateKindCommand}" CommandParameter="Incomplete"
                     ToolTip="Click to show only incomplete work. Click again to show all.">
@@ -106,7 +106,7 @@
                     <TextBlock Text="{Binding ExpiringCount}" FontSize="22" FontWeight="Bold" Foreground="#F9A825"/>
                 </StackPanel>
             </Button>
-            <Button Margin="0" Background="#FFCDD2"
+            <Button Margin="0,0,8,0" Background="#FFCDD2"
                     Command="{Binding IsolateKindCommand}" CommandParameter="Expired"
                     ToolTip="Click to show only expired specimens and panels. Click again to show all.">
                 <Button.Style>
@@ -124,6 +124,24 @@
                     <TextBlock Text="{Binding ExpiredCount}" FontSize="22" FontWeight="Bold" Foreground="#C62828"/>
                 </StackPanel>
             </Button>
+            <Button Margin="0" Background="#E1F5FE"
+                    Command="{Binding IsolateKindCommand}" CommandParameter="Review"
+                    ToolTip="Overdue testing, supervisor review, expired reagent use, untyped cells, typing checks, duplicate lots, rule problems and inconsistent status. Click to show only these. Click again to show all.">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource DashCard}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ReviewIsolated}" Value="True">
+                                <Setter Property="BorderThickness" Value="3"/>
+                                <Setter Property="BorderBrush" Value="#0277BD"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <StackPanel>
+                    <TextBlock Text="Review" FontSize="11" Foreground="#5D4037"/>
+                    <TextBlock Text="{Binding ReviewCount}" FontSize="22" FontWeight="Bold" Foreground="#0277BD"/>
+                </StackPanel>
+            </Button>
         </UniformGrid>
 
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
@@ -131,14 +149,15 @@
             <CheckBox Content="Incomplete" IsChecked="{Binding ShowIncomplete}" VerticalAlignment="Center" Margin="0,0,12,0"/>
             <CheckBox Content="Stale analysis" IsChecked="{Binding ShowStale}" VerticalAlignment="Center" Margin="0,0,12,0"/>
             <CheckBox Content="Expiring" IsChecked="{Binding ShowExpiring}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-            <CheckBox Content="Expired" IsChecked="{Binding ShowExpired}" VerticalAlignment="Center"/>
+            <CheckBox Content="Expired" IsChecked="{Binding ShowExpired}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <CheckBox Content="Review" IsChecked="{Binding ShowReview}" VerticalAlignment="Center"/>
         </StackPanel>
 
         <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6" Foreground="#37474F" FontWeight="SemiBold"
                    Text="{Binding IsolatedKindLabel}"
                    Visibility="{Binding HasIsolatedKind, Converter={x:Static local:BoolToVisibilityConverter.Instance}}"/>
         <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Foreground="#546E7A" TextWrapping="Wrap"
-                   Text="Incomplete reactions and stale analyses for specimens that do not yet have a confirmed antibody ID, plus specimens or panels that are expired or nearing expiration. Click a count card to filter. Double-click or press Enter on a row to open it."/>
+                   Text="Incomplete reactions and stale analyses for specimens that do not yet have a confirmed antibody ID, specimens or panels that are expired or nearing expiration, and items to review. Click a count card to filter. Double-click or press Enter on a row to open it."/>
         <DataGrid ItemsSource="{Binding Items}"
                   SelectedItem="{Binding SelectedItem}"
                   AutoGenerateColumns="False" IsReadOnly="True"

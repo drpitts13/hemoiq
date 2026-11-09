@@ -2441,8 +2441,29 @@ missing antigen typing into an import preview:
   rich and inline strings; sparse and wide columns (AA); cells without
   references; phonetic runs ignored.
 
+## Iteration 111 (this change)
+
+**Deficiency:** The Worklist had count cards and Show toggles for four
+categories (Incomplete, Stale, Expiring, Expired). Its other ten kinds had no
+count and could not be isolated: overdue testing, supervisor review, expired
+reagent use, untyped cells, check typing, duplicate lots, rule problems and
+inconsistent status. A supervisor could not see how many review items were
+waiting, or list only those. Isolating a card left them mixed into the list.
+
+**Bounded improvement:**
+- New `LabSettings.WorklistCategory(kind)` maps every kind to exactly one card.
+  The kinds without their own card go to a fifth category, "Review", with a
+  `WorklistShowReview` preference.
+- The copied isolation logic in `LabSettings` and `WorklistViewModel` is
+  replaced by generic `ShowsWorklistCategory`, `SetWorklistCategory`,
+  `IsWorklistCategoryIsolated` and `IsolateOrRestoreWorklistCategory`. A new
+  kind can no longer be left off every card.
+- Worklist view: a fifth card ("Review", with its count), a Review Show
+  checkbox, and the label "Showing only items to review".
+- Behavior change: isolating another card now also hides Review items.
+
 ## Likely next tick
 
-The Worklist count card and Show toggle for the Overdue testing and Rule
-problem kinds, or the Specimen dialog regrouping noted in the Iteration 107
-review.
+The Specimen dialog regrouping noted in the Iteration 107 review, or making
+the separate Worklist kinds within Review filterable from the Find box
+(already possible by kind label).

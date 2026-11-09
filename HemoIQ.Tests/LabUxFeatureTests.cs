@@ -251,7 +251,8 @@ public class LabUxFeatureTests
             WorklistShowIncomplete = false,
             WorklistShowStale = true,
             WorklistShowExpiring = false,
-            WorklistShowExpired = false
+            WorklistShowExpired = false,
+            WorklistShowReview = false
         };
         Assert.True(isolated.IsWorklistCategoryIsolated("Stale"));
         Assert.False(isolated.IsWorklistCategoryIsolated("Incomplete"));
