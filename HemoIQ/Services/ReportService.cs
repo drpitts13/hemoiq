@@ -290,6 +290,8 @@ namespace HemoIQ.Services
                 sb.AppendLine("FINAL IDENTIFICATION (confirmed)");
                 sb.AppendLine($"  {s.FinalAntibodies}");
                 sb.AppendLine($"  Confirmed by {s.IdentifiedBy ?? "—"} on {s.IdentifiedAt ?? "—"}");
+                foreach (var o in ConfirmationOverrides.ForCurrentConfirmation(_db, s.AccessionNumber))
+                    sb.AppendLine($"  Warning overridden at confirmation: {o}");
                 if (s.IsReviewed)
                     sb.AppendLine($"  Supervisor reviewed by {s.ReviewedBy} on {s.ReviewedAt ?? "—"}");
                 else if (AppSettings.Current.RequireSupervisorReview)

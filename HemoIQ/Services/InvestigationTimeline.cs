@@ -263,7 +263,9 @@ namespace HemoIQ.Services
                 "link_panel" => $"Panel attached: {Prop(a.AfterJson, "panel") ?? "panel"}",
                 "unlink_panel" => $"Panel removed: {Prop(a.BeforeJson, "panel") ?? "panel"}",
                 "confirm_final_call" => $"Identification confirmed: {Prop(a.AfterJson, "antibodies")}" +
-                                        (Prop(a.AfterJson, "identifiedBy") is string by ? $" by {by}" : ""),
+                                        (Prop(a.AfterJson, "identifiedBy") is string by ? $" by {by}" : "") +
+                                        (ConfirmationOverrides.Read(a.AfterJson) is { Count: > 0 } ov
+                                            ? " — WARNINGS OVERRIDDEN: " + string.Join(" ", ov) : ""),
                 "clear_final_call" => $"Identification cleared: {Prop(a.BeforeJson, "FinalAntibodies") ?? "—"}; reason: {a.Reason}",
                 "supervisor_review" => $"Supervisor reviewed by {Prop(a.AfterJson, "reviewedBy")}" +
                                        (string.IsNullOrWhiteSpace(a.Reason) ? "" : $"; {a.Reason}"),

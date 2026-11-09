@@ -1195,7 +1195,7 @@ namespace HemoIQ.Data
 
         public void SetSpecimenFinalCall(string accessionNumber,
             string? antibodies, string? comment, string? identifiedBy,
-            DateTime? identifiedAt = null)
+            DateTime? identifiedAt = null, IReadOnlyList<string>? overrides = null)
         {
             if (antibodies != null && GetSpecimen(accessionNumber)?.IsCancelled == true)
                 throw new RecordLockedException(accessionNumber, cancelled: true);
@@ -1219,13 +1219,13 @@ namespace HemoIQ.Data
             cmd.ExecuteNonQuery();
             if (antibodies != null)
             {
-                AppendAudit("confirm_final_call", "specimen", accessionNumber, null,
-                    afterJson: JsonSerializer.Serialize(new
-                    {
-                        antibodies,
-                        comment,
-                        identifiedBy
-                    }));
+                // Warnings confirmed past are part of the confirmation record (one entry, written together).
+                var overridden = overrides?.Where(o => !string.IsNullOrWhiteSpace(o)).ToList();
+                AppendAudit("confirm_final_call", "specimen", accessionNumber,
+                    overridden is { Count: > 0 } ? $"Confirmed past {overridden.Count} warning(s)" : null,
+                    afterJson: overridden is { Count: > 0 }
+                        ? JsonSerializer.Serialize(new { antibodies, comment, identifiedBy, overrides = overridden })
+                        : JsonSerializer.Serialize(new { antibodies, comment, identifiedBy }));
             }
         }
 
@@ -2977,7 +2977,10 @@ namespace HemoIQ.Data
                         Kind = WorklistKind.AwaitingSupervisorReview,
                         KindLabel = "Supervisor review",
                         Title = s.AccessionNumber,
-                        Detail = $"Confirmed {s.FinalAntibodies} by {s.IdentifiedBy ?? "—"} on {s.IdentifiedAt ?? "—"}; awaiting supervisor review.",
+                        Detail = $"Confirmed {s.FinalAntibodies} by {s.IdentifiedBy ?? "—"} on {s.IdentifiedAt ?? "—"}; awaiting supervisor review." +
+                                 (Services.ConfirmationOverrides.ForCurrentConfirmation(this, s.AccessionNumber) is { Count: > 0 } ov
+                                     ? $" Confirmed past {ov.Count} warning(s): " + string.Join(" ", ov)
+                                     : ""),
                         UrgencyLabel = "Needs review",
                         SortOrder = 3,
                         AccessionNumber = s.AccessionNumber,

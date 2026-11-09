@@ -93,6 +93,6 @@ public class AntigenCaseGuardTests
     {
         const string sample = "if (string.Equals(rule.Antibody, antibody, StringComparison.OrdinalIgnoreCase))";
         Assert.True(Insensitive.IsMatch(sample) && AntigenMention.IsMatch(sample) && !AlwaysSafe.IsMatch(sample));
-        Assert.True(AlwaysSafe.IsMatch(".OrderBy(a => a, StringComparer.OrdinalIgnoreCase)"));
+        Assert.Matches(AlwaysSafe, ".OrderBy(a => a, StringComparer.OrdinalIgnoreCase)");
     }
 }

@@ -622,28 +622,50 @@ namespace HemoIQ.ViewModels
                 return;
             }
 
-            if (ConfirmStalePrompt(SelectedSpecimen.LastAnalyzedAt == null ? null : _db.AnalysisStaleReason(SelectedSpecimen.AccessionNumber),
-                    SelectedSpecimen.LastAnalyzedAt == null) is string staleWarning &&
-                MessageBox.Show(staleWarning, "Analysis out of date",
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+            var overrides = new List<string>();
+            var neverAnalyzed = SelectedSpecimen.LastAnalyzedAt == null;
+            var staleReason = neverAnalyzed ? null : _db.AnalysisStaleReason(SelectedSpecimen.AccessionNumber);
+            if (ConfirmStalePrompt(staleReason, neverAnalyzed) is string staleWarning)
             {
-                _main.SetStatus("Not confirmed: run analysis again first.");
-                return;
+                if (MessageBox.Show(staleWarning, "Analysis out of date",
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+                {
+                    _main.SetStatus("Not confirmed: run analysis again first.");
+                    return;
+                }
+                overrides.Add(ConfirmationOverrides.StaleAnalysis(staleReason, neverAnalyzed)!);
             }
 
-            if (SeparationShortfallMessage(
-                    _analyzer.EvaluateFinalCall(SelectedSpecimen.AccessionNumber, antibodies)) is string shortfall &&
-                MessageBox.Show(shortfall + "\n\nConfirm this identification anyway?", "Multiple antibodies",
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            var openNeeds = neverAnalyzed ? null : _db.GetLatestAnalysisSnapshot(SelectedSpecimen.AccessionNumber)?.AdditionalTesting;
+            if (ConfirmationOverrides.OpenTestingPrompt(openNeeds) is string openPrompt)
             {
-                _main.SetStatus("Not confirmed: the multiple-antibody separation criterion is not met.");
-                return;
+                if (MessageBox.Show(openPrompt, "Testing still open",
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No) != MessageBoxResult.Yes)
+                {
+                    _main.SetStatus("Not confirmed: the analysis left testing open.");
+                    return;
+                }
+                overrides.Add(ConfirmationOverrides.OpenTesting(openNeeds!));
+            }
+
+            var separation = _analyzer.EvaluateFinalCall(SelectedSpecimen.AccessionNumber, antibodies);
+            if (SeparationShortfallMessage(separation) is string shortfall)
+            {
+                if (MessageBox.Show(shortfall + "\n\nConfirm this identification anyway?", "Multiple antibodies",
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                {
+                    _main.SetStatus("Not confirmed: the multiple-antibody separation criterion is not met.");
+                    return;
+                }
+                overrides.Add(ConfirmationOverrides.SeparationShortfall(
+                    separation.Where(e => !e.MeetsCriterion).Select(e => e.Antibody)));
             }
 
             try
             {
                 _db.SetSpecimenFinalCall(SelectedSpecimen.AccessionNumber, antibodies,
-                    string.IsNullOrWhiteSpace(FinalComment) ? null : FinalComment.Trim(), initials);
+                    string.IsNullOrWhiteSpace(FinalComment) ? null : FinalComment.Trim(), initials,
+                    overrides: overrides);
             }
             catch (RecordLockedException ex)
             {

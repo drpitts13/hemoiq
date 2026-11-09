@@ -2592,7 +2592,33 @@ and the convention was written down nowhere a developer would look.
   audited changes, preview-before-write imports, schema migrations, and test
   isolation for settings.
 
+## Iteration 116 (this change)
+
+**Deficiency:** Confirm ID warned when the analysis was missing or stale, and
+when the separation criterion was not met. Confirming anyway was allowed but
+left no record that a warning was overridden. The prompt asks for overrides to
+be audited (section 27) and shown to supervisors (section 20). Confirm ID also
+did not warn when the latest analysis still had testing open, such as
+clinically significant antibodies not ruled out. Those items appeared only in
+the status strip.
+
+**Bounded improvement:**
+- `ConfirmationOverrides` builds the override texts and the new
+  open-testing prompt.
+- Confirm ID now has three warnings: stale or missing analysis, testing still
+  open, and separation shortfall. Each defaults to No, and each one
+  confirmed past is collected.
+- `SetSpecimenFinalCall(..., overrides)` stores them in the same
+  `confirm_final_call` audit entry. The reason reads "Confirmed past N
+  warning(s)", so they are written together. No schema change.
+- The overrides are shown in three places:
+  - the Timeline, as "WARNINGS OVERRIDDEN: …";
+  - the identification worksheet, as one line per override;
+  - the supervisor-review Worklist item's detail.
+- They are read from the latest confirmation only, so a clean
+  re-confirmation after a clear shows none. Audit history is kept.
+
 ## Likely next tick
 
-The Specimen dialog regrouping (roadmap item 2 from Iteration 114), or a
-single configuration bundle for rules and Preferences.
+Count of overridden confirmations on Analytics (management reports: "number
+of manual overrides"), with drill-down to the cases.
