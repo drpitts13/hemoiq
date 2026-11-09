@@ -16,6 +16,25 @@ namespace HemoIQ.Services
         public static List<string> Compute(AnalysisResult result)
         {
             var needs = new List<string>();
+            var kinds = result.ReactionPatterns.Select(p => p.Kind).ToHashSet(System.StringComparer.Ordinal);
+
+            // Panreactive or autoantibody-like reactivity cannot be separated by single cells: every
+            // cell reacts, so a list of unmet identification rules would point the wrong way.
+            if (kinds.Contains(ReactionPatternClassifier.Panreactive) || kinds.Contains(ReactionPatternClassifier.Autoantibody))
+            {
+                needs.Add("Panreactive or autoantibody-like pattern: autocontrol, DAT and adsorption (then testing the adsorbed " +
+                          "serum) are the next steps; selected cells alone will not separate the specificities.");
+                return needs;
+            }
+            if (kinds.Contains(ReactionPatternClassifier.HighPrevalence) || kinds.Contains(ReactionPatternClassifier.Htla))
+            {
+                needs.Add("High-prevalence or HTLA pattern: test rare antigen-negative cells, and titration or neutralization " +
+                          "where suggested, before attributing the reactivity to common antibodies.");
+                var rare = result.SelectedCellRecommendations.Where(r => !r.IsExpired).Take(3)
+                    .Select(r => $"{r.PanelName} cell {r.CellNumber}").ToList();
+                if (rare.Count > 0) needs.Add("Selected cells: " + string.Join(", ", rare) + ".");
+                return needs;
+            }
 
             var short_ = result.SuspectedStatistics
                 .Where(kv => !kv.Value.MeetsIdentificationRule)

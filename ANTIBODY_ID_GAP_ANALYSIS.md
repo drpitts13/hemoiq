@@ -2152,9 +2152,42 @@ interpret, and analysis gave no warning.
 **Not in this tick:** a Worklist "Awaiting testing" queue. It needs real-lab
 judgement on noise first.
 
+## Iteration 101 (this change) — product review of the new status on demo data
+
+**Method:** analyzed the 10 clinical demo investigations and read the
+"Awaiting additional testing" items for each.
+
+**Findings:**
+- **Signal is reasonable:**
+  - 2 cases have no open items (single antibody, everything else ruled
+    out).
+  - The rest name specific open antibodies, separation shortfalls and
+    cells.
+  - A Worklist queue for these would hold most open investigations, so it
+    stays deferred. The status strip and the existing Suggestions carry
+    the information.
+- **Wrong direction for patterns:** in 2026-006 (warm, panreactive,
+  high-prevalence) the next action listed seven unmet identification
+  rules and three selected cells. Single selected cells cannot separate
+  specificities when every cell reacts.
+- **Anti-f separation:** 2026-007 (anti-e, anti-f, anti-Leb) reports a
+  separation shortfall for anti-e and anti-f. f+ cells are always c+ and
+  e+, so that separation is impossible by biology. The user asked that
+  exceptions come only from patient history or the Rules tab, so no
+  built-in exemption was added. A lab should add a Rules-tab exemption
+  (anti-f, from e, c). This is noted in help and here.
+
+**Bounded improvement:** `AdditionalTestingNeeds` checks the reaction
+patterns first:
+- **Panreactive or autoantibody:** a single autocontrol, DAT and adsorption
+  item.
+- **High-prevalence or HTLA:** rare antigen-negative cells, titration or
+  neutralization, with the recommended cells.
+
+**No schema change.**
+
 ## Likely next tick
 
-Product review (several iterations since the last). Candidates:
-- the awaiting-testing Worklist queue;
-- products and units transfused on the specimen;
-- encounter or account identifiers.
+Products and units transfused on the specimen (count and type, recorded
+with the transfusion date). These would show on the patient history and in
+the transfusion context note.

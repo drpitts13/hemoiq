@@ -87,6 +87,32 @@ public class AdditionalTestingStatusTests
     }
 
     [Fact]
+    public void PanreactivePattern_PointsToAdsorptionWorkup_NotPerAntibodyLists()
+    {
+        var result = new AnalysisResult();
+        result.ReactionPatterns.Add(new ReactionPatternNote { Kind = ReactionPatternClassifier.Panreactive });
+        result.Suspected["anti-Jka"] = 0.4;
+        result.SuspectedStatistics["anti-Jka"] = new SuspectedStatistics { MeetsIdentificationRule = false };
+        result.SelectedCellRecommendations.Add(new SelectedCellRecommendation { PanelName = "P", CellNumber = "3" });
+
+        var need = Assert.Single(AdditionalTestingNeeds.Compute(result));
+        Assert.StartsWith("Panreactive or autoantibody-like pattern: autocontrol, DAT and adsorption", need);
+    }
+
+    [Fact]
+    public void HighPrevalencePattern_KeepsRareCellRecommendations()
+    {
+        var result = new AnalysisResult();
+        result.ReactionPatterns.Add(new ReactionPatternNote { Kind = ReactionPatternClassifier.HighPrevalence });
+        result.SelectedCellRecommendations.Add(new SelectedCellRecommendation { PanelName = "Rare", CellNumber = "1" });
+        Assert.Equal(new[]
+        {
+            "High-prevalence or HTLA pattern: test rare antigen-negative cells, and titration or neutralization where suggested, before attributing the reactivity to common antibodies.",
+            "Selected cells: Rare cell 1.",
+        }, AdditionalTestingNeeds.Compute(result));
+    }
+
+    [Fact]
     public void ExpiredSelectedCellsOnly_AreNotListed()
     {
         var result = new AnalysisResult();

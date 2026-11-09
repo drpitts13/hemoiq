@@ -77,7 +77,11 @@ The grey strip at the top of the detail pane shows where the investigation stand
 - multiple-antibody separation shortfalls;
 - up to three recommended selected cells.
 
-An antibody the patient's own reliable typing or genotype argues against is not listed. This is a suggestion, not a block: you can still record the identification. Analyses saved before this version show **Awaiting identification** until analysis is run again.
+An antibody the patient's own reliable typing or genotype argues against is not listed.
+
+Some reaction patterns change what is listed:
+- **Panreactive or autoantibody-like:** **Next** points to autocontrol, DAT and adsorption instead of a list of antibodies and cells, because selected cells cannot separate specificities when every cell reacts.
+- **High-prevalence or HTLA:** **Next** points to rare antigen-negative cells, titration or neutralization, with the recommended cells. This is a suggestion, not a block: you can still record the identification. Analyses saved before this version show **Awaiting identification** until analysis is run again.
 
 The identification worksheet prints the same status line.
 
