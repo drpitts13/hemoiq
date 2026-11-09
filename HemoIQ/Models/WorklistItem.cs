@@ -15,7 +15,9 @@ namespace HemoIQ.Models
         DuplicateLot,
         InconsistentStatus,
         OverdueAdditionalTesting,
-        RuleConflict
+        RuleConflict,
+        /// <summary>Stored reactions that disagree with the specimen or panel (see DataConsistencyCheck).</summary>
+        DataInconsistency
     }
 
     public class WorklistItem

@@ -48,6 +48,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | UI | Antigram freeze / slashes / run compare | Partial | Frozen cell; slashes; compare extras; Show dosage; filter/sort; panel lot compare | — |
 | UI | Explain Analysis panel | Present | Explain tab + Summary + clinical report assemble rule-out, support, conflict, phenotype, additional testing | Keep wording as evidence, not diagnosis |
 | Audit | Panel, reactions, rules, settings, final ID | Partial | Snapshots store rule-engine version, rules JSON, operator, and the adsorption comparison (conclusions plus ordinary-score exclusions) | Cross-panel enzyme/DTT pairing later |
+| Data integrity | Reaction/specimen/panel consistency | Present | Detaching a panel with grades is refused; `DataConsistencyCheck` lists legacy reactions on detached panels, grades for cells the panel lacks, and unrecognized grade values as Worklist "Data inconsistency" items with an Open target | Check runs on Worklist refresh only; no scheduled report |
 | Security | Roles and data-change permission | Present | Read-only, Technologist, Supervisor, Administrator; once users are registered every public data writer requires `RecordResults` (Technologist and above), so unregistered logins and Read-only users view only; guard test fails on any unguarded public writer; users table migrated to accept the new role | Role grants are fixed per role, not a configurable table; no Senior technologist or Medical director role. Status bar names the session; view-only sessions have change commands disabled (Iteration 132) |
 | Configuration | ACS antigen list | Present | Fixed core (Rh, Kell, Duffy, Kidd, Ss) plus lab-configured additions (default Lea, Leb, M, N), validated case-sensitively; used by ACS evaluation, open-testing list, untypeable classifier and clinical-significance flags; listed on the report, in the rule trace and in the clinical snapshot; transferred with Preferences | The core itself is fixed by design |
 | Configuration | Rules + Preferences transfer | Present | Separate rule and Preferences JSON exports; `ConfigurationBundle` exports both together; import previews both sections and the stored rules the file lacks, refuses a file with any refused entry, applies atomically with optional audited removal of local-only rules, one `import_configuration` audit | No signed or checksummed bundle; reaction grades and phases beyond extra phases are not yet configurable data |
@@ -3175,7 +3176,48 @@ All 1134 tests pass.
    unlinked panels) shown on the Worklist Review category.
 4. Configuration: a role-to-permission table, only if requested.
 
+## Iteration 134 (this change)
+
+**Deficiency:** Analysis reads every run recorded for a specimen
+(`GetAllSpecimenRuns`). Detach, though, removed only the specimen–panel link,
+even when that panel held grades. The detached panel's reactions kept
+driving the analysis while the Specimens tab, reports and Reactions panel
+list no longer showed it: hidden evidence. Foreign keys cannot catch this, or
+grades left on cell numbers a panel no longer has, or stored grade values
+outside the recognized set (from older or imported data). All three stayed
+silent.
+
+**Bounded improvement:**
+- Prevention: `UnlinkSpecimenPanel` refuses when the panel has graded cells
+  for the specimen. It says how many and tells the user to clear them, with
+  a reason, first. The Specimens tab shows this as a warning instead of an
+  error.
+- Detection:
+  - `DatabaseService.GetReactionRecords` returns each stored reaction with
+    its raw grades (four phases plus extra phases), whether its panel is
+    attached and whether the panel still has the cell. The autocontrol is
+    exempt from the cell check.
+  - `DataConsistencyCheck.Find` reports, per specimen and panel: grades on a
+    detached panel, grades for missing cells, and unrecognized grade values.
+    Each finding has a detail, an action and an Open target.
+- Worklist: a new `DataInconsistency` kind in the Review category, with
+  "Resolve" urgency. Detached-panel findings open the specimen, where the
+  panel can be re-attached; the others open Reactions. Nothing is changed
+  automatically.
+
+**Tests:** `DataConsistencyCheckTests` (5):
+- clean data yields no findings and no Worklist items;
+- detaching a panel with grades is refused, the link stays, and after the
+  reactions are cleared with a reason the panel detaches;
+- a legacy detached panel is found and listed on the Worklist, with the
+  Specimens target and the Review category;
+- grades on a deleted cell and an unrecognized grade "pos" are found;
+- ungraded rows on detached panels are not reported, the autocontrol needs
+  no panel cell, and grade recognition is case-exact.
+
+All 1139 tests pass.
+
 ## Likely next tick
 
-Roadmap item 3: a data-consistency check surfaced in the Worklist Review
-category.
+Roadmap item 2: mark amended reports, with the amendment reason, when an
+identification is cleared and re-confirmed.

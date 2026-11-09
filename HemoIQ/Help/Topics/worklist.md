@@ -10,7 +10,7 @@ Five cards sit across the top:
 - **Stale analysis** — grades were saved after the last analysis, or analysis rules or clinical Preferences changed after it, so the evidence on the Analysis tab is out of date. The detail says which. Only investigations without a confirmed identification are listed.
 - **Expiring** — specimens or panel lots inside the expiration warning window from Preferences.
 - **Expired** — specimens or panel lots past their expiration date.
-- **Review** — every other item: overdue testing, supervisor review, expired reagent use, untyped cells, check typing, duplicate lots, rule problems, and inconsistent status. These are described below.
+- **Review** — every other item: overdue testing, supervisor review, expired reagent use, untyped cells, check typing, duplicate lots, rule problems, data inconsistencies, and inconsistent status. These are described below.
 
 Click a card to show only that category. Click the same card again to show every category that is still checked. A thicker border means that card is the active filter.
 
@@ -37,6 +37,13 @@ The worklist does not include a confirmed identification as unfinished work. Aft
 **Overdue testing** items list investigations whose status is **Awaiting additional testing** and that were received more days ago than the Preferences **Turnaround threshold**. The detail gives the received date, the age, and the testing the last analysis left open, for example clinically significant antibodies not yet ruled out or recommended selected cells. Open goes to Analysis. The item clears when the testing is recorded and analysis no longer leaves anything open, or when the identification is confirmed, cancelled, or the specimen made inactive. Investigations awaiting testing within the threshold are not listed; the status strip already shows them.
 
 **Rule problem** items list lab rules that cannot work as written: a rule whose antibody is not a known antigen in its exact case (it never applies), or two or more rules for the same antibody (only the first by name is used). Such rules can only come from older data, because the Rule dialog now refuses them. Open goes to the Rules tab. Fix or merge the rules and the item clears.
+
+**Data inconsistency** items list stored reactions that disagree with the specimen or panel. Nothing is changed automatically:
+- **Reactions on detached panel:** a panel has grades for the specimen but is no longer attached. Analysis still reads those grades although the Specimens tab does not list the panel. Open goes to the specimen; re-attach the panel, then review or clear its reactions with a reason.
+- **Grades for cells the panel lacks:** grades are stored for cell numbers the panel no longer has, so they cannot be matched to antigen typing. Open goes to Reactions.
+- **Unrecognized grades:** a stored grade is not one of 0, w+, 1+–4+, MF, H or NT, for example from older or imported data. It is read as neither reactive nor nonreactive. Re-enter it on Reactions.
+
+These states can come only from older or imported data: HemoIQ no longer detaches a panel that has grades.
 
 **Supervisor review** items appear only when Preferences requires supervisor review. Each lists a confirmed identification that has not been reviewed yet. Open goes to the specimen, where **Supervisor Review…** records the review.
 

@@ -497,7 +497,15 @@ namespace HemoIQ.ViewModels
             if (SelectedSpecimen == null || SelectedLinkedPanel == null) return;
             if (MessageBox.Show($"Detach panel '{SelectedLinkedPanel.Name}'?",
                 "Confirm", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
-            _db.UnlinkSpecimenPanel(SelectedSpecimen.AccessionNumber, SelectedLinkedPanel.PanelId);
+            try
+            {
+                _db.UnlinkSpecimenPanel(SelectedSpecimen.AccessionNumber, SelectedLinkedPanel.PanelId);
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "Panel not detached", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             _main.SetStatus("Panel detached.");
             LoadSpecimenDetails();
             _main.ReactionsVM.RefreshSpecimens();

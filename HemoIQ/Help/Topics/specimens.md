@@ -31,7 +31,7 @@ The right pane follows the selected specimen.
 - No grade is changed or excluded.
 - Changes are audited and shown on the Timeline. The field is locked once an identification is confirmed. The identification worksheet prints it.
 
-**Linked Panels** are the lots used for this workup. **Attach Panel** picks a lot. **Detach** removes the selected link. Linking a panel makes it available when you enter reactions.
+**Linked Panels** are the lots used for this workup. **Attach Panel** picks a lot. **Detach** removes the selected link. A panel with grades for this specimen cannot be detached, because analysis would keep using those grades: clear its reactions on the Reactions tab (with a reason) first. Linking a panel makes it available when you enter reactions.
 
 **Suspected Antibodies** and **Ruled-out Antibodies** are read-only summaries from the latest analysis. Change them by entering grades and running analysis, not by typing in these grids.
 

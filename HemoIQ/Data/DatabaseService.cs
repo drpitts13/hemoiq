@@ -2526,6 +2526,14 @@ namespace HemoIQ.Data
         {
             EnsureCanRecord();
             EnsureSpecimenUnlocked(specimenId);
+            // Analysis reads every run on the specimen, so detaching a panel that has grades would leave
+            // evidence in the analysis that the specimen no longer lists.
+            var graded = GetReactionRecords(specimenId)
+                .Count(r => r.PanelId == panelId && r.Grades.Values.Any(Services.DataConsistencyCheck.IsGraded));
+            if (graded > 0)
+                throw new InvalidOperationException(
+                    $"{PanelAuditName(panelId) ?? $"Panel #{panelId}"} has {graded} graded cell(s) for {specimenId}. " +
+                    "Analysis uses them, so the panel stays attached. Clear its reactions on the Reactions tab (with a reason) first.");
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
                 DELETE FROM specimen_panels WHERE specimen_id = $sid AND panel_id = $pid";
@@ -2883,6 +2891,43 @@ namespace HemoIQ.Data
             SaveReaction(runId, cellNumber, is_, c37, ahg, cc);
         }
 
+        /// <summary>
+        /// Every stored reaction (or one specimen's), with whether its panel is still attached to the
+        /// specimen and whether the panel still has its cell, for <see cref="Services.DataConsistencyCheck"/>.
+        /// Grades are returned as stored, not normalized.
+        /// </summary>
+        public List<Services.ReactionRecord> GetReactionRecords(string? specimenId = null)
+        {
+            var list = new List<Services.ReactionRecord>();
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = @"
+                SELECT pr.specimen_id, pr.panel_id, p.name, rxn.cell_number,
+                       rxn.""IS"", rxn.C37, rxn.AHG, rxn.CC, rxn.extra_phases,
+                       EXISTS (SELECT 1 FROM specimen_panels sp WHERE sp.specimen_id = pr.specimen_id AND sp.panel_id = pr.panel_id),
+                       EXISTS (SELECT 1 FROM panel_cells pc WHERE pc.panel_id = pr.panel_id AND pc.cell_number = rxn.cell_number)
+                FROM reactions rxn
+                JOIN panel_runs pr ON rxn.run_id = pr.run_id
+                JOIN panels p ON p.panel_id = pr.panel_id
+                WHERE $sid IS NULL OR pr.specimen_id = $sid";
+            cmd.Parameters.AddWithValue("$sid", (object?)specimenId ?? DBNull.Value);
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
+            {
+                string? Col(int i) => r.IsDBNull(i) ? null : r.GetString(i);
+                var grades = new Dictionary<string, string?>(StringComparer.Ordinal)
+                {
+                    ["IS"] = Col(4), ["37°C"] = Col(5), ["AHG"] = Col(6), ["CC"] = Col(7),
+                };
+                foreach (var (phase, value) in ExtraPhaseParser.Deserialize(Col(8)))
+                    grades[phase] = value;
+                var cell = r.GetString(3);
+                list.Add(new Services.ReactionRecord(r.GetString(0), r.GetInt32(1), r.GetString(2), cell, grades,
+                    PanelLinked: r.GetInt64(9) != 0,
+                    CellOnPanel: r.GetInt64(10) != 0 || string.Equals(cell, "AC", StringComparison.OrdinalIgnoreCase)));
+            }
+            return list;
+        }
+
         /// <summary>Returns reactions for a specific run.</summary>
         public List<Reaction> GetReactions(int runId)
         {
@@ -3198,6 +3243,20 @@ namespace HemoIQ.Data
                     TargetTab = "Panels",
                 });
             }
+
+            foreach (var f in Services.DataConsistencyCheck.Find(GetReactionRecords()))
+                items.Add(new WorklistItem
+                {
+                    Kind = WorklistKind.DataInconsistency,
+                    KindLabel = "Data inconsistency",
+                    Title = f.Title,
+                    Detail = f.Detail + " " + f.Action,
+                    UrgencyLabel = "Resolve",
+                    SortOrder = 1,
+                    AccessionNumber = f.AccessionNumber,
+                    PanelId = f.PanelId,
+                    TargetTab = f.TargetTab,
+                });
 
             foreach (var (title, detail) in Services.RuleValidation.Problems(GetAllRules(), GetKnownAntigens()))
                 items.Add(new WorklistItem
