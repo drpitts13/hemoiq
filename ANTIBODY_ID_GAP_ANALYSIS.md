@@ -2780,7 +2780,54 @@ when its natural height exceeds 728 px, unless the dialog caps itself and
 scrolls. The measurement was checked against uncapped Preferences, which it
 flags. Developer conventions say to add new dialogs to the test.
 
+## Iteration 124 (this change): product review and a date-culture sweep
+
+### Review (since Iteration 119)
+
+**Completed since the last review:**
+- Audit coverage guard (119).
+- Specimen dialog checked and fit-tested (120).
+- Overrides per technologist (121).
+- Preferences usable on short screens (122).
+- Every dialog height-guarded (123).
+
+**Defect class reviewed.** Dates are stored as Gregorian text and compared
+as text. 44 `ToString("yyyy…")` calls and 15 interpolated `{x:yyyy…}`
+formats had no culture, and about 10 `DateTime.TryParse` calls (mostly in
+dialogs) had no culture. Under the workstation's regional settings this
+corrupts stored data:
+- Thai (Buddhist calendar) writes year 2569 for 2026.
+- Saudi Arabic (Um al-Qura calendar) writes a Hijri year.
+- Finnish writes "10.30" for 10:30, which breaks ordinal date comparisons
+  for turnaround and specimen dating.
+
+Each of these was confirmed in a test before the fix.
+
+### Fix
+
+`AppCulture.Apply()` runs first in `App.OnStartup` and covers every current
+and future site in one place:
+- The user's culture is kept for language and numbers.
+- The calendar is forced to Gregorian; if the culture cannot use Gregorian,
+  invariant date formatting is used instead.
+- The time separator is forced to ":".
+
+**Tests:** `AppCultureTests` (7):
+- each case first shows the defect under the raw culture (th-TH, ar-SA,
+  fi-FI), then shows the normalized culture fixes it;
+- stored ISO dates parse as the same day;
+- en-US is unchanged in effect, and month names stay localized;
+- an end-to-end database save under normalized Thai stores "2026-…";
+- a source check that startup calls `Apply()` before any data access.
+
+### Roadmap
+
+1. One configuration bundle for rules and Preferences.
+2. Number formatting: verify that stored decimals, such as the probability
+   threshold, use the invariant culture. The Preferences threshold already
+   does.
+
 ## Likely next tick
 
-One configuration bundle combining rules and Preferences, or a product review
-(the last was at Iteration 119).
+Roadmap item 2: a sweep of stored-number formatting under a comma-decimal
+culture (for example de-DE).

@@ -13,6 +13,8 @@ namespace HemoIQ
     {
         protected override void OnStartup(StartupEventArgs e)
         {
+            // Before anything formats or parses a date: Gregorian calendar and ":" times, whatever the regional settings.
+            AppCulture.Apply();
             AppDataPaths.MigrateUserData();
             DispatcherUnhandledException += (_, args) =>
             {

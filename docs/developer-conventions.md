@@ -20,6 +20,17 @@ comparisons, the import schema check, and Final ID entries.
   that mentions antigens or antibodies fails the build unless it is in the test's reviewed list
   with a reason. Prefer fixing the comparison over adding an entry.
 
+## Dates are stored as Gregorian text
+
+- Dates are stored as `yyyy-MM-dd` and times as `yyyy-MM-dd HH:mm`, and they are compared as
+  text.
+- `AppCulture.Apply()`, called first in `App.OnStartup`, keeps the user's culture for language
+  and numbers but forces the Gregorian calendar and ":" as the time separator. Without it, a
+  Thai Buddhist or Um al-Qura workstation stores year 2569 or 1448, and a Finnish one stores
+  "10.30".
+- Prefer `CultureInfo.InvariantCulture` when formatting a stored date in new code.
+  `AppCultureTests` checks the normalization and that startup applies it.
+
 ## Clinically important changes are audited, never silent
 
 - Each specimen, patient, rule and settings change goes through a `DatabaseService` method. The
