@@ -125,8 +125,9 @@ namespace HemoIQ.Services
             antigens
                 .Where(a => !string.IsNullOrWhiteSpace(a))
                 .Select(a => a.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(a => a, StringComparer.OrdinalIgnoreCase)
+                // Ordinal: K and k (C/c, E/e, S/s) are different antigen columns.
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(a => a, StringComparer.OrdinalIgnoreCase).ThenBy(a => a, StringComparer.Ordinal)
                 .ToList();
     }
 }

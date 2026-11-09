@@ -420,8 +420,7 @@ namespace HemoIQ.Services
         }
 
         private static bool SerumRemovesAntibody(RunContext ctx, string antibody) =>
-            ctx.AbsorbedAntibodies.Any(a =>
-                string.Equals(a, antibody, StringComparison.OrdinalIgnoreCase));
+            ctx.AbsorbedAntibodies.Any(a => RuleoutPolicy.SameAntibody(a, antibody));
 
         /// <summary>
         /// An adsorbed aliquot is not ordinary panel evidence for specificities
@@ -577,7 +576,8 @@ namespace HemoIQ.Services
             IReadOnlyList<string> antigens,
             ISet<string> scoreExclusions)
         {
-            var result = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+            // Ordinal: anti-K and anti-k are different antibodies with different conflicting cells.
+            var result = new Dictionary<string, List<string>>(StringComparer.Ordinal);
             foreach (var (runId, runReactions) in byRun)
             {
                 if (!contexts.TryGetValue(runId, out var ctx)) continue;

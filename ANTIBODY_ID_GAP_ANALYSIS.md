@@ -2518,7 +2518,59 @@ workstations.
 - The Preferences dialog has **Export…** and **Import…** buttons. Import
   confirms, saves and closes the dialog.
 
+## Iteration 114 (this change): product review and an antigen-case sweep
+
+### Review (since Iteration 107)
+
+**Completed since the last review:**
+- Rule validation and the Rule problem queue (Iterations 108 and 111).
+- Encounter, phenotype and genotype in patient history (109).
+- Direct tests for the structured import parsers (110).
+- The Review card on the Worklist (111).
+- Rule and Preferences export/import with preview and confirm (112 and 113).
+
+**Defect class reviewed.** Iteration 107 found that antigen case was ignored
+in rule lookups. This review searched the whole codebase for the same
+pattern: `OrdinalIgnoreCase` comparisons, dictionaries and sets keyed by an
+antigen or antibody name. Places that compare cell numbers, phase names,
+vendors, file names and SQL columns are correctly case-insensitive and were
+left alone.
+
+### Fixes (10 sites; K/k, C/c, E/e, S/s had been treated as one)
+
+| Area | Effect before the fix |
+|---|---|
+| `AntibodyAnalyzer.SerumRemovesAntibody` | An adsorbed aliquot expected to remove anti-K was also treated as removing anti-k, which then left ordinary scoring |
+| `AntibodyAnalyzer.CollectConflictingReactiveCells` | One dictionary for anti-K and anti-k, so anti-K's conflicting reactive cells appeared on anti-k's rule-out evaluation |
+| `FinalAntibodyParser.Append` | Adding anti-k to a Final ID that already held anti-K did nothing |
+| `PanelComparer` (antigen union and normalize) | Lot comparison merged the K and k columns, so a K-typing change could be hidden |
+| `PanelImportReviewer.CompareSchema` | The import preview's schema-vs-prior-lot check missed an added or removed k (or c, e, s) column |
+| `SelectedCellRecommender.PatientAntigen` | Patient typing for K could be read as k when ranking selected cells |
+| `SelectedCellRecommender.ResolveCandidates` | anti-k was dropped from the candidates when anti-K was also suspected |
+| `VendorPanelImportService.IncomingAntigens` | With no explicit antigen order, k was dropped from the imported column order |
+| `ReactionsViewModel` ruled-out columns | K and k nonreactive-cell counts were added together, so a column could show as ruled out with too few cells |
+| `RuleoutRow.IsClinicallySignificantAntibody` | Matched names ignoring antigen case |
+
+**Tests:** `AntigenCaseRegressionTests`:
+- Final ID: appending anti-k beside anti-K; duplicates still ignored.
+- Lot comparison: the K and k columns stay separate, and the import schema
+  check reports a removed k.
+- Selected cells: patient K typing is not read as k.
+- Analysis: anti-K's conflicting reactive cell is not on anti-k's evaluation.
+- Clinical-significance matching.
+- The three private or internal sites (candidate list, vendor import column
+  order and Reactions ruled-out columns) are one-line comparer changes and
+  are covered by the full suite.
+
+### Roadmap
+
+1. A guard against this class of bug: one shared `AntigenComparer.Name`
+   (ordinal) used wherever an antigen or antibody name is compared or keyed,
+   or a test that fails on `OrdinalIgnoreCase` near antigen code.
+2. The Specimen dialog regrouping (the dialog is still dense).
+3. A single configuration bundle combining rules and Preferences.
+
 ## Likely next tick
 
-A product review (the last was at Iteration 107), or the Specimen dialog
-regrouping.
+Roadmap item 1: introduce a shared ordinal antigen-name comparer and a source
+scan test that flags new case-insensitive antigen comparisons.

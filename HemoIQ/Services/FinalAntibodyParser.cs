@@ -32,7 +32,9 @@ namespace HemoIQ.Services
                 return current?.Trim() ?? string.Empty;
 
             var parts = Split(current).ToList();
-            if (parts.Any(p => string.Equals(p, antibody, StringComparison.OrdinalIgnoreCase)))
+            // Same antibody only when the antigen case matches: adding anti-k beside anti-K is a new entry.
+            if (parts.Any(p => RuleoutPolicy.SameAntibody(p, antibody) ||
+                               (PatientHistory.AntibodyKey(p) == null && string.Equals(p, antibody.Trim(), StringComparison.OrdinalIgnoreCase))))
                 return Join(parts);
             parts.Add(antibody.Trim());
             return Join(parts);

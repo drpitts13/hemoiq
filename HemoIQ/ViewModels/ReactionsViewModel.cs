@@ -677,7 +677,7 @@ namespace HemoIQ.ViewModels
 
             var allReactions = _db.GetAllSpecimenReactions(SelectedSpecimen.AccessionNumber);
             var rules = _db.GetAllRules();
-            var observed = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var observed = new Dictionary<string, int>(StringComparer.Ordinal); // per antigen, case kept
 
             var byRun = new Dictionary<int, List<Reaction>>();
             foreach (var r in allReactions)

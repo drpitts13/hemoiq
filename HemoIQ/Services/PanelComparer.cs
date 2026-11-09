@@ -66,8 +66,9 @@ namespace HemoIQ.Services
             foreach (var cell in right.Keys.Except(left.Keys, StringComparer.OrdinalIgnoreCase).OrderBy(CellKey))
                 result.OnlyRightCells.Add(cell);
 
-            var antigens = leftAgs.Union(rightAgs, StringComparer.OrdinalIgnoreCase)
-                .OrderBy(a => a, StringComparer.OrdinalIgnoreCase)
+            // Antigen names are case-sensitive (K and k are different columns).
+            var antigens = leftAgs.Union(rightAgs, StringComparer.Ordinal)
+                .OrderBy(a => a, StringComparer.OrdinalIgnoreCase).ThenBy(a => a, StringComparer.Ordinal)
                 .ToList();
             foreach (var cellNumber in left.Keys.Intersect(right.Keys, StringComparer.OrdinalIgnoreCase)
                          .OrderBy(CellKey))
@@ -187,14 +188,14 @@ namespace HemoIQ.Services
             var fromList = listed
                 .Where(a => !string.IsNullOrWhiteSpace(a))
                 .Select(a => a.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Distinct(StringComparer.Ordinal)
                 .ToList();
             if (fromList.Count > 0) return fromList;
             return cells
                 .SelectMany(c => c.Antigens.Where(kv => AntigenConstants.IsTypedAntigenValue(kv.Value))
                     .Select(kv => kv.Key))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(a => a, StringComparer.OrdinalIgnoreCase)
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(a => a, StringComparer.OrdinalIgnoreCase).ThenBy(a => a, StringComparer.Ordinal)
                 .ToList();
         }
 

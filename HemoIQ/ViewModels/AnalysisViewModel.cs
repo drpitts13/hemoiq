@@ -1013,7 +1013,7 @@ namespace HemoIQ.ViewModels
             if (string.IsNullOrWhiteSpace(antibody)) return false;
             foreach (var ag in AntigenConstants.ClinicallySignificantAntigens)
             {
-                if (string.Equals(antibody, $"anti-{ag}", StringComparison.OrdinalIgnoreCase))
+                if (RuleoutPolicy.SameAntibody(antibody, $"anti-{ag}"))
                     return true;
             }
             return false;

@@ -54,7 +54,7 @@ namespace HemoIQ.Services
         internal static List<string> ResolveCandidates(AnalysisResult result)
         {
             var list = new List<string>();
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var seen = new HashSet<string>(StringComparer.Ordinal); // anti-K and anti-k are both candidates
 
             foreach (var ab in result.Suspected.Keys.OrderByDescending(k => result.Suspected[k]))
             {
@@ -364,7 +364,7 @@ namespace HemoIQ.Services
         public static string? PatientAntigen(AnalysisResult result, string antigen)
         {
             var notes = result.PatientTypingConsiderations
-                .Where(c => string.Equals(c.Antigen, antigen, StringComparison.OrdinalIgnoreCase))
+                .Where(c => string.Equals(c.Antigen, antigen, StringComparison.Ordinal))
                 .ToList();
             var predicted = notes.FirstOrDefault(c =>
                 c.Kind == PatientTypingKind.Predicted && !string.IsNullOrEmpty(c.PatientValue));

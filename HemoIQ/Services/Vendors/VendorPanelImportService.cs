@@ -120,7 +120,7 @@ namespace HemoIQ.Services.Vendors
                 return parsed.AntigenOrder;
             return parsed.Cells
                 .SelectMany(c => AntigenConstants.AllKnownAntigens.Where(c.HasTypedAntigen))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Distinct(StringComparer.Ordinal) // K and k are separate columns
                 .ToList();
         }
     }
