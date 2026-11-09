@@ -2570,7 +2570,29 @@ left alone.
 2. The Specimen dialog regrouping (the dialog is still dense).
 3. A single configuration bundle combining rules and Preferences.
 
+## Iteration 115 (this change)
+
+**Deficiency:** Two reviews (Iterations 107 and 114) fixed eleven places that
+ignored antigen case. Nothing stopped the next change from adding a twelfth,
+and the convention was written down nowhere a developer would look.
+
+**Bounded improvement:**
+- `AntigenCaseGuardTests` scans the application source. Every
+  case-insensitive comparison on a line that mentions antigens or antibodies
+  must appear in a reviewed list with a reason, or the test fails and names
+  the line.
+  - Sorting and the "anti-" prefix check are always allowed.
+  - A second test fails when a reviewed entry no longer matches anything, so
+    the list cannot go stale.
+  - A third test checks that the guard flags the original defect's shape.
+- The 15 current sites were reviewed and listed. Each is a non-antigen word
+  (DAT results, AC, XML element names, vendor or product names, filter
+  words) or a reviewed fallback that cannot merge a case pair.
+- New `docs/developer-conventions.md` covers case-sensitive antigen names,
+  audited changes, preview-before-write imports, schema migrations, and test
+  isolation for settings.
+
 ## Likely next tick
 
-Roadmap item 1: introduce a shared ordinal antigen-name comparer and a source
-scan test that flags new case-insensitive antigen comparisons.
+The Specimen dialog regrouping (roadmap item 2 from Iteration 114), or a
+single configuration bundle for rules and Preferences.
