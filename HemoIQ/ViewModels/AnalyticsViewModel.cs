@@ -80,6 +80,19 @@ namespace HemoIQ.ViewModels
             }
         }
 
+        private UserActivity? _selectedActivity;
+        /// <summary>Selecting a login lists the cases where it continued past a warning.</summary>
+        public UserActivity? SelectedActivity
+        {
+            get => _selectedActivity;
+            set
+            {
+                if (!SetField(ref _selectedActivity, value) || value == null) return;
+                ShowDrill($"{value.Display}: warnings overridden ({RangeLabel})",
+                    OverrideAnalytics.Cases(_db, FromDate, ToDate, value.Login));
+            }
+        }
+
         private LocationWorkload? _selectedLocation;
         public LocationWorkload? SelectedLocation
         {
@@ -251,7 +264,8 @@ namespace HemoIQ.ViewModels
             OnPropertyChanged(nameof(IsAllTime));
             OnPropertyChanged(nameof(RangeLabel));
             // The range or data changed, so the old drill-down list no longer matches the counts.
-            _selectedAntibody = null; _selectedWorkload = null; _selectedLocation = null;
+            _selectedAntibody = null; _selectedWorkload = null; _selectedLocation = null; _selectedActivity = null;
+            OnPropertyChanged(nameof(SelectedActivity));
             OnPropertyChanged(nameof(SelectedAntibody));
             OnPropertyChanged(nameof(SelectedWorkload));
             OnPropertyChanged(nameof(SelectedLocation));

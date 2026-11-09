@@ -69,4 +69,25 @@ public class OverrideAnalyticsTests
         Assert.Contains("Accession,Date,Final ID,Detail", csv);
         Assert.Contains(csv, l => l.StartsWith("\"OA-1\","));
     }
+
+    [Fact]
+    public void Cases_ForOneLogin_ListOnlyTheirOverrides_ButJudgeCurrencyAcrossEveryone()
+    {
+        AuditEvent By(AuditEvent e, string login) { e.Operator = login; return e; }
+        var events = new[]
+        {
+            By(Confirm(1, "A", "2026-11-02T12:00:00.0000000Z", """["by tech"]"""), "TECH"),
+            By(Confirm(2, "A", "2026-11-03T12:00:00.0000000Z", null), "super"), // later clean re-confirmation by someone else
+            By(Confirm(3, "B", "2026-11-04T12:00:00.0000000Z", """["by other"]"""), "other"),
+            new AuditEvent { Id = 4, Action = "save_override", EntityType = "specimen", EntityId = "C", Operator = "tech",
+                             OccurredAtUtc = "2026-11-05T12:00:00.0000000Z", Reason = "Pregnancy for a male patient." },
+        };
+        Specimen Lookup(string acc) => new() { AccessionNumber = acc, FinalAntibodies = "anti-E" };
+
+        var tech = OverrideAnalytics.Cases(events, null, null, Lookup, "tech");
+        Assert.Equal(new[] { "C", "A" }, tech.Select(c => c.Accession));
+        Assert.StartsWith("No longer the current identification.", tech.Single(c => c.Accession == "A").Detail);
+        Assert.Equal("B", Assert.Single(OverrideAnalytics.Cases(events, null, null, Lookup, "other")).Accession);
+        Assert.Equal(3, OverrideAnalytics.Cases(events, null, null, Lookup).Count);
+    }
 }

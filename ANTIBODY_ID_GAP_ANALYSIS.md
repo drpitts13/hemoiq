@@ -2851,7 +2851,24 @@ under comma-decimal regional settings (de-DE).
 - the turnaround CSV, the antibody CSV (which fails without fix 2) and the
   Preferences export round trip, all run under German settings.
 
+## Iteration 126 (this change)
+
+**Deficiency:** Iteration 121 added an Overrides count per login, but a
+supervisor could not see which cases those were without reading the audit
+log. The operational dashboard asks for drill-down from metrics to cases.
+
+**Bounded improvement:**
+- `OverrideAnalytics.Cases(..., login)` filters to one Windows login. The
+  match ignores case, as Windows logins do.
+- "Current identification" is still decided across every user's
+  confirmations before filtering. A clean re-confirmation by someone else
+  therefore marks the earlier override "No longer the current
+  identification".
+- Analytics, Activity by user: selecting a row fills the investigations list
+  with that user's override cases. Open goes to each case. The selection
+  clears when the date range changes.
+
 ## Likely next tick
 
-One configuration bundle for rules and Preferences, or the encounter and
-override drill-down by technologist.
+A product review (the last was at Iteration 124), or one configuration
+bundle for rules and Preferences.

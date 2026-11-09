@@ -16,20 +16,24 @@ namespace HemoIQ.Services
     /// </summary>
     public static class OverrideAnalytics
     {
-        public static List<AnalyticsCase> Cases(DatabaseService db, DateTime? from, DateTime? to) =>
+        /// <param name="login">When set, only overrides by this Windows login (as in Activity by user).</param>
+        public static List<AnalyticsCase> Cases(DatabaseService db, DateTime? from, DateTime? to, string? login = null) =>
             Cases(db.GetAuditEventsByAction(new[] { "confirm_final_call", "save_override" }), from, to,
-                acc => db.GetSpecimen(acc));
+                acc => db.GetSpecimen(acc), login);
 
         public static List<AnalyticsCase> Cases(IEnumerable<AuditEvent> confirmations, DateTime? from, DateTime? to,
-            Func<string, Specimen?> specimen)
+            Func<string, Specimen?> specimen, string? login = null)
         {
             var all = confirmations.ToList();
+            bool ByLogin(AuditEvent e) =>
+                login == null || string.Equals((e.Operator ?? "").Trim(), login.Trim(), StringComparison.OrdinalIgnoreCase);
             var events = all.Where(e => e.Action == "confirm_final_call" && e.EntityId != null).ToList();
             var latestByAccession = events
                 .GroupBy(e => e.EntityId!, StringComparer.Ordinal)
                 .ToDictionary(g => g.Key, g => g.Max(e => e.Id), StringComparer.Ordinal);
             var cases = new List<AnalyticsCase>();
-            foreach (var e in events.OrderByDescending(e => e.Id))
+            // "Current" is decided over everyone's confirmations; the login filter applies after.
+            foreach (var e in events.Where(ByLogin).OrderByDescending(e => e.Id))
             {
                 var overrides = ConfirmationOverrides.Read(e.AfterJson);
                 if (overrides.Count == 0 || !UserActivityService.InRange(e.OccurredAtUtc, from, to)) continue;
@@ -46,7 +50,7 @@ namespace HemoIQ.Services
                 });
             }
             // Specimen saves past a data-quality warning (encounter on another patient, pregnancy for a male patient).
-            foreach (var e in all.Where(e => e.Action == "save_override" && e.EntityId != null && !string.IsNullOrWhiteSpace(e.Reason)))
+            foreach (var e in all.Where(e => e.Action == "save_override" && e.EntityId != null && !string.IsNullOrWhiteSpace(e.Reason) && ByLogin(e)))
             {
                 if (!UserActivityService.InRange(e.OccurredAtUtc, from, to)) continue;
                 cases.Add(new AnalyticsCase
