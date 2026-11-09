@@ -110,9 +110,9 @@ namespace HemoIQ.Services
                     result.Errors.Add("A cell is missing cellNumber.");
                     continue;
                 }
-                if (!seen.Add(src.CellNumber))
+                if (!seen.Add(src.CellNumber.Trim()))
                 {
-                    result.Errors.Add($"Duplicate cell '{src.CellNumber}'.");
+                    result.Errors.Add($"Duplicate cell '{src.CellNumber.Trim()}'.");
                     continue;
                 }
                 var cell = new PanelCell

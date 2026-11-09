@@ -2410,6 +2410,39 @@ it, they had to open each older specimen.
 - They are shown for review only. Analysis does not use an earlier phenotype
   as evidence, because its date and reliability are not structured.
 
+## Iteration 110 (this change)
+
+**Deficiency:** The Iteration 107 review found that `StructuredPanelParser`
+(JSON and XML) and `XlsxGridReader` were tested only indirectly through
+import flows. Direct tests found three defects that could put wrong or
+missing antigen typing into an import preview:
+1. **Rows dropped.** In XLSX, a cell's `r` reference is optional. Rows whose
+   cells had none were dropped entirely, and a row mixing both kinds
+   misplaced the unreferenced cells.
+2. **Extra text in values.** Phonetic reading runs (`rPh`) in shared or
+   inline strings were appended to the cell text, so "Fya" read as "Fyaふ"
+   and the header was then unrecognized.
+3. **Duplicates missed.** The duplicate-cell check compared untrimmed
+   numbers, so " 1 " and "1" were both kept.
+
+**Change:**
+- `XlsxGridReader` places a cell without `r` after the previous cell and
+  ignores phonetic runs. `ColumnIndex` is now public.
+- `StructuredPanelParser` trims the cell number before the duplicate check.
+
+**Tests:** `StructuredImportParserTests` (13):
+- JSON: K and k kept apart; value mapping (++, 0, numeric 1, nt); aliases
+  such as Fy(a); unknown antigens reported; no typing invented for antigens
+  a cell did not list; errors for an array root, bad JSON, bad values, a
+  missing cell number and duplicates; the UTF-8 BOM.
+- XML: attributes or child elements, and `ag id=`.
+- `ToLabResult`: NT values dropped.
+- XLSX: the workbook relationship followed to a non-default sheet; shared,
+  rich and inline strings; sparse and wide columns (AA); cells without
+  references; phonetic runs ignored.
+
 ## Likely next tick
 
-Direct tests for `StructuredPanelParser` and `XlsxGridReader` edge cases.
+The Worklist count card and Show toggle for the Overdue testing and Rule
+problem kinds, or the Specimen dialog regrouping noted in the Iteration 107
+review.

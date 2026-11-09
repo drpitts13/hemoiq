@@ -73,12 +73,7 @@ namespace HemoIQ.Services
             using var stream = entry.Open();
             var doc = XDocument.Load(stream);
             foreach (var si in doc.Descendants().Where(e => e.Name.LocalName == "si"))
-            {
-                var text = string.Concat(si.Descendants()
-                    .Where(e => e.Name.LocalName == "t")
-                    .Select(e => e.Value));
-                list.Add(text);
-            }
+                list.Add(VisibleText(si));
             return list;
         }
 
@@ -89,16 +84,20 @@ namespace HemoIQ.Services
             {
                 var cells = rowEl.Elements().Where(e => e.Name.LocalName == "c").ToList();
                 if (cells.Count == 0) continue;
-                var maxCol = cells.Max(c => ColumnIndex((string?)c.Attribute("r") ?? ""));
-                if (maxCol < 0) continue;
-                var values = new string[maxCol + 1];
-                Array.Fill(values, "");
+                // The r reference is optional in OOXML: a cell without one is in the column
+                // after the previous cell.
+                var placed = new List<(int Col, string Text)>();
+                var next = 0;
                 foreach (var cell in cells)
                 {
                     var col = ColumnIndex((string?)cell.Attribute("r") ?? "");
-                    if (col < 0) continue;
-                    values[col] = CellText(cell, shared);
+                    if (col < 0) col = next;
+                    placed.Add((col, CellText(cell, shared)));
+                    next = col + 1;
                 }
+                var values = new string[placed.Max(p => p.Col) + 1];
+                Array.Fill(values, "");
+                foreach (var (col, text) in placed) values[col] = text;
                 if (values.All(string.IsNullOrWhiteSpace)) continue;
                 rows.Add(values);
             }
@@ -116,15 +115,22 @@ namespace HemoIQ.Services
                 return "";
             }
             if (string.Equals(type, "inlineStr", StringComparison.OrdinalIgnoreCase))
-            {
-                return string.Concat(cell.Descendants()
-                    .Where(e => e.Name.LocalName == "t")
-                    .Select(e => e.Value));
-            }
+                return cell.Elements().FirstOrDefault(e => e.Name.LocalName == "is") is XElement inline
+                    ? VisibleText(inline) : "";
             return cell.Descendants().FirstOrDefault(e => e.Name.LocalName == "v")?.Value ?? "";
         }
 
-        internal static int ColumnIndex(string cellRef)
+        /// <summary>
+        /// Text of a string item (plain or rich-text runs), leaving out phonetic (rPh) runs,
+        /// which are reading hints and not part of the cell's value.
+        /// </summary>
+        private static string VisibleText(XElement item) =>
+            string.Concat(item.Descendants()
+                .Where(e => e.Name.LocalName == "t" && !e.Ancestors().Any(a => a.Name.LocalName == "rPh"))
+                .Select(e => e.Value));
+
+        /// <summary>Zero-based column of a reference such as "AA10"; -1 when there is no column part.</summary>
+        public static int ColumnIndex(string cellRef)
         {
             var col = 0;
             foreach (var c in cellRef)
