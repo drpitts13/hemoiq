@@ -14,7 +14,8 @@ namespace HemoIQ.Models
         UntypedPanel,
         DuplicateLot,
         InconsistentStatus,
-        OverdueAdditionalTesting
+        OverdueAdditionalTesting,
+        RuleConflict
     }
 
     public class WorklistItem

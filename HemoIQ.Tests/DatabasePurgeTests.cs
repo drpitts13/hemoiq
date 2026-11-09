@@ -104,7 +104,7 @@ public class DatabasePurgeTests
     {
         using var iso = new IsolatedDatabase();
         SeedOldAndNew(iso, out var usedPanelId, out var unusedPanelId);
-        var ruleId = iso.Db.AddRule("Keep me", "desc", "K", null, false, 3);
+        var ruleId = iso.Db.AddRule("Keep me", "desc", "anti-K", null, false, 3);
 
         iso.Db.PurgeSpecimensCreatedBefore("2024-01-01");
 

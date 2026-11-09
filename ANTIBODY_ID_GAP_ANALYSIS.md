@@ -2366,6 +2366,32 @@ look-back and the RhIG window are distinct.
 - an analysis regression where an anti-K rule of 3 leaves anti-k at the lab
   default.
 
+## Iteration 108 (this change)
+
+**Deficiency:** This follows from Iteration 107. Rule lookup takes the first
+matching rule, ordered by name, and the Rule dialog's Antibody box accepted
+free text. That allowed:
+- a rule naming no real antigen ("anti-kell", "anti-fya", or a bare "K", as
+  one test fixture had), which silently never applied;
+- two rules for the same antibody, where which one applied depended on the
+  rule names, so renaming a rule could change rule-out counts.
+
+**Bounded improvement:**
+- `RuleValidation.NormalizeAntibody`, enforced in `DatabaseService.AddRule`
+  and `UpdateRule`:
+  - requires the anti- form and a known antigen in its exact case, with a
+    "Did you mean anti-Fya?" hint;
+  - refuses a second rule for the same antibody and names the existing rule;
+  - stores the normalized "anti-X". anti-K and anti-k stay separate.
+- `GetKnownAntigens` returns the standard and warehouse antigens plus any
+  stored extra antigen, for older data.
+- `RuleValidation.Problems` and a new Worklist kind, `RuleConflict` ("Rule
+  problem"), list stored rules that break these checks, naming the rule that
+  actually wins. Open goes to the Rules tab.
+- `GetAllRules` orders by name without regard to case, then by id, so the
+  order is fixed.
+- The Rules tab shows the refusal message when a save is refused.
+
 ## Likely next tick
 
 The encounter number in Patient history rows. After that, direct tests for

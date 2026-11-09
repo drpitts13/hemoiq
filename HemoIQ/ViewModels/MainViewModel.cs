@@ -134,6 +134,9 @@ namespace HemoIQ.ViewModels
                     if (item.PanelId is int pid)
                         PanelsVM.SelectPanel(pid);
                     break;
+                case "Rules":
+                    SelectedTabIndex = 8;
+                    break;
                 default:
                     SelectedTabIndex = 1;
                     if (item.AccessionNumber != null)

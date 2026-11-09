@@ -68,9 +68,18 @@ namespace HemoIQ.ViewModels
             if (!CanConfigure()) return;
             var dlg = new Views.Dialogs.RuleDialog();
             if (dlg.ShowDialog() != true) return;
-            var id = _db.AddRule(dlg.RuleName, dlg.Description, dlg.Antibody,
-                dlg.ExceptionAntigen, dlg.HeterozygousOk, dlg.MinRuleoutCount,
-                dlg.SeparationExempt, dlg.SeparationExemptFrom);
+            int id;
+            try
+            {
+                id = _db.AddRule(dlg.RuleName, dlg.Description, dlg.Antibody,
+                    dlg.ExceptionAntigen, dlg.HeterozygousOk, dlg.MinRuleoutCount,
+                    dlg.SeparationExempt, dlg.SeparationExemptFrom);
+            }
+            catch (System.ArgumentException ex)
+            {
+                MessageBox.Show(ex.Message, "Rule not added", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             _main.SetStatus($"Rule '{dlg.RuleName}' added." + StaleNote);
             _main.WorklistVM.Refresh();
             Refresh();
@@ -82,9 +91,17 @@ namespace HemoIQ.ViewModels
             if (SelectedRule == null || !CanConfigure()) return;
             var dlg = new Views.Dialogs.RuleDialog(SelectedRule);
             if (dlg.ShowDialog() != true) return;
-            _db.UpdateRule(SelectedRule.RuleId, dlg.RuleName, dlg.Description, dlg.Antibody,
-                dlg.ExceptionAntigen, dlg.HeterozygousOk, dlg.MinRuleoutCount,
-                dlg.SeparationExempt, dlg.SeparationExemptFrom);
+            try
+            {
+                _db.UpdateRule(SelectedRule.RuleId, dlg.RuleName, dlg.Description, dlg.Antibody,
+                    dlg.ExceptionAntigen, dlg.HeterozygousOk, dlg.MinRuleoutCount,
+                    dlg.SeparationExempt, dlg.SeparationExemptFrom);
+            }
+            catch (System.ArgumentException ex)
+            {
+                MessageBox.Show(ex.Message, "Rule not saved", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             _main.SetStatus($"Rule '{dlg.RuleName}' updated." + StaleNote);
             _main.WorklistVM.Refresh();
             Refresh();

@@ -3044,6 +3044,18 @@ namespace HemoIQ.Data
                 });
             }
 
+            foreach (var (title, detail) in Services.RuleValidation.Problems(GetAllRules(), GetKnownAntigens()))
+                items.Add(new WorklistItem
+                {
+                    Kind = WorklistKind.RuleConflict,
+                    KindLabel = "Rule problem",
+                    Title = title,
+                    Detail = detail,
+                    UrgencyLabel = "Fix rule",
+                    SortOrder = 1,
+                    TargetTab = "Rules",
+                });
+
             foreach (var p in allPanels.Where(p => p.IsActive))
             {
                 AddExpirationWorklistItem(items, p.ExpirationDate, today, todayStr, horizon,
@@ -3167,11 +3179,27 @@ namespace HemoIQ.Data
 
         // ── Rules ─────────────────────────────────────────────────────────────
 
+        /// <summary>Standard and warehouse antigens plus every extra antigen added to a panel.</summary>
+        public List<string> GetKnownAntigens()
+        {
+            var list = new List<string>(AntigenConstants.AllKnownAntigens);
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = "SELECT DISTINCT antigen_name FROM panel_extra_antigens";
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
+            {
+                var ag = r.GetString(0);
+                if (!list.Contains(ag, StringComparer.Ordinal)) list.Add(ag);
+            }
+            return list;
+        }
+
         public int AddRule(string name, string? description, string antibody,
             string? exceptionAntigen, bool heterozygousOk, int minRuleoutCount,
             bool separationExempt = false, string? separationExemptFrom = null)
         {
             Services.AccessControl.Demand(this, Services.Permission.ConfigureRules);
+            antibody = Services.RuleValidation.NormalizeAntibody(antibody, GetKnownAntigens(), GetAllRules(), null);
             separationExemptFrom = NormalizeSeparationList(separationExempt, separationExemptFrom);
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
@@ -3197,7 +3225,7 @@ namespace HemoIQ.Data
         {
             var list = new List<Rule>();
             using var cmd = _conn.CreateCommand();
-            cmd.CommandText = "SELECT * FROM rules ORDER BY name";
+            cmd.CommandText = "SELECT * FROM rules ORDER BY name COLLATE NOCASE, rule_id";
             using var r = cmd.ExecuteReader();
             while (r.Read()) list.Add(ReadRule(r));
             return list;
@@ -3208,6 +3236,7 @@ namespace HemoIQ.Data
             bool separationExempt = false, string? separationExemptFrom = null)
         {
             Services.AccessControl.Demand(this, Services.Permission.ConfigureRules);
+            antibody = Services.RuleValidation.NormalizeAntibody(antibody, GetKnownAntigens(), GetAllRules(), ruleId);
             separationExemptFrom = NormalizeSeparationList(separationExempt, separationExemptFrom);
             var before = RuleAuditJson(GetRule(ruleId));
             using var cmd = _conn.CreateCommand();
