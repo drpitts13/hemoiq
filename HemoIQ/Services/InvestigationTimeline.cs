@@ -284,6 +284,8 @@ namespace HemoIQ.Services
                 "update_collection" => $"Collection/receipt recorded: collected {Prop(a.AfterJson, "collectedAt") ?? "—"}, received {Prop(a.AfterJson, "receivedAt") ?? "—"}",
                 "update_origin" => "Origin recorded: " + OriginText(a.AfterJson),
                 "save_override" => "Saved past a warning: " + a.Reason,
+                "auto_deactivate_expired" => "Made inactive automatically: " + a.Reason,
+                "add_run" => RunAddedText(a.AfterJson),
                 "update_encounter" => Prop(a.AfterJson, "encounter") is string enc
                     ? $"Encounter / account recorded: {enc}" : "Encounter / account cleared",
                 "clear_reactions" => $"Reactions cleared on {Prop(a.BeforeJson, "panel") ?? "panel"}, {Prop(a.BeforeJson, "run") ?? "run"}: " +
@@ -333,6 +335,21 @@ namespace HemoIQ.Services
         }
 
         private static string? Cell(string? json) => Prop(json, "cellNumber");
+
+        /// <summary>A treated or labelled run is additional testing; the untreated default run is implied by "Panel attached".</summary>
+        private static string? RunAddedText(string? json)
+        {
+            var cell = Prop(json, "cellTreatment") ?? "None";
+            var serum = Prop(json, "serumTreatment") ?? "None";
+            var label = Prop(json, "label");
+            if (cell == "None" && serum == "None" && (label == null || label == "Untreated")) return null;
+            var parts = new List<string>();
+            if (cell != "None") parts.Add($"cells {cell}");
+            if (serum != "None") parts.Add($"serum {serum}");
+            var what = label ?? (parts.Count > 0 ? string.Join(", ", parts) : "untreated");
+            var treat = parts.Count > 0 && label != null ? $" ({string.Join(", ", parts)})" : "";
+            return $"Run added: {Prop(json, "panel") ?? "panel"}, {what}{treat}";
+        }
 
         private static string OriginText(string? json)
         {

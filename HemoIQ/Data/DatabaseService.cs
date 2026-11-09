@@ -441,26 +441,44 @@ namespace HemoIQ.Data
                 ExecNonQuery("ALTER TABLE analysis_snapshots ADD COLUMN additional_testing_json TEXT");
         }
 
-        private void DeactivateExpiredSpecimens()
-        {
-            var today = DateTime.Now.ToString("yyyy-MM-dd");
-            using var cmd = _conn.CreateCommand();
-            cmd.CommandText = @"
-                UPDATE specimens SET is_active = 0
-                WHERE expiration_date IS NOT NULL AND expiration_date < $today AND is_active = 1";
-            cmd.Parameters.AddWithValue("$today", today);
-            cmd.ExecuteNonQuery();
-        }
+        private void DeactivateExpiredSpecimens() =>
+            DeactivateExpired("specimens", "accession_number", "specimen");
 
-        private void DeactivateExpiredPanels()
+        private void DeactivateExpiredPanels() =>
+            DeactivateExpired("panels", "panel_id", "panel");
+
+        /// <summary>
+        /// Marks records whose expiration date has passed as inactive, at startup. Each one is
+        /// audited (auto_deactivate_expired, with the expiration date) so the status change is
+        /// never silent and appears on the record's history.
+        /// </summary>
+        private void DeactivateExpired(string table, string keyColumn, string entityType)
         {
             var today = DateTime.Now.ToString("yyyy-MM-dd");
-            using var cmd = _conn.CreateCommand();
-            cmd.CommandText = @"
-                UPDATE panels SET is_active = 0
-                WHERE expiration_date IS NOT NULL AND expiration_date < $today AND is_active = 1";
-            cmd.Parameters.AddWithValue("$today", today);
-            cmd.ExecuteNonQuery();
+            var expired = new List<(string Id, string Expiration)>();
+            using (var select = _conn.CreateCommand())
+            {
+                select.CommandText = $@"
+                    SELECT {keyColumn}, expiration_date FROM {table}
+                    WHERE expiration_date IS NOT NULL AND expiration_date < $today AND is_active = 1";
+                select.Parameters.AddWithValue("$today", today);
+                using var r = select.ExecuteReader();
+                while (r.Read()) expired.Add((Convert.ToString(r.GetValue(0))!, r.GetString(1)));
+            }
+            if (expired.Count == 0) return;
+            RunInTransaction(() =>
+            {
+                foreach (var (id, expiration) in expired)
+                {
+                    using var cmd = _conn.CreateCommand();
+                    cmd.CommandText = $"UPDATE {table} SET is_active = 0 WHERE {keyColumn} = $id AND is_active = 1";
+                    cmd.Parameters.AddWithValue("$id", id);
+                    cmd.ExecuteNonQuery();
+                    AppendAudit("auto_deactivate_expired", entityType, id, $"Expired {expiration}; deactivated automatically at startup",
+                        JsonSerializer.Serialize(new { isActive = true, expiration }),
+                        JsonSerializer.Serialize(new { isActive = false, expiration }));
+                }
+            });
         }
 
         /// <summary>
@@ -2471,7 +2489,16 @@ namespace HemoIQ.Data
             cmd.Parameters.AddWithValue("$st", serumTreatment.ToString());
             cmd.Parameters.AddWithValue("$lbl", (object?)label ?? DBNull.Value);
             cmd.Parameters.AddWithValue("$dt", DateTime.Now.ToString("yyyy-MM-dd"));
-            return Convert.ToInt32(cmd.ExecuteScalar());
+            var runId = Convert.ToInt32(cmd.ExecuteScalar());
+            AppendAudit("add_run", "specimen", specimenId, null, null, JsonSerializer.Serialize(new
+            {
+                runId,
+                panel = GetPanel(panelId)?.Name,
+                cellTreatment = cellTreatment.ToString(),
+                serumTreatment = serumTreatment.ToString(),
+                label = string.IsNullOrWhiteSpace(label) ? null : label.Trim(),
+            }));
+            return runId;
         }
 
         /// <summary>

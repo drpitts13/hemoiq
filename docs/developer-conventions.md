@@ -26,6 +26,9 @@ comparisons, the import schema check, and Final ID entries.
   method validates the value and calls `AppendAudit(action, entity, id, reason, beforeJson,
   afterJson)`.
 - A save that changes nothing writes no audit entry.
+- **Guard:** `AuditCoverageGuardTests` scans `DatabaseService`. A method that runs UPDATE, DELETE
+  or INSERT must call `AppendAudit` or be on the test's reviewed list with a reason, such as
+  derived analysis output, a timestamp, or a helper whose callers audit.
 - Specimen fields lock after a confirmed identification (`EnsureSpecimenUnlocked`).
 - Rules and lab-wide Preferences are audited, and changing them marks open analyses stale
   (`AnalysisCurrency`, `LastAnalysisConfigurationChange`).

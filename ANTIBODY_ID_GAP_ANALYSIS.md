@@ -2659,7 +2659,44 @@ to review.
   overrides, newest first. The Analytics card is renamed **Warnings
   overridden**, and the CSV section is renamed to match.
 
+## Iteration 119 (this change): product review and an audit-coverage sweep
+
+### Review (since Iteration 114)
+
+**Completed since the last review:**
+- The antigen-case guard and developer conventions (115).
+- Confirm ID overrides: recorded (116), counted on Analytics (117), and
+  extended to specimen-save warnings (118).
+- A supervisor can now see every warning someone continued past, on the
+  Timeline, the worksheet, the review queue and Analytics.
+
+**Defect class reviewed.** The prompt says "never silently overwrite
+clinically important historical information". Every `DatabaseService` method
+that writes data was checked for an `AppendAudit` call. 22 had none. Most are
+derived analysis output, timestamps, or helpers whose callers audit. Two were
+real gaps.
+
+### Fixes
+
+| Gap | Before | Now |
+|---|---|---|
+| Startup auto-deactivation of expired specimens and panels | Switched to inactive with no record, so they left the Worklist with nothing on their history | One `auto_deactivate_expired` entry per record, with the expiration date and before/after; Timeline "Made inactive automatically: Expired …" |
+| `AddPanelRun` | Treated or labelled runs (ficin, DTT, prewarm and so on) were not audited, while run deletion was, and additional testing never appeared on the Timeline | `add_run` audit with panel, treatments and label; Timeline "Run added: …" for treated or labelled runs, with the implied untreated default run omitted |
+
+**Guard:** `AuditCoverageGuardTests` fails on any new unaudited writer that
+is not on its reviewed list of 19 entries with reasons, and it fails when an
+entry goes stale. `docs/developer-conventions.md` documents it.
+
+**Tests:** `WriteAuditCoverageTests` covers the run audit and Timeline
+wording, and startup deactivation (audited once, not repeated on the next
+start).
+
+### Roadmap
+
+1. The Specimen dialog regrouping (dense, flagged since Iteration 107).
+2. One configuration bundle for rules and Preferences.
+3. Overrides by technologist on Analytics.
+
 ## Likely next tick
 
-A product review (the last was at Iteration 114), or the Specimen dialog
-regrouping.
+Roadmap item 1: Specimen dialog regrouping, verified in the running app.
