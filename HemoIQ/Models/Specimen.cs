@@ -75,9 +75,14 @@ namespace HemoIQ.Models
         /// <summary>Normalized <see cref="Models.TransfusionStatus"/> code.</summary>
         public string TransfusionStatus { get; set; } = Models.TransfusionStatus.Unknown;
         public string? LastTransfusionDate { get; set; }
+        /// <summary>Comma-separated <see cref="TransfusionProducts"/> codes; null when not recorded.</summary>
+        public string? TransfusionProducts { get; set; }
+        public int? TransfusionUnits { get; set; }
         public string TransfusionDisplay =>
             Models.TransfusionStatus.Normalize(TransfusionStatus) == Models.TransfusionStatus.Transfused
-                ? $"Transfused (last {LastTransfusionDate ?? "date not recorded"})"
+                ? $"Transfused (last {LastTransfusionDate ?? "date not recorded"}" +
+                  (string.IsNullOrEmpty(TransfusionProducts) ? "" : $"; {Models.TransfusionProducts.Describe(TransfusionProducts)}") +
+                  (TransfusionUnits is int u ? $"; {u} unit(s)" : "") + ")"
                 : Models.TransfusionStatus.Label(TransfusionStatus);
 
         public string? FinalAntibodies { get; set; }

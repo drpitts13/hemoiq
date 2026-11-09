@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using HemoIQ.Data;
 
 namespace HemoIQ.Services
@@ -19,6 +21,8 @@ namespace HemoIQ.Services
         public string Hemolysis { get; init; } = string.Empty;
         public string TransfusionStatus { get; init; } = Models.TransfusionStatus.Unknown;
         public string? LastTransfusionDate { get; init; }
+        public IReadOnlyList<string> TransfusionProducts { get; init; } = Array.Empty<string>();
+        public int? TransfusionUnits { get; init; }
         public string? Mrn { get; init; }
         public string? SourceAccession { get; init; }
         public string? CollectedAt { get; init; }
@@ -51,6 +55,7 @@ namespace HemoIQ.Services
                     db.UpdateSpecimen(e.AccessionNumber, e.Type, e.ExpirationDate, e.IsActive,
                         e.Notes, e.Phenotype, e.PreviousAntibodies, e.DatResult, e.Genotype);
                 db.UpdateSpecimenTransfusion(e.AccessionNumber, e.TransfusionStatus, e.LastTransfusionDate);
+                db.UpdateSpecimenTransfusionProducts(e.AccessionNumber, e.TransfusionProducts, e.TransfusionUnits);
                 db.UpdateSpecimenDatSplit(e.AccessionNumber, e.DatIgg, e.DatC3);
                 db.UpdateSpecimenHemolysis(e.AccessionNumber, e.Hemolysis);
                 db.UpdateSpecimenMrn(e.AccessionNumber, e.Mrn);

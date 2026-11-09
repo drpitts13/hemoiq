@@ -267,6 +267,9 @@ namespace HemoIQ.Services
                 "clear_final_call" => $"Identification cleared: {Prop(a.BeforeJson, "FinalAntibodies") ?? "—"}; reason: {a.Reason}",
                 "supervisor_review" => $"Supervisor reviewed by {Prop(a.AfterJson, "reviewedBy")}" +
                                        (string.IsNullOrWhiteSpace(a.Reason) ? "" : $"; {a.Reason}"),
+                "update_transfusion_products" => "Transfused products recorded: " +
+                    (TransfusionProducts.Describe(Prop(a.AfterJson, "products")) is { Length: > 0 } pr ? pr : "none") +
+                    (Prop(a.AfterJson, "units") is string un ? $", {un} unit(s)" : ""),
                 "update_transfusion" => $"Transfusion record set: {TransfusionStatus.Label(Prop(a.AfterJson, "status"))}" +
                                         (Prop(a.AfterJson, "lastTransfusionDate") is string d ? $", last {d}" : ""),
                 "update_hemolysis" => $"Visual hemolysis recorded: {SpecimenHemolysis.Label(Prop(a.AfterJson, "hemolysis"))}",

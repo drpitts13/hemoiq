@@ -2186,8 +2186,36 @@ patterns first:
 
 **No schema change.**
 
+## Iteration 102 (this change)
+
+**Deficiency:** The transfusion record had only a status and a date. Any
+recent transfusion made the serologic phenotype unreliable, including
+platelets-only or plasma-only transfusions, which carry few or no donor red
+cells. Nothing noted that plasma-containing products can passively
+transfer antibody. The prompt asks for "number/type of products where
+known".
+
+**Bounded improvement:**
+- `TransfusionProducts` codes: red cells, whole blood, granulocytes,
+  platelets, plasma, cryo. Red-cell-containing and plasma-containing sets
+  are defined.
+- `Specimen.TransfusionProducts` and `TransfusionUnits` (migration:
+  `specimens.transfusion_products` and `transfusion_units`).
+- `UpdateSpecimenTransfusionProducts` keeps products only while the status
+  is Transfused and validates units (1–999). It is audited as
+  `update_transfusion_products`, shown on the timeline, a no-op save writes
+  nothing, and it is locked after confirmation.
+- `TransfusionContext.Assess(..., products)`:
+  - When the products are recorded and none carry red cells, the phenotype
+    stays usable and the explanation says why.
+  - Plasma-containing products add a passive-antibody note.
+  - Unknown products leave the current behaviour unchanged.
+- The specimen dialog has product checkboxes and a units field, with
+  validation. `TransfusionDisplay` (detail pane, history, reports) lists
+  them.
+
 ## Likely next tick
 
-Products and units transfused on the specimen (count and type, recorded
-with the transfusion date). These would show on the patient history and in
-the transfusion context note.
+Encounter or account identifier on the specimen (searchable, on reports).
+After that, a Worklist "Awaiting testing" queue limited to investigations
+past the turnaround threshold.

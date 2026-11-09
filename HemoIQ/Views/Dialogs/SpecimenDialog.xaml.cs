@@ -52,6 +52,16 @@ namespace HemoIQ.Views.Dialogs
         public string Hemolysis => (HemolysisBox.SelectedItem as HemolysisOption)?.Code ?? string.Empty;
 
         private sealed record HemolysisOption(string Code, string Label);
+        private readonly List<CheckBox> _productBoxes = new();
+
+        public IReadOnlyList<string> TransfusionProductCodes =>
+            TransfusionStatusCode == Models.TransfusionStatus.Transfused
+                ? _productBoxes.Where(b => b.IsChecked == true).Select(b => (string)b.Tag).ToList()
+                : Array.Empty<string>();
+
+        public int? TransfusionUnits =>
+            TransfusionStatusCode == Models.TransfusionStatus.Transfused && int.TryParse(UnitsBox.Text.Trim(), out var u) ? u : null;
+
         public string TransfusionStatusCode =>
             (TransfusionBox.SelectedItem as TransfusionOption)?.Code ?? Models.TransfusionStatus.Unknown;
         public string? LastTransfusionDate =>
@@ -87,6 +97,14 @@ namespace HemoIQ.Views.Dialogs
                 transfusionOptions.Add(new TransfusionOption(code, label));
             TransfusionBox.ItemsSource = transfusionOptions;
             TransfusionBox.SelectedIndex = 0;
+            foreach (var (code, label) in Models.TransfusionProducts.All)
+            {
+                var box = new CheckBox { Content = label, Tag = code, Margin = new Thickness(0, 0, 10, 2) };
+                box.Checked += Context_Changed;
+                box.Unchecked += Context_Changed;
+                _productBoxes.Add(box);
+                ProductsPanel.Children.Add(box);
+            }
             var pregnancyOptions = new System.Collections.Generic.List<TransfusionOption>();
             foreach (var (code, label) in Models.PregnancyStatus.Options)
                 pregnancyOptions.Add(new TransfusionOption(code, label));
@@ -159,6 +177,9 @@ namespace HemoIQ.Views.Dialogs
                     if (pregnancyOptions[i].Code == preg) { PregnancyBox.SelectedIndex = i; break; }
                 if (DateTime.TryParse(existing.PregnancyEndDate, out var pe)) PregnancyEndPicker.SelectedDate = pe;
                 if (DateTime.TryParse(existing.RhigDate, out var rg)) RhigPicker.SelectedDate = rg;
+                var recorded = Models.TransfusionProducts.Parse(existing.TransfusionProducts);
+                foreach (var box in _productBoxes) box.IsChecked = recorded.Contains((string)box.Tag);
+                UnitsBox.Text = existing.TransfusionUnits?.ToString() ?? string.Empty;
                 if (existing.LastTransfusionDate != null &&
                     DateTime.TryParse(existing.LastTransfusionDate, out var td))
                     LastTransfusionPicker.SelectedDate = td;
@@ -176,6 +197,8 @@ namespace HemoIQ.Views.Dialogs
         {
             TransfusionStatus = TransfusionStatusCode,
             LastTransfusionDate = LastTransfusionDate,
+            TransfusionProducts = Models.TransfusionProducts.Format(TransfusionProductCodes),
+            TransfusionUnits = TransfusionUnits,
             PregnancyStatus = PregnancyStatusCode,
             PregnancyEndDate = PregnancyEndDate,
             RhigDate = RhigDate,
@@ -259,6 +282,7 @@ namespace HemoIQ.Views.Dialogs
         {
             if (LastTransfusionPicker == null) return;
             LastTransfusionPicker.IsEnabled = TransfusionStatusCode == Models.TransfusionStatus.Transfused;
+            ProductsPanel.IsEnabled = UnitsBox.IsEnabled = LastTransfusionPicker.IsEnabled;
         }
 
         private void ExpirationPicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
@@ -281,6 +305,12 @@ namespace HemoIQ.Views.Dialogs
                 LastTransfusionPicker.SelectedDate?.Date > DateTime.Today)
             {
                 Invalid("Last transfusion date cannot be in the future.", LastTransfusionPicker);
+                return;
+            }
+            if (TransfusionStatusCode == Models.TransfusionStatus.Transfused && UnitsBox.Text.Trim().Length > 0 &&
+                (!int.TryParse(UnitsBox.Text.Trim(), out var units) || units < 1 || units > 999))
+            {
+                Invalid("Units transfused must be a whole number from 1 to 999, or blank if not known.", UnitsBox);
                 return;
             }
             if (PregnancyStatusCode == Models.PregnancyStatus.Recent && PregnancyEndPicker.SelectedDate == null)

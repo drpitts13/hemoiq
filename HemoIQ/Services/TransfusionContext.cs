@@ -27,14 +27,14 @@ namespace HemoIQ.Services
     public static class TransfusionContext
     {
         public static TransfusionAssessment Assess(string? status, string? lastTransfusionDate,
-            string? specimenDate, int windowDays, string? phenotype, string? notes)
+            string? specimenDate, int windowDays, string? phenotype, string? notes, string? products = null)
         {
             var code = TransfusionStatus.Normalize(status);
             var notesHint = PatientTypingParser.LooksRecentlyTransfused(phenotype) ||
                             PatientTypingParser.LooksRecentlyTransfused(notes);
 
             if (code == TransfusionStatus.Transfused)
-                return WithStatus(AssessTransfused(lastTransfusionDate, specimenDate, windowDays), code);
+                return WithStatus(ApplyProducts(AssessTransfused(lastTransfusionDate, specimenDate, windowDays), products), code);
 
             return WithStatus(AssessUntransfused(code, notesHint), code);
         }
@@ -80,6 +80,35 @@ namespace HemoIQ.Services
             {
                 Source = "none",
                 Explanation = "Transfusion status is Unknown. Serologic patient typing is used as evidence; record the status if the patient may have been transfused.",
+            };
+        }
+
+        /// <summary>
+        /// When the products given are recorded and none carry red cells (platelets, plasma, cryo), the
+        /// transfusion does not make the serologic phenotype unreliable. Plasma-containing products add
+        /// a note that antibodies can be passively transferred. No products recorded: unchanged.
+        /// </summary>
+        private static TransfusionAssessment ApplyProducts(TransfusionAssessment a, string? products)
+        {
+            var codes = TransfusionProducts.Parse(products);
+            if (codes.Count == 0) return a;
+            var described = TransfusionProducts.Describe(products);
+            var passive = codes.Any(TransfusionProducts.ContainPlasma.Contains)
+                ? " Plasma-containing products can passively transfer antibodies; weak or newly detected reactivity soon after transfusion may be passive."
+                : "";
+            if (!a.PhenotypeUnreliable || codes.Any(TransfusionProducts.ContainRedCells.Contains))
+                return new TransfusionAssessment
+                {
+                    PhenotypeUnreliable = a.PhenotypeUnreliable,
+                    Source = a.Source,
+                    Explanation = $"{a.Explanation} Products recorded: {described}.{passive}",
+                };
+            return new TransfusionAssessment
+            {
+                PhenotypeUnreliable = false,
+                Source = a.Source,
+                Explanation = $"{a.Explanation} However, only {described} {(codes.Count == 1 ? "was" : "were")} recorded, " +
+                              $"which carry few or no donor red cells, so serologic patient typing is used as evidence.{passive}",
             };
         }
 

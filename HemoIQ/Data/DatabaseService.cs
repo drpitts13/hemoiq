@@ -238,6 +238,10 @@ namespace HemoIQ.Data
                     "CHECK (transfusion_status IN ('unknown','none','transfused'))");
             if (!cols.Contains("last_transfusion_date"))
                 ExecNonQuery("ALTER TABLE specimens ADD COLUMN last_transfusion_date TEXT");
+            if (!cols.Contains("transfusion_products"))
+                ExecNonQuery("ALTER TABLE specimens ADD COLUMN transfusion_products TEXT");
+            if (!cols.Contains("transfusion_units"))
+                ExecNonQuery("ALTER TABLE specimens ADD COLUMN transfusion_units INTEGER");
             if (!cols.Contains("dat_igg"))
                 ExecNonQuery("ALTER TABLE specimens ADD COLUMN dat_igg TEXT");
             if (!cols.Contains("dat_c3"))
@@ -631,6 +635,32 @@ namespace HemoIQ.Data
         /// Records structured transfusion history. Audited with before and
         /// after values because it changes how patient typing is interpreted.
         /// </summary>
+        /// <summary>
+        /// Records which products were transfused and how many units. Kept only while the status is
+        /// Transfused. Audited (<c>update_transfusion_products</c>); locked after a confirmed identification.
+        /// </summary>
+        public void UpdateSpecimenTransfusionProducts(string accessionNumber, IEnumerable<string>? products, int? units)
+        {
+            var before = GetSpecimen(accessionNumber)
+                         ?? throw new ArgumentException($"Specimen {accessionNumber} not found.");
+            var transfused = TransfusionStatus.Normalize(before.TransfusionStatus) == TransfusionStatus.Transfused;
+            if (units is < 1 or > 999)
+                throw new ArgumentException("Units transfused must be between 1 and 999.");
+            var codes = transfused ? Models.TransfusionProducts.Format(products) : null;
+            var count = transfused ? units : null;
+            if (before.TransfusionProducts == codes && before.TransfusionUnits == count) return;
+            EnsureSpecimenUnlocked(accessionNumber);
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = "UPDATE specimens SET transfusion_products = $p, transfusion_units = $u WHERE accession_number = $acc";
+            cmd.Parameters.AddWithValue("$p", (object?)codes ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$u", (object?)count ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$acc", accessionNumber);
+            cmd.ExecuteNonQuery();
+            AppendAudit("update_transfusion_products", "specimen", accessionNumber, null,
+                JsonSerializer.Serialize(new { products = before.TransfusionProducts, units = before.TransfusionUnits }),
+                JsonSerializer.Serialize(new { products = codes, units = count }));
+        }
+
         public void UpdateSpecimenTransfusion(string accessionNumber, string? status, string? lastTransfusionDate)
         {
             var code = TransfusionStatus.Normalize(status);
@@ -3339,6 +3369,8 @@ namespace HemoIQ.Data
             DatResult = SafeGetString(r, "dat_result"),
             TransfusionStatus = TransfusionStatus.Normalize(SafeGetString(r, "transfusion_status")),
             LastTransfusionDate = SafeGetString(r, "last_transfusion_date"),
+            TransfusionProducts = SafeGetString(r, "transfusion_products"),
+            TransfusionUnits = int.TryParse(SafeGetString(r, "transfusion_units"), out var units) ? units : null,
             DatIgg = SafeGetString(r, "dat_igg"),
             Mrn = SafeGetString(r, "mrn"),
             SourceAccession = SafeGetString(r, "source_accession"),

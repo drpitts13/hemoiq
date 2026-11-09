@@ -166,7 +166,7 @@ namespace HemoIQ.Services
             {
                 var transfusion = TransfusionContext.Assess(
                     specimen.TransfusionStatus, specimen.LastTransfusionDate, specimen.CreatedDate,
-                    AppSettings.Current.RecentTransfusionWindowDays, specimen.Phenotype, specimen.Notes);
+                    AppSettings.Current.RecentTransfusionWindowDays, specimen.Phenotype, specimen.Notes, specimen.TransfusionProducts);
                 var typing = PatientTypingParser.Parse(
                     specimen.Phenotype, specimen.PreviousAntibodies, specimen.Notes, specimen.Genotype, transfusion);
                 var prior = PatientHistory.ConfirmedAntibodies(PatientHistory.OtherSpecimens(_db, specimen))
@@ -1381,7 +1381,7 @@ namespace HemoIQ.Services
             if (specimen == null) return null;
             var transfusion = TransplantContext.Apply(TransfusionContext.Assess(
                 specimen.TransfusionStatus, specimen.LastTransfusionDate, specimen.CreatedDate,
-                AppSettings.Current.RecentTransfusionWindowDays, specimen.Phenotype, specimen.Notes),
+                AppSettings.Current.RecentTransfusionWindowDays, specimen.Phenotype, specimen.Notes, specimen.TransfusionProducts),
                 _db.GetPatient(specimen.Mrn), specimen.CollectedAt ?? specimen.CreatedDate);
             var typing = PatientTypingParser.Parse(
                 specimen.Phenotype, specimen.PreviousAntibodies, specimen.Notes, specimen.Genotype, transfusion);

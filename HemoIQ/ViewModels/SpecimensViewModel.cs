@@ -369,6 +369,8 @@ namespace HemoIQ.ViewModels
             Hemolysis = dlg.Hemolysis,
             TransfusionStatus = dlg.TransfusionStatusCode,
             LastTransfusionDate = dlg.LastTransfusionDate,
+            TransfusionProducts = dlg.TransfusionProductCodes,
+            TransfusionUnits = dlg.TransfusionUnits,
             Mrn = dlg.Mrn,
             SourceAccession = dlg.SourceAccession,
             CollectedAt = dlg.CollectedAt,

@@ -100,6 +100,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="36"/>
                         <RowDefinition Height="36"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="36"/>
                         <RowDefinition Height="36"/>
                         <RowDefinition Height="Auto"/>
@@ -116,8 +117,19 @@
                                 VerticalAlignment="Center" Margin="0,2" SelectedDateChanged="Context_Changed"
                                 ToolTip="Date of the most recent red-cell transfusion. Leave blank if unknown; the phenotype is then treated as uninterpretable."/>
 
-                    <Label Content="Pregnancy:" Grid.Row="2"/>
-                    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Label Content="Products / units:" Grid.Row="2" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,4,0,4">
+                        <WrapPanel x:Name="ProductsPanel"
+                                   ToolTip="Products given in the transfusion. If only platelets, plasma or cryoprecipitate are recorded, the phenotype is not treated as unreliable, because they carry few or no donor red cells. Plasma-containing products add a note about passive antibody. Leave all unticked if not known."/>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="Units:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBox x:Name="UnitsBox" Width="60" MaxLength="3" TextChanged="Context_Changed"
+                                     ToolTip="Number of units transfused, if known (1–999)."/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Label Content="Pregnancy:" Grid.Row="3"/>
+                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <ComboBox x:Name="PregnancyBox" Width="150" DisplayMemberPath="Label"
                                   SelectionChanged="PregnancyBox_SelectionChanged"
                                   ToolTip="Pregnant, or pregnant within the Preferences dating look-back, applies the specimen-dating check like a recent transfusion."/>
@@ -125,12 +137,12 @@
                                     ToolTip="Date a recent pregnancy ended (delivery or loss). Required for Recently pregnant."/>
                     </StackPanel>
 
-                    <Label Content="RhIG given:" Grid.Row="3"/>
-                    <DatePicker x:Name="RhigPicker" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" Margin="0,2"
+                    <Label Content="RhIG given:" Grid.Row="4"/>
+                    <DatePicker x:Name="RhigPicker" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Margin="0,2"
                                 SelectedDateChanged="Context_Changed"
                                 ToolTip="Date Rh immune globulin was last given. Anti-D within the Preferences RhIG window is flagged as possibly passive."/>
 
-                    <TextBlock Grid.Row="4" Grid.ColumnSpan="2" Margin="4,12,0,0" TextWrapping="Wrap" Foreground="DimGray"
+                    <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Margin="4,12,0,0" TextWrapping="Wrap" Foreground="DimGray"
                                Text="Recent transfusion or pregnancy turns on the specimen-dating check, and recent transfusion makes the serologic phenotype unusable for ruling out antibodies. Analysis names each effect as a REVIEW note."/>
                 </Grid>
             </TabItem>
