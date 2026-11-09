@@ -731,18 +731,8 @@ namespace HemoIQ.ViewModels
             return RuleAllowsHeterozygous(antigen, rules);
         }
 
-        internal static bool RuleAllowsHeterozygous(string antigen, IReadOnlyList<Rule> rules)
-        {
-            foreach (var rule in rules)
-            {
-                if (!rule.HeterozygousOk) continue;
-                if (rule.ExceptionAntigen == antigen) return true;
-                if (string.IsNullOrEmpty(rule.ExceptionAntigen) &&
-                    string.Equals(rule.Antibody, $"anti-{antigen}", StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
-            return false;
-        }
+        internal static bool RuleAllowsHeterozygous(string antigen, IReadOnlyList<Rule> rules) =>
+            RuleoutPolicy.HeterozygousAllowed(antigen, rules);
 
         private void RefreshExtraAntigens()
         {

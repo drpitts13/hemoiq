@@ -5,7 +5,7 @@ Rules are optional, per-antibody overrides of the default rule-out settings. Whe
 ## The list
 
 - **Name** is the label you gave the rule.
-- **Antibody** is the specificity it applies to.
+- **Antibody** is the specificity it applies to. Capitals in "Anti-" do not matter, but the antigen is case-sensitive: a rule for anti-K does not apply to anti-k, and the same holds for C and c, E and e, and S and s.
 - **Het OK** means a heterozygous antigen-positive cell may count toward the rule-out.
 - **Add** creates a rule. Ctrl+N does the same while this tab is selected. **Edit** opens the selected rule. **Delete** removes it after you confirm. **Refresh** reloads the list.
 - Rules change which antibodies are ruled out. Once users are registered, adding, editing and deleting rules needs the Supervisor or Administrator role; other users see the reason and nothing changes.

@@ -2302,7 +2302,71 @@ did not show which panels or encounter each one used.
 - The Search grid has Encounter and Panels columns. The help describes
   searching for every investigation tested on a lot.
 
+## Iteration 107 (this change): product review, and a rule-matching fix it found
+
+### Review (since Iteration 101)
+
+**Workflows now complete end to end:**
+- Specimen receipt with origin, encounter, transfusion products, hemolysis,
+  pregnancy and RhIG.
+- Panel attach, reaction entry with drafts, analysis, Awaiting additional
+  testing (now also an overdue Worklist queue), confirm, supervisor review,
+  amend, and reports.
+- Search by patient, specimen, encounter, panel manufacturer or lot.
+
+**Still fragmented:**
+- Patient history rows do not show the encounter number.
+- The Overdue testing queue has no count card or Show toggle.
+- The Worklist cards cover only four of its thirteen kinds.
+
+**Screens getting dense:**
+- The Specimen dialog (two tabs, 23 rows) and Preferences (22 rows).
+- Neither has room for more fields without regrouping. Prefer placing new
+  inputs beside related ones, as done for encounter and sex.
+
+**Configuration:** no duplicates found. Turnaround threshold, dating
+look-back and the RhIG window are distinct.
+
+**Services with no tests of their own:**
+- `RuleoutPolicy`, the rule-out policy core, was tested only through
+  analysis. It now has direct tests, and they found the bug below.
+- `StructuredPanelParser`, `XlsxGridReader` and `ImportArtifactStore` are
+  exercised only through import tests. Direct parser tests are a future
+  candidate.
+
+**Large files:**
+- `DatabaseService.cs` (4,371 lines), `AntibodyAnalyzer.cs` (1,573) and
+  `AnalysisViewModel.cs` (1,170).
+- No split now, because no change is blocked. Revisit if a feature needs a
+  separate repository or engine seam.
+
+### Fix: rule lookups ignored antigen case
+
+**Deficiency:**
+- `RuleoutPolicy.FindAntibodyRule` and `HeterozygousAllowed` compared antibody
+  names case-insensitively. `ReactionsViewModel` had a copy of the latter.
+- Antigens are case-sensitive, so a lab rule for anti-K (for example
+  "3 cells") also governed anti-k. A heterozygous-OK rule for anti-C also
+  applied to c. The first matching rule won.
+- This changed rule-out requirements without anyone seeing it.
+
+**Change:**
+- New `RuleoutPolicy.SameAntibody`: "Anti-" and "anti-" match, and the
+  antigen is ordinal (uses `PatientHistory.AntibodyKey`).
+- Rule lookup, heterozygous permission and the separation-exemption lookup
+  (through `FindAntibodyRule`) all use it.
+- `ReactionsViewModel` now delegates to `RuleoutPolicy`.
+- The duplicate checks for DTT and enzyme inferences are now ordinal.
+
+**Tests:** `RuleoutPolicyTests` (12):
+- `SameAntibody` cases for K/k, C/c, E/e and S/s;
+- required count and its clamping;
+- heterozygous permission by antibody and by exception antigen;
+- explanation wording;
+- an analysis regression where an anti-K rule of 3 leaves anti-k at the lab
+  default.
+
 ## Likely next tick
 
-Product review (last at Iteration 101). After that, the encounter number in
-Patient history rows.
+The encounter number in Patient history rows. After that, direct tests for
+`StructuredPanelParser` and `XlsxGridReader` edge cases.

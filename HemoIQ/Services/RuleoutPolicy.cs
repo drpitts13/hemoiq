@@ -23,11 +23,18 @@ namespace HemoIQ.Services
             return count;
         }
 
+        /// <summary>
+        /// True when both name the same antibody. "Anti-" and "anti-" match, but the antigen is
+        /// case-sensitive: anti-K is not anti-k, anti-C is not anti-c, anti-E is not anti-e.
+        /// </summary>
+        public static bool SameAntibody(string? a, string? b) =>
+            PatientHistory.AntibodyKey(a) is string ka && string.Equals(ka, PatientHistory.AntibodyKey(b), StringComparison.Ordinal);
+
         public static Rule? FindAntibodyRule(string antibody, IEnumerable<Rule> rules)
         {
             foreach (var rule in rules)
             {
-                if (string.Equals(rule.Antibody, antibody, StringComparison.OrdinalIgnoreCase))
+                if (SameAntibody(rule.Antibody, antibody))
                     return rule;
             }
             return null;
@@ -45,8 +52,7 @@ namespace HemoIQ.Services
             {
                 if (!rule.HeterozygousOk) continue;
                 if (rule.ExceptionAntigen == antigen) return true;
-                if (string.IsNullOrEmpty(rule.ExceptionAntigen) &&
-                    string.Equals(rule.Antibody, $"anti-{antigen}", StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(rule.ExceptionAntigen) && SameAntibody(rule.Antibody, $"anti-{antigen}"))
                     return true;
             }
             return false;

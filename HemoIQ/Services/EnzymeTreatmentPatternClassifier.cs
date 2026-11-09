@@ -273,7 +273,7 @@ namespace HemoIQ.Services
             {
                 var antibody = $"anti-{ag}";
                 if (result.TreatmentInferences.Any(i =>
-                        string.Equals(i.Antibody, antibody, StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(i.Antibody, antibody, StringComparison.Ordinal) &&
                         i.InferenceType == type))
                     continue;
                 result.TreatmentInferences.Add(new TreatmentInference
