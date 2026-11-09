@@ -1384,10 +1384,11 @@ namespace HemoIQ.Services
         {
             var specimen = _db.GetSpecimen(specimenId);
             if (specimen == null) return null;
-            var transfusion = TransplantContext.Apply(TransfusionContext.Assess(
+            var historyFinding = TransfusionHistoryCheck.Find(_db, specimen, AppSettings.Current.RecentTransfusionWindowDays);
+            var transfusion = TransfusionHistoryCheck.Apply(TransplantContext.Apply(TransfusionContext.Assess(
                 specimen.TransfusionStatus, specimen.LastTransfusionDate, specimen.CreatedDate,
                 AppSettings.Current.RecentTransfusionWindowDays, specimen.Phenotype, specimen.Notes, specimen.TransfusionProducts),
-                _db.GetPatient(specimen.Mrn), specimen.CollectedAt ?? specimen.CreatedDate);
+                _db.GetPatient(specimen.Mrn), specimen.CollectedAt ?? specimen.CreatedDate), historyFinding);
             var typing = PatientTypingParser.Parse(
                 specimen.Phenotype, specimen.PreviousAntibodies, specimen.Notes, specimen.Genotype, transfusion);
             result.PatientPhenotypeUnreliable = typing.PhenotypeUnreliable;
@@ -1413,6 +1414,8 @@ namespace HemoIQ.Services
                         FinalAntibodyParser.Split(specimen.FinalAntibodies).Contains("anti-D", StringComparer.OrdinalIgnoreCase);
             if (SpecimenDating.PassiveAntiD(specimen, antiD, AppSettings.Current.RhigPassiveWindowDays) is string passive)
                 result.TransfusionRequirementNotes.Insert(0, passive);
+            if (historyFinding != null)
+                result.TransfusionRequirementNotes.Insert(0, historyFinding.Note);
             foreach (var expired in ExpiredReagentCheck.Check(_db, specimen.AccessionNumber))
                 result.TransfusionRequirementNotes.Insert(0, expired.Note);
             foreach (var panel in _db.GetSpecimenPanels(specimen.AccessionNumber))

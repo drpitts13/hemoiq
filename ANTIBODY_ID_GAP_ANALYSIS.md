@@ -48,6 +48,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | UI | Antigram freeze / slashes / run compare | Partial | Frozen cell; slashes; compare extras; Show dosage; filter/sort; panel lot compare | — |
 | UI | Explain Analysis panel | Present | Explain tab + Summary + clinical report assemble rule-out, support, conflict, phenotype, additional testing | Keep wording as evidence, not diagnosis |
 | Audit | Panel, reactions, rules, settings, final ID | Partial | Snapshots store rule-engine version, rules JSON, operator, and the adsorption comparison (conclusions plus ordinary-score exclusions) | Cross-panel enzyme/DTT pairing later |
+| Analysis | Cross-specimen transfusion check | Present | `TransfusionHistoryCheck`: a red-cell transfusion within the window on another same-MRN specimen contradicts Not transfused (REVIEW note) and fills Unknown, making typing unreliable with the source named; a stale Transfused date gets an update note | Uses only transfusions recorded in HemoIQ, not an external transfusion service |
 | Workflow | Specimen-receipt checklist | Present | `ReceiptChecklist`: required MRN, collection time, transfusion status (+ last transfusion date when transfused); advisory receipt time, hemolysis, pregnancy, DAT. Drives the Received step and the Awaiting-panel next action; shaded line with reasons on the Specimens detail pane; printed on the worksheet | Required items are fixed, not configurable per lab |
 | Reporting | Amended report marking | Present | Clinical Identification header shows AMENDED REPORT or PREVIOUS IDENTIFICATION WITHDRAWN when an identification was ever cleared; Amendment history lists each earlier identification, its confirmer, who cleared it, when and why, from `clear_final_call` audit entries | Text and PDF only; no separate amendment notification to recipients |
 | Data integrity | Reaction/specimen/panel consistency | Present | Detaching a panel with grades is refused; `DataConsistencyCheck` lists legacy reactions on detached panels, grades for cells the panel lacks, and unrecognized grade values as Worklist "Data inconsistency" items with an Open target | Check runs on Worklist refresh only; no scheduled report |
@@ -3301,8 +3302,41 @@ full.
 
 All 1149 tests pass.
 
+## Iteration 137 (this change)
+
+**Deficiency:** Each specimen's transfusion status was judged on its own. A
+new specimen recorded as **Not transfused**, or left **Unknown**, had its
+serologic phenotype used as evidence. That held even when another specimen
+for the same MRN recorded a red-cell transfusion ten days earlier. Typing
+that may reflect donor cells could argue against a real alloantibody, the
+case the transfusion window exists to prevent, and the conflict was not
+shown anywhere.
+
+**Bounded improvement:**
+- `TransfusionHistoryCheck.Find` looks at the patient's other specimens and
+  takes the latest recorded red-cell transfusion on or before this
+  collection, within the recent-transfusion window. Transfusions of
+  platelets, plasma or cryo only are excluded. Then:
+  - **Not transfused** gets a **REVIEW** conflict note, and typing is
+    treated as unreliable;
+  - **Unknown** has typing treated as unreliable, with the date to record;
+  - **Transfused** with an older date gets an update note, and reliability
+    is unchanged.
+- `Apply` marks the assessment unreliable, appends the reason, and sets
+  `Source = "history"`.
+- The analyzer applies the check after the transplant check. The note leads
+  the suggestions and appears in the [Transfusion] note, and the earlier
+  phenotype rule (Iteration 127) still applies.
+
+**Tests:** `TransfusionHistoryCheckTests` (4):
+- the Not-transfused conflict, in full analysis (unreliable, note, suggestion);
+- Unknown is filled, and `Apply` composes the explanation;
+- an older Transfused date gets a note without changing reliability;
+- no finding outside the window, for platelets or plasma only, without an
+  MRN, or for a transfusion after this collection.
+
+All 1153 tests pass.
+
 ## Likely next tick
 
-A product review is due at Iteration 138. Before then, a small slice: check
-whether earlier specimens with the same MRN have receipt data a new specimen
-could reuse, such as transfusion history.
+Product review at Iteration 138.
