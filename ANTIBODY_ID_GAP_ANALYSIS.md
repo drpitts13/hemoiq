@@ -2719,7 +2719,21 @@ pregnancy). It fails if any tab needs more height than it has. The Specimen
 tab has about one row of spare room, which is documented in
 `docs/developer-conventions.md`.
 
+## Iteration 121 (this change)
+
+**Deficiency:** Analytics counted warnings overridden overall (Iterations 117
+and 118) but not by person. A supervisor could not see whether overrides
+cluster with one technologist, which is a training and competency signal.
+
+**Bounded improvement:**
+- `UserActivity.Overrides`, per Windows login from the audit log, counts:
+  - `confirm_final_call` entries that carry overrides;
+  - `save_override` entries.
+- It is not added to the activity total, which still measures work.
+- The Analytics user-activity table has an **Overrides** column. The activity
+  CSV gains "Warnings overridden".
+
 ## Likely next tick
 
-Overrides by technologist on Analytics, or one configuration bundle for rules
-and Preferences.
+One configuration bundle (rules and Preferences in a single file), or a fit
+test for the Preferences dialog like the Specimen dialog's.

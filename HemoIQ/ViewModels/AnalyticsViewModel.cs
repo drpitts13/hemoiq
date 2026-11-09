@@ -301,9 +301,9 @@ namespace HemoIQ.ViewModels
             static string Q(string v) => v.Contains(',') || v.Contains('"') ? $"\"{v.Replace("\"", "\"\"")}\"" : v;
             yield return "";
             yield return "Activity by user (from the audit log, by local date of the event)";
-            yield return "Login,Name,Reaction cells entered,Recorded results changed,Specimens,Identifications confirmed,Identifications cleared,Supervisor reviews";
+            yield return "Login,Name,Reaction cells entered,Recorded results changed,Specimens,Identifications confirmed,Identifications cleared,Supervisor reviews,Warnings overridden";
             foreach (var a in rows)
-                yield return $"{Q(a.Login)},{Q(a.Name)},{a.ReactionEntries},{a.ReactionChanges},{a.Specimens},{a.Confirmations},{a.Clears},{a.Reviews}";
+                yield return $"{Q(a.Login)},{Q(a.Name)},{a.ReactionEntries},{a.ReactionChanges},{a.Specimens},{a.Confirmations},{a.Clears},{a.Reviews},{a.Overrides}";
         }
 
         public static IEnumerable<string> OverrideCsvLines(IEnumerable<AnalyticsCase> cases)

@@ -19,6 +19,8 @@ namespace HemoIQ.Services
         public int Confirmations { get; init; }
         public int Clears { get; init; }
         public int Reviews { get; init; }
+        /// <summary>Warnings continued past: identifications confirmed past Confirm ID warnings, plus specimen saves past a warning.</summary>
+        public int Overrides { get; init; }
 
         public string Display => string.IsNullOrWhiteSpace(Name) ? Login : $"{Name} [{Login}]";
         public int Total => ReactionEntries + ReactionChanges + Confirmations + Clears + Reviews;
@@ -34,7 +36,7 @@ namespace HemoIQ.Services
     public static class UserActivityService
     {
         public static readonly string[] Actions =
-            { "save_reaction", "confirm_final_call", "clear_final_call", "supervisor_review" };
+            { "save_reaction", "confirm_final_call", "clear_final_call", "supervisor_review", "save_override" };
 
         public static List<UserActivity> Compute(DatabaseService db, DateTime? from, DateTime? to) =>
             Compute(db.GetAuditEventsByAction(Actions), from, to, db.GetUsers());
@@ -64,6 +66,8 @@ namespace HemoIQ.Services
                         Confirmations = g.Count(e => e.Action == "confirm_final_call"),
                         Clears = g.Count(e => e.Action == "clear_final_call"),
                         Reviews = g.Count(e => e.Action == "supervisor_review"),
+                        Overrides = g.Count(e => e.Action == "save_override" ||
+                                                 (e.Action == "confirm_final_call" && ConfirmationOverrides.Read(e.AfterJson).Count > 0)),
                     };
                 })
                 .OrderByDescending(a => a.Total)

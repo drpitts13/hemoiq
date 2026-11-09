@@ -81,5 +81,6 @@ The **Activity by user** tab counts work recorded in the audit log, by Windows l
 - **Changed** is reaction cells whose recorded result was replaced. The audit entry keeps the original value.
 - **Specimens** is how many different specimens the user saved reactions on, confirmed, cleared, or reviewed.
 - **Confirmed**, **Cleared**, and **Reviews** count identifications confirmed, identifications cleared (amendments), and supervisor reviews.
+- **Overrides** counts the warnings this login continued past: identifications confirmed past a Confirm ID warning, and specimens saved past a warning. It is the per-person view of the **Warnings overridden** card, and is not added to the activity total.
 
 When the login belongs to a user in **Preferences > Users & roles**, the name and initials are shown with it. Saving a reaction grid without changing a cell writes nothing to the audit log, so it is not counted. **Export CSV** adds this table at the end.

@@ -140,7 +140,30 @@ public class UserActivityTests
         {
             new UserActivity { Login = "tech", Name = "Doe, T", ReactionEntries = 5, ReactionChanges = 1, Specimens = 2, Confirmations = 1 },
         }).ToList();
-        Assert.Contains("Login,Name,Reaction cells entered,Recorded results changed,Specimens,Identifications confirmed,Identifications cleared,Supervisor reviews", lines);
-        Assert.Contains("tech,\"Doe, T\",5,1,2,1,0,0", lines);
+        Assert.Contains("Login,Name,Reaction cells entered,Recorded results changed,Specimens,Identifications confirmed,Identifications cleared,Supervisor reviews,Warnings overridden", lines);
+        Assert.Contains("tech,\"Doe, T\",5,1,2,1,0,0,0", lines);
+    }
+
+    [Fact]
+    public void Overrides_CountConfirmationsWithOverridesAndSavesPastWarnings_PerLogin()
+    {
+        var now = DateTime.UtcNow.ToString("o");
+        var events = new[]
+        {
+            new AuditEvent { Action = "confirm_final_call", Operator = "tech", EntityType = "specimen", EntityId = "A", OccurredAtUtc = now,
+                             AfterJson = """{"antibodies":"anti-E","overrides":["Confirmed without an analysis."]}""" },
+            new AuditEvent { Action = "confirm_final_call", Operator = "tech", EntityType = "specimen", EntityId = "B", OccurredAtUtc = now,
+                             AfterJson = """{"antibodies":"anti-K"}""" },
+            new AuditEvent { Action = "save_override", Operator = "tech", EntityType = "specimen", EntityId = "C", OccurredAtUtc = now,
+                             Reason = "Encounter E1 is already recorded on X." },
+            new AuditEvent { Action = "save_override", Operator = "other", EntityType = "specimen", EntityId = "D", OccurredAtUtc = now,
+                             Reason = "Pregnancy for a male patient." },
+        };
+        var rows = UserActivityService.Compute(events, null, null);
+        var tech = rows.Single(r => r.Login == "tech");
+        Assert.Equal(2, tech.Overrides);
+        Assert.Equal(2, tech.Confirmations);
+        Assert.Equal(2, tech.Total); // overrides are not extra work
+        Assert.Equal(1, rows.Single(r => r.Login == "other").Overrides);
     }
 }
