@@ -25,7 +25,7 @@ namespace HemoIQ.Services
         {
             var candidates = ResolveCandidates(result);
             if (candidates.Count == 0 && !NeedsRareNegativeCell(result) && !HasSeparationShortfall(result) &&
-                !NeutralizationParser.FavorsSolubleSubstanceFollowUp(result))
+                !HasDosageBlockedRuleout(result) && !NeutralizationParser.FavorsSolubleSubstanceFollowUp(result))
                 return new();
 
             var tested = new HashSet<(int, string)>(alreadyTested);
@@ -115,7 +115,7 @@ namespace HemoIQ.Services
             }
 
             if (present.Count == 0 && absent.Count == 0 && !NeedsRareNegativeCell(result) &&
-                !NeutralizationParser.FavorsSolubleSubstanceFollowUp(result))
+                !HasDosageBlockedRuleout(result) && !NeutralizationParser.FavorsSolubleSubstanceFollowUp(result))
                 return null;
 
             foreach (var plus in present)
@@ -137,6 +137,7 @@ namespace HemoIQ.Services
 
             ApplyPatientCompatibility(cell, candidates, result, ref score, reasons);
             var separation = ApplySeparationShortfalls(cell, result, ref score);
+            var completion = ApplyDosageRuleoutCompletion(cell, result, ref score);
 
             if (LooksLikeSelectedCellVial(panel))
             {
@@ -169,6 +170,8 @@ namespace HemoIQ.Services
             var explanation = FormatExplanation(panel, cell, reasons, distinguishes);
             if (separation.Count > 0)
                 explanation += " It " + string.Join("; it ", separation) + ".";
+            if (completion.Count > 0)
+                explanation += " It " + string.Join("; it ", completion) + ".";
             return new SelectedCellRecommendation
             {
                 PanelId = panel.PanelId,
@@ -179,6 +182,7 @@ namespace HemoIQ.Services
                 AntigenProfile = profile,
                 Distinguishes = distinguishes,
                 FillsSeparation = separation.Count > 0,
+                CompletesRuleout = completion.Count > 0,
                 Explanation = explanation,
                 IsExpired = panel.IsExpired,
                 IsExpiringSoon = !panel.IsExpired && panel.IsExpiringSoon,
@@ -263,6 +267,38 @@ namespace HemoIQ.Services
                 var phenotype = $"{e.Antigen}+ {string.Join(" ", partners.Select(p => p + "-"))}";
                 notes.Add($"is {phenotype} and, if reactive, would count toward the multiple-antibody separation " +
                           $"criterion for {e.Antibody} ({e.IsolatedCount} of {e.Required} so far)");
+            }
+            return notes;
+        }
+
+        /// <summary>A rule-out short of its required count with cells left out only for dosage.</summary>
+        public static bool HasDosageBlockedRuleout(AnalysisResult result) =>
+            DosageBlocked(result).Any();
+
+        private static IEnumerable<RuleoutEvaluation> DosageBlocked(AnalysisResult result) =>
+            result.RuleoutEvaluations.Where(e => !e.MeetsCriteria && e.DosageExcludedCells.Count > 0 &&
+                                                 !result.Suspected.ContainsKey(e.Antibody));
+
+        /// <summary>
+        /// A homozygous cell for an antigen whose rule-out is held up by dosage could complete it, if it is
+        /// nonreactive. Cells carrying an antigen of a suspected antibody are skipped: they are expected to
+        /// react, so they cannot add a nonreactive cell.
+        /// </summary>
+        private static List<string> ApplyDosageRuleoutCompletion(PanelCell cell, AnalysisResult result, ref int score)
+        {
+            var notes = new List<string>();
+            var suspectedAntigens = result.Suspected.Keys.Select(AntigenOf).ToList();
+            if (suspectedAntigens.Any(ag => cell.HasTypedAntigen(ag) && cell.GetAntigen(ag) == "+")) return notes;
+            foreach (var e in DosageBlocked(result))
+            {
+                if (!cell.IsHomozygousFor(e.Antigen)) continue;
+                score += 5;
+                var partner = AntigenConstants.AntitheticalPairs.TryGetValue(e.Antigen, out var p) ? p : null;
+                var phenotype = partner != null && cell.HasTypedAntigen(partner)
+                    ? $"{e.Antigen}+ {partner}-"
+                    : $"{e.Antigen}++";
+                notes.Add($"is homozygous {phenotype} and, if nonreactive, would count toward ruling out {e.Antibody} " +
+                          $"({e.ObservedCount} of {e.RequiredCount} so far; heterozygous cells do not count)");
             }
             return notes;
         }

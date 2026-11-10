@@ -133,4 +133,53 @@ public class DosageRuleoutExplanationTests
         Assert.Contains(exp.RuleoutCells, c => c.EndsWith("cell 2 (not counted: zygosity unknown, Jkb not typed)"));
         Assert.StartsWith("Anti-Jka cannot currently be ruled out", exp.RuleoutCriteria);
     }
+
+    /// <summary>An unlinked selected-cell panel: cell 1 Jk(a+b-) homozygous, cell 2 Jk(a+b+), cell 3 Jk(a+b-) but E+.</summary>
+    private static void SelectedCellPanel(IsolatedDatabase iso)
+    {
+        var sel = iso.Db.AddPanel("Selected cells", "SEL-1", "V", 3, null, false, startTypedNegative: true);
+        var cells = iso.Db.GetPanelCells(sel);
+        iso.Db.UpdatePanelCellAntigen(cells[0].Id, "Jka", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[1].Id, "Jka", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[1].Id, "Jkb", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[2].Id, "Jka", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[2].Id, "E", "+");
+    }
+
+    [Fact]
+    public void SelectedCells_RecommendAHomozygousCell_ToCompleteADosageBlockedRuleOut()
+    {
+        using var iso = new IsolatedDatabase();
+        SelectedCellPanel(iso);
+        var result = Analyze(iso, "DS-10", ("+", "+"), ("+", "+"));
+
+        var rec = Assert.Single(result.SelectedCellRecommendations, r => r.CompletesRuleout && r.PanelName == "Selected cells" && r.CellNumber == "1");
+        Assert.Contains("It is homozygous Jka+ Jkb- and, if nonreactive, would count toward ruling out anti-Jka (0 of 1 so far; heterozygous cells do not count).",
+            rec.Explanation);
+        Assert.False(rec.FillsSeparation);
+        Assert.DoesNotContain(result.SelectedCellRecommendations, r => r.CompletesRuleout && r.CellNumber == "2" && r.PanelName == "Selected cells");
+    }
+
+    [Fact]
+    public void CellsCarryingASuspectedAntigen_AreNotOfferedToCompleteARuleOut()
+    {
+        var result = new AnalysisResult();
+        result.Suspected["anti-E"] = 0.9;
+        result.RuleoutEvaluations.Add(new RuleoutEvaluation
+        {
+            Antibody = "anti-Jka", Antigen = "Jka", RequiredCount = 1,
+            DosageExcludedCells = { new RuleoutDetail { CellNumber = "4", Antigen = "Jka", Antithetical = "Jkb", AntitheticalValue = "+" } },
+        });
+        var panel = new Panel { PanelId = 9, Name = "Inventory" };
+        PanelCell Cell(string n, string e) => new()
+        {
+            CellNumber = n,
+            Antigens = new Dictionary<string, string> { ["Jka"] = "+", ["Jkb"] = "-", ["E"] = e },
+        };
+        var recs = SelectedCellRecommender.Recommend(result, Array.Empty<(int, string)>(),
+            new[] { (panel, Cell("1", "+")), (panel, Cell("2", "-")) });
+
+        Assert.DoesNotContain(recs, r => r.CellNumber == "1" && r.CompletesRuleout);
+        Assert.Contains(recs, r => r.CellNumber == "2" && r.CompletesRuleout);
+    }
 }

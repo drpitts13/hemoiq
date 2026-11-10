@@ -3533,6 +3533,59 @@ The explanation text was right, but the structured views gave no evidence.
 
 All 1169 tests pass.
 
+## Iteration 143 (this change): product review of Iterations 139–142
+
+**What is now complete:**
+- The dosage chain for ruling out is complete. Unknown zygosity is never
+  homozygous (audited in Iteration 141). The explanation names the excluded
+  cells, the grid and Explain show them, and the recommender points to the
+  cell that would complete the rule-out (this iteration).
+- Panel activation compares antigen coverage with the previous lot.
+- Amended reports list the superseded copies.
+
+**Fragmented (fixed here):** The Iteration 141 explanation tells the user to
+"Test 1 homozygous Jka-positive cell(s)". Selected Cells never pointed to
+one, for two reasons:
+- its candidates are suspected antibodies (or pattern matches), and an
+  antibody blocked by dosage is neither;
+- with no candidates, `ScoreCell` returned before any other scoring, so a
+  homozygous cell in inventory was never considered.
+
+**Bounded improvement:**
+- `SelectedCellRecommender.HasDosageBlockedRuleout` covers rule-outs that are
+  short, have dosage-excluded cells and are not suspected. It keeps the
+  recommender running and passes the `ScoreCell` early return.
+- `ApplyDosageRuleoutCompletion` adds +5 per such rule-out for an untested
+  cell homozygous for the antigen, with the note "is homozygous Jka+ Jkb- and,
+  if nonreactive, would count toward ruling out anti-Jka (0 of 1 so far)".
+  Cells carrying a suspected antibody's antigen are skipped, since they
+  would react.
+- `SelectedCellRecommendation.CompletesRuleout` is a new flag, separate from
+  `FillsSeparation`, so the two reasons are not conflated.
+
+**Other review findings (no change needed):**
+- Configuration: no new duplicated settings.
+- Database: no new structures needed.
+- Testing: every iteration in 139–142 added tests at the analysis level. UI
+  column widths at 1366×768 for the new Counted and Zygosity columns remain
+  unchecked.
+
+**Tests:** `DosageRuleoutExplanationTests` (+2):
+- through a full analysis, an unlinked selected-cell panel's homozygous cell
+  is recommended with the note, and its heterozygous cell is not;
+- a recommender unit test: a cell carrying a suspected antigen is not
+  offered, and a clean homozygous cell is.
+
+All 1171 tests pass.
+
+### Roadmap
+
+1. Configurable role permissions, only if requested.
+2. Report recipients, only if requested.
+3. Check Analysis-tab column widths at 1366×768.
+
 ## Likely next tick
 
-Product review at Iteration 143.
+Return to workflow and data integrity: check that a reaction grade entered
+on a cell number the panel no longer has (flagged on the Worklist since
+Iteration 134) cannot be created through the Reactions tab.

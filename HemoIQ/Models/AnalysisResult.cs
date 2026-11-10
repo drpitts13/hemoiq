@@ -355,6 +355,8 @@ namespace HemoIQ.Models
         public List<string> Distinguishes { get; set; } = new();
         /// <summary>True when the cell could add an isolated reactive cell for a separation shortfall.</summary>
         public bool FillsSeparation { get; set; }
+        /// <summary>True when the cell is homozygous for an antigen whose rule-out is held up by dosage.</summary>
+        public bool CompletesRuleout { get; set; }
         public bool IsExpired { get; set; }
         public bool IsExpiringSoon { get; set; }
         public string? ExpirationDate { get; set; }
