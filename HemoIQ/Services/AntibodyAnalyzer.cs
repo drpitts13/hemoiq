@@ -38,9 +38,9 @@ namespace HemoIQ.Services
             var scoreExclusions = new HashSet<string>(StringComparer.Ordinal);
             MarkPanreactiveUntreatedBesideAdsorption(byRun, contexts, scoreExclusions);
             var observedRuleouts = CalculateRuleouts(byRun, contexts, antigens, rules, out var gatedRuleouts);
-            var detailedRuleouts = GetDetailedRuleouts(byRun, contexts, antigens, rules);
+            var detailedRuleouts = GetDetailedRuleouts(byRun, contexts, antigens, rules, out var dosageExcluded);
             var evaluations = BuildRuleoutEvaluations(
-                observedRuleouts, detailedRuleouts, rules, byRun, contexts, antigens, scoreExclusions);
+                observedRuleouts, detailedRuleouts, dosageExcluded, rules, byRun, contexts, antigens, scoreExclusions);
             var ruledOut = evaluations
                 .Where(e => e.MeetsCriteria)
                 .ToDictionary(e => e.Antibody, e => e.ObservedCount);
@@ -362,9 +362,13 @@ namespace HemoIQ.Services
             Dictionary<int, List<Reaction>> byRun,
             Dictionary<int, RunContext> contexts,
             IReadOnlyList<string> antigens,
-            List<Rule> rules)
+            List<Rule> rules,
+            out Dictionary<string, List<RuleoutDetail>> dosageExcluded)
         {
             var result = new Dictionary<string, List<RuleoutDetail>>();
+            // Nonreactive antigen-positive cells left out only because of dosage: heterozygous, or
+            // zygosity unknown (antithetical antigen not typed), where heterozygous cells are not allowed.
+            dosageExcluded = new Dictionary<string, List<RuleoutDetail>>();
 
             foreach (var (runId, runReactions) in byRun)
             {
@@ -386,7 +390,7 @@ namespace HemoIQ.Services
                         var antibodyForSerum = $"anti-{ag}";
                         if (SerumRemovesAntibody(ctx, antibodyForSerum)) continue;
                         if (!ctx.CanContributeRuleout(ag, cell)) continue;
-                        if (!CanRuleOut(ag, cell, rules)) continue;
+                        var target = CanRuleOut(ag, cell, rules) ? result : dosageExcluded;
 
                         var antibody = $"anti-{ag}";
                         var antithetical = AntigenConstants.AntitheticalPairs
@@ -395,8 +399,8 @@ namespace HemoIQ.Services
                         var antitheticalVal = antitheticalTyped ? cell.GetAntigen(antithetical!) : null;
                         var isHomo = cell.IsHomozygousFor(ag);
 
-                        if (!result.ContainsKey(antibody)) result[antibody] = new();
-                        result[antibody].Add(new RuleoutDetail
+                        if (!target.ContainsKey(antibody)) target[antibody] = new();
+                        target[antibody].Add(new RuleoutDetail
                         {
                             RunId = runId,
                             RunLabel = ctx.Run.DisplayLabel,
@@ -528,6 +532,7 @@ namespace HemoIQ.Services
         private List<RuleoutEvaluation> BuildRuleoutEvaluations(
             Dictionary<string, int> observed,
             Dictionary<string, List<RuleoutDetail>> detailed,
+            Dictionary<string, List<RuleoutDetail>> dosageExcluded,
             List<Rule> rules,
             Dictionary<int, List<Reaction>> byRun,
             Dictionary<int, RunContext> contexts,
@@ -538,7 +543,11 @@ namespace HemoIQ.Services
             var conflicts = CollectConflictingReactiveCells(byRun, contexts, antigens, scoreExclusions);
             var list = new List<RuleoutEvaluation>();
 
-            foreach (var (antibody, count) in observed.OrderBy(x => x.Key))
+            // Antibodies with no qualifying cell but dosage-excluded ones still get an evaluation, so the
+            // reason they are not ruled out is stated rather than silent.
+            var all = observed.Keys.Union(dosageExcluded.Keys, StringComparer.Ordinal)
+                .Select(ab => (Antibody: ab, Count: observed.TryGetValue(ab, out var n) ? n : 0));
+            foreach (var (antibody, count) in all.OrderBy(x => x.Antibody))
             {
                 var antigen = antibody.StartsWith("anti-", StringComparison.OrdinalIgnoreCase)
                     ? antibody[5..]
@@ -561,6 +570,7 @@ namespace HemoIQ.Services
                     MeetsCriteria = count >= required,
                     PolicySource = rule != null ? "antibody rule" : "lab default",
                     Cells = cells,
+                    DosageExcludedCells = dosageExcluded.TryGetValue(antibody, out var excluded) ? excluded : new List<RuleoutDetail>(),
                     ConflictingReactiveCells = conflicting ?? new List<string>(),
                 };
                 evaluation.Explanation = RuleoutPolicy.FormatExplanation(evaluation);

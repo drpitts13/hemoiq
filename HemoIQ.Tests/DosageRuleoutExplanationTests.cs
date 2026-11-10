@@ -1,0 +1,94 @@
+using HemoIQ.Models;
+using HemoIQ.Services;
+using HemoIQ.Tests.Infrastructure;
+
+namespace HemoIQ.Tests;
+
+[Collection("PersistentDatabase")]
+public class DosageRuleoutExplanationTests
+{
+    /// <summary>
+    /// One specimen on a panel of nonreactive cells. Each entry is (Jka, Jkb) typing for one cell;
+    /// null leaves Jkb untyped (NT).
+    /// </summary>
+    private static AnalysisResult Analyze(IsolatedDatabase iso, string acc, params (string Jka, string? Jkb)[] cells)
+    {
+        iso.Db.AddSpecimen(acc, "serum", null);
+        var panel = iso.Db.AddPanel("Dosage", "DS-" + acc, "V", cells.Length, null, false);
+        iso.Db.LinkSpecimenPanel(acc, panel);
+        var stored = iso.Db.GetPanelCells(panel);
+        for (var i = 0; i < cells.Length; i++)
+        {
+            iso.Db.UpdatePanelCellAntigen(stored[i].Id, "Jka", cells[i].Jka);
+            iso.Db.UpdatePanelCellAntigen(stored[i].Id, "Jkb", cells[i].Jkb ?? AntigenConstants.AntigenNotTested);
+            iso.Db.SaveReaction(acc, panel, stored[i].CellNumber, "0", "0", "0", "2+");
+        }
+        return iso.Analyzer.AnalyzeSpecimen(acc, updateDb: false);
+    }
+
+    [Fact]
+    public void OnlyHeterozygousCells_ExplainsWhyAntiJkaIsNotRuledOut()
+    {
+        using var iso = new IsolatedDatabase();
+        var result = Analyze(iso, "DS-1", ("+", "+"), ("+", "+"));
+
+        var ev = Assert.Single(result.RuleoutEvaluations, e => e.Antibody == "anti-Jka");
+        Assert.False(ev.MeetsCriteria);
+        Assert.Equal(0, ev.ObservedCount);
+        Assert.Equal(2, ev.DosageExcludedCells.Count);
+        Assert.Equal("Anti-Jka cannot currently be ruled out because the only nonreactive Jka-positive cells are heterozygous (cells 1, 2), " +
+                     "and heterozygous cells are not allowed for this antibody (dosage). " +
+                     "Test 1 homozygous Jka-positive cell(s), or allow heterozygous cells with a rule on the Rules tab.", ev.Explanation);
+        Assert.Contains(ev.Explanation, result.Suggestions);
+        Assert.False(result.RuledOut.ContainsKey("anti-Jka"));
+    }
+
+    [Fact]
+    public void UntypedAntithetical_IsReportedAsUnknownZygosity_NotAsHeterozygous()
+    {
+        using var iso = new IsolatedDatabase();
+        var result = Analyze(iso, "DS-2", ("+", "+"), ("+", null));
+
+        var ev = Assert.Single(result.RuleoutEvaluations, e => e.Antibody == "anti-Jka");
+        Assert.Contains("are heterozygous (cell 1) or are of unknown zygosity because Jkb is not typed (cell 2)", ev.Explanation);
+    }
+
+    [Fact]
+    public void ShortEvaluation_ListsTheCellsNotCountedForDosage()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddRule("Jka two", null, "anti-Jka", null, heterozygousOk: false, minRuleoutCount: 2);
+        var result = Analyze(iso, "DS-3", ("+", "-"), ("+", "+"));
+
+        var ev = Assert.Single(result.RuleoutEvaluations, e => e.Antibody == "anti-Jka");
+        Assert.Equal(1, ev.ObservedCount);
+        Assert.Equal("Anti-Jka does not yet meet configured rule-out criteria (1 of 2 homozygous antigen-positive nonreactive cells). " +
+                     "Not counted for dosage: nonreactive Jka-positive cells that are heterozygous (cell 2).", ev.Explanation);
+    }
+
+    [Fact]
+    public void HomozygousRuleOut_AndHeterozygousAllowed_HaveNoDosageNote()
+    {
+        using var iso = new IsolatedDatabase();
+        var met = Analyze(iso, "DS-4", ("+", "-"), ("+", "+"));
+        var ev = Assert.Single(met.RuleoutEvaluations, e => e.Antibody == "anti-Jka");
+        Assert.True(ev.MeetsCriteria);
+        Assert.DoesNotContain("dosage", ev.Explanation);
+
+        using var iso2 = new IsolatedDatabase();
+        iso2.Db.AddRule("Jka het", null, "anti-Jka", null, heterozygousOk: true, minRuleoutCount: 1);
+        var allowed = Analyze(iso2, "DS-5", ("+", "+"));
+        var ev2 = Assert.Single(allowed.RuleoutEvaluations, e => e.Antibody == "anti-Jka");
+        Assert.True(ev2.MeetsCriteria);
+        Assert.Empty(ev2.DosageExcludedCells);
+    }
+
+    [Fact]
+    public void AntigensWithoutAPartner_AreNeverExcludedForDosage()
+    {
+        using var iso = new IsolatedDatabase();
+        var result = Analyze(iso, "DS-6", ("+", "+"));
+        Assert.All(result.RuleoutEvaluations, e =>
+            Assert.True(AntigenConstants.AntitheticalPairs.ContainsKey(e.Antigen) || e.DosageExcludedCells.Count == 0));
+    }
+}

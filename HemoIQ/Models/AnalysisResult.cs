@@ -241,6 +241,11 @@ namespace HemoIQ.Models
         public string PolicySource { get; set; } = "lab default";
         public string Explanation { get; set; } = string.Empty;
         public List<RuleoutDetail> Cells { get; set; } = new();
+        /// <summary>
+        /// Nonreactive antigen-positive cells not counted because heterozygous cells are not allowed for this
+        /// antibody: heterozygous (antithetical antigen typed +) or zygosity unknown (antithetical not typed).
+        /// </summary>
+        public List<RuleoutDetail> DosageExcludedCells { get; set; } = new();
         public List<string> ConflictingReactiveCells { get; set; } = new();
     }
 

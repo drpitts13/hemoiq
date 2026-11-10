@@ -98,7 +98,30 @@ namespace HemoIQ.Services
             var zygosityWord = evaluation.HeterozygousAllowed
                 ? "antigen-positive"
                 : "homozygous antigen-positive";
-            return $"{name} does not yet meet configured rule-out criteria ({evaluation.ObservedCount} of {evaluation.RequiredCount} {zygosityWord} nonreactive cells).";
+            var dosage = DescribeDosageExcluded(evaluation);
+            if (evaluation.ObservedCount == 0 && dosage != null)
+                return $"{name} cannot currently be ruled out because the only nonreactive {evaluation.Antigen}-positive cells " +
+                       $"{dosage}, and heterozygous cells are not allowed for this antibody (dosage). " +
+                       $"Test {evaluation.RequiredCount} homozygous {evaluation.Antigen}-positive cell(s), or allow heterozygous cells with a rule on the Rules tab.";
+            return $"{name} does not yet meet configured rule-out criteria ({evaluation.ObservedCount} of {evaluation.RequiredCount} {zygosityWord} nonreactive cells)." +
+                   (dosage == null ? "" : $" Not counted for dosage: nonreactive {evaluation.Antigen}-positive cells that {dosage}.");
+        }
+
+        /// <summary>"are heterozygous (cells 3, 5)" / "are of unknown zygosity because Jkb is not typed (cell 4)", or both; null when none.</summary>
+        private static string? DescribeDosageExcluded(RuleoutEvaluation evaluation)
+        {
+            var cells = evaluation.DosageExcludedCells;
+            if (cells.Count == 0) return null;
+            var het = cells.Where(c => c.AntitheticalValue != null).ToList();
+            var unknown = cells.Where(c => c.AntitheticalValue == null).ToList();
+            var parts = new List<string>();
+            if (het.Count > 0) parts.Add($"are heterozygous {FormatCellList(het)}");
+            if (unknown.Count > 0)
+            {
+                var partner = unknown[0].Antithetical ?? "the antithetical antigen";
+                parts.Add($"are of unknown zygosity because {partner} is not typed {FormatCellList(unknown)}");
+            }
+            return string.Join(" or ", parts);
         }
     }
 }

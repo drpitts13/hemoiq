@@ -28,7 +28,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | Reaction entry | w+, MF, hemolysis | Present | Combo + keys; treated as reactive evidence | — |
 | Reaction entry | RT, PEG, gel, solid phase as phases | Partial | Extra JSON plus Preferences RT/PEG/Gel/Solid and titer-grid checkboxes; empty stays tube-only; Gel/Solid/PEG are IAT-like; Dil1–Dil128 are titer only | Custom method names later |
 | Analysis | Transparent candidate evidence | Partial | Explain Analysis lists suspected, in-progress, historical, untypeable, pattern, enzyme, DTT, and cell-level adsorption comparisons. Adsorbed aliquots do not rule out or enter ordinary scores for specificities they are expected to remove. A panreactive untreated run paired with autoadsorption or rr/R1R1/R2R2 adsorption is omitted from ordinary scores. Unpaired ficin, papain, and DTT runs are named and are not compared with another panel | Cross-panel enzyme and DTT pairing stays out of scope |
-| Analysis | Configurable visible rule-out | Partial | `Rule.MinRuleoutCount` is now applied; lab default + explanation sentences | Watch seeded anti-D/anti-k rules; ACS remains separate |
+| Analysis | Configurable visible rule-out | Partial | `Rule.MinRuleoutCount` is now applied; lab default + explanation sentences | Watch seeded anti-D/anti-k rules; ACS remains separate; dosage-excluded cells (heterozygous / unknown zygosity) are named in the explanation, including antibodies with no qualifying cell (Iteration 141) |
 | Analysis | Single / multiple / dosage scoring | Partial | Fisher + pattern; pairwise combinations; dosage averages | Label as evidence, not diagnosis |
 | Audit | Investigation timeline | Present | `InvestigationTimeline` merges receipt, panel link/unlink (now audited), runs, grouped reaction saves, analysis snapshots, confirm/clear/review, MRN/transfusion/DAT/patient edits; Specimens Timeline expander and worksheet section | Report print/PDF/CSV audited with SHA-256 and shown on the timeline |
 | Reporting | Turnaround metrics | Present | `TurnaroundService`: received→confirmed (days) and confirmed→reviewed (hours) median and nearest-rank 90th percentile by received date, cancelled excluded; overdue open list with status and Open; configurable threshold; CSV | Uses recorded received time when present |
@@ -3462,7 +3462,51 @@ All 1161 tests pass.
 1. Configurable role permissions, only if requested.
 2. Recipients for reports, if labs need them beyond the issue record.
 
+## Iteration 141 (this change)
+
+**Audit:** cells of unknown zygosity (antigen +, antithetical not typed).
+`PanelCell.IsHomozygousFor` requires the partner to be typed negative, or
+the cell marked ++, and a typed + partner overrides a ++ mark. An
+unknown-zygosity cell is therefore never treated as homozygous and counts
+only where heterozygous cells are allowed. That is safe; no change was
+needed.
+
+**Deficiency found:** The explanation was missing, the case the
+requirements use as their example. When every nonreactive Jka-positive cell
+was heterozygous, or of unknown zygosity, and heterozygous cells were not
+allowed, anti-Jka got **no** rule-out evaluation at all, because only
+antibodies with at least one qualifying cell were evaluated. Nothing said why
+anti-Jka was not ruled out. A short evaluation (1 of 2) also did not say
+which cells had been left out for dosage.
+
+**Bounded improvement:**
+- `GetDetailedRuleouts` now also returns the dosage-excluded cells: those
+  that pass every other gate (serum removal, treatment destruction) and fail
+  only the zygosity rule.
+- `RuleoutEvaluation.DosageExcludedCells` holds them.
+  `BuildRuleoutEvaluations` evaluates the union of antibodies with
+  qualifying cells and antibodies with dosage-excluded cells.
+- `RuleoutPolicy.FormatExplanation`:
+  - with no qualifying cell: "cannot currently be ruled out because the only
+    nonreactive Jka-positive cells are heterozygous (cells …) or are of
+    unknown zygosity because Jkb is not typed (cell …), and heterozygous cells
+    are not allowed for this antibody (dosage)", plus the next step;
+  - when short: "Not counted for dosage: …".
+- The rule-out results (`RuledOut` holds only evaluations that meet the
+  criteria) are unchanged. The new rows add explanation only.
+
+**Tests:** `DosageRuleoutExplanationTests` (5):
+- heterozygous only gives the full sentence, which also appears in the
+  suggestions;
+- an untyped partner is reported as unknown zygosity;
+- a short evaluation lists the dosage-excluded cell;
+- a homozygous rule-out, or heterozygous cells allowed, gives no dosage note;
+- antigens without a partner are never excluded.
+
+All 1166 tests pass.
+
 ## Likely next tick
 
-Look again at the analysis engine for remaining unsafe behavior. Candidate:
-dosage handling for antigens whose heterozygous status is unknown ("+?").
+A product review is due at Iteration 143. Before then: check that the new
+zero-count rule-out rows read well on the Analysis tab's Ruled Out grid
+(status column and row count).
