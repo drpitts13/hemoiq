@@ -1938,6 +1938,7 @@ namespace HemoIQ.Data
 
         private void UpdatePanelCellAntigenCore(int cellId, string antigen, string value)
         {
+            value = RequireAntigenValue(value, antigen, cellId);
             if (AntigenConstants.IsWarehouse(antigen))
             {
                 UpsertExtraCellAntigen(cellId, antigen, value);
@@ -1950,6 +1951,24 @@ namespace HemoIQ.Data
             cmd.Parameters.AddWithValue("$val", value);
             cmd.Parameters.AddWithValue("$id", cellId);
             cmd.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Panel typing is stored only as +, -, ++ (homozygous) or NT. Blank means NT. Anything else,
+        /// for example "0", "w" or "+w", is refused rather than stored, because analysis would read it
+        /// as untyped without saying so.
+        /// </summary>
+        private string RequireAntigenValue(string? value, string antigen, int cellId)
+        {
+            var v = (value ?? string.Empty).Trim();
+            if (v.Length == 0) return AntigenConstants.AntigenNotTested;
+            if (AntigenConstants.IsTypedAntigenValue(v) || v == AntigenConstants.AntigenNotTested) return v;
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = "SELECT cell_number FROM panel_cells WHERE id = $id";
+            cmd.Parameters.AddWithValue("$id", cellId);
+            var cell = cmd.ExecuteScalar() as string ?? $"#{cellId}";
+            throw new ArgumentException(
+                $"Cell {cell} {antigen}: \"{v}\" is not a panel typing value (+, -, ++ for homozygous, or NT).");
         }
 
         /// <summary>The value <see cref="UpdatePanelCell"/> would store for an antigen.</summary>

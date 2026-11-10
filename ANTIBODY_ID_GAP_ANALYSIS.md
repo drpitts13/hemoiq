@@ -3617,8 +3617,36 @@ Iteration 134 only *detected* these after the fact on the Worklist; the
 
 All 1176 tests pass.
 
+## Iteration 145 (this change)
+
+**Deficiency:** The Panels editor cycles only through +, ++, - and NT, and
+imports report invalid values in their review (`PanelTypingInspector`
+InvalidValue). The database method `UpdatePanelCellAntigen`, used by seeders
+and any future caller, stored whatever it was given, for example "0", "w" or
+"+w". Analysis treats anything that is not +, - or ++ as untyped, so such a
+value would silently drop the cell from that antigen's evidence. The
+warehouse-antigen table behaved the same way.
+
+**Bounded improvement:**
+- `UpdatePanelCellAntigenCore`, shared by the direct writer and the audited
+  edit, calls `RequireAntigenValue` first:
+  - +, -, ++ and NT are stored, trimmed; blank becomes NT;
+  - anything else is refused with the cell number, the antigen and the
+    value.
+- This applies to standard and warehouse antigens alike.
+- Unchanged: `UpdatePanelCell` and imports still map unreadable values to NT
+  before writing, and the import review lists them as InvalidValue, so the
+  user sees them before activation.
+
+**Tests:** `PanelTypingValueTests` (11 cases):
+- six accepted inputs, with trimming and blank as NT;
+- four refused inputs, with the exact message and the typing unchanged;
+- a warehouse antigen is validated the same way.
+
+All 1187 tests pass.
+
 ## Likely next tick
 
-A data-entry slice: the panel cell editor's antigen values ("+", "-", "++",
-"NT") are validated in the UI; check that `UpdatePanelCellAntigen` refuses
-other values at the database layer too.
+A product review is due at Iteration 148. Before then: the archive restore
+path copies grades and typing as stored. Check that it reports values the
+new save checks would refuse, without blocking the restore.

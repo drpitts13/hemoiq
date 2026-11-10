@@ -29,6 +29,8 @@ The Panels tab stores panel lots and the antigen profile of each cell. Analysis 
 
 The grid on the right is the antigram. Press **Edit** before changing it.
 
+Each antigen value is one of **+**, **-**, **++** (homozygous) or **NT** (not tested). HemoIQ stores nothing else: a value such as 0 or w is refused with the cell and antigen named, and an import lists such values in its review instead of storing them.
+
 - Click a cell, or press Space or Enter, to cycle **NT → + → ++ → −**. Antigens without an antithetical pair skip ++.
 - Press **+**, **−** or **N** to set the current cell to +, − or NT directly.
 - **Fill NT with −** types every NT cell in the selected antigen column as negative, skipping the autocontrol. For a new lot, enter the positives from the vendor antigram, then fill each column the antigram lists. Leave antigens the antigram does not list as NT. Nothing is stored until **Save**, which audits each change.
