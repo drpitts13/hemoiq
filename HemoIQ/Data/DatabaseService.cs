@@ -2830,6 +2830,16 @@ namespace HemoIQ.Data
             // Need specimen_id to call TouchSpecimenReactionsUpdated
             var run = GetPanelRun(runId);
             if (run != null) EnsureSpecimenUnlocked(run.SpecimenId);
+            // Grades are stored in their normalized form; anything unrecognized is refused, as is a cell the
+            // panel does not have (it could not be matched to antigen typing). See DataConsistencyCheck.
+            is_ = RequireGrade(is_, cellNumber, "IS");
+            c37 = RequireGrade(c37, cellNumber, "37°C");
+            ahg = RequireGrade(ahg, cellNumber, "AHG");
+            cc = RequireGrade(cc, cellNumber, "CC");
+            if (extraPhases != null)
+                extraPhases = extraPhases.ToDictionary(kv => kv.Key, kv => RequireGrade(kv.Value, cellNumber, kv.Key),
+                    StringComparer.OrdinalIgnoreCase);
+            if (run != null) EnsureCellOnPanel(run.PanelId, cellNumber);
             var extra = ExtraPhaseParser.Serialize(extraPhases);
 
             // Unchanged saves write nothing, so the audit log holds only real entries and changes.
@@ -2897,6 +2907,26 @@ namespace HemoIQ.Data
             EnsureCanRecord();
             var runId = GetOrCreateDefaultRun(specimenId, panelId);
             SaveReaction(runId, cellNumber, is_, c37, ahg, cc);
+        }
+
+        private static string RequireGrade(string? raw, string cellNumber, string phase)
+        {
+            var normalized = ReactionGrade.Normalize(raw);
+            if (ReactionGrade.All.Contains(normalized, StringComparer.Ordinal)) return normalized;
+            throw new ArgumentException(
+                $"Cell {cellNumber} {phase}: \"{raw?.Trim()}\" is not a recognized grade (0, w+, 1+ to 4+, MF, H or NT).");
+        }
+
+        private void EnsureCellOnPanel(int panelId, string cellNumber)
+        {
+            if (string.Equals(cellNumber, "AC", StringComparison.OrdinalIgnoreCase)) return;
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = "SELECT 1 FROM panel_cells WHERE panel_id = $pid AND cell_number = $cn";
+            cmd.Parameters.AddWithValue("$pid", panelId);
+            cmd.Parameters.AddWithValue("$cn", cellNumber);
+            if (cmd.ExecuteScalar() != null) return;
+            throw new ArgumentException(
+                $"Cell {cellNumber} is not on {PanelAuditName(panelId) ?? $"panel #{panelId}"}; grades can only be recorded for the panel's own cells.");
         }
 
         /// <summary>

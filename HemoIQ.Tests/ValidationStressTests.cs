@@ -61,16 +61,16 @@ public class ValidationStressTests
     }
 
     [Fact]
-    public void SaveReaction_UnusualValuesAreStoredAsProvided()
+    public void SaveReaction_UnrecognizedValues_AreRefused_AndNothingIsStored()
     {
         using var iso = new IsolatedDatabase();
         iso.Db.AddSpecimen("RXN-BAD", "serum", null);
         var panelId = iso.Db.AddPanel("P", "L", "V", 1, null, false);
         iso.Db.LinkSpecimenPanel("RXN-BAD", panelId);
-        iso.Db.SaveReaction("RXN-BAD", panelId, "1", "INVALID", "999", "??", "5+");
-        var rxn = iso.Db.GetReactions("RXN-BAD", panelId).Single();
-        Assert.Equal("INVALID", rxn.IS);
-        Assert.Equal("999", rxn.C37);
+        var ex = Assert.Throws<ArgumentException>(() =>
+            iso.Db.SaveReaction("RXN-BAD", panelId, "1", "INVALID", "999", "??", "5+"));
+        Assert.Equal("Cell 1 IS: \"INVALID\" is not a recognized grade (0, w+, 1+ to 4+, MF, H or NT).", ex.Message);
+        Assert.Empty(iso.Db.GetReactions("RXN-BAD", panelId));
     }
 
     [Theory]
@@ -172,8 +172,16 @@ public class ValidationStressTests
         iso.Db.AddSpecimen("GARBAGE", "serum", null);
         var panelId = iso.Db.AddPanel("P", "L", "V", 3, null, false);
         iso.Db.LinkSpecimenPanel("GARBAGE", panelId);
-        iso.Db.SaveReaction("GARBAGE", panelId, "1", "BAD", "BAD", "BAD", "BAD");
+        iso.Db.SaveReaction("GARBAGE", panelId, "1", "0", "0", "0", "0");
         iso.Db.SaveReaction("GARBAGE", panelId, "2", "0", "0", "0", "0");
+        // Older or imported data can still hold unrecognized grades; analysis must cope with them.
+        using (var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={iso.DbPath};Pooling=False"))
+        {
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE reactions SET \"IS\" = 'BAD', C37 = 'BAD', AHG = 'BAD', CC = 'BAD' WHERE cell_number = '1'";
+            Assert.Equal(1, cmd.ExecuteNonQuery());
+        }
         iso.Db.SaveReaction("GARBAGE", panelId, "3", "NT", "NT", "NT", "NT");
 
         var result = iso.Analyzer.AnalyzeSpecimen("GARBAGE");

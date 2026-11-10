@@ -52,7 +52,7 @@ Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing revie
 | Analysis | Cross-specimen transfusion check | Present | `TransfusionHistoryCheck`: a red-cell transfusion within the window on another same-MRN specimen contradicts Not transfused (REVIEW note) and fills Unknown, making typing unreliable with the source named; a stale Transfused date gets an update note | Uses only transfusions recorded in HemoIQ, not an external transfusion service |
 | Workflow | Specimen-receipt checklist | Present | `ReceiptChecklist`: required MRN, collection time, transfusion status (+ last transfusion date when transfused); advisory receipt time, hemolysis, pregnancy, DAT. Drives the Received step and the Awaiting-panel next action; shaded line with reasons on the Specimens detail pane; printed on the worksheet | Required items are fixed, not configurable per lab |
 | Reporting | Amended report marking | Present | Clinical Identification header shows AMENDED REPORT or PREVIOUS IDENTIFICATION WITHDRAWN when an identification was ever cleared; Amendment history lists each earlier identification, its confirmer, who cleared it, when and why, from `clear_final_call` audit entries | Text and PDF only; superseded issued copies are listed (Iteration 140), but recipients are not recorded |
-| Data integrity | Reaction/specimen/panel consistency | Present | Detaching a panel with grades is refused; `DataConsistencyCheck` lists legacy reactions on detached panels, grades for cells the panel lacks, and unrecognized grade values as Worklist "Data inconsistency" items with an Open target | Check runs on Worklist refresh only; no scheduled report |
+| Data integrity | Reaction/specimen/panel consistency | Present | Detaching a panel with grades is refused; `DataConsistencyCheck` lists legacy reactions on detached panels, grades for cells the panel lacks, and unrecognized grade values as Worklist "Data inconsistency" items with an Open target | Check runs on Worklist refresh only; no scheduled report. New invalid grades and grades for missing cells are refused at save (Iteration 144) |
 | Security | Roles and data-change permission | Present | Read-only, Technologist, Supervisor, Administrator; once users are registered every public data writer requires `RecordResults` (Technologist and above), so unregistered logins and Read-only users view only; guard test fails on any unguarded public writer; users table migrated to accept the new role | Role grants are fixed per role, not a configurable table; no Senior technologist or Medical director role. Status bar names the session; view-only sessions have change commands disabled (Iteration 132) |
 | Configuration | ACS antigen list | Present | Fixed core (Rh, Kell, Duffy, Kidd, Ss) plus lab-configured additions (default Lea, Leb, M, N), validated case-sensitively; used by ACS evaluation, open-testing list, untypeable classifier and clinical-significance flags; listed on the report, in the rule trace and in the clinical snapshot; transferred with Preferences | The core itself is fixed by design |
 | Configuration | Rules + Preferences transfer | Present | Separate rule and Preferences JSON exports; `ConfigurationBundle` exports both together; import previews both sections and the stored rules the file lacks, refuses a file with any refused entry, applies atomically with optional audited removal of local-only rules, one `import_configuration` audit | No signed or checksummed bundle; reaction grades and phases beyond extra phases are not yet configurable data |
@@ -3584,8 +3584,41 @@ All 1171 tests pass.
 2. Report recipients, only if requested.
 3. Check Analysis-tab column widths at 1366×768.
 
+## Iteration 144 (this change)
+
+**Deficiency:** `SaveReaction` stored grades exactly as given and never
+checked the cell number. A caller could store "pos", "999" or "5+", or a
+grade for cell 9 on a 2-cell panel. Analysis reads such grades as neither
+reactive nor nonreactive, and cannot match a missing cell to typing.
+Iteration 134 only *detected* these after the fact on the Worklist; the
+`ValidationStressTests` even asserted that garbage was "stored as provided".
+
+**Bounded improvement:**
+- Every save path goes through `SaveReaction`: the grid's `SaveReactions`,
+  add-run copy, and the seeders.
+  - Each phase, including extra phases, is passed through
+    `ReactionGrade.Normalize`. Recognized synonyms are stored in standard
+    form ("W" becomes w+, "2" becomes 2+, "mixed field" becomes MF).
+    Anything outside `ReactionGrade.All` is refused with the cell, phase and
+    value named.
+  - The cell must exist on the run's panel; the autocontrol (AC) is exempt.
+  - `SaveReactions` runs in one transaction, so one bad row means nothing
+    from the grid is saved, and the Reactions tab shows the message.
+- Older data that already holds bad values is still detected by
+  `DataConsistencyCheck`, and analysis still tolerates it.
+
+**Tests:**
+- `ReactionSaveValidationTests` (5): synonyms are normalized; a missing cell
+  is refused; AC is accepted; a bad row rolls back the whole grid; extra
+  phases are validated and normalized.
+- `ValidationStressTests`, rewritten to the new contract (2): unrecognized
+  values are refused and nothing is stored; garbage written directly to the
+  database, as older data can hold, still analyzes without crashing.
+
+All 1176 tests pass.
+
 ## Likely next tick
 
-Return to workflow and data integrity: check that a reaction grade entered
-on a cell number the panel no longer has (flagged on the Worklist since
-Iteration 134) cannot be created through the Reactions tab.
+A data-entry slice: the panel cell editor's antigen values ("+", "-", "++",
+"NT") are validated in the UI; check that `UpdatePanelCellAntigen` refuses
+other values at the database layer too.
