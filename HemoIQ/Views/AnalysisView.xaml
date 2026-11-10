@@ -288,13 +288,13 @@
                             <DataGridTextColumn Header="Antibody" Binding="{Binding Antibody}" Width="110"/>
                             <DataGridTextColumn Header="Count" Binding="{Binding Count}" Width="60"/>
                             <DataGridTextColumn Header="Needed" Binding="{Binding Required}" Width="60"/>
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="115"/>
                             <DataGridTextColumn Header="Explanation" Binding="{Binding Explanation}" Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
                     <GridSplitter Grid.Row="1" Height="6" HorizontalAlignment="Stretch"/>
                     <DockPanel Grid.Row="2">
-                        <TextBlock DockPanel.Dock="Top" Text="Cells that counted toward this rule-out" FontWeight="SemiBold" Margin="4,2"/>
+                        <TextBlock DockPanel.Dock="Top" Text="Nonreactive antigen-positive cells for this rule-out (Counted: No = left out for dosage)" FontWeight="SemiBold" Margin="4,2"/>
                         <DataGrid ItemsSource="{Binding RuleoutDetailRows}" IsReadOnly="True"
                                   AutoGenerateColumns="False" GridLinesVisibility="Horizontal"
                                   HeadersVisibility="Column">
@@ -302,7 +302,8 @@
                                 <DataGridTextColumn Header="Panel" Binding="{Binding PanelName}" Width="*"/>
                                 <DataGridTextColumn Header="Run" Binding="{Binding RunLabel}" Width="100"/>
                                 <DataGridTextColumn Header="Cell" Binding="{Binding CellNumber}" Width="50"/>
-                                <DataGridTextColumn Header="Zygosity" Binding="{Binding Zygosity}" Width="100"/>
+                                <DataGridTextColumn Header="Zygosity" Binding="{Binding Zygosity}" Width="140"/>
+                                <DataGridTextColumn Header="Counted" Binding="{Binding Counted}" Width="85"/>
                                 <DataGridTextColumn Header="IS" Binding="{Binding IS}" Width="40"/>
                                 <DataGridTextColumn Header="37°C" Binding="{Binding C37}" Width="45"/>
                                 <DataGridTextColumn Header="AHG" Binding="{Binding AHG}" Width="45"/>

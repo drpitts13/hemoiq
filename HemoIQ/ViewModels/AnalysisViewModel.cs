@@ -753,23 +753,43 @@ namespace HemoIQ.ViewModels
         {
             RuleoutDetailRows.Clear();
             if (_lastResult == null || SelectedRuleout == null) return;
-            if (!_lastResult.DetailedRuleouts.TryGetValue(SelectedRuleout.Antibody, out var details))
-                return;
-            foreach (var d in details)
-            {
-                RuleoutDetailRows.Add(new RuleoutDetailRow
-                {
-                    PanelName = d.PanelName,
-                    RunLabel = d.RunLabel,
-                    CellNumber = d.CellNumber,
-                    Zygosity = d.IsHomozygous ? "Homozygous" : "Heterozygous",
-                    IS = d.IS,
-                    C37 = d.C37,
-                    AHG = d.AHG,
-                    CC = d.CC,
-                });
-            }
+            foreach (var row in DetailRowsFor(_lastResult, SelectedRuleout.Antibody))
+                RuleoutDetailRows.Add(row);
         }
+
+        /// <summary>
+        /// The nonreactive antigen-positive cells behind one rule-out row: the cells that counted, then the
+        /// cells left out for dosage (heterozygous, or zygosity unknown because the antithetical antigen
+        /// is not typed), so a row with no counted cell still shows its evidence.
+        /// </summary>
+        public static List<RuleoutDetailRow> DetailRowsFor(AnalysisResult result, string antibody)
+        {
+            var rows = new List<RuleoutDetailRow>();
+            if (result.DetailedRuleouts.TryGetValue(antibody, out var counted))
+                rows.AddRange(counted.Select(d => DetailRow(d, "Yes")));
+            var ev = result.RuleoutEvaluations.FirstOrDefault(e => string.Equals(e.Antibody, antibody, StringComparison.Ordinal));
+            if (ev != null)
+                rows.AddRange(ev.DosageExcludedCells.Select(d => DetailRow(d, "No (dosage)")));
+            return rows;
+        }
+
+        private static RuleoutDetailRow DetailRow(RuleoutDetail d, string counted) => new()
+        {
+            PanelName = d.PanelName,
+            RunLabel = d.RunLabel,
+            CellNumber = d.CellNumber,
+            Zygosity = ZygosityLabel(d),
+            Counted = counted,
+            IS = d.IS,
+            C37 = d.C37,
+            AHG = d.AHG,
+            CC = d.CC,
+        };
+
+        public static string ZygosityLabel(RuleoutDetail d) =>
+            d.IsHomozygous ? "Homozygous"
+            : d.Antithetical != null && d.AntitheticalValue == null ? $"Unknown ({d.Antithetical} not typed)"
+            : "Heterozygous";
 
         private void BuildSummary(AnalysisResult r)
         {
@@ -1001,6 +1021,8 @@ namespace HemoIQ.ViewModels
         public string Status { get; set; } = string.Empty;
         public string Explanation { get; set; } = string.Empty;
 
+        public const string BlockedByDosage = "Blocked by dosage";
+
         public static RuleoutRow From(RuleoutEvaluation evaluation)
         {
             var cs = IsClinicallySignificantAntibody(evaluation.Antibody);
@@ -1011,7 +1033,9 @@ namespace HemoIQ.ViewModels
                 Required = evaluation.RequiredCount,
                 MeetsRequired = evaluation.MeetsCriteria,
                 IsClinicallySignificant = cs,
-                Status = evaluation.MeetsCriteria ? "Ruled out" : "In progress",
+                Status = evaluation.MeetsCriteria ? "Ruled out"
+                    : evaluation.ObservedCount == 0 && evaluation.DosageExcludedCells.Count > 0 ? BlockedByDosage
+                    : "In progress",
                 Explanation = evaluation.Explanation,
             };
         }
@@ -1173,6 +1197,8 @@ namespace HemoIQ.ViewModels
         public string RunLabel { get; set; } = string.Empty;
         public string CellNumber { get; set; } = string.Empty;
         public string Zygosity { get; set; } = string.Empty;
+        /// <summary>"Yes" when the cell counted toward the rule-out; "No (dosage)" when left out for zygosity.</summary>
+        public string Counted { get; set; } = string.Empty;
         public string IS { get; set; } = string.Empty;
         public string C37 { get; set; } = string.Empty;
         public string AHG { get; set; } = string.Empty;

@@ -20,6 +20,8 @@ Select a row. The lower grid lists the cells that counted toward that rule-out, 
 - When no cell counts, the antibody still gets a row. Its explanation reads, for example, "Anti-Jka cannot currently be ruled out because the only nonreactive Jka-positive cells are heterozygous (cells 1, 2), and heterozygous cells are not allowed for this antibody (dosage)", and says what to test next.
 - When some cells count but not enough, the explanation adds "Not counted for dosage:" with the heterozygous and unknown-zygosity cells.
 - The same sentences appear in the analysis suggestions.
+- On the grid, a row with no counted cell has the status **Blocked by dosage**. Selecting any row lists all its nonreactive antigen-positive cells: first the counted ones (**Counted: Yes**), then those left out (**No (dosage)**). The Zygosity column says Homozygous, Heterozygous, or Unknown (for example "Unknown (Jkb not typed)").
+- **Explain** lists the same cells, each marked "not counted: heterozygous" or "not counted: zygosity unknown", and gives such an antibody the status **Not ruled out (dosage)**.
 
 Antigen-positive cells that reacted do not rule the antibody out. w+, mixed field, and hemolysis are reactive, so they do not count as rule-outs. Cells whose antigen was destroyed by ficin, papain, or DTT are listed on **Special Panels** as gated rule-outs instead of counting here.
 

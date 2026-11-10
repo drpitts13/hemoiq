@@ -1,6 +1,7 @@
 using HemoIQ.Models;
 using HemoIQ.Services;
 using HemoIQ.Tests.Infrastructure;
+using HemoIQ.ViewModels;
 
 namespace HemoIQ.Tests;
 
@@ -90,5 +91,46 @@ public class DosageRuleoutExplanationTests
         var result = Analyze(iso, "DS-6", ("+", "+"));
         Assert.All(result.RuleoutEvaluations, e =>
             Assert.True(AntigenConstants.AntitheticalPairs.ContainsKey(e.Antigen) || e.DosageExcludedCells.Count == 0));
+    }
+
+    [Fact]
+    public void RuledOutGrid_ShowsBlockedByDosage_AndTheExcludedCellsWithTheirZygosity()
+    {
+        using var iso = new IsolatedDatabase();
+        var result = Analyze(iso, "DS-7", ("+", "+"), ("+", null));
+        var ev = Assert.Single(result.RuleoutEvaluations, e => e.Antibody == "anti-Jka");
+
+        Assert.Equal(RuleoutRow.BlockedByDosage, RuleoutRow.From(ev).Status);
+        var rows = AnalysisViewModel.DetailRowsFor(result, "anti-Jka");
+        Assert.Equal(2, rows.Count);
+        Assert.All(rows, r => Assert.Equal("No (dosage)", r.Counted));
+        Assert.Equal(new[] { "Heterozygous", "Unknown (Jkb not typed)" }, rows.Select(r => r.Zygosity));
+    }
+
+    [Fact]
+    public void ShortRuleOut_ListsCountedCellsFirst_ThenExcluded_AndStaysInProgress()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddRule("Jka two", null, "anti-Jka", null, heterozygousOk: false, minRuleoutCount: 2);
+        var result = Analyze(iso, "DS-8", ("+", "-"), ("+", "+"));
+        var ev = Assert.Single(result.RuleoutEvaluations, e => e.Antibody == "anti-Jka");
+
+        Assert.Equal("In progress", RuleoutRow.From(ev).Status);
+        var rows = AnalysisViewModel.DetailRowsFor(result, "anti-Jka");
+        Assert.Equal(new[] { ("1", "Yes", "Homozygous"), ("2", "No (dosage)", "Heterozygous") },
+            rows.Select(r => (r.CellNumber, r.Counted, r.Zygosity)));
+    }
+
+    [Fact]
+    public void ExplainView_NamesTheExcludedCells_AndADosageStatus()
+    {
+        using var iso = new IsolatedDatabase();
+        var result = Analyze(iso, "DS-9", ("+", "+"), ("+", null));
+        var exp = AnalysisExplainer.Explain("anti-Jka", result);
+
+        Assert.Equal("Not ruled out (dosage)", exp.Status);
+        Assert.Contains(exp.RuleoutCells, c => c.EndsWith("cell 1 (not counted: heterozygous)"));
+        Assert.Contains(exp.RuleoutCells, c => c.EndsWith("cell 2 (not counted: zygosity unknown, Jkb not typed)"));
+        Assert.StartsWith("Anti-Jka cannot currently be ruled out", exp.RuleoutCriteria);
     }
 }

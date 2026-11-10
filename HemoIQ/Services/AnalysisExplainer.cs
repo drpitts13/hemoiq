@@ -138,6 +138,9 @@ namespace HemoIQ.Services
                 exp.RuleoutCriteria = ruleEval.Explanation;
                 exp.RuleoutCells = ruleEval.Cells
                     .Select(c => $"{c.PanelName} cell {c.CellNumber} ({(c.IsHomozygous ? "homozygous" : "heterozygous")})")
+                    .Concat(ruleEval.DosageExcludedCells.Select(c =>
+                        $"{c.PanelName} cell {c.CellNumber} (not counted: " +
+                        (c.AntitheticalValue == null ? $"zygosity unknown, {c.Antithetical} not typed" : "heterozygous") + ")"))
                     .ToList();
             }
             else
@@ -244,7 +247,10 @@ namespace HemoIQ.Services
             if (suspected && ruledOut) return "Suspected and ruled out — review";
             if (suspected) return "Suspected";
             if (ruleEval?.MeetsCriteria == true || ruledOut) return "Ruled out";
-            if (ruleEval != null) return "Rule-out in progress";
+            if (ruleEval != null)
+                return ruleEval.ObservedCount == 0 && ruleEval.DosageExcludedCells.Count > 0
+                    ? "Not ruled out (dosage)"
+                    : "Rule-out in progress";
             if (phenotype.Any(p => p.Kind == PatientTypingKind.Historical)) return "Historical";
             if (pattern != null) return "Pattern only";
             return "Considered";

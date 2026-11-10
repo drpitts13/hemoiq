@@ -3505,8 +3505,34 @@ which cells had been left out for dosage.
 
 All 1166 tests pass.
 
+## Iteration 142 (this change)
+
+**Deficiency:** The rows added in Iteration 141 for antibodies whose rule-out
+is blocked by dosage showed badly in the UI:
+- The Ruled Out grid called them "In progress" with Count 0.
+- The cell list below was empty, because it showed only counted cells.
+- Explain gave "Rule-out in progress" and listed no cells.
+The explanation text was right, but the structured views gave no evidence.
+
+**Bounded improvement:**
+- `RuleoutRow.From`: status **Blocked by dosage** when no cell counted and
+  some were left out for dosage. A short rule-out stays "In progress".
+- `AnalysisViewModel.DetailRowsFor` lists the counted cells (Counted: Yes),
+  then the dosage-excluded cells (Counted: No (dosage)). `ZygosityLabel`
+  distinguishes Homozygous, Heterozygous, and "Unknown (Jkb not typed)".
+  The cell grid has a Counted column and a header that says what it lists.
+- `AnalysisExplainer`: the rule-out cells include the excluded ones ("not
+  counted: heterozygous" or "not counted: zygosity unknown, Jkb not
+  typed"), and the status is **Not ruled out (dosage)**.
+
+**Tests:** `DosageRuleoutExplanationTests` (+3):
+- grid status and excluded-cell rows with their zygosity;
+- a short rule-out lists counted cells first, then excluded ones, and stays
+  In progress;
+- Explain status, cell lines and criteria.
+
+All 1169 tests pass.
+
 ## Likely next tick
 
-A product review is due at Iteration 143. Before then: check that the new
-zero-count rule-out rows read well on the Analysis tab's Ruled Out grid
-(status column and row count).
+Product review at Iteration 143.
