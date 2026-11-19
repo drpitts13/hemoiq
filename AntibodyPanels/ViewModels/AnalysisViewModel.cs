@@ -47,7 +47,16 @@ namespace AntibodyPanels.ViewModels
         public Specimen? SelectedSpecimen
         {
             get => _selectedSpecimen;
-            set { if (SetField(ref _selectedSpecimen, value)) AutoLoadAnalysis(); }
+            set
+            {
+                var previous = _selectedSpecimen?.AccessionNumber;
+                if (!SetField(ref _selectedSpecimen, value)) return;
+                var loaded = AutoLoadAnalysis();
+                if (loaded
+                    && _main.SelectedTabIndex == 4
+                    && !string.Equals(previous, _selectedSpecimen?.AccessionNumber, StringComparison.Ordinal))
+                    AnnounceStatus();
+            }
         }
 
         private string _summaryText = string.Empty;
@@ -62,6 +71,13 @@ namespace AntibodyPanels.ViewModels
         {
             get => _isStale;
             set => SetField(ref _isStale, value);
+        }
+
+        private string _staleMessage = "";
+        public string StaleMessage
+        {
+            get => _staleMessage;
+            set => SetField(ref _staleMessage, value);
         }
 
         public ICommand AnalyzeCommand { get; }
@@ -208,8 +224,28 @@ namespace AntibodyPanels.ViewModels
 
         public void OnTabSelected()
         {
-            if (SelectedSpecimen != null)
-                IsStale = _db.IsSpecimenAnalysisStale(SelectedSpecimen.AccessionNumber);
+            RefreshStaleState();
+        }
+
+        public void AnnounceStatus() =>
+            _main.SetStatus(ScreenStatus.Analysis(
+                SelectedSpecimen?.AccessionNumber,
+                SelectedSpecimen?.LastAnalyzedAt != null,
+                IsStale,
+                SuspectedRows.Count,
+                RuleoutRows.Count));
+
+        public void RefreshStaleState()
+        {
+            if (SelectedSpecimen == null)
+            {
+                IsStale = false;
+                StaleMessage = "";
+                return;
+            }
+            var reason = _db.GetAnalysisStaleReason(SelectedSpecimen.AccessionNumber);
+            IsStale = reason != AnalysisStaleReason.None;
+            StaleMessage = AnalysisFreshness.Banner(reason);
         }
 
         /// <summary>
@@ -217,27 +253,31 @@ namespace AntibodyPanels.ViewModels
         /// If the specimen has been analyzed before, reloads those results without
         /// updating the database (preserving the stale-analysis indicator).
         /// </summary>
-        private void AutoLoadAnalysis()
+        private bool AutoLoadAnalysis()
         {
             ClearResults();
             if (SelectedSpecimen == null)
             {
                 LoadFinalCall(null);
-                return;
+                return true;
             }
 
-            IsStale = _db.IsSpecimenAnalysisStale(SelectedSpecimen.AccessionNumber);
+            RefreshStaleState();
             LoadFinalCall(SelectedSpecimen);
 
             // Only auto-populate if a previous analysis run exists
-            if (SelectedSpecimen.LastAnalyzedAt == null) return;
+            if (SelectedSpecimen.LastAnalyzedAt == null) return true;
 
             try
             {
                 var result = _analyzer.AnalyzeSpecimen(SelectedSpecimen.AccessionNumber, updateDb: false);
                 PopulateFromResult(result);
+                return true;
             }
-            catch { /* silently ignore — user can click Run Analysis to retry */ }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>Triggered by the Run Analysis button — computes, persists, and refreshes.</summary>
@@ -252,6 +292,7 @@ namespace AntibodyPanels.ViewModels
                 PopulateFromResult(result);
                 OfferAcsException(result);
                 IsStale = false;
+                StaleMessage = "";
                 _main.SetStatus($"Analysis complete — {SuspectedRows.Count} suspected, {RuleoutRows.Count} ruled out.");
                 _main.SpecimensVM.Refresh();
                 _main.WorklistVM.Refresh();
@@ -701,7 +742,7 @@ namespace AntibodyPanels.ViewModels
                 }
                 sb.AppendLine();
             }
-            else
+            else if (IncludeNoSuspectedSummary(r))
             {
                 sb.AppendLine("No antibodies suspected based on current data.");
                 sb.AppendLine();
@@ -823,6 +864,14 @@ namespace AntibodyPanels.ViewModels
 
             SummaryText = sb.ToString();
         }
+
+        /// <summary>
+        /// A warm-auto or other panreactive pattern is evidence. Summary does
+        /// not add "no antibodies suspected" on top of that pattern.
+        /// </summary>
+        public static bool IncludeNoSuspectedSummary(AnalysisResult result) =>
+            (result.Suspected == null || result.Suspected.Count == 0)
+            && SpecimenPatternEvidence.PatternLines(result).Count == 0;
 
         private static string PatientTypingHeader(AnalysisResult r)
         {
@@ -1034,6 +1083,13 @@ namespace AntibodyPanels.ViewModels
         public string C37 { get; set; } = string.Empty;
         public string AHG { get; set; } = string.Empty;
         public string CC { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Same check-cell warning as the reactions grid: AHG is negative and
+        /// the check cell did not react.
+        /// </summary>
+        public bool IsCcInvalid =>
+            ReactionGrade.IsNegative(AHG) && !ReactionGrade.IsPositive(CC);
     }
 
     public class DosageRow

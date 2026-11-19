@@ -196,6 +196,21 @@ public class AbsorptionPatternTests
     }
 
     [Fact]
+    public void Autoadsorption_OneCellLost_IsStillResidual()
+    {
+        var result = AnalyzeAuto(
+            untreatedAhg: new[] { "2+", "2+", "2+", "2+" },
+            adsorbedAhg: new[] { "2+", "2+", "2+", "0" });
+
+        var note = Assert.Single(result.AbsorptionConclusions);
+        Assert.Equal(AbsorptionPatternClassifier.AutoResidualKind, note.Kind);
+        Assert.Contains("4", note.SupportingCells);
+        Assert.Contains("1", note.ConflictingCells);
+        Assert.Contains("underlying alloantibody", note.Explanation);
+        Assert.Contains("Not a diagnosis", note.Explanation);
+    }
+
+    [Fact]
     public void Analyzer_RrVsUntreated_ExplainsRemovalAndDoesNotRuleOutFromTheAliquot()
     {
         using var iso = new IsolatedDatabase();

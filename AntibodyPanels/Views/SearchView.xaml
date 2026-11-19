@@ -57,6 +57,8 @@
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="8,6,0,6">
             <Button Content="Search" Command="{Binding SearchCommand}" Width="80" Margin="0,0,8,0" FontWeight="Bold"/>
+            <Button Content="Open" Command="{Binding OpenCommand}" Width="80" Margin="0,0,8,0"
+                    ToolTip="Open the selected panel"/>
             <Button Content="Clear" Command="{Binding ClearCommand}" Width="80" Margin="0,0,8,0"/>
             <Button Content="Help" Width="80"
                     Command="{x:Static help:HelpCommands.ShowContext}"
@@ -71,14 +73,43 @@
                        Text="{Binding Results.Count, StringFormat='Results: {0}'}" FontStyle="Italic"/>
         </StackPanel>
 
-        <!-- Results -->
-        <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Margin="8,0,8,8">
-            <DataGrid x:Name="ResultsGrid" ItemsSource="{Binding Results}" IsReadOnly="True"
-                      AutoGenerateColumns="False" GridLinesVisibility="All"
-                      HeadersVisibility="Column" FontSize="12">
+        <!-- Results. The grid scrolls itself so the column headings stay visible. -->
+        <DataGrid x:Name="ResultsGrid" Grid.Row="3" Margin="8,0,8,8"
+                  ItemsSource="{Binding Results}"
+                  SelectedItem="{Binding SelectedResult}"
+                  SelectionMode="Single" IsReadOnly="True"
+                  AutoGenerateColumns="False" GridLinesVisibility="All"
+                  HeadersVisibility="Column" FontSize="12"
+                  FrozenColumnCount="3"
+                  PreviewKeyDown="ResultsGrid_PreviewKeyDown"
+                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <EventSetter Event="MouseDoubleClick" Handler="ResultsRow_MouseDoubleClick"/>
+                    </Style>
+                </DataGrid.RowStyle>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Panel" Binding="{Binding PanelName}" Width="150"/>
-                    <DataGridTextColumn Header="Lot" Binding="{Binding LotNumber}" Width="90"/>
+                    <DataGridTextColumn Header="Panel" Binding="{Binding PanelName}" Width="220">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextWrapping" Value="NoWrap"/>
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                <Setter Property="ToolTip" Value="{Binding PanelName}"/>
+                                <Setter Property="Padding" Value="4,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Lot" Binding="{Binding LotNumber}" Width="200">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextWrapping" Value="NoWrap"/>
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                <Setter Property="ToolTip" Value="{Binding LotNumber}"/>
+                                <Setter Property="Padding" Value="4,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
                     <DataGridTextColumn Header="Cell" Binding="{Binding CellNumber}" Width="50"/>
                     <DataGridTextColumn Header="D"   Binding="{Binding D}"   Width="35"/>
                     <DataGridTextColumn Header="C"   Binding="{Binding C}"   Width="35"/>
@@ -109,7 +140,6 @@
                     <DataGridTextColumn Header="Xga" Binding="{Binding Xga}" Width="40"/>
                     <DataGridTextColumn Header="P1"  Binding="{Binding P1}"  Width="38"/>
                 </DataGrid.Columns>
-            </DataGrid>
-        </ScrollViewer>
+        </DataGrid>
     </Grid>
 </UserControl>

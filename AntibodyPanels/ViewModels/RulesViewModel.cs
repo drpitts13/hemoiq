@@ -18,7 +18,13 @@ namespace AntibodyPanels.ViewModels
         public Rule? SelectedRule
         {
             get => _selectedRule;
-            set => SetField(ref _selectedRule, value);
+            set
+            {
+                var previous = _selectedRule?.RuleId;
+                if (!SetField(ref _selectedRule, value)) return;
+                if (_main.SelectedTabIndex == 8 && previous != _selectedRule?.RuleId)
+                    AnnounceStatus();
+            }
         }
 
         public ICommand AddCommand { get; }
@@ -37,6 +43,9 @@ namespace AntibodyPanels.ViewModels
             Refresh();
         }
 
+        public void AnnounceStatus() =>
+            _main.SetStatus(ScreenStatus.Rules(Rules.Count, SelectedRule?.Name));
+
         public void Refresh()
         {
             var sid = SelectedRule?.RuleId;
@@ -51,9 +60,9 @@ namespace AntibodyPanels.ViewModels
             if (dlg.ShowDialog() != true) return;
             var id = _db.AddRule(dlg.RuleName, dlg.Description, dlg.Antibody,
                 dlg.ExceptionAntigen, dlg.HeterozygousOk, dlg.MinRuleoutCount);
-            _main.SetStatus($"Rule '{dlg.RuleName}' added.");
             Refresh();
             SelectedRule = Rules.FirstOrDefault(r => r.RuleId == id);
+            _main.SetStatus($"Rule '{dlg.RuleName}' added.");
         }
 
         private void EditRule()
@@ -63,8 +72,8 @@ namespace AntibodyPanels.ViewModels
             if (dlg.ShowDialog() != true) return;
             _db.UpdateRule(SelectedRule.RuleId, dlg.RuleName, dlg.Description, dlg.Antibody,
                 dlg.ExceptionAntigen, dlg.HeterozygousOk, dlg.MinRuleoutCount);
-            _main.SetStatus($"Rule '{dlg.RuleName}' updated.");
             Refresh();
+            _main.SetStatus($"Rule '{dlg.RuleName}' updated.");
         }
 
         private void DeleteRule()
@@ -73,8 +82,8 @@ namespace AntibodyPanels.ViewModels
             if (MessageBox.Show($"Delete rule '{SelectedRule.Name}'?",
                 "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
             _db.DeleteRule(SelectedRule.RuleId);
-            _main.SetStatus("Rule deleted.");
             Refresh();
+            _main.SetStatus("Rule deleted.");
         }
     }
 }

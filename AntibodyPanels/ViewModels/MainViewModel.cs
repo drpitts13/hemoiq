@@ -77,6 +77,7 @@ namespace AntibodyPanels.ViewModels
             SpecimensVM.ShowInactive = AppSettings.Current.ShowInactiveByDefault;
             PanelsVM.ShowInactive = AppSettings.Current.ShowInactiveByDefault;
             ReactionsVM.ApplyColumnVisibilitySettings();
+            AnalysisVM.RefreshStaleState();
             WorklistVM.Refresh();
             ApplyDatabaseSizeLimit();
             NotifyCapacityIfNeeded();
@@ -105,6 +106,25 @@ namespace AntibodyPanels.ViewModels
         }
 
         public void SetStatus(string message) => StatusText = message;
+
+        /// <summary>
+        /// Replace the status line with the screen the user just opened.
+        /// </summary>
+        public void AnnounceScreen(string? header)
+        {
+            switch (header)
+            {
+                case "Worklist": WorklistVM.AnnounceStatus(); break;
+                case "Specimens": SpecimensVM.AnnounceStatus(); break;
+                case "Panels": PanelsVM.AnnounceStatus(); break;
+                case "Reactions": ReactionsVM.AnnounceStatus(); break;
+                case "Analysis": AnalysisVM.AnnounceStatus(); break;
+                case "Reports": ReportsVM.AnnounceStatus(); break;
+                case "Analytics": AnalyticsVM.AnnounceStatus(); break;
+                case "Search": SearchVM.AnnounceStatus(); break;
+                case "Rules": RulesVM.AnnounceStatus(); break;
+            }
+        }
 
         public void RefreshAll()
         {
@@ -161,6 +181,16 @@ namespace AntibodyPanels.ViewModels
             SelectedTabIndex = 5;
             if (accessionNumber != null)
                 ReportsVM.SelectSpecimen(accessionNumber, reportType);
+        }
+
+        public void OpenPanel(
+            int panelId,
+            string? cellNumber = null,
+            string? antigen = null,
+            IReadOnlyList<string>? searchAntigens = null)
+        {
+            SelectedTabIndex = 2;
+            PanelsVM.SelectPanel(panelId, cellNumber, antigen, searchAntigens);
         }
 
         public void Dispose()

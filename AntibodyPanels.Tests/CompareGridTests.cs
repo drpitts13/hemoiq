@@ -75,4 +75,24 @@ public class CompareGridTests
         Assert.Contains("AHG (this 2+ vs other 0)", row.Explanation);
         Assert.DoesNotContain("RT", row.Explanation);
     }
+
+    [Fact]
+    public void NamedRuns_AppearOnGradeHeadersAndTheDifference()
+    {
+        Assert.Equal("Autoadsorbed AHG", CompareReactionRow.GradeHeader("Autoadsorbed", "AHG", "This"));
+        Assert.Equal("Untreated AHG", CompareReactionRow.GradeHeader("Untreated", "AHG", "Other"));
+        Assert.Equal("This AHG", CompareReactionRow.GradeHeader("  ", "AHG", "This"));
+
+        var row = CompareReactionRow.Build(
+            "4",
+            "0", "0", "0", "2+",
+            "0", "2+", "3+", "NT",
+            leftLabel: "Autoadsorbed",
+            rightLabel: "Untreated");
+
+        Assert.Contains("AHG (Autoadsorbed 0 vs Untreated 3+)", row.Explanation);
+        Assert.Contains("37°C (Autoadsorbed 0 vs Untreated 2+)", row.Explanation);
+        Assert.DoesNotContain("this", row.Explanation);
+        Assert.DoesNotContain("other", row.Explanation);
+    }
 }

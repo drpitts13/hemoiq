@@ -19,6 +19,13 @@ namespace AntibodyPanels.Models
                 ? (AntigenConstants.IsExplicitHomozygousValue(v) ? "+" : v)
                 : "-";
 
+        /// <summary>
+        /// Value for a printed antigram. An untyped or NT cell prints NT.
+        /// A typed minus stays minus. Explicit ++ still prints as +.
+        /// </summary>
+        public string PrintedAntigen(string antigen) =>
+            HasTypedAntigen(antigen) ? GetAntigen(antigen) : AntigenConstants.AntigenNotTested;
+
         public string? GetTypedValue(string antigen) =>
             TryGetTyped(antigen, out var v) ? v : null;
 
@@ -51,6 +58,31 @@ namespace AntibodyPanels.Models
 
         public void SetAntigen(string antigen, string value) =>
             Antigens[antigen] = value;
+
+        /// <summary>
+        /// Antigens to show when an all-NT column should be omitted.
+        /// A column stays when any cell is typed +, ++, or −. Blank and NT
+        /// do not keep it. An empty cell list keeps the full order.
+        /// The stored panel order is not changed.
+        /// </summary>
+        public static IReadOnlyList<string> AntigensTypedOnAnyCell(
+            IReadOnlyList<string> order,
+            IReadOnlyList<PanelCell> cells)
+        {
+            if (cells.Count == 0)
+                return new List<string>(order);
+            var typed = new List<string>();
+            foreach (var ag in order)
+            {
+                foreach (var cell in cells)
+                {
+                    if (!cell.HasTypedAntigen(ag)) continue;
+                    typed.Add(ag);
+                    break;
+                }
+            }
+            return typed;
+        }
 
         private bool TryGetTyped(string antigen, out string value)
         {

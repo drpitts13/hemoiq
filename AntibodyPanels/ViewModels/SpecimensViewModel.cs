@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using AntibodyPanels.Data;
 using AntibodyPanels.Models;
+using AntibodyPanels.Services;
 
 namespace AntibodyPanels.ViewModels
 {
@@ -24,8 +25,13 @@ namespace AntibodyPanels.ViewModels
             get => _selectedSpecimen;
             set
             {
-                if (SetField(ref _selectedSpecimen, value))
-                    LoadSpecimenDetails();
+                var previous = _selectedSpecimen?.AccessionNumber;
+                if (!SetField(ref _selectedSpecimen, value)) return;
+                var failed = LoadSpecimenDetails();
+                if (!failed
+                    && _main.SelectedTabIndex == 1
+                    && !string.Equals(previous, _selectedSpecimen?.AccessionNumber, StringComparison.Ordinal))
+                    AnnounceStatus();
             }
         }
 
@@ -48,6 +54,26 @@ namespace AntibodyPanels.ViewModels
         {
             get => _listFilter;
             set { if (SetField(ref _listFilter, value)) ApplyFilter(); }
+        }
+
+        private string _patternEvidence = string.Empty;
+        public string PatternEvidence
+        {
+            get => _patternEvidence;
+            private set
+            {
+                if (SetField(ref _patternEvidence, value))
+                    OnPropertyChanged(nameof(HasPatternEvidence));
+            }
+        }
+
+        public bool HasPatternEvidence => !string.IsNullOrWhiteSpace(PatternEvidence);
+
+        private string _ruleoutNote = "";
+        public string RuleoutNote
+        {
+            get => _ruleoutNote;
+            private set => SetField(ref _ruleoutNote, value);
         }
 
         public ICommand AddCommand { get; }
@@ -88,6 +114,9 @@ namespace AntibodyPanels.ViewModels
             ApplyFilter(selected);
         }
 
+        public void AnnounceStatus() =>
+            _main.SetStatus(ScreenStatus.Specimens(Specimens.Count, SelectedSpecimen?.AccessionNumber));
+
         public void SelectSpecimen(string accessionNumber)
         {
             EnsureVisible(accessionNumber);
@@ -126,18 +155,45 @@ namespace AntibodyPanels.ViewModels
             ApplyFilter(accessionNumber);
         }
 
-        private void LoadSpecimenDetails()
+        private bool LoadSpecimenDetails()
         {
             LinkedPanels.Clear();
             Antibodies.Clear();
             Ruleouts.Clear();
+            PatternEvidence = string.Empty;
+            RuleoutNote = "";
 
-            if (_selectedSpecimen == null) return;
+            if (_selectedSpecimen == null) return false;
             var sid = _selectedSpecimen.AccessionNumber;
 
             foreach (var p in _db.GetSpecimenPanels(sid)) LinkedPanels.Add(p);
-            foreach (var a in _db.GetSpecimenAntibodies(sid)) Antibodies.Add(a);
-            foreach (var r in _db.GetSpecimenRuleouts(sid)) Ruleouts.Add(r);
+            return LoadAnalysisSummary(sid);
+        }
+
+        private bool LoadAnalysisSummary(string specimenId)
+        {
+            var failed = false;
+            try
+            {
+                var result = _main.Analyzer.AnalyzeSpecimen(specimenId, updateDb: false);
+                PatternEvidence = SpecimenPatternEvidence.Format(result);
+                foreach (var row in SpecimenPatternEvidence.SuspectedRows(result))
+                    Antibodies.Add(row);
+                foreach (var row in SpecimenPatternEvidence.RuleoutRows(result))
+                    Ruleouts.Add(row);
+            }
+            catch (System.Exception ex)
+            {
+                failed = true;
+                PatternEvidence = string.Empty;
+                foreach (var a in _db.GetSpecimenAntibodies(specimenId)) Antibodies.Add(a);
+                foreach (var r in _db.GetSpecimenRuleouts(specimenId)) Ruleouts.Add(r);
+                _main.SetStatus($"Pattern evidence for {specimenId} could not be read: {ex.Message}");
+            }
+            RuleoutNote = Ruleouts.Count == 0
+                ? "No specificity meets the current rule-out criteria."
+                : "";
+            return failed;
         }
 
         /// <summary>

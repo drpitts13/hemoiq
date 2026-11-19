@@ -5,12 +5,14 @@
         Title="User Manual" Height="720" Width="980"
         MinHeight="480" MinWidth="720"
         WindowStartupLocation="CenterScreen"
-        Loaded="Window_Loaded">
+        Loaded="Window_Loaded"
+        PreviewKeyDown="Window_PreviewKeyDown">
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,8,12,12">
             <Button Content="Print chapter" Width="110" Margin="0,0,8,0" Click="PrintChapterClick"/>
             <Button Content="Print manual" Width="110" Margin="0,0,8,0" Click="PrintManualClick"/>
-            <Button Content="Close" Width="84" IsCancel="True"/>
+            <Button Content="Save manual" Width="110" Margin="0,0,8,0" Click="SaveManualClick"/>
+            <Button Content="Close" Width="84" IsCancel="True" Click="CloseClick"/>
         </StackPanel>
 
         <Grid Margin="12,12,12,0">

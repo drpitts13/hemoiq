@@ -6,5 +6,6 @@ namespace AntibodyPanels.Models
         public string SpecimenId { get; set; } = string.Empty;
         public string Antibody { get; set; } = string.Empty;
         public int RuleoutCount { get; set; }
+        public string Note { get; set; } = string.Empty;
     }
 }

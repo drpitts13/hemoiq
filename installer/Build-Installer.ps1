@@ -53,6 +53,17 @@ if (-not (Test-Path $exePath)) {
     throw "Publish succeeded but AntibodyPanels.exe was not found at $publishDir."
 }
 
+$manualPath = Join-Path $publishDir "USER_MANUAL.md"
+Write-Host "Writing the user manual..."
+$manualProc = Start-Process -FilePath $exePath -ArgumentList @('--write-manual', $manualPath) -Wait -PassThru
+if ($manualProc.ExitCode -ne 0) {
+    throw "The application did not write the user manual (exit $($manualProc.ExitCode))."
+}
+if (-not (Test-Path $manualPath)) {
+    throw "USER_MANUAL.md was not written to $publishDir."
+}
+Copy-Item $manualPath (Join-Path $repoRoot "docs\USER_MANUAL.md") -Force
+
 if (-not (Test-Path $outputDir)) {
     New-Item -ItemType Directory -Path $outputDir | Out-Null
 }

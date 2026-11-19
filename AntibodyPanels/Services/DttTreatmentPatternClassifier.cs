@@ -47,6 +47,10 @@ namespace AntibodyPanels.Services
                 var cellDict = cells.ToDictionary(c => c.CellNumber, StringComparer.OrdinalIgnoreCase);
                 var treatedByCell = treatedRxns.ToDictionary(r => r.CellNumber, StringComparer.OrdinalIgnoreCase);
                 var untreatedByCell = untreatedRxns.ToDictionary(r => r.CellNumber, StringComparer.OrdinalIgnoreCase);
+                var onlyUntreated = CellsOnlyOn(untreatedByCell, treatedByCell);
+                var onlyTreated = CellsOnlyOn(treatedByCell, untreatedByCell);
+                var notOnPanel = CellsNotOnPanel(untreatedByCell, treatedByCell, cellDict);
+                var bothNonreactive = new List<string>();
 
                 var lost = new List<string>();
                 var persisted = new List<string>();
@@ -62,7 +66,11 @@ namespace AntibodyPanels.Services
 
                     var treatedPos = treatedCtx.IsPositive(treatedRxn);
                     var untreatedPos = untreatedCtx.IsPositive(untreatedRxn);
-                    if (!untreatedPos && !treatedPos) continue;
+                    if (!untreatedPos && !treatedPos)
+                    {
+                        bothNonreactive.Add(cellNum);
+                        continue;
+                    }
 
                     var destroyed = TypedAntigensWithEffect(cell, AntigenEffect.Destroyed);
 
@@ -85,6 +93,7 @@ namespace AntibodyPanels.Services
                 {
                     if (string.Equals(cellNum, "AC", StringComparison.OrdinalIgnoreCase)) continue;
                     if (!untreatedByCell.TryGetValue(cellNum, out var untreatedRxn)) continue;
+                    if (!cellDict.ContainsKey(cellNum)) continue;
                     if (untreatedCtx.IsPositive(untreatedRxn)) continue;
                     if (treatedCtx.IsPositive(treatedRxn))
                     {
@@ -95,7 +104,7 @@ namespace AntibodyPanels.Services
 
                 if (paired < MinimumPairedCells)
                 {
-                    AddIncomplete(result, treatedCtx, paired, lost, gained, persisted);
+                    AddIncomplete(result, treatedCtx, paired, lost, gained, persisted, onlyUntreated, onlyTreated, notOnPanel, bothNonreactive);
                     continue;
                 }
 
@@ -109,9 +118,11 @@ namespace AntibodyPanels.Services
                         : "DTT-destroyed antigens (K/k, Lua/Lub, Yt, Knops, Do)";
                     var note = MakeNote(
                         DestroyedKind, lost, persisted, paired,
+                        WithOneSided(
                         $"{lost.Count} of {paired} paired cells lost reactivity on {treatment} cells " +
                         $"({string.Join(", ", lost)}). This is consistent with antibodies to DTT-destroyed " +
-                        $"antigens ({antigens}). Do not rule those antibodies out from the DTT run. Not a diagnosis.");
+                        $"antigens ({antigens}). Do not rule those antibodies out from the DTT run. Not a diagnosis.",
+                        onlyUntreated, onlyTreated, notOnPanel, bothNonreactive));
                     result.ReactionPatterns.Add(note);
                     AddInference(result, treatedCtx.Run.DisplayLabel, destroyedOnLost, note.Explanation);
                     assigned = true;
@@ -123,10 +134,12 @@ namespace AntibodyPanels.Services
                         : "DTT-destroyed antigens";
                     var note = MakeNote(
                         DestroyedKind, lost, persisted, paired,
+                        WithOneSided(
                         $"{lost.Count} of {paired} paired cells lost reactivity on {treatment} " +
                         $"({string.Join(", ", lost)}) but {persisted.Count} remained reactive " +
                         $"({string.Join(", ", persisted)}). DTT-destroyed antigens ({antigens}) are only a partial " +
-                        "fit; consider multiple antibodies or a DTT-resistant specificity. Not a diagnosis.");
+                        "fit; consider multiple antibodies or a DTT-resistant specificity. Not a diagnosis.",
+                        onlyUntreated, onlyTreated, notOnPanel, bothNonreactive));
                     result.ReactionPatterns.Add(note);
                     assigned = true;
                 }
@@ -137,15 +150,17 @@ namespace AntibodyPanels.Services
                         : "K, k, Lua, Lub";
                     var note = MakeNote(
                         ResistantKind, persisted, Array.Empty<string>(), paired,
+                        WithOneSided(
                         $"{persisted.Count} of {paired} paired cells remained reactive on {treatment} cells " +
                         $"({string.Join(", ", persisted)}). Survival of reactivity argues against antibodies to " +
-                        $"DTT-destroyed antigens ({antigens}) as the sole explanation. Not a diagnosis.");
+                        $"DTT-destroyed antigens ({antigens}) as the sole explanation. Not a diagnosis.",
+                        onlyUntreated, onlyTreated, notOnPanel, bothNonreactive));
                     result.ReactionPatterns.Add(note);
                     assigned = true;
                 }
 
                 if (!assigned)
-                    AddNoFit(result, treatedCtx, paired, lost, gained, persisted);
+                    AddNoFit(result, treatedCtx, paired, lost, gained, persisted, onlyUntreated, onlyTreated, notOnPanel, bothNonreactive);
             }
         }
 
@@ -172,7 +187,8 @@ namespace AntibodyPanels.Services
 
         private static void AddIncomplete(
             AnalysisResult result, RunContext treated, int paired,
-            IReadOnlyList<string> lost, IReadOnlyList<string> gained, IReadOnlyList<string> persisted)
+            IReadOnlyList<string> lost, IReadOnlyList<string> gained, IReadOnlyList<string> persisted,
+            IReadOnlyList<string> onlyUntreated, IReadOnlyList<string> onlyTreated, IReadOnlyList<string> notOnPanel, IReadOnlyList<string> bothNonreactive)
         {
             var cells = lost.Concat(gained).Concat(persisted).ToList();
             var which = cells.Count == 0 ? "none" : string.Join(", ", cells);
@@ -182,19 +198,21 @@ namespace AntibodyPanels.Services
                 MatchingCells = 0,
                 EvaluatedCells = paired,
                 SupportingCells = cells,
-                Explanation =
+                Explanation = WithOneSided(
                     $"{treated.Run.DisplayLabel} on panel {treated.Run.PanelId} was compared with an untreated run " +
                     $"on the same panel. {paired} cell(s) could be paired ({which}): {lost.Count} lost reactivity, " +
                     $"{gained.Count} became reactive, and {persisted.Count} stayed reactive. " +
                     $"{MinimumPairedCells} paired cells are required before a DTT pattern is assigned. " +
                     "The comparison is incomplete. No DTT-destroyed or DTT-resistant pattern was assigned. " +
-                    "Not a diagnosis."
+                    "Not a diagnosis.",
+                    onlyUntreated, onlyTreated, notOnPanel, bothNonreactive)
             });
         }
 
         private static void AddNoFit(
             AnalysisResult result, RunContext treated, int paired,
-            IReadOnlyList<string> lost, IReadOnlyList<string> gained, IReadOnlyList<string> persisted)
+            IReadOnlyList<string> lost, IReadOnlyList<string> gained, IReadOnlyList<string> persisted,
+            IReadOnlyList<string> onlyUntreated, IReadOnlyList<string> onlyTreated, IReadOnlyList<string> notOnPanel, IReadOnlyList<string> bothNonreactive)
         {
             var which = string.Join(", ", lost.Concat(gained).Concat(persisted));
             result.ReactionPatterns.Add(new ReactionPatternNote
@@ -203,7 +221,7 @@ namespace AntibodyPanels.Services
                 MatchingCells = 0,
                 EvaluatedCells = paired,
                 SupportingCells = lost.Concat(gained).Concat(persisted).ToList(),
-                Explanation =
+                Explanation = WithOneSided(
                     $"{treated.Run.DisplayLabel} on panel {treated.Run.PanelId} was compared with an untreated run " +
                     $"on the same panel. {paired} cells were paired ({which}): {lost.Count} lost reactivity " +
                     $"({ListOrNone(lost)}), {gained.Count} became reactive ({ListOrNone(gained)}), and " +
@@ -211,8 +229,67 @@ namespace AntibodyPanels.Services
                     "DTT-destroyed needs at least 2 cells that lost reactivity and at least as many losses as cells that stayed reactive, " +
                     "or 1 lost and 2 that stayed reactive. DTT-resistant needs at least 3 cells that stayed reactive and no losses. " +
                     "Cells that became reactive are counted but do not form a DTT pattern. " +
-                    "No pattern was assigned. Not a diagnosis."
+                    "No pattern was assigned. Not a diagnosis.",
+                    onlyUntreated, onlyTreated, notOnPanel, bothNonreactive)
             });
+        }
+
+        private static List<string> CellsOnlyOn(
+            IReadOnlyDictionary<string, Reaction> side,
+            IReadOnlyDictionary<string, Reaction> other)
+        {
+            return side.Keys
+                .Where(cell => !string.Equals(cell, "AC", StringComparison.OrdinalIgnoreCase)
+                               && !other.ContainsKey(cell))
+                .OrderBy(cell => int.TryParse(cell, out var n) ? n : int.MaxValue)
+                .ThenBy(cell => cell, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private static List<string> CellsNotOnPanel(
+            IReadOnlyDictionary<string, Reaction> untreated,
+            IReadOnlyDictionary<string, Reaction> treated,
+            IReadOnlyDictionary<string, PanelCell> cells)
+        {
+            return untreated.Keys
+                .Where(cell => !string.Equals(cell, "AC", StringComparison.OrdinalIgnoreCase)
+                               && treated.ContainsKey(cell)
+                               && !cells.ContainsKey(cell))
+                .OrderBy(cell => int.TryParse(cell, out var n) ? n : int.MaxValue)
+                .ThenBy(cell => cell, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private static string WithOneSided(
+            string explanation, IReadOnlyList<string> onlyUntreated, IReadOnlyList<string> onlyTreated, IReadOnlyList<string> notOnPanel, IReadOnlyList<string> bothNonreactive)
+        {
+            var clauses = new List<string>();
+            if (onlyUntreated.Count > 0 || onlyTreated.Count > 0)
+            {
+                var parts = new List<string>();
+                if (onlyUntreated.Count > 0)
+                    parts.Add("untreated only " + string.Join(", ", onlyUntreated));
+                if (onlyTreated.Count > 0)
+                    parts.Add("treated only " + string.Join(", ", onlyTreated));
+                clauses.Add("Cells left out of the pair count because they were tested on only one run: "
+                    + string.Join("; ", parts) + ".");
+            }
+            if (notOnPanel.Count > 0)
+                clauses.Add("Cells recorded on both runs but omitted because they are not on the panel cell list: "
+                    + string.Join(", ", notOnPanel) + ".");
+            if (bothNonreactive.Count > 0)
+                clauses.Add("Cells left out of the pair count because both grades were nonreactive: "
+                    + string.Join(", ", bothNonreactive
+                        .OrderBy(cell => int.TryParse(cell, out var n) ? n : int.MaxValue)
+                        .ThenBy(cell => cell, StringComparer.OrdinalIgnoreCase)) + ".");
+            if (clauses.Count == 0)
+                return explanation;
+            var clause = string.Join(" ", clauses) + " ";
+            const string marker = "Not a diagnosis.";
+            var idx = explanation.IndexOf(marker, StringComparison.Ordinal);
+            return idx >= 0
+                ? explanation.Insert(idx, clause)
+                : explanation.TrimEnd() + " " + clause.TrimEnd();
         }
 
         private static string ListOrNone(IReadOnlyList<string> cells) =>

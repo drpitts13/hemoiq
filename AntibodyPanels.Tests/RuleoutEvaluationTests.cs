@@ -22,6 +22,7 @@ public class RuleoutEvaluationTests
         Assert.Equal("lab default", ev.PolicySource);
         Assert.Contains("cell 1", ev.Explanation);
         Assert.Contains("currently meets configured rule-out criteria", ev.Explanation);
+        Assert.DoesNotContain("check cell did not react", ev.Explanation);
         Assert.Contains(ev.Cells, c => c.CellNumber == "1" && c.IsHomozygous);
         Assert.True(result.RuledOut.ContainsKey("anti-E"));
         Assert.Equal(1, result.RuledOut["anti-E"]);
@@ -102,8 +103,10 @@ public class RuleoutEvaluationTests
         Assert.Equal(1, ev.ObservedCount);
         Assert.DoesNotContain(ev.Cells, c => c.CellNumber == "1");
         Assert.Contains(ev.Cells, c => c.CellNumber == "2");
-        Assert.Contains("1", ev.ConflictingReactiveCells);
-        Assert.DoesNotContain("2", ev.ConflictingReactiveCells);
+        Assert.Contains(ev.ConflictingReactiveCells, c =>
+            c.CellNumber == "1" && c.RunLabel == "Untreated" &&
+            c.StrongestPhase == "AHG" && c.StrongestValue == "3+" && c.CC == "NT");
+        Assert.DoesNotContain(ev.ConflictingReactiveCells, c => c.CellNumber == "2");
         Assert.True(ev.MeetsCriteria);
     }
 
@@ -130,6 +133,71 @@ public class RuleoutEvaluationTests
     }
 
     [Fact]
+    public void FailedCheckCell_IsNamedBesideTheControlledCell()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("RO-CC-FAIL", "serum", null);
+        var panelId = iso.Db.AddPanel("P", "L", "V", 3, null, false);
+        iso.Db.LinkSpecimenPanel("RO-CC-FAIL", panelId);
+        var cells = iso.Db.GetPanelCells(panelId);
+        SetZygosity(iso, cells[0], "K", "k", homozygousPositive: true);
+        SetZygosity(iso, cells[1], "K", "k", homozygousPositive: true);
+        SetZygosity(iso, cells[2], "K", "k", homozygousPositive: false);
+        iso.Db.SaveReaction("RO-CC-FAIL", panelId, "1", "0", "0", "0", "0");
+        iso.Db.SaveReaction("RO-CC-FAIL", panelId, "2", "0", "0", "0", "2+");
+        iso.Db.SaveReaction("RO-CC-FAIL", panelId, "3", "0", "0", "0", "2+");
+
+        var result = iso.Analyzer.AnalyzeSpecimen("RO-CC-FAIL", updateDb: false);
+        var ev = RequireEvaluation(result, "anti-K");
+
+        Assert.True(ev.MeetsCriteria);
+        Assert.Equal(2, ev.ObservedCount);
+        Assert.Contains("cells 1, 2", ev.Explanation);
+        Assert.Contains("cell 1 check cell did not react", ev.Explanation);
+        Assert.DoesNotContain("cell 2 check cell did not react", ev.Explanation);
+
+        var rows = SpecimenPatternEvidence.RuleoutRows(result);
+        var antiK = Assert.Single(rows, r => r.Antibody == "anti-K");
+        var antiLittleK = Assert.Single(rows, r => r.Antibody == "anti-k");
+        Assert.Equal(2, antiK.RuleoutCount);
+        Assert.Equal("cell 1 check cell did not react", antiK.Note);
+        Assert.Equal(1, antiLittleK.RuleoutCount);
+        Assert.Equal(string.Empty, antiLittleK.Note);
+
+        var summary = iso.Reports.GeneratePreviewText(ReportType.SpecimenSummary, "RO-CC-FAIL");
+        var analysis = iso.Reports.GeneratePreviewText(ReportType.AnalysisResults, "RO-CC-FAIL");
+        foreach (var text in new[] { summary, analysis })
+        {
+            Assert.Contains("anti-K  (x2)  cell 1 check cell did not react", text);
+            var littleK = text.Split('\n').Single(line => line.Contains("anti-k", StringComparison.Ordinal));
+            Assert.Contains("(x1)", littleK);
+            Assert.DoesNotContain("did not react", littleK);
+        }
+
+        var clinical = iso.Reports.GeneratePreviewText(ReportType.ClinicalIdentification, "RO-CC-FAIL");
+        Assert.Contains("cell 1 check cell did not react", clinical);
+        Assert.DoesNotContain("anti-K  (x2)", clinical);
+
+        var csvPath = Path.Combine(Path.GetTempPath(), $"ruleout_{Guid.NewGuid():N}.csv");
+        try
+        {
+            iso.Reports.ExportToCsv(ReportType.SpecimenSummary, csvPath, "RO-CC-FAIL");
+            var lines = File.ReadAllLines(csvPath);
+            Assert.Contains("Antibody,RuleoutCount,CheckCell", lines);
+            var antiKLine = Assert.Single(lines, line => line.StartsWith("anti-K,", StringComparison.Ordinal));
+            Assert.Contains("cell 1 check cell did not react", antiKLine);
+            Assert.Contains(",2,", antiKLine);
+            var littleKLine = Assert.Single(lines, line => line.StartsWith("anti-k,", StringComparison.Ordinal));
+            Assert.StartsWith("anti-k,1", littleKLine);
+            Assert.DoesNotContain("did not react", littleKLine);
+        }
+        finally
+        {
+            if (File.Exists(csvPath)) File.Delete(csvPath);
+        }
+    }
+
+    [Fact]
     public void RuleoutRow_FromEvaluation_ExposesReviewableSentence()
     {
         var ev = new RuleoutEvaluation
@@ -145,6 +213,32 @@ public class RuleoutEvaluationTests
         Assert.True(row.MeetsRequired);
         Assert.Equal(2, row.Required);
         Assert.Contains("currently meets configured rule-out criteria", row.Explanation);
+    }
+
+    [Fact]
+    public void AntiDExceptionForC_DoesNotRuleOutAntiCOnHeterozygousCells()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("RO-C-D-RULE", "serum", null);
+        var panelId = iso.Db.AddPanel("P", "L", "V", 2, null, false);
+        iso.Db.LinkSpecimenPanel("RO-C-D-RULE", panelId);
+        foreach (var cell in iso.Db.GetPanelCells(panelId))
+        {
+            iso.Db.UpdatePanelCellAntigen(cell.Id, "C", "+");
+            iso.Db.UpdatePanelCellAntigen(cell.Id, "c", "+");
+            iso.Db.SaveReaction("RO-C-D-RULE", panelId, cell.CellNumber, "0", "0", "0", "2+");
+        }
+        iso.Db.AddRule(
+            "Anti-D C Exception",
+            "When anti-D is suspected, allow C to be ruled out heterozygously",
+            "anti-D", "C", heterozygousOk: true, minRuleoutCount: 3);
+
+        var result = iso.Analyzer.AnalyzeSpecimen("RO-C-D-RULE", updateDb: false);
+
+        Assert.False(result.RuledOut.ContainsKey("anti-C"));
+        Assert.DoesNotContain(result.RuleoutEvaluations, e => e.Antibody == "anti-C" && e.MeetsCriteria);
+        Assert.Equal(3, RuleoutPolicy.ResolveRequiredCount("anti-D", iso.Db.GetAllRules(), 1));
+        Assert.False(RuleoutPolicy.HeterozygousAllowed("C", iso.Db.GetAllRules()));
     }
 
     [Fact]

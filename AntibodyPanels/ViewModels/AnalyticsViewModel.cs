@@ -93,6 +93,9 @@ namespace AntibodyPanels.ViewModels
 
         public void Refresh() => Recompute();
 
+        public void AnnounceStatus() =>
+            _main?.SetStatus(ScreenStatus.Analytics(RangeLabel, ConfirmedSpecimens));
+
         private void ApplyRange(DateTime? from, DateTime? to)
         {
             _fromDate = from;
@@ -122,6 +125,8 @@ namespace AntibodyPanels.ViewModels
             OnPropertyChanged(nameof(IsAllTime));
             OnPropertyChanged(nameof(RangeLabel));
             ChartDataChanged?.Invoke(this, EventArgs.Empty);
+            if (_main?.SelectedTabIndex == 6)
+                AnnounceStatus();
         }
 
         private void ExportCsv()

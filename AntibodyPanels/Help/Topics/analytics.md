@@ -12,7 +12,7 @@ Analytics counts confirmed antibody identifications over a date range. It uses o
 - **Export CSV** saves the detail rows.
 - **Help** opens this chapter.
 
-The line under the toolbar names the range that is actually in use.
+The line under the toolbar names the range that is actually in use. Changing the range updates the status line to name that range and the confirmed-specimen count.
 
 ## What the numbers mean
 
@@ -21,6 +21,6 @@ The line under the toolbar names the range that is actually in use.
 - **Total occurrences** counts each specificity once per specimen. A call of anti-E; anti-K adds one to anti-E and one to anti-K.
 - **Most common** is the specificity with the highest occurrence count.
 
-The two charts show counts by specificity and the trend over time. The grid under the charts lists the same breakdown. Use the grid when you need the exact counts behind a bar.
+The two charts show counts by specificity and the trend over time. When the range has no confirmed identification, each chart shows that title and does not draw a negative count scale. The grid under the charts lists the same breakdown. Use the grid when you need the exact counts behind a bar.
 
 Analytics describes work this laboratory confirmed in the application. It is not a population frequency and it does not change any specimen.

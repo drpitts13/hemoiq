@@ -26,4 +26,4 @@ Open **Tools → Preferences** to set laboratory defaults. **Save** writes them 
 - **RT**, **PEG**, **Gel**, and **Solid** are suggested columns. Gel, Solid, and PEG count as IAT-like evidence. You can also type custom names.
 - **Titer grid (Dil1–Dil128)** adds serial-dilution columns. The last reactive tube is the titer endpoint. Dilution grades are not IAT, and they do not rule out or identify an antibody.
 
-Changes apply to the next analysis and to new specimens. They do not rewrite identifications you have already confirmed.
+Changes apply to the next analysis and to new specimens. They do not rewrite identifications you have already confirmed. Saving a new score threshold, ID cell rule, ACS rule-out count, default rule-out count, or extra-phase list marks each unconfirmed analysis stale until you run analysis again. The lab name, department, and specimen defaults do not.

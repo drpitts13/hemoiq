@@ -6,11 +6,11 @@ The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cel
 
 - **Find** filters the specimen list by accession, type, phenotype, previous antibodies, notes, or final ID.
 - **Specimen** and **Panel** pick the accession and the lot. Grades load when you change specimen, panel, or run.
-- **Run** selects which set of grades you are editing. The first run is the untreated panel. **+ Run** adds a treated or adsorbed run. **Delete Run** removes the run you are viewing.
+- **Run** selects which set of grades you are editing. The first run is the untreated panel. **+ Run** adds a treated or adsorbed run. **Delete Run** removes the run you are viewing. Changing the run updates the status line to name that run.
 
 ## While you enter grades
 
-- **Compare** shows another run beside this one. Pick that run in the second list. Rows that differ are highlighted, and extra phases are included.
+- **Compare** shows another run beside this one. Pick that run in the second list. Grade columns are named for the two runs. Rows that differ are highlighted, the Changed box is checked, and extra phases are included. The Changed box is display only.
 - **Hide ruled-out** hides antigen columns already ruled out for this specimen. The setting can also be turned on by default in Preferences.
 - **Show dosage** groups columns by blood-group system and marks homozygous ++, heterozygous +, or +/? when the antithetical antigen was not typed. This is display only. It does not change rule-out.
 - **Load Reactions** reloads grades from the database.
@@ -24,7 +24,7 @@ A blue banner names the cell or serum treatment when the run is not an ordinary 
 
 ## The grid
 
-Antigen columns come from the panel. Red header text means that antibody is ruled out for this specimen. A strikethrough header means the antigen is destroyed by the cell treatment, so that column cannot support a rule-out on this run.
+Antigen columns come from the panel. A column that is NT on every cell is hidden. A typed minus stays. Red header text means that antibody is ruled out for this specimen. A strikethrough header means the antigen is destroyed by the cell treatment, so that column cannot support a rule-out on this run.
 
 Row colors: blue when no grades have been entered, green when the row contributed to a rule-out. Phase cells use yellow for w+ or 1+, orange for 2+, red for 3+, 4+, or hemolysis, and purple for mixed field. A pink CC cell is invalid when AHG is 0.
 

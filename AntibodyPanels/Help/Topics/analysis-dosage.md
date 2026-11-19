@@ -1,6 +1,8 @@
 # Dosage
 
-Dosage compares reaction strength on homozygous cells with reaction strength on heterozygous cells for the suspected antibodies.
+Dosage compares reaction strength on homozygous cells with reaction strength on heterozygous cells for suspected antibodies.
+
+A row appears only when a suspected antibody scores at least 60 percent, the antigen has an antithetical partner, both a homozygous cell and a heterozygous cell were graded, and the homozygous average is stronger by more than half a grade. The grid is empty when no suspected antibody meets that pattern. A workup where nothing is suspected, including a nonreactive panel used for rule-out, has no dosage rows.
 
 The note at the top of the tab describes the comparison. The grid columns are:
 

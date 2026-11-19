@@ -38,7 +38,13 @@ namespace AntibodyPanels.ViewModels
         public string SelectedReportType
         {
             get => _selectedReportType;
-            set { SetField(ref _selectedReportType, value); UpdatePreview(); }
+            set
+            {
+                var changed = SetField(ref _selectedReportType, value);
+                UpdatePreview();
+                if (changed && _main?.SelectedTabIndex == 5)
+                    AnnounceStatus();
+            }
         }
 
         private Specimen? _selectedSpecimen;
@@ -123,6 +129,9 @@ namespace AntibodyPanels.ViewModels
             }
             ApplySpecimenFilter(accessionNumber);
         }
+
+        public void AnnounceStatus() =>
+            _main?.SetStatus(ScreenStatus.Reports(SelectedReportType));
 
         public void Refresh()
         {

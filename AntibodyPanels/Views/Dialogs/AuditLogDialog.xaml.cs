@@ -1,20 +1,39 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using AntibodyPanels.Data;
+using AntibodyPanels.Models;
 using Microsoft.Win32;
 
 namespace AntibodyPanels.Views.Dialogs
 {
     public partial class AuditLogDialog : Window
     {
+        public const int MaxEvents = 5000;
+
         private readonly DatabaseService _db;
+        private List<AuditEvent> _events = new();
 
         public AuditLogDialog(DatabaseService db)
         {
             InitializeComponent();
             _db = db;
-            EventsGrid.ItemsSource = _db.GetAuditEvents();
+            _events = _db.GetAuditEvents(MaxEvents);
+            ApplyFilter();
+        }
+
+        private void FindChanged(object sender, TextChangedEventArgs e) => ApplyFilter();
+
+        private void ApplyFilter()
+        {
+            var shown = _events.Where(ev => ev.MatchesFilter(FindBox.Text)).ToList();
+            EventsGrid.ItemsSource = shown;
+            CountText.Text = shown.Count == _events.Count
+                ? $"{shown.Count} event(s)"
+                : $"Showing {shown.Count} of {_events.Count}";
         }
 
         private void ExportClick(object sender, RoutedEventArgs e)
@@ -26,9 +45,10 @@ namespace AntibodyPanels.Views.Dialogs
             };
             if (dlg.ShowDialog() != true) return;
 
+            var shown = EventsGrid.ItemsSource as IEnumerable<AuditEvent> ?? _events;
             var sb = new StringBuilder();
             sb.AppendLine("OccurredAtUtc,Operator,Action,EntityType,EntityId,Reason,BeforeJson,AfterJson");
-            foreach (var ev in _db.GetAuditEvents(5000))
+            foreach (var ev in shown)
             {
                 sb.AppendLine(string.Join(",",
                     Csv(ev.OccurredAtUtc), Csv(ev.Operator), Csv(ev.Action),

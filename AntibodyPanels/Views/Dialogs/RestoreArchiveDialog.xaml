@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:help="clr-namespace:AntibodyPanels.Help"
         help:Help.Topic="archive"
-        Title="Open Archive" Width="640" Height="520"
+        Title="Open Archive" Width="820" Height="520"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
         MinWidth="520" MinHeight="400">
     <DockPanel Margin="16,12,16,12">
@@ -35,6 +35,8 @@
                 <DataGridTextColumn Header="Accession" Binding="{Binding AccessionNumber}" Width="*"/>
                 <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="80"/>
                 <DataGridTextColumn Header="Created" Binding="{Binding CreatedDate}" Width="110"/>
+                <DataGridTextColumn Header="Recorded" Binding="{Binding Recorded}" Width="2*"
+                                    ToolTipService.ToolTip="Final identification if one was confirmed; otherwise the antibodies stored with the specimen, plus DAT and notes. Not a new identification."/>
                 <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="150"/>
             </DataGrid.Columns>
         </DataGrid>

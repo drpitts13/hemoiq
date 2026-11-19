@@ -414,5 +414,40 @@ namespace AntibodyPanels.Tests
             Assert.True(rxn.IsNegative);
             Assert.False(rxn.IsPositive);
         }
+
+        [Fact]
+        public void DemoScenarios_NeverAnalyzed_AreRecordedWithoutChangingGrades()
+        {
+            var before = _db.GetWorklistItems(14);
+            Assert.Contains(before, i =>
+                i.AccessionNumber == DemoDataSeeder.Scenario1Id && i.Detail == "Never analyzed.");
+
+            _db.AddSpecimen("KEEP-NA", "serum");
+            var otherPanel = _db.AddPanel("Keep", "LOT", "Lab", 1, null, false);
+            _db.LinkSpecimenPanel("KEEP-NA", otherPanel);
+
+            Assert.Equal(DemoDataSeeder.ScenarioIds.Length,
+                DemoDataSeeder.AnalyzeIfNeverAnalyzed(_db, _analyzer));
+
+            var after = _db.GetWorklistItems(14);
+            Assert.DoesNotContain(after, i =>
+                i.AccessionNumber != null &&
+                i.AccessionNumber.StartsWith("DEMO-", StringComparison.Ordinal) &&
+                i.Detail == "Never analyzed.");
+            Assert.Contains(after, i =>
+                i.AccessionNumber == "KEEP-NA" && i.Detail == "Never analyzed.");
+
+            var antiE = _db.GetSpecimen(DemoDataSeeder.Scenario1Id);
+            Assert.False(string.IsNullOrEmpty(antiE!.LastAnalyzedAt));
+            Assert.Contains(_db.GetSpecimenAntibodies(DemoDataSeeder.Scenario1Id),
+                a => a.Antibody == "anti-E");
+            var run = _db.GetAllSpecimenRuns(DemoDataSeeder.Scenario1Id)[0];
+            var cell1 = _db.GetReactions(run.RunId).Single(r => r.CellNumber == "1");
+            Assert.Equal("2+", cell1.AHG);
+
+            Assert.Equal(0, DemoDataSeeder.AnalyzeIfNeverAnalyzed(_db, _analyzer));
+            Assert.Equal(antiE.LastAnalyzedAt, _db.GetSpecimen(DemoDataSeeder.Scenario1Id)!.LastAnalyzedAt);
+            Assert.Null(_db.GetSpecimen("KEEP-NA")!.LastAnalyzedAt);
+        }
     }
 }

@@ -25,8 +25,12 @@ public class Fda510kControlTests
         Assert.DoesNotContain("Version 2.0 (C# / WPF)", SoftwareIdentity.AboutText());
         Assert.Contains(SoftwareIdentity.Version, SoftwareIdentity.AboutText());
         Assert.Contains("does not issue or release blood units", SoftwareIdentity.IntendedUse);
-        Assert.Contains("INTENDED USE:", SoftwareIdentity.ReportPreamble());
-        Assert.Contains(SoftwareIdentity.Version, SoftwareIdentity.ReportPreamble());
+        var preamble = SoftwareIdentity.ReportPreamble();
+        Assert.Contains("INTENDED USE:", preamble);
+        Assert.Contains(SoftwareIdentity.Version, preamble);
+        Assert.Contains("does not issue or release blood units", preamble);
+        foreach (var line in preamble.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None))
+            Assert.True(line.Length <= SoftwareIdentity.ReportLineWidth, line);
     }
 
     [Fact]
@@ -191,5 +195,28 @@ public class Fda510kControlTests
         iso.Db.AppendAudit("update_settings", "settings", "lab", null,
             "{\"ProbabilityThreshold\":0.5}", "{\"ProbabilityThreshold\":0.8}");
         Assert.Contains(iso.Db.GetAuditEvents(), e => e.Action == "update_settings");
+    }
+
+    [Fact]
+    public void AuditFind_KeepsOneSeededAccession()
+    {
+        var warm = new AuditEvent
+        {
+            Action = "save_reaction",
+            EntityType = "specimen",
+            EntityId = "E2E-WARM-AUTO",
+            Operator = "darrellpitts"
+        };
+        var other = new AuditEvent
+        {
+            Action = "save_reaction",
+            EntityType = "specimen",
+            EntityId = "E2E-NEGATIVE",
+            Operator = "darrellpitts"
+        };
+        Assert.True(warm.MatchesFilter("e2e-warm-auto"));
+        Assert.False(other.MatchesFilter("e2e-warm-auto"));
+        Assert.True(warm.MatchesFilter(null));
+        Assert.True(other.MatchesFilter("save_reaction"));
     }
 }

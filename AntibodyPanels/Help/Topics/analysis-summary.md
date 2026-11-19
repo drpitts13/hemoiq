@@ -6,4 +6,6 @@ Use it when you want the whole workup on one page before you open **Reports**. T
 
 The text updates when you click **Run Analysis**. If the orange stale warning is showing, the summary still describes the previous analysis. Run analysis again so the summary matches the grades.
 
+When the analysis has a panreactive, autoantibody, or high-prevalence pattern, Summary does not say that no antibodies are suspected. Those pattern sentences are the evidence. An ordinary workup with no such pattern still says no antibodies are suspected when the suspected list is empty.
+
 You cannot type into the summary. Change grades on Reactions, change the final ID on **Suspected Antibodies**, and change clinical context on the specimen record.

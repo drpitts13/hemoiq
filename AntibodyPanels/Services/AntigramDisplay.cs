@@ -78,6 +78,8 @@ namespace AntibodyPanels.Services
             var zygosity = Classify(antigens, antigen);
             if (!showDosage)
             {
+                if (Typed(antigens, antigen, out var raw) && AntigenConstants.IsExplicitHomozygousValue(raw))
+                    return AntigenConstants.AntigenHomozygous;
                 return zygosity switch
                 {
                     AntigenZygosity.NotTested => "",

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using AntibodyPanels.Models;
+using AntibodyPanels.Services;
 
 namespace AntibodyPanels.Data
 {
@@ -609,21 +610,60 @@ namespace AntibodyPanels.Data
             cmd.ExecuteNonQuery();
         }
 
-        public bool IsSpecimenAnalysisStale(string specimenId)
+        public bool IsSpecimenAnalysisStale(string specimenId) =>
+            GetAnalysisStaleReason(specimenId) != AnalysisStaleReason.None;
+
+        public AnalysisStaleReason GetAnalysisStaleReason(string specimenId)
         {
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
-                SELECT reactions_updated_at, last_analyzed_at FROM specimens
+                SELECT reactions_updated_at, last_analyzed_at, final_antibodies FROM specimens
                 WHERE accession_number = $id";
             cmd.Parameters.AddWithValue("$id", specimenId);
+            string? ru;
+            string? la;
+            string? finalId;
+            using (var r = cmd.ExecuteReader())
+            {
+                if (!r.Read()) return AnalysisStaleReason.None;
+                ru = r.IsDBNull(0) ? null : r.GetString(0);
+                la = r.IsDBNull(1) ? null : r.GetString(1);
+                finalId = r.IsDBNull(2) ? null : r.GetString(2);
+            }
+            var reactionsChanged = ReactionsChangedSinceAnalysis(ru, la);
+            var preferencesChanged = false;
+            if (string.IsNullOrWhiteSpace(finalId) && la != null)
+            {
+                var saved = GetLatestAnalysisSnapshot(specimenId)?.SettingsJson;
+                preferencesChanged = LabSettings.ClinicalSettingsDiffer(
+                    saved, AppSettings.Current.ClinicalSettingsJson());
+            }
+            return AnalysisFreshness.Combine(reactionsChanged, preferencesChanged);
+        }
+
+        private static bool ReactionsChangedSinceAnalysis(string? reactionsUpdatedAt, string? lastAnalyzedAt)
+        {
+            if (reactionsUpdatedAt == null && lastAnalyzedAt == null) return false;
+            if (reactionsUpdatedAt != null && lastAnalyzedAt == null) return true;
+            if (reactionsUpdatedAt == null) return false;
+            return string.Compare(reactionsUpdatedAt, lastAnalyzedAt, StringComparison.Ordinal) > 0;
+        }
+
+        public Dictionary<string, string> GetLatestSnapshotSettingsBySpecimen()
+        {
+            var map = new Dictionary<string, string>(StringComparer.Ordinal);
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = @"
+                SELECT specimen_id, settings_json
+                FROM analysis_snapshots
+                WHERE id IN (SELECT MAX(id) FROM analysis_snapshots GROUP BY specimen_id)";
             using var r = cmd.ExecuteReader();
-            if (!r.Read()) return false;
-            var ru = r.IsDBNull(0) ? null : r.GetString(0);
-            var la = r.IsDBNull(1) ? null : r.GetString(1);
-            if (ru == null && la == null) return false;
-            if (ru != null && la == null) return true;
-            if (ru == null) return false;
-            return string.Compare(ru, la, StringComparison.Ordinal) > 0;
+            while (r.Read())
+            {
+                if (r.IsDBNull(1)) continue;
+                map[r.GetString(0)] = r.GetString(1);
+            }
+            return map;
         }
 
         // ── Specimen Antibodies ───────────────────────────────────────────────
@@ -924,7 +964,7 @@ namespace AntibodyPanels.Data
         public void AddPanelCell(int panelId, string cellNumber)
         {
             var cols = string.Join(", ", AntigenMapper.AllColumns);
-            var vals = string.Join(", ", GetAllAntigenColumns(_ => "'-'"));
+            var vals = string.Join(", ", GetAllAntigenColumns(_ => $"'{AntigenConstants.AntigenNotTested}'"));
             using (var cmd = _conn.CreateCommand())
             {
                 cmd.CommandText = $@"
@@ -1657,6 +1697,8 @@ namespace AntibodyPanels.Data
             var today = DateTime.Now.Date;
             var horizon = today.AddDays(expirationWarningDays).ToString("yyyy-MM-dd");
             var todayStr = today.ToString("yyyy-MM-dd");
+            var currentSettingsJson = AppSettings.Current.ClinicalSettingsJson();
+            var savedSettings = GetLatestSnapshotSettingsBySpecimen();
 
             foreach (var s in GetAllSpecimens().Where(s => s.IsActive))
             {
@@ -1721,16 +1763,22 @@ namespace AntibodyPanels.Data
                         }
                     }
 
-                    if (s.IsAnalysisStale || (s.LastAnalyzedAt == null && panels.Count > 0))
+                    var preferencesChanged = s.LastAnalyzedAt != null &&
+                        savedSettings.TryGetValue(s.AccessionNumber, out var savedJson) &&
+                        LabSettings.ClinicalSettingsDiffer(savedJson, currentSettingsJson);
+                    var neverAnalyzed = s.LastAnalyzedAt == null && panels.Count > 0;
+                    if (s.IsAnalysisStale || preferencesChanged || neverAnalyzed)
                     {
+                        var detail = neverAnalyzed
+                            ? "Never analyzed."
+                            : AnalysisFreshness.WorklistDetail(
+                                AnalysisFreshness.Combine(s.IsAnalysisStale, preferencesChanged));
                         items.Add(new WorklistItem
                         {
                             Kind = WorklistKind.StaleAnalysis,
                             KindLabel = "Stale analysis",
                             Title = s.AccessionNumber,
-                            Detail = s.LastAnalyzedAt == null
-                                ? "Never analyzed."
-                                : "Reactions changed since last analysis.",
+                            Detail = detail,
                             UrgencyLabel = "Re-analyze",
                             SortOrder = 2,
                             AccessionNumber = s.AccessionNumber,
@@ -2308,23 +2356,46 @@ namespace AntibodyPanels.Data
             using var conn = OpenArchiveReadOnly(path);
             EnsureArchiveSpecimensTable(conn);
 
+            var specimenCols = ArchiveColumnNames(conn, "specimens");
+            var select = new List<string> { "accession_number", "type", "created_date" };
+            foreach (var optional in new[] { "final_antibodies", "dat_result", "notes" })
+            {
+                if (specimenCols.Contains(optional))
+                    select.Add(optional);
+            }
             var specimens = new List<ArchiveSpecimenRow>();
+            var antibodies = ArchiveAntibodiesBySpecimen(conn);
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = @"
-                    SELECT accession_number, type, created_date
+                cmd.CommandText = $@"
+                    SELECT {string.Join(", ", select)}
                     FROM specimens
                     ORDER BY created_date, accession_number";
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
                     var acc = reader.GetString(0);
+                    string? finalId = null;
+                    string? dat = null;
+                    string? notes = null;
+                    for (var i = 3; i < select.Count; i++)
+                    {
+                        var value = reader.IsDBNull(i) ? null : reader.GetString(i);
+                        switch (select[i])
+                        {
+                            case "final_antibodies": finalId = value; break;
+                            case "dat_result": dat = value; break;
+                            case "notes": notes = value; break;
+                        }
+                    }
+                    antibodies.TryGetValue(acc, out var listed);
                     specimens.Add(new ArchiveSpecimenRow
                     {
                         AccessionNumber = acc,
                         Type = reader.IsDBNull(1) ? "" : reader.GetString(1),
                         CreatedDate = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                        ExistsInLive = liveAccessions.Contains(acc)
+                        ExistsInLive = liveAccessions.Contains(acc),
+                        Recorded = ArchiveSpecimenRow.FormatRecorded(finalId, dat, notes, listed)
                     });
                 }
             }
@@ -2384,8 +2455,13 @@ namespace AntibodyPanels.Data
                     archiveSpecimenCount = Convert.ToInt32(cmd.ExecuteScalar());
                 }
 
+                FillRestoreSkipPanels();
                 CopyFromArchive("panels");
                 CopyFromArchive("panel_cells");
+                if (AttachedTableExists("panel_antigen_order"))
+                    CopyFromArchive(
+                        "panel_antigen_order",
+                        "panel_id NOT IN (SELECT panel_id FROM restore_skip_panels)");
                 if (AttachedTableExists("panel_extra_antigens"))
                     CopyFromArchive("panel_extra_antigens", "panel_id IN (SELECT panel_id FROM panels)");
                 if (AttachedTableExists("panel_cell_extra_antigens"))
@@ -2409,10 +2485,15 @@ namespace AntibodyPanels.Data
                 CopyFromArchive(
                     "reactions",
                     "run_id IN (SELECT run_id FROM panel_runs)");
+                if (AttachedTableExists("analysis_snapshots"))
+                    CopyFromArchive(
+                        "analysis_snapshots",
+                        "specimen_id NOT IN (SELECT accession_number FROM restore_skip)");
             }
             finally
             {
                 try { ExecNonQuery("DROP TABLE IF EXISTS restore_skip"); } catch { /* ignore */ }
+                try { ExecNonQuery("DROP TABLE IF EXISTS restore_skip_panels"); } catch { /* ignore */ }
                 try { DetachArchive(); } catch { /* ignore if not attached */ }
             }
 
@@ -2423,6 +2504,7 @@ namespace AntibodyPanels.Data
             BumpSequence("specimen_panels", "id");
             BumpSequence("panel_runs", "run_id");
             BumpSequence("reactions", "reaction_id");
+            BumpSequence("analysis_snapshots", "id");
 
             AppendAudit("restore", "archive", path, null,
                 afterJson: JsonSerializer.Serialize(new { restored, skipped = archiveSpecimenCount - restored }));
@@ -2467,6 +2549,48 @@ namespace AntibodyPanels.Data
         {
             if (!TableExists(conn, "specimens"))
                 throw new InvalidOperationException("This file is not a valid Antibody Panels archive.");
+        }
+
+        private static HashSet<string> ArchiveColumnNames(SqliteConnection conn, string table)
+        {
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"PRAGMA table_info({table})";
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+                names.Add(reader.GetString(1));
+            return names;
+        }
+
+        private static Dictionary<string, List<string>> ArchiveAntibodiesBySpecimen(SqliteConnection conn)
+        {
+            var map = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            if (!TableExists(conn, "specimen_antibodies"))
+                return map;
+            var columns = ArchiveColumnNames(conn, "specimen_antibodies");
+            if (!columns.Contains("antibody"))
+                return map;
+            var order = columns.Contains("probability")
+                ? "specimen_id, probability DESC, antibody"
+                : "specimen_id, antibody";
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $@"
+                SELECT specimen_id, antibody
+                FROM specimen_antibodies
+                ORDER BY {order}";
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                if (reader.IsDBNull(0) || reader.IsDBNull(1)) continue;
+                var id = reader.GetString(0);
+                if (!map.TryGetValue(id, out var list))
+                {
+                    list = new List<string>();
+                    map[id] = list;
+                }
+                list.Add(reader.GetString(1));
+            }
+            return map;
         }
 
         private static bool TableExists(SqliteConnection conn, string table)
@@ -2526,6 +2650,13 @@ namespace AntibodyPanels.Data
         }
 
         private static string QuoteIdent(string name) => "\"" + name.Replace("\"", "\"\"") + "\"";
+
+        private void FillRestoreSkipPanels()
+        {
+            ExecNonQuery("DROP TABLE IF EXISTS restore_skip_panels");
+            ExecNonQuery("CREATE TEMP TABLE restore_skip_panels (panel_id INTEGER PRIMARY KEY)");
+            ExecNonQuery("INSERT INTO restore_skip_panels (panel_id) SELECT panel_id FROM panels");
+        }
 
         private void FillRestoreSkipTable(HashSet<string> skip)
         {
@@ -2591,6 +2722,10 @@ namespace AntibodyPanels.Data
                     SELECT * FROM panel_cells
                     WHERE panel_id IN (SELECT panel_id FROM archive.panels)");
                 ExecNonQuery(@"
+                    INSERT INTO archive.panel_antigen_order
+                    SELECT * FROM panel_antigen_order
+                    WHERE panel_id IN (SELECT panel_id FROM archive.panels)");
+                ExecNonQuery(@"
                     INSERT INTO archive.panel_extra_antigens
                     SELECT * FROM panel_extra_antigens
                     WHERE panel_id IN (SELECT panel_id FROM archive.panels)");
@@ -2621,6 +2756,10 @@ namespace AntibodyPanels.Data
                     INSERT INTO archive.reactions
                     SELECT * FROM reactions
                     WHERE run_id IN (SELECT run_id FROM archive.panel_runs)");
+                ExecNonQuery(@"
+                    INSERT INTO archive.analysis_snapshots
+                    SELECT * FROM analysis_snapshots
+                    WHERE specimen_id IN (SELECT accession_number FROM archive.specimens)");
             }
             finally
             {

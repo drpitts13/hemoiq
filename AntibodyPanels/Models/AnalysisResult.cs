@@ -71,6 +71,11 @@ namespace AntibodyPanels.Models
         public string Antibody { get; set; } = string.Empty;
         public string Antigen { get; set; } = string.Empty;
         public bool IsClinicallySignificant { get; set; }
+        /// <summary>
+        /// The antigen is on the linked panel and NT on every cell.
+        /// False means the antigen was not on the panel.
+        /// </summary>
+        public bool NotTestedOnEveryCell { get; set; }
         public string Explanation { get; set; } = string.Empty;
     }
 
@@ -210,7 +215,21 @@ namespace AntibodyPanels.Models
         public string PolicySource { get; set; } = "lab default";
         public string Explanation { get; set; } = string.Empty;
         public List<RuleoutDetail> Cells { get; set; } = new();
-        public List<string> ConflictingReactiveCells { get; set; } = new();
+        public List<ReactiveConflictCell> ConflictingReactiveCells { get; set; } = new();
+    }
+
+    /// <summary>
+    /// An antigen-positive cell that reacted, so it cannot rule the antibody out.
+    /// The run is part of the citation.
+    /// </summary>
+    public class ReactiveConflictCell
+    {
+        public string PanelName { get; set; } = string.Empty;
+        public string CellNumber { get; set; } = string.Empty;
+        public string RunLabel { get; set; } = string.Empty;
+        public string StrongestPhase { get; set; } = string.Empty;
+        public string StrongestValue { get; set; } = string.Empty;
+        public string CC { get; set; } = string.Empty;
     }
 
     public class RuleoutDetail

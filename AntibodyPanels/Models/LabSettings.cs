@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 
 namespace AntibodyPanels.Models
 {
@@ -112,6 +113,18 @@ namespace AntibodyPanels.Models
             DefaultMinRuleoutCount,
             ExtraPhases
         };
+
+        public string ClinicalSettingsJson() => JsonSerializer.Serialize(ClinicalSnapshot());
+
+        /// <summary>
+        /// True when a saved analysis used a different score threshold, ID cell
+        /// rule, ACS count, default rule-out count, or extra-phase list.
+        /// Lab name and other display settings are ignored. A blank snapshot
+        /// is not treated as a change.
+        /// </summary>
+        public static bool ClinicalSettingsDiffer(string? savedJson, string currentJson) =>
+            !string.IsNullOrWhiteSpace(savedJson) &&
+            !string.Equals(savedJson.Trim(), currentJson, StringComparison.Ordinal);
 
         public string IsolatedWorklistLabel =>
             IsWorklistCategoryIsolated("Incomplete") ? "Showing only incomplete work." :

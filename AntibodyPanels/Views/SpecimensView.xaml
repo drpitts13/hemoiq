@@ -5,7 +5,7 @@
              help:Help.Topic="specimens">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="340" MinWidth="200"/>
+            <ColumnDefinition Width="580" MinWidth="320"/>
             <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
@@ -50,10 +50,10 @@
                     </Style>
                 </DataGrid.RowStyle>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Accession #" Binding="{Binding AccessionNumber}" Width="120"/>
+                    <DataGridTextColumn Header="Accession #" Binding="{Binding AccessionNumber}" Width="170"/>
                     <DataGridTextColumn Header="Type" Binding="{Binding Type}" Width="60"/>
                     <DataGridTextColumn Header="Final ID" Binding="{Binding FinalIdDisplay}" Width="90"/>
-                    <DataGridTextColumn Header="Expiration" Binding="{Binding ExpirationDate}" Width="80"/>
+                    <DataGridTextColumn Header="Expiration" Binding="{Binding ExpirationDate}" Width="88"/>
                     <DataGridTextColumn Header="Created" Binding="{Binding CreatedDate}" Width="80"/>
                     <DataGridCheckBoxColumn Header="Active" Binding="{Binding IsActive}" IsReadOnly="True" Width="50"/>
                 </DataGrid.Columns>
@@ -123,14 +123,30 @@
                     </StackPanel>
                     <ListBox ItemsSource="{Binding LinkedPanels}"
                              SelectedItem="{Binding SelectedLinkedPanel}"
-                             DisplayMemberPath="Name" Height="100"/>
+                             DisplayMemberPath="Name" Height="64"/>
                 </DockPanel>
+            </GroupBox>
+
+            <GroupBox DockPanel.Dock="Top" Header="Pattern evidence" Margin="0,0,0,8" Padding="6">
+                <GroupBox.Style>
+                    <Style TargetType="GroupBox" BasedOn="{StaticResource {x:Type GroupBox}}">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasPatternEvidence}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </GroupBox.Style>
+                <ScrollViewer MaxHeight="132" VerticalScrollBarVisibility="Auto">
+                    <TextBlock Text="{Binding PatternEvidence}" TextWrapping="Wrap"/>
+                </ScrollViewer>
             </GroupBox>
 
             <!-- Suspected Antibodies -->
             <GroupBox DockPanel.Dock="Top" Header="Suspected Antibodies" Margin="0,0,0,8" Padding="6">
                 <DataGrid ItemsSource="{Binding Antibodies}" IsReadOnly="True"
-                          AutoGenerateColumns="False" Height="120"
+                          AutoGenerateColumns="False" Height="72"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Antibody" Binding="{Binding Antibody}" Width="*"/>
@@ -141,14 +157,19 @@
 
             <!-- Ruled-out Antibodies -->
             <GroupBox Header="Ruled-out Antibodies" Padding="6">
+                <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="{Binding RuleoutNote}" TextWrapping="Wrap"
+                           Margin="0,0,0,4" Foreground="#546E7A"/>
                 <DataGrid ItemsSource="{Binding Ruleouts}" IsReadOnly="True"
                           AutoGenerateColumns="False"
                           HeadersVisibility="Column" GridLinesVisibility="Horizontal">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Antibody" Binding="{Binding Antibody}" Width="*"/>
-                        <DataGridTextColumn Header="Count" Binding="{Binding RuleoutCount}" Width="80"/>
+                        <DataGridTextColumn Header="Antibody" Binding="{Binding Antibody}" Width="120"/>
+                        <DataGridTextColumn Header="Count" Binding="{Binding RuleoutCount}" Width="70"/>
+                        <DataGridTextColumn Header="Check cell" Binding="{Binding Note}" Width="*"/>
                     </DataGrid.Columns>
                 </DataGrid>
+                </DockPanel>
             </GroupBox>
         </DockPanel>
     </Grid>

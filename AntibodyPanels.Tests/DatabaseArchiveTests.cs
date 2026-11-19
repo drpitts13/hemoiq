@@ -56,6 +56,42 @@ public class DatabaseArchiveTests
     }
 
     [Fact]
+    public void InspectArchive_ShowsStoredAntibodiesDatAndNotes()
+    {
+        using var iso = new IsolatedDatabase();
+        var panelId = iso.Db.AddPanel("Warm Panel", "L1", "V", 1, null, false);
+        iso.Db.AddSpecimen("E2E-WARM-AUTO", "serum", null, null, null, null, null, "Positive", "2020-01-15");
+        iso.Db.AddSpecimen("E2E-WARM-K", "serum", null, null, null, null, null, null, "2020-01-16");
+        iso.Db.AddSpecimen("E2E-WARM-AUTO-ALLOS", "serum", null, null,
+            "Warm autoantibody with possible underlying alloantibodies.", null, null, "Positive", "2020-01-17");
+        iso.Db.LinkSpecimenPanel("E2E-WARM-AUTO", panelId);
+        iso.Db.AddSpecimenAntibody("E2E-WARM-K", "anti-K", 0.8);
+        iso.Db.AddSpecimenAntibody("E2E-WARM-AUTO-ALLOS", "anti-E", 0.7);
+        iso.Db.AddSpecimenAntibody("E2E-WARM-AUTO-ALLOS", "anti-K", 0.6);
+        iso.Db.SetSpecimenFinalCall("E2E-WARM-K", "anti-K", null, "DP");
+
+        var archivePath = NewArchivePath();
+        try
+        {
+            iso.Db.PurgeSpecimensCreatedBefore("2024-01-01", archivePath);
+            var inspection = iso.Db.InspectArchive(archivePath);
+            var warm = inspection.Specimens.Single(s => s.AccessionNumber == "E2E-WARM-AUTO");
+            var kell = inspection.Specimens.Single(s => s.AccessionNumber == "E2E-WARM-K");
+            var allos = inspection.Specimens.Single(s => s.AccessionNumber == "E2E-WARM-AUTO-ALLOS");
+            Assert.Equal("DAT Positive", warm.Recorded);
+            Assert.Equal("anti-K", kell.Recorded);
+            Assert.Contains("anti-E; anti-K", allos.Recorded);
+            Assert.Contains("DAT Positive", allos.Recorded);
+            Assert.Contains("underlying alloantibodies", allos.Recorded);
+            Assert.DoesNotContain("anti-E", kell.Recorded);
+        }
+        finally
+        {
+            TryDelete(archivePath);
+        }
+    }
+
+    [Fact]
     public void InspectArchive_RefusesLiveDatabasePath()
     {
         using var iso = new IsolatedDatabase();
@@ -158,6 +194,89 @@ public class DatabaseArchiveTests
             Assert.NotNull(iso.Db.GetPanel(usedPanelId));
             Assert.NotNull(iso.Db.GetSpecimen("OLD-SPEC"));
             Assert.Contains(iso.Db.GetSpecimenPanels("OLD-SPEC"), p => p.PanelId == usedPanelId);
+        }
+        finally
+        {
+            TryDelete(archivePath);
+        }
+    }
+
+    [Fact]
+    public void RestoreArchive_RestoresAnalysisSnapshot()
+    {
+        using var iso = new IsolatedDatabase();
+        Seed(iso, out _, out _);
+        const string settings =
+            "{\"ProbabilityThreshold\":0.5,\"IdentificationCellCount\":3,\"AcsRuleoutCount\":3,\"DefaultMinRuleoutCount\":1,\"ExtraPhases\":\"\"}";
+        iso.Db.SaveAnalysisSnapshot(
+            "OLD-SPEC", "2.0.0", settings, "fp-old",
+            "[\"anti-E\"]", "{\"anti-K\":0.9}", null,
+            "v1", "[]", "DP", "{\"note\":\"stored\"}");
+        iso.Db.SaveAnalysisSnapshot(
+            "NEW-SPEC", "2.0.0", settings, "fp-new",
+            null, null, null);
+
+        var archivePath = NewArchivePath();
+        try
+        {
+            iso.Db.PurgeSpecimensCreatedBefore("2024-01-01", archivePath);
+            Assert.Null(iso.Db.GetLatestAnalysisSnapshot("OLD-SPEC"));
+            Assert.Equal("fp-new", iso.Db.GetLatestAnalysisSnapshot("NEW-SPEC")!.InputFingerprint);
+
+            var result = iso.Db.RestoreArchive(archivePath);
+            Assert.Equal(1, result.SpecimensRestored);
+            var snap = iso.Db.GetLatestAnalysisSnapshot("OLD-SPEC");
+            Assert.NotNull(snap);
+            Assert.Equal(settings, snap!.SettingsJson);
+            Assert.Equal("fp-old", snap.InputFingerprint);
+            Assert.Equal("[\"anti-E\"]", snap.RuledOutJson);
+            Assert.Contains("anti-K", snap.SuspectedJson);
+            Assert.Equal("v1", snap.RuleEngineVersion);
+            Assert.Equal("DP", snap.AnalyzedBy);
+            Assert.Contains("stored", snap.AbsorptionJson);
+            Assert.Equal("fp-new", iso.Db.GetLatestAnalysisSnapshot("NEW-SPEC")!.InputFingerprint);
+
+            var id = snap.Id;
+            iso.Db.RestoreArchive(archivePath);
+            Assert.Equal(id, iso.Db.GetLatestAnalysisSnapshot("OLD-SPEC")!.Id);
+        }
+        finally
+        {
+            TryDelete(archivePath);
+        }
+    }
+
+    [Fact]
+    public void RestoreArchive_RestoresSavedAntigenOrder_AndLeavesLiveOrder()
+    {
+        using var iso = new IsolatedDatabase();
+        var restoredId = iso.Db.AddPanel("Order Restore", "L1", "V", 1, null, false);
+        var liveId = iso.Db.AddPanel("Order Live", "L2", "V", 1, null, false);
+        var reversed = AntigenConstants.Antigens.Reverse().ToList();
+        var forward = AntigenConstants.Antigens.ToList();
+        iso.Db.SetPanelAntigenOrder(restoredId, reversed);
+        iso.Db.SetPanelAntigenOrder(liveId, reversed);
+        iso.Db.AddSpecimen("OLD-SPEC", "serum", null, createdDate: "2020-01-15");
+        iso.Db.AddSpecimen("NEW-SPEC", "serum", null, createdDate: "2026-06-01");
+        iso.Db.LinkSpecimenPanel("OLD-SPEC", restoredId);
+        iso.Db.LinkSpecimenPanel("OLD-SPEC", liveId);
+        iso.Db.LinkSpecimenPanel("NEW-SPEC", liveId);
+
+        var archivePath = NewArchivePath();
+        try
+        {
+            iso.Db.PurgeSpecimensCreatedBefore("2024-01-01", archivePath);
+            iso.Db.DeletePanel(restoredId);
+            iso.Db.SetPanelAntigenOrder(liveId, forward);
+            Assert.Null(iso.Db.GetPanel(restoredId));
+
+            iso.Db.RestoreArchive(archivePath);
+            Assert.Equal(reversed, iso.Db.GetPanelAntigenOrder(restoredId));
+            Assert.Equal(forward, iso.Db.GetPanelAntigenOrder(liveId));
+
+            iso.Db.RestoreArchive(archivePath);
+            Assert.Equal(reversed, iso.Db.GetPanelAntigenOrder(restoredId));
+            Assert.Equal(forward, iso.Db.GetPanelAntigenOrder(liveId));
         }
         finally
         {

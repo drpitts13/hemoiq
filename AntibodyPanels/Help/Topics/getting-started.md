@@ -10,7 +10,7 @@ Antibody Panel Management System helps licensed immunohematology professionals d
 - Choose **Help → Topics** to jump to any chapter.
 - **Help → Keyboard Shortcuts** opens the shortcut list. **Help → About** shows the product name, version, and intended use.
 
-The manual stays open while you work. Use **Find** to search titles and chapter text. **Print chapter** prints the page you are reading. **Print manual** prints every chapter in order.
+The manual stays open while you work. Use **Find** to search titles and chapter text. **Print chapter** prints the page you are reading. **Print manual** prints every chapter in order. **Save manual** writes the whole manual, including the intended-use statement and the contents, as a PDF, a Markdown file, or plain text. **Close**, or Escape, dismisses the manual and leaves the screen you were on.
 
 ## A typical workup
 
@@ -31,4 +31,4 @@ The manual stays open while you work. Use **Find** to search titles and chapter 
 - **Edit → New Item** (Ctrl+N) adds a specimen, panel, or rule, depending on the tab.
 - **Tools** opens Preferences, Purge Database, Open Archive, Audit Log, and Load Demo Data.
 
-The first time the application starts, it shows the intended-use statement. The status bar at the bottom reports the result of the last action.
+The first time the application starts, it shows the intended-use statement. The status bar at the bottom reports the result of the last action. Opening a screen replaces that line with a line for the screen you are looking at, so a worklist message does not stay on Search. Returning to Search shows the last search result again, including the homozygous or heterozygous wording.

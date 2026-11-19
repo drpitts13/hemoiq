@@ -1,5 +1,7 @@
 using AntibodyPanels.Models;
+using AntibodyPanels.Services;
 using AntibodyPanels.Tests.Infrastructure;
+using AntibodyPanels.ViewModels;
 
 namespace AntibodyPanels.Tests;
 
@@ -134,6 +136,88 @@ public class SearchZygosityTests
         Assert.Single(both);
         Assert.Empty(homo);
         Assert.Empty(het);
+    }
+
+    [Fact]
+    public void WarmAuto_NegativeSearchSkipsNt_AndResultShowsNt()
+    {
+        using var iso = new IsolatedDatabase();
+        E2EWorkflowSeeder.SeedIfNeeded(iso.Db, iso.Analyzer);
+
+        var dNegative = iso.Db.SearchCellsByProfile(new Dictionary<string, string> { ["D"] = "-" });
+        Assert.DoesNotContain(dNegative, m => m.panel.LotNumber == "E2E-WARM-AUTO");
+
+        var ePositive = iso.Db.SearchCellsByProfile(new Dictionary<string, string> { ["E"] = "+" });
+        var warmE = Assert.Single(ePositive, m =>
+            m.panel.LotNumber == "E2E-WARM-AUTO" && m.cell.CellNumber == "1");
+        var row = new SearchResultRow(warmE.panel, warmE.cell);
+        Assert.Equal("+", row.E);
+        Assert.Equal("NT", row.D);
+
+        var kNegative = iso.Db.SearchCellsByProfile(new Dictionary<string, string> { ["K"] = "-" });
+        var warmK = Assert.Single(kNegative, m =>
+            m.panel.LotNumber == "E2E-WARM-AUTO" && m.cell.CellNumber == "1");
+        Assert.Equal("-", new SearchResultRow(warmK.panel, warmK.cell).K);
+    }
+
+    [Fact]
+    public void WarmAutoAllos_EPositiveKeepsTypedKMinus_AndDNegativeSkipsNt()
+    {
+        using var iso = new IsolatedDatabase();
+        E2EWorkflowSeeder.SeedIfNeeded(iso.Db, iso.Analyzer);
+
+        var ePositive = iso.Db.SearchCellsByProfile(new Dictionary<string, string> { ["E"] = "+" });
+        var allos = ePositive
+            .Where(m => m.panel.LotNumber == E2EWorkflowSeeder.WarmAutoAllos)
+            .OrderBy(m => m.cell.CellNumber)
+            .ToList();
+        Assert.Equal(new[] { "1", "3", "5" }, allos.Select(m => m.cell.CellNumber).ToArray());
+
+        var cell1 = new SearchResultRow(allos[0].panel, allos[0].cell);
+        Assert.Equal("+", cell1.E);
+        Assert.Equal("-", cell1.K);
+        Assert.Equal("-", cell1.c);
+        Assert.Equal("NT", cell1.D);
+
+        var cell3 = new SearchResultRow(allos[1].panel, allos[1].cell);
+        Assert.Equal("+", cell3.K);
+
+        var dNegative = iso.Db.SearchCellsByProfile(new Dictionary<string, string> { ["D"] = "-" });
+        Assert.DoesNotContain(dNegative, m => m.panel.LotNumber == E2EWorkflowSeeder.WarmAutoAllos);
+    }
+
+    [Fact]
+    public void WarmAutoAllos_HomozygousE_SkipsCellsWhosePartnerIsNt()
+    {
+        using var iso = new IsolatedDatabase();
+        E2EWorkflowSeeder.SeedIfNeeded(iso.Db, iso.Analyzer);
+
+        var both = iso.Db.SearchCellsByProfile(
+            new Dictionary<string, string> { ["E"] = "+" },
+            AntigenConstants.ZygosityBoth);
+        var allos = both
+            .Where(m => m.panel.LotNumber == E2EWorkflowSeeder.WarmAutoAllos)
+            .OrderBy(m => m.cell.CellNumber)
+            .ToList();
+        Assert.Equal(new[] { "1", "3", "5" }, allos.Select(m => m.cell.CellNumber).ToArray());
+        Assert.All(allos, m => Assert.False(m.cell.IsHomozygousFor("E")));
+        Assert.Equal("NT", new SearchResultRow(allos[0].panel, allos[0].cell).e);
+
+        var homo = iso.Db.SearchCellsByProfile(
+            new Dictionary<string, string> { ["E"] = "+" },
+            AntigenConstants.ZygosityHomozygous);
+        Assert.DoesNotContain(homo, m => m.panel.LotNumber == E2EWorkflowSeeder.WarmAutoAllos);
+        Assert.All(homo, m => Assert.True(m.cell.IsHomozygousFor("E")));
+
+        Assert.Equal(
+            "Found 3 matching cells for 1 criterion. Positive cells are homozygous.",
+            SearchViewModel.FormatResultStatus(3, 1, AntigenConstants.ZygosityHomozygous));
+        Assert.Equal(
+            "Found 141 matching cells for 1 criterion.",
+            SearchViewModel.FormatResultStatus(141, 1, AntigenConstants.ZygosityBoth));
+        Assert.Equal(
+            "Found 4 matching cells for 2 criteria. Positive cells are heterozygous.",
+            SearchViewModel.FormatResultStatus(4, 2, AntigenConstants.ZygosityHeterozygous));
     }
 
     private static IsolatedDatabase CreateCcPanel(out string homoCell, out string hetCell, out string negCell)

@@ -56,7 +56,7 @@ public class ZygosityPersistenceTests
         var antigens = new Dictionary<string, string> { ["E"] = "++" };
         Assert.Equal(AntigenZygosity.Homozygous, AntigramDisplay.Classify(antigens, "E"));
         Assert.Equal("++", AntigramDisplay.Format(antigens, "E", showDosage: true));
-        Assert.Equal("+", AntigramDisplay.Format(antigens, "E", showDosage: false));
+        Assert.Equal("++", AntigramDisplay.Format(antigens, "E", showDosage: false));
         var sentence = AntigramDisplay.Explain("1", antigens, "E");
         Assert.Contains("homozygous for E", sentence);
         Assert.Contains("e was not typed", sentence);

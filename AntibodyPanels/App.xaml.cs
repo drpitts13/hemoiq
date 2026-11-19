@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -26,11 +27,29 @@ namespace AntibodyPanels
                 Keyboard.PreviewKeyDownEvent,
                 new KeyEventHandler(OnPreviewKeyDown));
 
+            var manualFlag = Array.FindIndex(e.Args, a =>
+                string.Equals(a, "--write-manual", StringComparison.OrdinalIgnoreCase));
+            if (manualFlag >= 0)
+            {
+                var path = manualFlag + 1 < e.Args.Length
+                    ? e.Args[manualFlag + 1]
+                    : Path.Combine(AppContext.BaseDirectory, "USER_MANUAL.md");
+                var directory = Path.GetDirectoryName(Path.GetFullPath(path));
+                if (!string.IsNullOrEmpty(directory))
+                    Directory.CreateDirectory(directory);
+                File.WriteAllText(path, UserManual.Build());
+                Shutdown();
+                return;
+            }
+
             if (e.Args.Any(a => string.Equals(a, "--seed-clinical", StringComparison.OrdinalIgnoreCase)))
             {
                 using var db = new DatabaseService();
-                ClinicalDataSeeder.SeedIfNeeded(db, new AntibodyAnalyzer(db));
+                var analyzer = new AntibodyAnalyzer(db);
+                ClinicalDataSeeder.SeedIfNeeded(db, analyzer);
                 DemoDataSeeder.SeedIfNeeded(db);
+                DemoDataSeeder.AnalyzeIfNeverAnalyzed(db, analyzer);
+                E2EWorkflowSeeder.SeedIfNeeded(db, analyzer);
                 Shutdown();
                 return;
             }

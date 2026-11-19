@@ -95,7 +95,10 @@ namespace AntibodyPanels.Views
                      e.PropertyName == nameof(ReactionsViewModel.ExtraAntigens))
                 RebuildAntigenColumns();
             else if (e.PropertyName == nameof(ReactionsViewModel.CompareExtraPhases))
+            {
                 RebuildCompareExtraColumns();
+                ApplyCompareColumnHeaders();
+            }
         }
 
         private void ApplyRuledOutToHeaders()
@@ -134,6 +137,7 @@ namespace AntibodyPanels.Views
 
             ApplyGradeStylesToPhaseColumns();
             RebuildCompareExtraColumns();
+            ApplyCompareColumnHeaders();
             ApplyCompareGradeStyles();
             ApplyRuledOutToHeaders();
             ApplyDestroyedToHeaders();
@@ -158,7 +162,7 @@ namespace AntibodyPanels.Views
             var headerTemplate = (DataTemplate)FindResource("AntigenHeaderTemplate");
             var positiveBg = new SolidColorBrush(Color.FromRgb(200, 230, 201));
 
-            int insertIdx = 1;
+            int insertIdx = IndexAfterPhaseColumns();
             foreach (var ag in _vm.AntigenDisplayOrder)
             {
                 var header = new AntigenColumnHeader(ag);
@@ -193,6 +197,18 @@ namespace AntibodyPanels.Views
             ApplyRuledOutToHeaders();
             ApplyDestroyedToHeaders();
             ApplyAntigenColumnVisibility();
+            FreezeThroughPhaseColumns();
+        }
+
+        private int IndexAfterPhaseColumns()
+        {
+            var cc = ReactionsGrid.Columns.FirstOrDefault(c => (c.Header as string) == "CC");
+            return cc != null ? ReactionsGrid.Columns.IndexOf(cc) + 1 : ReactionsGrid.Columns.Count;
+        }
+
+        private void FreezeThroughPhaseColumns()
+        {
+            ReactionsGrid.FrozenColumnCount = Math.Max(1, IndexAfterPhaseColumns());
         }
 
         private static DataTemplate CreateAntigenCellTemplate(string antigen)
@@ -248,7 +264,11 @@ namespace AntibodyPanels.Views
             _extraPhaseColumns.Clear();
 
             var phases = ExtraPhaseParser.Parse(AppSettings.Current.ExtraPhases);
-            if (phases.Count == 0) return;
+            if (phases.Count == 0)
+            {
+                FreezeThroughPhaseColumns();
+                return;
+            }
 
             var ahg = ReactionsGrid.Columns.FirstOrDefault(c => (c.Header as string) == "AHG");
             var insertAt = ahg != null ? ReactionsGrid.Columns.IndexOf(ahg) + 1 : ReactionsGrid.Columns.Count;
@@ -269,6 +289,7 @@ namespace AntibodyPanels.Views
                 ReactionsGrid.Columns.Insert(insertAt++, col);
                 _extraPhaseColumns.Add(col);
             }
+            FreezeThroughPhaseColumns();
         }
 
         private void RebuildCompareExtraColumns()
@@ -282,20 +303,20 @@ namespace AntibodyPanels.Views
                 ?? ExtraPhaseParser.Parse(AppSettings.Current.ExtraPhases);
             if (phases.Count == 0) return;
 
-            var ccCol = CompareGrid.Columns.FirstOrDefault(c => (c.Header as string) == "This CC");
+            var ccCol = CompareGrid.Columns.FirstOrDefault(c => CompareBindingPath(c) == "LeftCC");
             var insertAt = ccCol != null ? CompareGrid.Columns.IndexOf(ccCol) : CompareGrid.Columns.Count;
             foreach (var phase in phases)
             {
                 var left = new DataGridTextColumn
                 {
-                    Header = "This " + phase,
+                    Header = CompareReactionRow.GradeHeader(CompareLeftLabel(), phase, "This"),
                     Width = 78,
                     Binding = new Binding($"LeftExtra[{phase}]"),
                     CellStyle = CreateGradeCellStyle($"LeftExtra[{phase}]")
                 };
                 var right = new DataGridTextColumn
                 {
-                    Header = "Other " + phase,
+                    Header = CompareReactionRow.GradeHeader(CompareRightLabel(), phase, "Other"),
                     Width = 78,
                     Binding = new Binding($"RightExtra[{phase}]"),
                     CellStyle = CreateGradeCellStyle($"RightExtra[{phase}]")
@@ -307,23 +328,76 @@ namespace AntibodyPanels.Views
             }
         }
 
+        private void ApplyCompareColumnHeaders()
+        {
+            var left = CompareLeftLabel();
+            var right = CompareRightLabel();
+            foreach (var col in CompareGrid.Columns)
+            {
+                var path = CompareBindingPath(col);
+                if (path == null) continue;
+                var header = HeaderForComparePath(path, left, right);
+                if (header == null) continue;
+                col.Header = header;
+                col.Width = new DataGridLength(Math.Max(78, header.Length * 8.0));
+            }
+        }
+
+        private string? CompareLeftLabel()
+        {
+            var label = _vm?.CompareRows.FirstOrDefault()?.LeftLabel;
+            if (string.IsNullOrWhiteSpace(label))
+                label = _vm?.SelectedRun?.DisplayLabel;
+            return label;
+        }
+
+        private string? CompareRightLabel()
+        {
+            var label = _vm?.CompareRows.FirstOrDefault()?.RightLabel;
+            if (string.IsNullOrWhiteSpace(label))
+                label = _vm?.CompareRun?.DisplayLabel;
+            return label;
+        }
+
+        private static string? CompareBindingPath(DataGridColumn col) =>
+            col is DataGridTextColumn text && text.Binding is Binding binding
+                ? binding.Path?.Path
+                : null;
+
+        private static string? HeaderForComparePath(string path, string? left, string? right)
+        {
+            if (path.StartsWith("LeftExtra[", StringComparison.Ordinal) && path.EndsWith(']'))
+                return CompareReactionRow.GradeHeader(left, path["LeftExtra[".Length..^1], "This");
+            if (path.StartsWith("RightExtra[", StringComparison.Ordinal) && path.EndsWith(']'))
+                return CompareReactionRow.GradeHeader(right, path["RightExtra[".Length..^1], "Other");
+            return path switch
+            {
+                "LeftIS" => CompareReactionRow.GradeHeader(left, "IS", "This"),
+                "RightIS" => CompareReactionRow.GradeHeader(right, "IS", "Other"),
+                "LeftC37" => CompareReactionRow.GradeHeader(left, "37°C", "This"),
+                "RightC37" => CompareReactionRow.GradeHeader(right, "37°C", "Other"),
+                "LeftAHG" => CompareReactionRow.GradeHeader(left, "AHG", "This"),
+                "RightAHG" => CompareReactionRow.GradeHeader(right, "AHG", "Other"),
+                "LeftCC" => CompareReactionRow.GradeHeader(left, "CC", "This"),
+                "RightCC" => CompareReactionRow.GradeHeader(right, "CC", "Other"),
+                _ => null
+            };
+        }
+
         private void ApplyCompareGradeStyles()
         {
             foreach (var col in CompareGrid.Columns)
             {
-                if (col.Header is not string header) continue;
-                col.CellStyle = header switch
-                {
-                    "This IS" => CreateGradeCellStyle("LeftIS"),
-                    "Other IS" => CreateGradeCellStyle("RightIS"),
-                    "This 37°C" => CreateGradeCellStyle("LeftC37"),
-                    "Other 37°C" => CreateGradeCellStyle("RightC37"),
-                    "This AHG" => CreateGradeCellStyle("LeftAHG"),
-                    "Other AHG" => CreateGradeCellStyle("RightAHG"),
-                    "This CC" => CreateGradeCellStyle("LeftCC"),
-                    "Other CC" => CreateGradeCellStyle("RightCC"),
-                    _ => col.CellStyle
-                };
+                var path = CompareBindingPath(col);
+                if (path == null) continue;
+                var stylePath = path is "LeftIS" or "RightIS" or "LeftC37" or "RightC37"
+                    or "LeftAHG" or "RightAHG" or "LeftCC" or "RightCC"
+                    || path.StartsWith("LeftExtra[", StringComparison.Ordinal)
+                    || path.StartsWith("RightExtra[", StringComparison.Ordinal)
+                    ? path
+                    : null;
+                if (stylePath != null)
+                    col.CellStyle = CreateGradeCellStyle(stylePath);
             }
         }
 

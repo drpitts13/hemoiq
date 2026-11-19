@@ -56,7 +56,7 @@ namespace AntibodyPanels.Views
             var rows = _vm?.Rows.ToList() ?? new();
             if (rows.Count == 0)
             {
-                plot.Title("No confirmed identifications in this range");
+                ShowEmptyChart(plot, "No confirmed identifications in this range");
                 BarPlot.Refresh();
                 return;
             }
@@ -90,7 +90,7 @@ namespace AntibodyPanels.Views
             var points = _vm?.Trend.ToList() ?? new();
             if (points.Count == 0)
             {
-                plot.Title("No monthly trend for this range");
+                ShowEmptyChart(plot, "No monthly trend for this range");
                 TrendPlot.Refresh();
                 return;
             }
@@ -110,6 +110,16 @@ namespace AntibodyPanels.Views
             plot.Axes.Left.Min = 0;
             plot.Axes.Margins(left: 0.05, right: 0.05, bottom: 0.2, top: 0.05);
             TrendPlot.Refresh();
+        }
+
+        private static void ShowEmptyChart(Plot plot, string title)
+        {
+            plot.Title(title);
+            plot.Axes.Bottom.Label.Text = "";
+            plot.Axes.Left.Label.Text = "";
+            plot.Axes.Bottom.TickGenerator = new NumericManual();
+            plot.Axes.Left.TickGenerator = new NumericManual();
+            plot.Axes.SetLimits(0, 1, 0, 1);
         }
     }
 }

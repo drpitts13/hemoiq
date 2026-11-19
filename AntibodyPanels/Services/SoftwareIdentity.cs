@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text;
 
 namespace AntibodyPanels.Services
 {
@@ -29,10 +30,36 @@ namespace AntibodyPanels.Services
 
         public static string VersionLabel => $"Version {Version}";
 
+        public const int ReportLineWidth = 96;
+
         public static string ReportPreamble()
         {
-            return $"{ProductName}  {VersionLabel}{Environment.NewLine}" +
-                   $"INTENDED USE: {IntendedUse}{Environment.NewLine}{Environment.NewLine}";
+            return Wrap($"{ProductName}  {VersionLabel}", ReportLineWidth) + Environment.NewLine +
+                   Wrap($"INTENDED USE: {IntendedUse}", ReportLineWidth) + Environment.NewLine + Environment.NewLine;
+        }
+
+        public static string Wrap(string text, int width)
+        {
+            if (string.IsNullOrEmpty(text) || width < 1 || text.Length <= width) return text;
+            var sb = new StringBuilder();
+            var column = 0;
+            foreach (var word in text.Split(' '))
+            {
+                if (word.Length == 0) continue;
+                if (column > 0 && column + 1 + word.Length > width)
+                {
+                    sb.Append(Environment.NewLine);
+                    column = 0;
+                }
+                if (column > 0)
+                {
+                    sb.Append(' ');
+                    column++;
+                }
+                sb.Append(word);
+                column += word.Length;
+            }
+            return sb.ToString();
         }
 
         public static string AboutText()

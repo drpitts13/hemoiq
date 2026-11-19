@@ -203,7 +203,7 @@
                   GridLinesVisibility="All" HeadersVisibility="Column"
                   SelectionUnit="Cell" FontSize="13.75"
                   RowHeight="28"
-                  FrozenColumnCount="1"
+                  FrozenColumnCount="5"
                   Loaded="ReactionsGrid_Loaded"
                   PreviewKeyDown="ReactionsGrid_PreviewKeyDown">
             <DataGrid.Resources>
@@ -287,7 +287,16 @@
                     <DataGridTextColumn Header="Other AHG" Binding="{Binding RightAHG}" Width="78"/>
                     <DataGridTextColumn Header="This CC" Binding="{Binding LeftCC}" Width="70"/>
                     <DataGridTextColumn Header="Other CC" Binding="{Binding RightCC}" Width="70"/>
-                    <DataGridCheckBoxColumn Header="Changed" Binding="{Binding AnyChanged}" Width="70"/>
+                    <DataGridTemplateColumn Header="Changed" IsReadOnly="True" Width="70">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding AnyChanged, Mode=OneWay}"
+                                          IsHitTestVisible="False"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>

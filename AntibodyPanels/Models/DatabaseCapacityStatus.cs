@@ -36,7 +36,35 @@ namespace AntibodyPanels.Models
         public string Type { get; init; } = "";
         public string CreatedDate { get; init; } = "";
         public bool ExistsInLive { get; init; }
+        public string Recorded { get; init; } = "";
         public string Status => ExistsInLive ? "Already in database" : "Will restore";
+
+        /// <summary>
+        /// Stored final identification, otherwise the antibodies saved with the
+        /// specimen, plus DAT and notes. This is the archive record, not a new identification.
+        /// </summary>
+        public static string FormatRecorded(
+            string? finalAntibodies, string? datResult, string? notes, IEnumerable<string>? antibodies)
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(finalAntibodies))
+                parts.Add(finalAntibodies.Trim());
+            else if (antibodies != null)
+            {
+                var listed = antibodies
+                    .Where(a => !string.IsNullOrWhiteSpace(a))
+                    .Select(a => a.Trim())
+                    .Distinct(StringComparer.Ordinal)
+                    .ToList();
+                if (listed.Count > 0)
+                    parts.Add(string.Join("; ", listed));
+            }
+            if (!string.IsNullOrWhiteSpace(datResult))
+                parts.Add("DAT " + datResult.Trim());
+            if (!string.IsNullOrWhiteSpace(notes))
+                parts.Add(notes.Trim());
+            return string.Join("; ", parts);
+        }
     }
 
     public sealed class ArchiveInspection

@@ -27,6 +27,13 @@ dotnet build $CsprojPath --configuration Release --nologo -v quiet
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed (exit $LASTEXITCODE)." }
 Write-Host "    Build succeeded." -ForegroundColor Green
 
+$ManualPath = Join-Path $ProjectRoot 'docs\USER_MANUAL.md'
+Write-Host "`n==> Writing the user manual..." -ForegroundColor Cyan
+$manualProc = Start-Process -FilePath $ExePath -ArgumentList @('--write-manual', $ManualPath) -Wait -PassThru
+if ($manualProc.ExitCode -ne 0) { throw "The application did not write the user manual (exit $($manualProc.ExitCode))." }
+if (-not (Test-Path $ManualPath)) { throw "USER_MANUAL.md was not written." }
+Write-Host "    Manual written to: $ManualPath" -ForegroundColor Green
+
 # ---------------------------------------------------------------------------
 # 2. Convert PNG -> ICO (multi-size: 16, 32, 48, 256)
 # ---------------------------------------------------------------------------

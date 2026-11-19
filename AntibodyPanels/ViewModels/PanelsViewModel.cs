@@ -39,8 +39,17 @@ namespace AntibodyPanels.ViewModels
                     OnPropertyChanged(nameof(SelectedPanel));
                     return;
                 }
-                if (SetField(ref _selectedPanel, value))
-                    LoadCells();
+                var previous = _selectedPanel?.PanelId;
+                if (!SetField(ref _selectedPanel, value)) return;
+                if (!_applyingFocusedCell)
+                {
+                    _focusCellNumber = null;
+                    _focusAntigen = null;
+                    _focusAntigens = null;
+                }
+                LoadCells();
+                if (_main.SelectedTabIndex == 2 && previous != _selectedPanel?.PanelId)
+                    AnnounceStatus();
             }
         }
 
@@ -73,8 +82,81 @@ namespace AntibodyPanels.ViewModels
             private set
             {
                 if (SetField(ref _isEditingAntigens, value))
+                {
+                    OnPropertyChanged(nameof(GridAntigens));
+                    OnPropertyChanged(nameof(PanelColumnNote));
                     CommandManager.InvalidateRequerySuggested();
+                }
             }
+        }
+
+        /// <summary>
+        /// Columns drawn on the antigen grid. While browsing, an antigen that is
+        /// NT on every cell is omitted. Edit mode shows the full order so those
+        /// cells can be typed.
+        /// </summary>
+        public IReadOnlyList<string> GridAntigens
+        {
+            get
+            {
+                var browsing = AntigensForGrid(AntigenDisplayOrder, CellRows, IsEditingAntigens);
+                if (IsEditingAntigens) return browsing;
+                return PlaceSearchAntigensFirst(browsing, _focusAntigens);
+            }
+        }
+
+        public string PanelColumnNote
+        {
+            get
+            {
+                if (IsEditingAntigens || _selectedPanel == null || CellRows.Count == 0)
+                    return "";
+                var hidden = AntigenDisplayOrder.Count - GridAntigens.Count;
+                if (hidden <= 0) return "";
+                return hidden == AntigenDisplayOrder.Count
+                    ? "Every antigen is NT, so those columns are hidden. Press Edit to type them."
+                    : "Columns that are NT on every cell are hidden. Press Edit to type them.";
+            }
+        }
+
+        public static IReadOnlyList<string> AntigensForGrid(
+            IReadOnlyList<string> order,
+            IReadOnlyList<PanelCellRow> rows,
+            bool showUntypedColumns)
+        {
+            if (showUntypedColumns || rows.Count == 0)
+                return order.ToList();
+            var cells = new List<PanelCell>(rows.Count);
+            foreach (var row in rows)
+                cells.Add(row.Cell);
+            return PanelCell.AntigensTypedOnAnyCell(order, cells);
+        }
+
+        /// <summary>
+        /// Several search antigens lead the browsing grid so the earlier
+        /// one stays beside the later one. One antigen, or an antigen the
+        /// panel is not showing, keeps the panel order.
+        /// </summary>
+        public static IReadOnlyList<string> PlaceSearchAntigensFirst(
+            IReadOnlyList<string> browsing,
+            IReadOnlyList<string>? searchAntigens)
+        {
+            if (searchAntigens == null || searchAntigens.Count < 2)
+                return browsing;
+
+            var leading = new List<string>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var antigen in searchAntigens)
+            {
+                if (string.IsNullOrWhiteSpace(antigen) || !seen.Add(antigen)) continue;
+                if (browsing.Contains(antigen))
+                    leading.Add(antigen);
+            }
+            if (leading.Count < 2)
+                return browsing;
+
+            var leadingSet = new HashSet<string>(leading, StringComparer.Ordinal);
+            return leading.Concat(browsing.Where(a => !leadingSet.Contains(a))).ToList();
         }
 
         public ICommand AddCommand { get; }
@@ -131,24 +213,98 @@ namespace AntibodyPanels.ViewModels
             ApplyFilter(sid);
         }
 
-        public void SelectPanel(int panelId)
+        public void AnnounceStatus() =>
+            _main.SetStatus(ScreenStatus.Panels(
+                Panels.Count, SelectedPanel?.Name, SelectedPanel?.LotNumber, FocusCellNumber));
+
+        private bool _applyingFocusedCell;
+        private string? _focusCellNumber;
+        private string? _focusAntigen;
+        private IReadOnlyList<string>? _focusAntigens;
+        public string? FocusCellNumber => _focusCellNumber;
+
+        /// <summary>
+        /// Antigen the search was filtering on. The grid scrolls this column
+        /// into view when a result opens. Empty when the panel was not opened
+        /// from a search.
+        /// </summary>
+        public string? FocusAntigen => _focusAntigen;
+
+        /// <summary>
+        /// Antigens the search was filtering on, in criteria order. When
+        /// there are several, the antigen grid shows them first and keeps
+        /// them on screen with the cell when the grid is scrolled. Empty
+        /// when the panel was not opened from a search.
+        /// </summary>
+        public IReadOnlyList<string>? FocusAntigens => _focusAntigens;
+
+        public void SelectPanel(
+            int panelId,
+            string? cellNumber = null,
+            string? antigen = null,
+            IReadOnlyList<string>? searchAntigens = null)
         {
-            var match = _allPanels.FirstOrDefault(p => p.PanelId == panelId);
-            if (match != null && !IsEditingAntigens)
+            if (IsEditingAntigens && _selectedPanel?.PanelId != panelId)
             {
-                if (!_showInactive && !match.IsActive)
-                {
-                    _showInactive = true;
-                    OnPropertyChanged(nameof(ShowInactive));
-                }
-                if (!match.MatchesFilter(_listFilter))
-                {
-                    _listFilter = string.Empty;
-                    OnPropertyChanged(nameof(ListFilter));
-                }
-                ApplyFilter(panelId);
+                _main.SetStatus("Save or Cancel antigen edits before selecting another panel.");
+                return;
             }
-            SelectedPanel = Panels.FirstOrDefault(p => p.PanelId == panelId) ?? SelectedPanel;
+
+            _applyingFocusedCell = true;
+            _focusCellNumber = string.IsNullOrWhiteSpace(cellNumber) ? null : cellNumber.Trim();
+            _focusAntigen = string.IsNullOrWhiteSpace(antigen) ? null : antigen.Trim();
+            _focusAntigens = searchAntigens == null
+                ? null
+                : searchAntigens.Where(a => !string.IsNullOrWhiteSpace(a)).Select(a => a.Trim()).ToList();
+            var samePanel = _selectedPanel?.PanelId == panelId;
+            try
+            {
+                var match = _allPanels.FirstOrDefault(p => p.PanelId == panelId);
+                if (match != null && !IsEditingAntigens)
+                {
+                    if (!_showInactive && !match.IsActive)
+                    {
+                        _showInactive = true;
+                        OnPropertyChanged(nameof(ShowInactive));
+                    }
+                    if (!match.MatchesFilter(_listFilter))
+                    {
+                        _listFilter = string.Empty;
+                        OnPropertyChanged(nameof(ListFilter));
+                    }
+                    ApplyFilter(panelId);
+                }
+                SelectedPanel = Panels.FirstOrDefault(p => p.PanelId == panelId) ?? SelectedPanel;
+            }
+            finally
+            {
+                _applyingFocusedCell = false;
+            }
+
+            if (samePanel)
+            {
+                OnPropertyChanged(nameof(GridAntigens));
+                AntigenColumnsRevision++;
+            }
+
+            MarkSearchFocus();
+            OnPropertyChanged(nameof(FocusCellNumber));
+            OnPropertyChanged(nameof(FocusAntigen));
+            ListReveal++;
+            if (_main.SelectedTabIndex == 2 && _focusCellNumber != null)
+                AnnounceStatus();
+        }
+
+        private int _listReveal;
+
+        /// <summary>
+        /// Bumps when a search result opens a lot, including the same lot
+        /// again, so the panel list brings that row into view.
+        /// </summary>
+        public int ListReveal
+        {
+            get => _listReveal;
+            private set => SetField(ref _listReveal, value);
         }
 
         private void ApplyFilter(int? preferredId = null)
@@ -182,8 +338,18 @@ namespace AntibodyPanels.ViewModels
                 AntigenDisplayOrder.Add(ag);
             foreach (var c in _db.GetPanelCells(_selectedPanel.PanelId))
                 CellRows.Add(new PanelCellRow(c));
+            OnPropertyChanged(nameof(GridAntigens));
+            OnPropertyChanged(nameof(PanelColumnNote));
             AntigenColumnsRevision++;
             CommandManager.InvalidateRequerySuggested();
+            MarkSearchFocus();
+        }
+
+        private void MarkSearchFocus()
+        {
+            foreach (var row in CellRows)
+                row.IsSearchFocus = _focusCellNumber != null
+                    && string.Equals(row.CellNumber, _focusCellNumber, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -547,6 +713,13 @@ namespace AntibodyPanels.ViewModels
     {
         public PanelCell Cell { get; }
         public string CellNumber => Cell.CellNumber;
+
+        private bool _isSearchFocus;
+        public bool IsSearchFocus
+        {
+            get => _isSearchFocus;
+            set => SetField(ref _isSearchFocus, value);
+        }
 
         public PanelCellRow(PanelCell cell) => Cell = cell;
 

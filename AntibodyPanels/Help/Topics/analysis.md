@@ -5,8 +5,8 @@ Analysis computes rule-outs, scores, and pattern statistics from the grades and 
 ## Top of the tab
 
 - **Find** filters specimens by accession, type, phenotype, previous antibodies, notes, or final ID.
-- **Specimen** selects the accession to review.
-- An orange **Analysis is stale** warning means grades changed after the last run. Click **Run Analysis** again before you rely on the tabs.
+- **Specimen** selects the accession to review. Selecting a specimen updates the status line to name that accession.
+- An orange **Analysis is stale** warning means grades changed after the last run, or Preferences that change analysis were saved after that run. Click **Run Analysis** again before you rely on the saved result. A confirmed identification is not marked stale for a Preferences change.
 - **Enter Reactions** jumps to the Reactions tab for this specimen.
 - **Clinical Report** opens the clinical identification report.
 - **Run Analysis** recalculates every inner tab.

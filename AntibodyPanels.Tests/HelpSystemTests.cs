@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Documents;
 using AntibodyPanels.Help;
+using PdfSharp.Pdf.IO;
 using DocumentList = System.Windows.Documents.List;
 
 namespace AntibodyPanels.Tests;
@@ -45,6 +46,68 @@ public class HelpSystemTests
 
         var readingOrder = HelpCatalog.InReadingOrder().Select(topic => topic.Id).ToList();
         Assert.Equal(ids.Count, readingOrder.Distinct().Count());
+    }
+
+    [Fact]
+    public void PatternMatchesChapterCountsPositiveReactionsOnly()
+    {
+        var text = HelpCatalog.Find("analysis-patterns")!.Markdown;
+        Assert.Contains("antigen-positive cells that reacted", text);
+        Assert.Contains("antigen-negative cells that reacted", text);
+        Assert.Contains("every panel cell is nonreactive", text);
+        Assert.Contains("already ruled out", text);
+        Assert.DoesNotContain("lacks the antigen and did not react", text);
+    }
+
+    [Fact]
+    public void EmptyAnalysisChaptersSayWhenTheGridStaysEmpty()
+    {
+        var combinations = HelpCatalog.Find("analysis-combinations")!.Markdown;
+        Assert.Contains("fewer than two antibodies are suspected", combinations);
+        Assert.Contains("exceeds 50 percent", combinations);
+
+        var dosage = HelpCatalog.Find("analysis-dosage")!.Markdown;
+        Assert.Contains("at least 60 percent", dosage);
+        Assert.Contains("nothing is suspected", dosage);
+
+        var special = HelpCatalog.Find("analysis-special")!.Markdown;
+        Assert.Contains("Treatment comparison", special);
+        Assert.Contains("only an untreated run", special);
+        Assert.Contains("not a diagnosis", special);
+    }
+
+    [Fact]
+    public void UserManualIncludesEveryChapterAndTheIntendedUse()
+    {
+        var manual = UserManual.Build();
+        Assert.Contains("Antibody Panel Management System", manual);
+        Assert.Contains("# User Manual", manual);
+        Assert.Contains("does not issue or release blood units", manual);
+        Assert.Contains("## Contents", manual);
+        foreach (var topic in HelpCatalog.All)
+        {
+            Assert.Contains($"# {topic.Title}", manual);
+            Assert.Contains(topic.Markdown.Trim(), manual);
+        }
+    }
+
+    [Fact]
+    public void UserManualPdf_WritesMoreThanOneLetterPage()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "abpanels-manual-" + Guid.NewGuid().ToString("N") + ".pdf");
+        try
+        {
+            UserManualPdf.Save(path);
+            Assert.True(new FileInfo(path).Length > 1000);
+            using var doc = PdfReader.Open(path, PdfDocumentOpenMode.Import);
+            Assert.True(doc.PageCount > 1);
+            Assert.Contains("User Manual", doc.Info.Title);
+        }
+        finally
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
     }
 
     [Fact]

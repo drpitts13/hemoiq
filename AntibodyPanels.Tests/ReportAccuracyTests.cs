@@ -75,6 +75,30 @@ public class ReportAccuracyTests
     }
 
     [Fact]
+    public void AllPanelsReport_KeepsLotUnderItsHeading()
+    {
+        var panels = _fixture.Db.GetAllPanels();
+        var text = _fixture.Reports.GeneratePreviewText(ReportType.AllPanels);
+        var lines = text.Split('\n');
+        var header = lines.First(l => l.StartsWith("Name ", StringComparison.Ordinal));
+        var lotAt = header.IndexOf("Lot", StringComparison.Ordinal);
+        var cellsAt = header.IndexOf("Cells", StringComparison.Ordinal);
+        var expiresAt = header.IndexOf("Expires", StringComparison.Ordinal);
+        Assert.True(lotAt > "Name".Length);
+        foreach (var p in panels)
+        {
+            var row = lines.First(l => l.StartsWith(p.Name + " ", StringComparison.Ordinal)
+                || l.StartsWith(p.Name + "\r", StringComparison.Ordinal)
+                || l == p.Name);
+            var lot = p.LotNumber ?? "N/A";
+            Assert.Equal(lot, row.Substring(lotAt, lot.Length));
+            Assert.Equal(p.NumCells.ToString(), row.Substring(cellsAt, p.NumCells.ToString().Length));
+            var expires = p.ExpirationDate ?? "N/A";
+            Assert.Equal(expires, row.Substring(expiresAt, expires.Length));
+        }
+    }
+
+    [Fact]
     public void CsvExport_AllSpecimens_MatchesDatabaseCount()
     {
         var csvPath = Path.Combine(Path.GetTempPath(), $"specimens_{Guid.NewGuid():N}.csv");
