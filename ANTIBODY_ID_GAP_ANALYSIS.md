@@ -4176,9 +4176,28 @@ All 1274 tests pass.
 
 All 1281 tests pass.
 
+## Iteration 162 (clean pass): Worklist, Specimens search, F1 help
+
+**Reviewed:**
+- **Worklist.**
+  - All 15 kinds are produced: the expiry kinds by `GetWorklistItems`'
+    expiry pass, overdue testing by `OverdueTesting`, and rule problems
+    (including Iteration 161's out-of-range count) by
+    `RuleValidation.Problems`.
+  - `LabSettings.WorklistCategory` maps every kind to exactly one of the
+    five count cards. The card counts and the filter use the same mapping.
+  - Stale items use the shared `AnalysisCurrency` rule, ordered by audit id
+    since Iteration 152.
+- **Specimens search.** It reads only; filters do not change data.
+- **F1 help.** `HelpSystemTests` checks that every topic loads and that
+  the required topics cover every section. The user manual includes every
+  chapter and the intended use.
+
+No new issue or gap worth fixing. All 1281 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Worklist categories and counts, Specimens
-search and filters, keyboard and F1 help coverage.
+Continue clean-pass reviews: vendor panel import (download sources and
+terms), the import artifact store, and the Panels editor audit.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
