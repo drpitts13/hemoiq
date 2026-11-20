@@ -4424,10 +4424,47 @@ All 1289 tests pass.
 
 No new issue or gap worth fixing. All 1289 tests pass.
 
+## Iteration 171: one typing-reliability assessment, including HPC transplant
+
+**Reviewed, no gap:**
+- Allogeneic HPC transplant marks serologic typing unreliable and a
+  genotype possibly the donor's, from the transplant date
+  (`TransplantContext`). An autologous transplant changes neither.
+- Passive anti-D from RhIG within the configured window is flagged
+  (`SpecimenDating.PassiveAntiD`).
+
+**Deficiency found (patient safety, consistency):**
+- `ApplyPatientTyping` combined three sources into one assessment:
+  - the specimen's transfusion record;
+  - an allogeneic HPC transplant (`TransplantContext.Apply`);
+  - transfusions recorded on the patient's other specimens
+    (`TransfusionHistoryCheck.Apply`).
+- Iteration 169's autoadsorption check, and the separation step's
+  historical-antibody lookup, called only the bare `TransfusionContext.Assess`.
+- A patient with an allogeneic transplant, or a transfusion recorded only on
+  another specimen, could have alloantibodies ruled out from an autoadsorbed
+  aliquot. After an allogeneic transplant the autologous red cells may be
+  donor-derived, so they can adsorb alloantibodies just as transfused cells
+  can.
+
+**Bounded improvement:**
+- `AntibodyAnalyzer.AssessTypingReliability` is the one assessment, used by
+  patient typing, the autoadsorption caution and the separation step.
+- The caution names both causes: recently transfused or an allogeneic HPC
+  transplant.
+- Help (Panel run) lists every condition.
+
+**Tests:** `AutoadsorptionTransfusionTests` gains 2 cases (5 in all):
+- an allogeneic transplant 60 days before, not transfused: anti-K is not
+  ruled out and is gated with the transplant named;
+- an autologous transplant: anti-K is still ruled out.
+
+All 1291 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: HPC transplant handling (donor genotype, ABO
-change) and pregnancy-related passive antibodies (RhIG, already covered by
-`SpecimenDating.PassiveAntiD`).
+Continue clean-pass reviews: the remaining analyzer entry points
+(`EvaluateFinalCall`, selected-cell recommendations) for consistent use of
+the run contexts and cautions.
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5

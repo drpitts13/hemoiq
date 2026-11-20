@@ -169,9 +169,7 @@ namespace HemoIQ.Services
             var historical = new HashSet<string>(StringComparer.Ordinal);
             if (_db.GetSpecimen(specimenId) is Specimen specimen)
             {
-                var transfusion = TransfusionContext.Assess(
-                    specimen.TransfusionStatus, specimen.LastTransfusionDate, specimen.CreatedDate,
-                    AppSettings.Current.RecentTransfusionWindowDays, specimen.Phenotype, specimen.Notes, specimen.TransfusionProducts);
+                var transfusion = AssessTypingReliability(specimen);
                 var typing = PatientTypingParser.Parse(
                     specimen.Phenotype, specimen.PreviousAntibodies, specimen.Notes, specimen.Genotype, transfusion);
                 var prior = PatientHistory.ConfirmedAntibodies(PatientHistory.OtherSpecimens(_db, specimen))
@@ -264,15 +262,27 @@ namespace HemoIQ.Services
         {
             var auto = contexts.Where(c => c.IsAutoAdsorbed).ToList();
             if (auto.Count == 0 || _db.GetSpecimen(specimenId) is not Specimen s) return;
-            var transfusion = TransfusionContext.Assess(
-                s.TransfusionStatus, s.LastTransfusionDate, s.CreatedDate,
-                AppSettings.Current.RecentTransfusionWindowDays, s.Phenotype, s.Notes, s.TransfusionProducts);
-            if (!transfusion.PhenotypeUnreliable) return;
+            if (!AssessTypingReliability(s).PhenotypeUnreliable) return;
             foreach (var ctx in auto)
                 ctx.AutoAdsorptionCaution =
-                    $"{RunLabel(ctx)} was autoadsorbed, but the patient was recently transfused, so donor red cells in the " +
-                    "autologous sample may have adsorbed alloantibodies. Negative reactions on this aliquot cannot rule out " +
-                    "any alloantibody; consider allogeneic (differential) adsorption. Not a diagnosis.";
+                    $"{RunLabel(ctx)} was autoadsorbed, but the patient was recently transfused or has an allogeneic HPC " +
+                    "transplant, so donor red cells in the autologous sample may have adsorbed alloantibodies. Negative " +
+                    "reactions on this aliquot cannot rule out any alloantibody; consider allogeneic (differential) " +
+                    "adsorption. Not a diagnosis.";
+        }
+
+        /// <summary>
+        /// Whether the patient's red cells may not be their own: the specimen's transfusion record, an allogeneic
+        /// HPC transplant on or before collection, and transfusions recorded on the patient's other specimens.
+        /// The one assessment used for patient typing, autoadsorption and historical antibodies.
+        /// </summary>
+        private TransfusionAssessment AssessTypingReliability(Specimen specimen, TransfusionHistoryFinding? historyFinding = null)
+        {
+            historyFinding ??= TransfusionHistoryCheck.Find(_db, specimen, AppSettings.Current.RecentTransfusionWindowDays);
+            return TransfusionHistoryCheck.Apply(TransplantContext.Apply(TransfusionContext.Assess(
+                specimen.TransfusionStatus, specimen.LastTransfusionDate, specimen.CreatedDate,
+                AppSettings.Current.RecentTransfusionWindowDays, specimen.Phenotype, specimen.Notes, specimen.TransfusionProducts),
+                _db.GetPatient(specimen.Mrn), specimen.CollectedAt ?? specimen.CreatedDate), historyFinding);
         }
 
         private static string RunLabel(RunContext ctx) =>
@@ -1501,10 +1511,7 @@ namespace HemoIQ.Services
             var specimen = _db.GetSpecimen(specimenId);
             if (specimen == null) return null;
             var historyFinding = TransfusionHistoryCheck.Find(_db, specimen, AppSettings.Current.RecentTransfusionWindowDays);
-            var transfusion = TransfusionHistoryCheck.Apply(TransplantContext.Apply(TransfusionContext.Assess(
-                specimen.TransfusionStatus, specimen.LastTransfusionDate, specimen.CreatedDate,
-                AppSettings.Current.RecentTransfusionWindowDays, specimen.Phenotype, specimen.Notes, specimen.TransfusionProducts),
-                _db.GetPatient(specimen.Mrn), specimen.CollectedAt ?? specimen.CreatedDate), historyFinding);
+            var transfusion = AssessTypingReliability(specimen, historyFinding);
             var typing = PatientTypingParser.Parse(
                 specimen.Phenotype, specimen.PreviousAntibodies, specimen.Notes, specimen.Genotype, transfusion);
             result.PatientPhenotypeUnreliable = typing.PhenotypeUnreliable;

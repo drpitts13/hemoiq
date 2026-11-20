@@ -53,6 +53,33 @@ public class AutoadsorptionTransfusionTests
     }
 
     [Fact]
+    public void AllogeneicHpcTransplant_AutoadsorbedNegatives_DoNotRuleOut()
+    {
+        // Not transfused, but red cells after an allogeneic transplant may be donor-derived.
+        using var iso = AutoadsorbedOnly("AA-4", TransfusionStatus.NotTransfused, null);
+        iso.Db.SavePatient(new Patient { Mrn = "MRN-AA4", HpcTransplant = Services.HpcTransplant.Allogeneic, HpcTransplantDate = Day(60) });
+        iso.Db.UpdateSpecimenMrn("AA-4", "MRN-AA4");
+
+        var result = iso.Analyzer.AnalyzeSpecimen("AA-4", updateDb: false);
+
+        Assert.DoesNotContain(result.RuledOut.Keys, k => k == "anti-K");
+        var gate = Assert.Single(result.GatedRuleouts, g => g.Antibody == "anti-K");
+        Assert.Contains("allogeneic HPC transplant", gate.Reason);
+    }
+
+    [Fact]
+    public void AutologousHpcTransplant_AutoadsorbedNegatives_StillRuleOut()
+    {
+        using var iso = AutoadsorbedOnly("AA-5", TransfusionStatus.NotTransfused, null);
+        iso.Db.SavePatient(new Patient { Mrn = "MRN-AA5", HpcTransplant = Services.HpcTransplant.Autologous, HpcTransplantDate = Day(60) });
+        iso.Db.UpdateSpecimenMrn("AA-5", "MRN-AA5");
+
+        var result = iso.Analyzer.AnalyzeSpecimen("AA-5", updateDb: false);
+
+        Assert.Contains(result.RuledOut.Keys, k => k == "anti-K");
+    }
+
+    [Fact]
     public void TransfusedOutsideTheWindow_AutoadsorbedNegatives_StillRuleOut()
     {
         using var iso = AutoadsorbedOnly("AA-3", TransfusionStatus.Transfused, Day(200));
