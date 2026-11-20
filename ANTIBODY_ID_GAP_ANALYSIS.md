@@ -4461,10 +4461,24 @@ No new issue or gap worth fixing. All 1289 tests pass.
 
 All 1291 tests pass.
 
+## Iteration 172 (clean pass): analyzer entry points use the same run contexts
+
+**Reviewed:**
+- **`EvaluateFinalCall`** (the separation check at Confirm ID).
+  - It builds its contexts with `BuildContexts(runs, specimenId)`, so the
+    autoadsorption caution from Iterations 169 and 171 applies.
+  - It re-marks panreactive untreated runs. The instance set is cleared
+    first, so nothing carries over from an earlier specimen.
+  - It uses the same `ExcludedFromOrdinaryScores` gate as the analysis.
+- **`SelectedCellRecommender`.** It reads only the finished
+  `AnalysisResult`, whose `RuledOut` already reflects every gate: treatment
+  destruction, absorption removal, the autoadsorption caution and dosage.
+
+No new issue or gap worth fixing. All 1291 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the remaining analyzer entry points
-(`EvaluateFinalCall`, selected-cell recommendations) for consistent use of
-the run contexts and cautions.
+Continue clean-pass reviews: the HTLA titration and neutralization notes,
+and the cold-pattern suggestions (prewarm, IS-only reactivity).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
