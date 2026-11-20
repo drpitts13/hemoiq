@@ -614,7 +614,7 @@ w+, MF, and hemolysis count as reactive. They cannot be used to rule an antibody
 
 - **None** tests untreated serum.
 - **Prewarmed serum** records a prewarmed test.
-- **Absorbed: R1R1 (DCe/DCe)**, **Absorbed: R2R2 (DcE/DcE)**, and **Absorbed: rr (ce/ce)** are allogeneic adsorptions.
+- **Absorbed: R1R1 (DCe/DCe)**, **Absorbed: R2R2 (DcE/DcE)**, and **Absorbed: rr (ce/ce)** are allogeneic adsorptions. R1R1 cells are expected to remove anti-D, anti-C and anti-e; R2R2 cells anti-D, anti-c and anti-E; rr cells anti-c, anti-e and anti-f (rr cells carry f, the compound of c and e). An absorbed aliquot is not used to rule out the antibodies it is expected to remove.
 - **Autoadsorption** is an autoadsorbed aliquot.
 
 The italic note under the lists explains what the selected combination will mean when you analyze.
