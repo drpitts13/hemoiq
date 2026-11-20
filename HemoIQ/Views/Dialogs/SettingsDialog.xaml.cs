@@ -1,0 +1,271 @@
+using System.Globalization;
+using System.Text.Json;
+using System.Windows;
+using HemoIQ.Data;
+using HemoIQ.Models;
+using HemoIQ.Services;
+
+namespace HemoIQ.Views.Dialogs
+{
+    public partial class SettingsDialog : Window
+    {
+        private readonly DatabaseService? _db;
+
+        public SettingsDialog(DatabaseService? db = null)
+        {
+            _db = db;
+            InitializeComponent();
+            // Never taller than the screen's working area, so Save and Cancel stay reachable on small displays.
+            MaxHeight = Math.Max(300, SystemParameters.WorkArea.Height - 40);
+            var s = AppSettings.Current;
+            LabNameBox.Text = s.LabName;
+            DepartmentBox.Text = s.Department;
+            ThresholdBox.Text = s.ProbabilityThreshold.ToString("0.00", CultureInfo.InvariantCulture);
+            IdRuleBox.ItemsSource = new[] { "1 + 1", "2 + 2", "3 + 3" };
+            var idCount = s.IdentificationCellCount;
+            if (idCount < 1 || idCount > 3) idCount = 3;
+            IdRuleBox.SelectedItem = $"{idCount} + {idCount}";
+            AcsRuleoutBox.Text = s.AcsRuleoutCount.ToString();
+            AcsAntigensBox.Text = s.AcsAdditionalAntigens;
+            SeparationBox.Text = s.SeparationCellCount.ToString();
+            DefaultRuleoutBox.Text = s.DefaultMinRuleoutCount.ToString();
+            DefaultTypeBox.ItemsSource = AntigenConstants.SpecimenTypes;
+            DefaultTypeBox.SelectedItem = s.DefaultSpecimenType;
+            if (DefaultTypeBox.SelectedItem == null) DefaultTypeBox.SelectedIndex = 0;
+            DatingDaysBox.Text = s.DefaultSpecimenDatingDays.ToString();
+            ExpiryDaysBox.Text = s.ExpirationWarningDays.ToString();
+            TransfusionWindowBox.Text = s.RecentTransfusionWindowDays.ToString();
+            MaxDbSizeBox.Text = s.MaxDatabaseSizeMb.ToString();
+            InitialsBox.Text = s.DefaultIdentifiedBy;
+            ShowInactiveCheck.IsChecked = s.ShowInactiveByDefault;
+            HideRuledOutCheck.IsChecked = s.HideRuledOutAntigenColumns;
+            RequireReviewCheck.IsChecked = s.RequireSupervisorReview;
+            TurnaroundBox.Text = s.TurnaroundThresholdDays.ToString();
+            DatingLookbackBox.Text = s.DatingTransfusionLookbackDays.ToString();
+            RhigWindowBox.Text = s.RhigPassiveWindowDays.ToString();
+            ExtraPhasesBox.Text = s.ExtraPhases;
+            SyncSuggestedChecks();
+        }
+
+        private bool _syncingPhases;
+
+        private void ExtraPhasesBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            if (_syncingPhases) return;
+            SyncSuggestedChecks();
+        }
+
+        private void SuggestedPhaseChanged(object sender, RoutedEventArgs e)
+        {
+            if (_syncingPhases) return;
+            _syncingPhases = true;
+            ExtraPhasesBox.Text = ExtraPhaseParser.FromSuggested(
+                PhaseRtCheck.IsChecked == true,
+                PhasePegCheck.IsChecked == true,
+                PhaseGelCheck.IsChecked == true,
+                PhaseSolidCheck.IsChecked == true,
+                ExtraPhasesBox.Text,
+                PhaseTiterGridCheck.IsChecked == true);
+            _syncingPhases = false;
+        }
+
+        private void SyncSuggestedChecks()
+        {
+            if (PhaseRtCheck == null || PhaseTiterGridCheck == null) return;
+            _syncingPhases = true;
+            PhaseRtCheck.IsChecked = ExtraPhaseParser.Contains(ExtraPhasesBox.Text, "RT");
+            PhasePegCheck.IsChecked = ExtraPhaseParser.Contains(ExtraPhasesBox.Text, "PEG");
+            PhaseGelCheck.IsChecked = ExtraPhaseParser.Contains(ExtraPhasesBox.Text, "Gel");
+            PhaseSolidCheck.IsChecked = ExtraPhaseParser.Contains(ExtraPhasesBox.Text, "Solid");
+            PhaseTiterGridCheck.IsChecked = ExtraPhaseParser.ContainsTiterGrid(ExtraPhasesBox.Text);
+            _syncingPhases = false;
+        }
+
+        private void ExportClick(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Export Preferences",
+                Filter = "HemoIQ Preferences (*.json)|*.json",
+                FileName = $"hemoiq-preferences-{DateTime.Now:yyyyMMdd}.json",
+            };
+            if (dlg.ShowDialog(this) != true) return;
+            System.IO.File.WriteAllText(dlg.FileName, PreferenceTransfer.Export(AppSettings.Current, DateTime.Now));
+            MessageBox.Show("Preferences as last saved were exported. Unsaved edits in this window are not included.",
+                "Export Preferences", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void ImportClick(object sender, RoutedEventArgs e)
+        {
+            if (_db == null) return;
+            var dlg = new Microsoft.Win32.OpenFileDialog { Title = "Import Preferences", Filter = "HemoIQ Preferences (*.json)|*.json" };
+            if (dlg.ShowDialog(this) != true) return;
+            PreferencePreview preview;
+            try
+            {
+                preview = PreferenceTransfer.Preview(System.IO.File.ReadAllText(dlg.FileName), AppSettings.Current);
+            }
+            catch (Exception ex) when (ex is ArgumentException or System.IO.IOException)
+            {
+                MessageBox.Show(ex.Message, "Preferences not imported", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            var summary = PreferenceTransfer.Summarize(preview);
+            if (preview.Changes.Count == 0)
+            {
+                MessageBox.Show("Nothing to change.\n\n" + summary, "Import Preferences", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (MessageBox.Show(summary + "\n\nRefused values are skipped. Apply these changes now? This window closes and unsaved edits in it are discarded.",
+                    "Import Preferences", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            try
+            {
+                PreferenceTransfer.Apply(_db, AppSettings.Current, preview, System.IO.Path.GetFileName(dlg.FileName));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Preferences", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            SettingsService.Save();
+            DialogResult = true;
+        }
+
+        private void UsersClick(object sender, RoutedEventArgs e)
+        {
+            if (_db == null) return;
+            new UsersDialog(_db) { Owner = this }.ShowDialog();
+        }
+
+        private void SaveClick(object sender, RoutedEventArgs e)
+        {
+            if (_db != null && !AccessControl.Can(_db, Permission.ConfigurePreferences))
+            {
+                try { AccessControl.Demand(_db, Permission.ConfigurePreferences); }
+                catch (UnauthorizedAccessException ex)
+                {
+                    MessageBox.Show(ex.Message, "Preferences", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            if (!LabSettings.TryParseDecimal(ThresholdBox.Text, out var threshold) ||
+                threshold < 0.3 || threshold > 0.95)
+            {
+                MessageBox.Show("Score threshold must be a number between 0.30 and 0.95.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ThresholdBox.Focus();
+                return;
+            }
+            if (!int.TryParse(SeparationBox.Text.Trim(), out var separationCount) ||
+                separationCount < 0 || separationCount > 5)
+            {
+                MessageBox.Show("Multiple-Ab separation must be a number between 0 and 5. Use 0 to turn the check off.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                SeparationBox.Focus();
+                return;
+            }
+            if (!int.TryParse(AcsRuleoutBox.Text.Trim(), out var acsCount) || acsCount < 1 || acsCount > 5)
+            {
+                MessageBox.Show("ACS rule-outs must be a number between 1 and 5.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                AcsRuleoutBox.Focus();
+                return;
+            }
+            if (!AntigenConstants.TryParseAcsAdditions(AcsAntigensBox.Text, out var acsAdditions, out var acsProblem))
+            {
+                MessageBox.Show($"ACS antigens added: {acsProblem}.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                AcsAntigensBox.Focus();
+                return;
+            }
+            if (!int.TryParse(DefaultRuleoutBox.Text.Trim(), out var defaultRuleouts) ||
+                defaultRuleouts < 1 || defaultRuleouts > 5)
+            {
+                MessageBox.Show("Default rule-outs must be a number between 1 and 5.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                DefaultRuleoutBox.Focus();
+                return;
+            }
+            if (!int.TryParse(DatingDaysBox.Text.Trim(), out var datingDays) || datingDays < 0 || datingDays > 14)
+            {
+                MessageBox.Show("Specimen dating days must be between 0 and 14. Use 0 to leave expiration blank.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                DatingDaysBox.Focus();
+                return;
+            }
+            if (!int.TryParse(ExpiryDaysBox.Text.Trim(), out var days) || days < 1 || days > 90)
+            {
+                MessageBox.Show("Expiration warning days must be between 1 and 90.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ExpiryDaysBox.Focus();
+                return;
+            }
+            if (!int.TryParse(TransfusionWindowBox.Text.Trim(), out var transfusionDays) ||
+                transfusionDays < 1 || transfusionDays > 365)
+            {
+                MessageBox.Show("Recent transfusion window must be between 1 and 365 days.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                TransfusionWindowBox.Focus();
+                return;
+            }
+            if (!int.TryParse(TurnaroundBox.Text.Trim(), out var turnaroundDays) ||
+                turnaroundDays < 1 || turnaroundDays > 60)
+            {
+                MessageBox.Show("Turnaround threshold must be between 1 and 60 days.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                TurnaroundBox.Focus();
+                return;
+            }
+            if (!int.TryParse(DatingLookbackBox.Text.Trim(), out var lookback) || lookback < 1 || lookback > 365)
+            {
+                MessageBox.Show("Dating look-back must be between 1 and 365 days.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                DatingLookbackBox.Focus();
+                return;
+            }
+            if (!int.TryParse(RhigWindowBox.Text.Trim(), out var rhigDays) || rhigDays < 1 || rhigDays > 365)
+            {
+                MessageBox.Show("RhIG passive window must be between 1 and 365 days.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                RhigWindowBox.Focus();
+                return;
+            }
+            if (!int.TryParse(MaxDbSizeBox.Text.Trim(), out var maxMb) || maxMb < 50 || maxMb > 10240)
+            {
+                MessageBox.Show("Maximum database size must be between 50 and 10240 MB.",
+                    "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MaxDbSizeBox.Focus();
+                return;
+            }
+
+            var before = JsonSerializer.Serialize(AppSettings.Current.ClinicalSnapshot());
+            AppSettings.Current.LabName = LabNameBox.Text.Trim();
+            AppSettings.Current.Department = DepartmentBox.Text.Trim();
+            AppSettings.Current.ProbabilityThreshold = threshold;
+            var idRule = IdRuleBox.SelectedItem?.ToString() ?? "3 + 3";
+            AppSettings.Current.IdentificationCellCount =
+                idRule.StartsWith("1") ? 1 : idRule.StartsWith("2") ? 2 : 3;
+            AppSettings.Current.AcsRuleoutCount = acsCount;
+            AppSettings.Current.AcsAdditionalAntigens = acsAdditions;
+            AppSettings.Current.SeparationCellCount = separationCount;
+            AppSettings.Current.DefaultMinRuleoutCount = defaultRuleouts;
+            AppSettings.Current.DefaultSpecimenType = DefaultTypeBox.SelectedItem?.ToString() ?? "serum";
+            AppSettings.Current.DefaultSpecimenDatingDays = datingDays;
+            AppSettings.Current.ExpirationWarningDays = days;
+            AppSettings.Current.RecentTransfusionWindowDays = transfusionDays;
+            AppSettings.Current.MaxDatabaseSizeMb = maxMb;
+            AppSettings.Current.DefaultIdentifiedBy = LabSettings.NormalizeInitials(InitialsBox.Text);
+            AppSettings.Current.ShowInactiveByDefault = ShowInactiveCheck.IsChecked == true;
+            AppSettings.Current.HideRuledOutAntigenColumns = HideRuledOutCheck.IsChecked == true;
+            AppSettings.Current.RequireSupervisorReview = RequireReviewCheck.IsChecked == true;
+            AppSettings.Current.TurnaroundThresholdDays = turnaroundDays;
+            AppSettings.Current.DatingTransfusionLookbackDays = lookback;
+            AppSettings.Current.RhigPassiveWindowDays = rhigDays;
+            AppSettings.Current.ExtraPhases = ExtraPhasesBox.Text;
+            SettingsService.Save();
+            var after = JsonSerializer.Serialize(AppSettings.Current.ClinicalSnapshot());
+            if (_db != null && before != after)
+                _db.AppendAudit("update_settings", "settings", "lab", null, before, after);
+            DialogResult = true;
+        }
+    }
+}

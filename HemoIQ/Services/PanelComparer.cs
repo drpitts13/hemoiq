@@ -1,0 +1,206 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using HemoIQ.Models;
+
+namespace HemoIQ.Services
+{
+    public sealed class PanelCellTypingDiff
+    {
+        public string CellNumber { get; init; } = "";
+        public string Antigen { get; init; } = "";
+        public string Left { get; init; } = "NT";
+        public string Right { get; init; } = "NT";
+        public string Note { get; init; } = "";
+    }
+
+    public sealed class PanelCompareResult
+    {
+        public string LeftLabel { get; init; } = "";
+        public string RightLabel { get; init; } = "";
+        public SchemaDiff Schema { get; init; } = new();
+        public List<string> OnlyLeftCells { get; } = new();
+        public List<string> OnlyRightCells { get; } = new();
+        public List<PanelCellTypingDiff> TypingDiffs { get; } = new();
+        public PanelIntegrityCheck.TypingSummary? LeftTyping { get; set; }
+        public PanelIntegrityCheck.TypingSummary? RightTyping { get; set; }
+        /// <summary>
+        /// Antigens typed on every cell of the selected panel but not on every cell of the
+        /// comparison panel, as "Fya (9 of 11 cells)". Usually an unfinished antigram entry.
+        /// </summary>
+        public List<string> CoverageGaps { get; } = new();
+        public string Explanation { get; set; } = "";
+        public bool HasDifferences =>
+            Schema.Changed || OnlyLeftCells.Count > 0 || OnlyRightCells.Count > 0 || TypingDiffs.Count > 0 ||
+            CoverageGaps.Count > 0;
+    }
+
+    /// <summary>
+    /// Compares two stored panel antigrams. Untyped antigens stay NT; they are
+    /// never treated as negative.
+    /// </summary>
+    public static class PanelComparer
+    {
+        public static PanelCompareResult Compare(
+            string leftLabel,
+            IReadOnlyList<PanelCell> leftCells,
+            IReadOnlyList<string> leftAntigens,
+            string rightLabel,
+            IReadOnlyList<PanelCell> rightCells,
+            IReadOnlyList<string> rightAntigens)
+        {
+            var left = Index(leftCells);
+            var right = Index(rightCells);
+            var leftAgs = Normalize(leftAntigens, left.Values);
+            var rightAgs = Normalize(rightAntigens, right.Values);
+            var result = new PanelCompareResult
+            {
+                LeftLabel = leftLabel,
+                RightLabel = rightLabel,
+                Schema = PanelImportReviewer.CompareSchema(rightAgs, leftAgs)
+            };
+
+            foreach (var cell in left.Keys.Except(right.Keys, StringComparer.OrdinalIgnoreCase).OrderBy(CellKey))
+                result.OnlyLeftCells.Add(cell);
+            foreach (var cell in right.Keys.Except(left.Keys, StringComparer.OrdinalIgnoreCase).OrderBy(CellKey))
+                result.OnlyRightCells.Add(cell);
+
+            // Antigen names are case-sensitive (K and k are different columns).
+            var antigens = leftAgs.Union(rightAgs, StringComparer.Ordinal)
+                .OrderBy(a => a, StringComparer.OrdinalIgnoreCase).ThenBy(a => a, StringComparer.Ordinal)
+                .ToList();
+            foreach (var cellNumber in left.Keys.Intersect(right.Keys, StringComparer.OrdinalIgnoreCase)
+                         .OrderBy(CellKey))
+            {
+                var leftCell = left[cellNumber];
+                var rightCell = right[cellNumber];
+                foreach (var ag in antigens)
+                {
+                    var lv = Mark(leftCell, ag);
+                    var rv = Mark(rightCell, ag);
+                    if (string.Equals(lv, rv, StringComparison.OrdinalIgnoreCase)) continue;
+                    result.TypingDiffs.Add(new PanelCellTypingDiff
+                    {
+                        CellNumber = leftCell.CellNumber,
+                        Antigen = ag,
+                        Left = lv,
+                        Right = rv,
+                        Note = DescribeTyping(leftCell.CellNumber, ag, lv, rv)
+                    });
+                }
+            }
+
+            result.LeftTyping = PanelIntegrityCheck.Summarize(left.Values);
+            result.RightTyping = PanelIntegrityCheck.Summarize(right.Values);
+            var rightTyped = right.Values
+                .Where(c => !string.Equals(c.CellNumber, "AC", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            var leftTyped = left.Values
+                .Where(c => !string.Equals(c.CellNumber, "AC", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            if (leftTyped.Count > 0 && rightTyped.Count > 0)
+            {
+                foreach (var ag in antigens)
+                {
+                    if (!leftTyped.All(c => c.HasTypedAntigen(ag))) continue;
+                    var count = rightTyped.Count(c => c.HasTypedAntigen(ag));
+                    if (count < rightTyped.Count)
+                        result.CoverageGaps.Add($"{ag} ({count} of {rightTyped.Count} cells)");
+                }
+            }
+
+            result.Explanation = Explain(result);
+            return result;
+        }
+
+        public static string PanelLabel(Panel? panel)
+        {
+            if (panel == null) return "panel";
+            var lot = string.IsNullOrWhiteSpace(panel.LotNumber) ? "" : " lot " + panel.LotNumber.Trim();
+            return (panel.Name ?? "panel").Trim() + lot;
+        }
+
+        private static string Explain(PanelCompareResult result)
+        {
+            var sb = new StringBuilder();
+            sb.Append(result.RightLabel).Append(" compared with ").Append(result.LeftLabel).Append('.');
+            if (!result.HasDifferences)
+            {
+                sb.Append(" Antigen schema and typed cell values match. This is a review aid, not a diagnosis.");
+                return sb.ToString();
+            }
+            if (result.Schema.Changed)
+            {
+                sb.Append(" Antigen schema differs.");
+                if (result.Schema.Added.Count > 0)
+                    sb.Append(" Added on the comparison panel: ").Append(string.Join(", ", result.Schema.Added)).Append('.');
+                if (result.Schema.Removed.Count > 0)
+                    sb.Append(" Missing from the comparison panel: ").Append(string.Join(", ", result.Schema.Removed)).Append('.');
+            }
+            else
+            {
+                sb.Append(" Antigen schema matches.");
+            }
+            if (result.CoverageGaps.Count > 0)
+                sb.Append(" Typed on every cell of the selected panel but not of the comparison panel: ")
+                    .Append(string.Join(", ", result.CoverageGaps))
+                    .Append(". Check whether the comparison antigram entry is finished.");
+            if (result.RightTyping is { Untyped.Count: > 0 } rt)
+                sb.Append(" Comparison panel cell(s) with nothing typed positive: ")
+                    .Append(string.Join(", ", rt.Untyped)).Append('.');
+            if (result.OnlyRightCells.Count > 0)
+                sb.Append(" Cells only on the comparison panel: ").Append(string.Join(", ", result.OnlyRightCells)).Append('.');
+            if (result.OnlyLeftCells.Count > 0)
+                sb.Append(" Cells only on the selected panel: ").Append(string.Join(", ", result.OnlyLeftCells)).Append('.');
+            if (result.TypingDiffs.Count > 0)
+            {
+                sb.Append(' ').Append(result.TypingDiffs.Count).Append(" typing difference")
+                    .Append(result.TypingDiffs.Count == 1 ? "" : "s").Append(" on shared cells.");
+                foreach (var diff in result.TypingDiffs.Take(6))
+                    sb.Append(' ').Append(diff.Note);
+                if (result.TypingDiffs.Count > 6)
+                    sb.Append(" …");
+            }
+            sb.Append(" Review both antigrams before activating a lot. This is not a diagnosis.");
+            return sb.ToString();
+        }
+
+        private static string DescribeTyping(string cell, string antigen, string left, string right) =>
+            $"Cell {cell} {antigen} is {left} on the selected panel and {right} on the comparison panel.";
+
+        private static string Mark(PanelCell cell, string antigen) =>
+            cell.HasTypedAntigen(antigen) ? cell.GetAntigen(antigen) : "NT";
+
+        private static Dictionary<string, PanelCell> Index(IEnumerable<PanelCell> cells)
+        {
+            var map = new Dictionary<string, PanelCell>(StringComparer.OrdinalIgnoreCase);
+            foreach (var cell in cells)
+            {
+                if (string.IsNullOrWhiteSpace(cell.CellNumber)) continue;
+                map[cell.CellNumber.Trim()] = cell;
+            }
+            return map;
+        }
+
+        private static List<string> Normalize(IReadOnlyList<string> listed, IEnumerable<PanelCell> cells)
+        {
+            var fromList = listed
+                .Where(a => !string.IsNullOrWhiteSpace(a))
+                .Select(a => a.Trim())
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+            if (fromList.Count > 0) return fromList;
+            return cells
+                .SelectMany(c => c.Antigens.Where(kv => AntigenConstants.IsTypedAntigenValue(kv.Value))
+                    .Select(kv => kv.Key))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(a => a, StringComparer.OrdinalIgnoreCase).ThenBy(a => a, StringComparer.Ordinal)
+                .ToList();
+        }
+
+        private static int CellKey(string cellNumber) =>
+            string.Equals(cellNumber, "AC", StringComparison.OrdinalIgnoreCase) ? int.MaxValue
+            : int.TryParse(cellNumber, out var n) ? n : int.MaxValue - 1;
+    }
+}

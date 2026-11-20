@@ -1,0 +1,222 @@
+<Window x:Class="HemoIQ.Views.Dialogs.SpecimenDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:help="clr-namespace:HemoIQ.Help"
+        help:Help.Topic="specimen-dialog"
+        Title="Specimen" SizeToContent="Height" Width="540"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Padding="16">
+    <Window.Resources>
+        <Style TargetType="Label">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+    <StackPanel Margin="16,12,16,12">
+        <TabControl x:Name="Sections" Height="430" SelectedIndex="0">
+            <TabItem x:Name="SpecimenTab" Header="Specimen">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                    </Grid.RowDefinitions>
+
+                    <Label Content="Accession Number:" Grid.Row="0"/>
+                    <TextBox x:Name="AccessionBox" Grid.Row="0" Grid.Column="1"
+                             VerticalAlignment="Center" Margin="0,2"/>
+
+                    <Label Content="MRN / encounter:" Grid.Row="1"/>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBox x:Name="MrnBox" Width="150" MaxLength="64" VerticalContentAlignment="Center"
+                                 ToolTip="Medical record number. Specimens with the same MRN share history: confirmed antibodies on earlier specimens appear in analysis as historical evidence."/>
+                        <TextBox x:Name="EncounterBox" Width="145" Margin="6,0,0,0" MaxLength="64" VerticalContentAlignment="Center"
+                                 ToolTip="Encounter or account number the specimen was drawn under (optional). Searchable and printed on reports. You are warned if it is already on another patient's specimen."/>
+                    </StackPanel>
+
+                    <Label Content="Type:" Grid.Row="2"/>
+                    <ComboBox x:Name="TypeBox" Grid.Row="2" Grid.Column="1"
+                              VerticalAlignment="Center" Margin="0,2" SelectionChanged="TypeBox_SelectionChanged"/>
+
+                    <Label Content="Eluate of:" Grid.Row="3"/>
+                    <TextBox x:Name="SourceBox" Grid.Row="3" Grid.Column="1"
+                             VerticalAlignment="Center" Margin="0,2"
+                             ToolTip="For an eluate: the accession of the serum or plasma specimen whose red cells were eluted. The eluate's results then appear as evidence in that specimen's analysis."/>
+
+                    <Label Content="Collected:" Grid.Row="4"/>
+                    <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <DatePicker x:Name="CollectedPicker" Width="150" SelectedDateChanged="CollectedPicker_SelectedDateChanged"/>
+                        <TextBox x:Name="CollectedTimeBox" Width="60" Margin="6,0,0,0" VerticalContentAlignment="Center"
+                                 ToolTip="Time as HH:mm (24-hour). Used for specimen dating after recent transfusion."/>
+                    </StackPanel>
+
+                    <Label Content="Received:" Grid.Row="5"/>
+                    <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <DatePicker x:Name="ReceivedPicker" Width="150"/>
+                        <TextBox x:Name="ReceivedTimeBox" Width="60" Margin="6,0,0,0" VerticalContentAlignment="Center"
+                                 ToolTip="Time as HH:mm (24-hour). Used for turnaround on Analytics."/>
+                    </StackPanel>
+
+                    <Label Content="Collected by / at:" Grid.Row="6"/>
+                    <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBox x:Name="CollectorBox" Width="105" VerticalContentAlignment="Center" MaxLength="128"
+                                 ToolTip="Who collected the specimen (name, initials, or ID)."/>
+                        <TextBox x:Name="CollectionLocationBox" Width="190" Margin="6,0,0,0" VerticalContentAlignment="Center" MaxLength="128"
+                                 ToolTip="Where the specimen was collected (unit, clinic, or draw site)."/>
+                    </StackPanel>
+
+                    <Label Content="Ordered by / from:" Grid.Row="7"/>
+                    <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBox x:Name="OrderingProviderBox" Width="105" VerticalContentAlignment="Center" MaxLength="128"
+                                 ToolTip="Ordering provider."/>
+                        <TextBox x:Name="OrderingLocationBox" Width="190" Margin="6,0,0,0" VerticalContentAlignment="Center" MaxLength="128"
+                                 ToolTip="Ordering location (unit or clinic). Used for workload by location on Analytics."/>
+                    </StackPanel>
+
+                    <Label Content="Expiration Date:" Grid.Row="8"/>
+                    <DatePicker x:Name="ExpirationPicker" Grid.Row="8" Grid.Column="1"
+                                VerticalAlignment="Center" Margin="0,2"
+                                SelectedDateChanged="ExpirationPicker_SelectedDateChanged"/>
+
+                    <Label Content="Active:" Grid.Row="9"/>
+                    <CheckBox x:Name="ActiveCheck" Grid.Row="9" Grid.Column="1"
+                              VerticalAlignment="Center" Margin="0,2" IsChecked="True"/>
+                </Grid>
+            </TabItem>
+
+            <TabItem x:Name="ContextTab" Header="Clinical context">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Label Content="Transfusion status:" Grid.Row="0"/>
+                    <ComboBox x:Name="TransfusionBox" Grid.Row="0" Grid.Column="1"
+                              VerticalAlignment="Center" Margin="0,2" DisplayMemberPath="Label"
+                              SelectionChanged="TransfusionBox_SelectionChanged"
+                              ToolTip="Transfused within the configured Preferences window makes serologic phenotype uninterpretable for analysis. Unknown falls back to wording in Notes."/>
+
+                    <Label Content="Last transfusion:" Grid.Row="1"/>
+                    <DatePicker x:Name="LastTransfusionPicker" Grid.Row="1" Grid.Column="1"
+                                VerticalAlignment="Center" Margin="0,2" SelectedDateChanged="Context_Changed"
+                                ToolTip="Date of the most recent red-cell transfusion. Leave blank if unknown; the phenotype is then treated as uninterpretable."/>
+
+                    <Label Content="Products / units:" Grid.Row="2" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,4,0,4">
+                        <WrapPanel x:Name="ProductsPanel"
+                                   ToolTip="Products given in the transfusion. If only platelets, plasma or cryoprecipitate are recorded, the phenotype is not treated as unreliable, because they carry few or no donor red cells. Plasma-containing products add a note about passive antibody. Leave all unticked if not known."/>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="Units:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBox x:Name="UnitsBox" Width="60" MaxLength="3" TextChanged="Context_Changed"
+                                     ToolTip="Number of units transfused, if known (1–999)."/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Label Content="Pregnancy:" Grid.Row="3"/>
+                    <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <ComboBox x:Name="PregnancyBox" Width="150" DisplayMemberPath="Label"
+                                  SelectionChanged="PregnancyBox_SelectionChanged"
+                                  ToolTip="Pregnant, or pregnant within the Preferences dating look-back, applies the specimen-dating check like a recent transfusion."/>
+                        <DatePicker x:Name="PregnancyEndPicker" Width="140" Margin="6,0,0,0" SelectedDateChanged="Context_Changed"
+                                    ToolTip="Date a recent pregnancy ended (delivery or loss). Required for Recently pregnant."/>
+                    </StackPanel>
+
+                    <Label Content="RhIG given:" Grid.Row="4"/>
+                    <DatePicker x:Name="RhigPicker" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Margin="0,2"
+                                SelectedDateChanged="Context_Changed"
+                                ToolTip="Date Rh immune globulin was last given. Anti-D within the Preferences RhIG window is flagged as possibly passive."/>
+
+                    <TextBlock Grid.Row="5" Grid.ColumnSpan="2" Margin="4,12,0,0" TextWrapping="Wrap" Foreground="DimGray"
+                               Text="Recent transfusion or pregnancy turns on the specimen-dating check, and a recent transfusion makes the serologic phenotype unusable for ruling out antibodies, unless the products recorded are only platelets, plasma or cryoprecipitate. Analysis names each effect as a REVIEW note."/>
+                </Grid>
+            </TabItem>
+
+            <TabItem x:Name="SerologyTab" Header="Serology">
+                <Grid Margin="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                        <RowDefinition Height="36"/>
+                    </Grid.RowDefinitions>
+
+                    <Label Content="DAT polyspecific:" Grid.Row="0"/>
+                    <ComboBox x:Name="DatBox" Grid.Row="0" Grid.Column="1"
+                              VerticalAlignment="Center" Margin="0,2" SelectionChanged="Context_Changed"/>
+
+                    <Label Content="DAT IgG:" Grid.Row="1"/>
+                    <ComboBox x:Name="DatIggBox" Grid.Row="1" Grid.Column="1"
+                              VerticalAlignment="Center" Margin="0,2" SelectionChanged="Context_Changed"
+                              ToolTip="Monospecific anti-IgG DAT. NT if not performed. MF (mixed field) after transfusion is reviewed against the transfusion record."/>
+
+                    <Label Content="DAT C3:" Grid.Row="2"/>
+                    <ComboBox x:Name="DatC3Box" Grid.Row="2" Grid.Column="1"
+                              VerticalAlignment="Center" Margin="0,2" SelectionChanged="Context_Changed"
+                              ToolTip="Monospecific anti-C3 DAT. C3 reactive with IgG negative is noted as more typical of cold or complement-mediated reactivity."/>
+
+                    <Label Content="Phenotype:" Grid.Row="3"/>
+                    <TextBox x:Name="PhenotypeBox" Grid.Row="3" Grid.Column="1" TextChanged="Context_Changed"
+                             VerticalAlignment="Center" Margin="0,2"
+                             ToolTip="e.g. R1r, K−, Fy(a−b+). Record recent transfusion on Clinical context so analysis will not use typing to exclude alloantibodies."/>
+
+                    <Label Content="Genotype:" Grid.Row="4"/>
+                    <TextBox x:Name="GenotypeBox" Grid.Row="4" Grid.Column="1" TextChanged="Context_Changed"
+                             VerticalAlignment="Center" Margin="0,2"
+                             ToolTip="Predicted type from molecular results, e.g. RHCE*ce/ce; FY*02/FY*02. Remains reviewable after transfusion. Not a diagnosis."/>
+
+                    <Label Content="Previous antibodies:" Grid.Row="5"/>
+                    <TextBox x:Name="PreviousAbsBox" Grid.Row="5" Grid.Column="1"
+                             VerticalAlignment="Center" Margin="0,2" TextChanged="Context_Changed"/>
+
+                    <Label Content="Visual hemolysis:" Grid.Row="6"/>
+                    <ComboBox x:Name="HemolysisBox" Grid.Row="6" Grid.Column="1" DisplayMemberPath="Label"
+                              VerticalAlignment="Center" Margin="0,2" SelectionChanged="Context_Changed"
+                              ToolTip="Hemolysis of the specimen as received. Gross hemolysis always adds a REVIEW note to analysis; slight or moderate does when an H grade is recorded, because the specimen's own hemolysis cannot be told apart from hemolysis in the test."/>
+                </Grid>
+            </TabItem>
+
+            <TabItem x:Name="NotesTab" Header="Notes">
+                <TextBox x:Name="NotesBox" Margin="8"
+                         AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+            </TabItem>
+        </TabControl>
+
+        <TextBlock x:Name="ContextSummaryText" Margin="2,8,0,0" TextWrapping="Wrap" Foreground="#37474F"
+                   ToolTip="Clinical context and serology recorded on the other tabs, so nothing set there is hidden."/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="Help" Width="84" Margin="0,0,8,0"
+                    Command="{x:Static help:HelpCommands.ShowContext}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource Self}}"
+                    ToolTip="Open help for this section (F1)"/>
+            <Button Content="Save" Width="84" Margin="0,0,8,0" Click="SaveClick" IsDefault="True"/>
+            <Button Content="Cancel" Width="84" IsCancel="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

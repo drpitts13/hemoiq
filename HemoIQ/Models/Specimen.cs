@@ -1,0 +1,134 @@
+using System;
+using System.Collections.Generic;
+
+namespace HemoIQ.Models
+{
+    public class Specimen
+    {
+        public string AccessionNumber { get; set; } = string.Empty;
+        /// <summary>Medical record number; links specimens of the same patient. Stored upper-case.</summary>
+        public string? Mrn { get; set; }
+        /// <summary>For an eluate: the accession of the specimen whose red cells were eluted.</summary>
+        public string? SourceAccession { get; set; }
+        /// <summary>Collection date and time, "yyyy-MM-dd HH:mm".</summary>
+        public string? CollectedAt { get; set; }
+        /// <summary>Received in the laboratory, "yyyy-MM-dd HH:mm".</summary>
+        public string? ReceivedAt { get; set; }
+        /// <summary>Normalized <see cref="Models.PregnancyStatus"/> code.</summary>
+        public string PregnancyStatus { get; set; } = Models.PregnancyStatus.Unknown;
+        /// <summary>Date a recent pregnancy ended (delivery or loss), yyyy-MM-dd.</summary>
+        public string? PregnancyEndDate { get; set; }
+        /// <summary>Date Rh immune globulin was last given, yyyy-MM-dd.</summary>
+        public string? RhigDate { get; set; }
+        public string PregnancyDisplay
+        {
+            get
+            {
+                var label = Models.PregnancyStatus.Label(PregnancyStatus);
+                if (Models.PregnancyStatus.Normalize(PregnancyStatus) == Models.PregnancyStatus.Recent)
+                    label += $" (ended {PregnancyEndDate ?? "date not recorded"})";
+                return RhigDate == null ? label : $"{label}; RhIG {RhigDate}";
+            }
+        }
+        /// <summary>Who collected the specimen.</summary>
+        public string? Collector { get; set; }
+        /// <summary>Where the specimen was collected (unit, clinic, or site).</summary>
+        public string? CollectionLocation { get; set; }
+        /// <summary>Ordering location (unit or clinic the order came from).</summary>
+        public string? OrderingLocation { get; set; }
+        public string? OrderingProvider { get; set; }
+        /// <summary>Encounter or account number the specimen was drawn under.</summary>
+        public string? EncounterNumber { get; set; }
+        /// <summary>One-line encounter, collector, locations and provider; empty when none is recorded.</summary>
+        public string OriginDisplay
+        {
+            get
+            {
+                var parts = new System.Collections.Generic.List<string>();
+                if (EncounterNumber != null) parts.Add($"Encounter {EncounterNumber}");
+                if (Collector != null || CollectionLocation != null)
+                    parts.Add("Collected" + (Collector != null ? $" by {Collector}" : "") +
+                              (CollectionLocation != null ? $" at {CollectionLocation}" : ""));
+                if (OrderingProvider != null || OrderingLocation != null)
+                    parts.Add("Ordered" + (OrderingProvider != null ? $" by {OrderingProvider}" : "") +
+                              (OrderingLocation != null ? $" from {OrderingLocation}" : ""));
+                return string.Join("; ", parts);
+            }
+        }
+        public bool IsEluate => string.Equals(Type, "eluate", StringComparison.OrdinalIgnoreCase);
+        public string Type { get; set; } = "serum";
+        public string? ExpirationDate { get; set; }
+        public string CreatedDate { get; set; } = string.Empty;
+        public string? ReactionsUpdatedAt { get; set; }
+        public string? LastAnalyzedAt { get; set; }
+        public bool IsActive { get; set; } = true;
+
+        public string? Notes { get; set; }
+        public string? Phenotype { get; set; }
+        public string? Genotype { get; set; }
+        public string? PreviousAntibodies { get; set; }
+        /// <summary>Polyspecific DAT (the original single DAT value).</summary>
+        public string? DatResult { get; set; }
+        public string? DatIgg { get; set; }
+        /// <summary>Visual hemolysis as received: "", none, slight, moderate, gross. See <see cref="Services.SpecimenHemolysis"/>.</summary>
+        public string Hemolysis { get; set; } = string.Empty;
+        public string? DatC3 { get; set; }
+        public DatProfile Dat => new() { Polyspecific = DatResult, IgG = DatIgg, C3 = DatC3 };
+        public string DatDisplay => Dat.Describe();
+        /// <summary>Normalized <see cref="Models.TransfusionStatus"/> code.</summary>
+        public string TransfusionStatus { get; set; } = Models.TransfusionStatus.Unknown;
+        public string? LastTransfusionDate { get; set; }
+        /// <summary>Comma-separated <see cref="TransfusionProducts"/> codes; null when not recorded.</summary>
+        public string? TransfusionProducts { get; set; }
+        public int? TransfusionUnits { get; set; }
+        public string TransfusionDisplay =>
+            Models.TransfusionStatus.Normalize(TransfusionStatus) == Models.TransfusionStatus.Transfused
+                ? $"Transfused (last {LastTransfusionDate ?? "date not recorded"}" +
+                  (string.IsNullOrEmpty(TransfusionProducts) ? "" : $"; {Models.TransfusionProducts.Describe(TransfusionProducts)}") +
+                  (TransfusionUnits is int u ? $"; {u} unit(s)" : "") + ")"
+                : Models.TransfusionStatus.Label(TransfusionStatus);
+
+        public string? FinalAntibodies { get; set; }
+        public string? FinalComment { get; set; }
+        public string? IdentifiedBy { get; set; }
+        public string? IdentifiedAt { get; set; }
+        public string? CancelledAt { get; set; }
+        public string? CancelReason { get; set; }
+        public bool IsCancelled => !string.IsNullOrWhiteSpace(CancelledAt);
+        public string? ReviewedBy { get; set; }
+        public string? ReviewedAt { get; set; }
+        public bool HasFinalCall => !string.IsNullOrWhiteSpace(FinalAntibodies);
+        public bool IsReviewed => !string.IsNullOrWhiteSpace(ReviewedBy);
+        public string FinalIdDisplay => HasFinalCall ? FinalAntibodies! : "";
+
+        public string ListDisplay => FormatListDisplay(AccessionNumber, Type, FinalIdDisplay);
+
+        public bool IsExpired => ExpirationStatus.IsExpired(ExpirationDate, DateTime.Today);
+        public bool IsExpiringSoon =>
+            ExpirationStatus.IsExpiringSoon(ExpirationDate, DateTime.Today, ExpirationWarningDays);
+
+        private static int ExpirationWarningDays =>
+            Services.AppSettings.Current.ExpirationWarningDays;
+
+        public static string FormatListDisplay(string? accession, string? type, string? finalId)
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(accession)) parts.Add(accession.Trim());
+            if (!string.IsNullOrWhiteSpace(type)) parts.Add(type.Trim());
+            if (!string.IsNullOrWhiteSpace(finalId)) parts.Add(finalId.Trim());
+            return string.Join("  ·  ", parts);
+        }
+
+        public List<SpecimenAntibody> Antibodies { get; set; } = new();
+        public List<SpecimenRuleout> Ruleouts { get; set; } = new();
+        public List<Panel> LinkedPanels { get; set; } = new();
+
+        public bool IsAnalysisStale =>
+            ReactionsUpdatedAt != null &&
+            (LastAnalyzedAt == null || string.Compare(ReactionsUpdatedAt, LastAnalyzedAt) > 0);
+
+        public bool MatchesFilter(string? query) =>
+            TextFilter.Matches(query, AccessionNumber, Mrn, Type, Phenotype, Genotype, PreviousAntibodies,
+                Notes, FinalAntibodies, DatResult, DatIgg, DatC3, ExpirationDate);
+    }
+}

@@ -1,4 +1,4 @@
-# Antibody Panel Management System
+# HemoIQ
 
 # User Manual
 
@@ -54,7 +54,7 @@ This file is the same text as **Help → User Manual**. Chapters follow the topi
 
 # Getting started
 
-Antibody Panel Management System helps licensed immunohematology professionals document antibody-panel reactions and compute rule-out and probability statistics. A qualified professional must confirm identification. This software does not issue or release blood units and is not a substitute for licensed clinical judgment.
+HemoIQ helps licensed immunohematology professionals document antibody-panel reactions and compute rule-out and probability statistics. A qualified professional must confirm identification. This software does not issue or release blood units and is not a substitute for licensed clinical judgment.
 
 ## How to open help
 
@@ -95,12 +95,13 @@ The Worklist is the operational list for specimens that still need work and for 
 
 ## Count cards
 
-Four cards sit across the top:
+Five cards sit across the top:
 
 - **Incomplete** — reaction grids that are not finished, for specimens that do not yet have a confirmed antibody ID.
-- **Stale analysis** — grades were saved after the last analysis, or Preferences that change analysis (score threshold, ID cell rule, ACS rule-outs, default rule-outs, or extra phases) were saved after the last analysis. A specimen that has a panel and has never been analyzed is listed here with the detail "Never analyzed." A confirmed identification is not listed.
+- **Stale analysis** — grades were saved after the last analysis, or analysis rules or clinical Preferences changed after it, so the evidence on the Analysis tab is out of date. The detail says which. A specimen that has a panel and has never been analyzed is listed here with the detail "Never analyzed." Only investigations without a confirmed identification are listed.
 - **Expiring** — specimens or panel lots inside the expiration warning window from Preferences.
 - **Expired** — specimens or panel lots past their expiration date.
+- **Review** — every other item: overdue testing, supervisor review, expired reagent use, untyped cells, check typing, duplicate lots, rule problems, data inconsistencies, and inconsistent status. These are described below.
 
 Click a card to show only that category. Click the same card again to show every category that is still checked. A thicker border means that card is the active filter.
 
@@ -108,7 +109,7 @@ Click a card to show only that category. Click the same card again to show every
 
 - **Find** narrows the grid by accession, panel name, kind, urgency, or detail.
 - **Show all** clears the card filter.
-- The **Show** checkboxes turn Incomplete, Stale analysis, Expiring, and Expired on or off together.
+- The **Show** checkboxes turn Incomplete, Stale analysis, Expiring, Expired, and Review on or off.
 - **Open** goes to the selected row. Double-click a row, or press **Enter**, to do the same.
 - **Refresh** reloads the counts and the grid.
 - **Help** opens this chapter.
@@ -124,6 +125,29 @@ Row colors match the category: amber for incomplete, orange for stale, yellow fo
 
 The worklist does not include a confirmed identification as unfinished work. After you confirm an ID, incomplete and stale rows for that specimen drop off.
 
+**Overdue testing** items list investigations whose status is **Awaiting additional testing** and that were received more days ago than the Preferences **Turnaround threshold**. The detail gives the received date, the age, and the testing the last analysis left open, for example clinically significant antibodies not yet ruled out or recommended selected cells. Open goes to Analysis. The item clears when the testing is recorded and analysis no longer leaves anything open, or when the identification is confirmed, cancelled, or the specimen made inactive. Investigations awaiting testing within the threshold are not listed; the status strip already shows them.
+
+**Rule problem** items list lab rules that cannot work as written: a rule whose antibody is not a known antigen in its exact case (it never applies), or two or more rules for the same antibody (only the first by name is used). Such rules can only come from older data, because the Rule dialog now refuses them. Open goes to the Rules tab. Fix or merge the rules and the item clears.
+
+**Data inconsistency** items list stored reactions that disagree with the specimen or panel. Nothing is changed automatically:
+- **Reactions on detached panel:** a panel has grades for the specimen but is no longer attached. Analysis still reads those grades although the Specimens tab does not list the panel. Open goes to the specimen; re-attach the panel, then review or clear its reactions with a reason.
+- **Grades for cells the panel lacks:** grades are stored for cell numbers the panel no longer has, so they cannot be matched to antigen typing. Open goes to Reactions.
+- **Unrecognized grades:** a stored grade is not one of 0, w+, 1+–4+, MF, H or NT, for example from older or imported data. It is read as neither reactive nor nonreactive. Re-enter it on Reactions.
+
+These states can come only from older or imported data: HemoIQ no longer detaches a panel that has grades.
+
+**Supervisor review** items appear only when Preferences requires supervisor review. Each lists a confirmed identification that has not been reviewed yet. Open goes to the specimen, where **Supervisor Review…** records the review.
+
+**Expired reagent** items list open investigations (not yet confirmed, or confirmed but not supervisor-reviewed) with reactions recorded on a panel lot after its expiration date. The recording date is the last day graded results were saved on that run. Open goes to Analysis, where the same finding is a **REVIEW** note at the top of the suggestions. HemoIQ does not exclude the results; the laboratory decides whether they may be used. The item clears once the investigation is confirmed and supervisor-reviewed.
+
+**Untyped cells** items list active panels with cells that have no antigen typed positive. Every real red cell types positive for something: c or C, e or E, and k or K. A new panel's cells start typed negative, so a cell with nothing positive almost certainly has no typing entered yet. Analysis would read it as antigen-negative for every antibody. The item names the cells, or says the whole panel is untyped. Open the panel, enter the typing from the vendor antigram, and the item clears. An investigation that uses such a panel also shows a **REVIEW** note on Analysis.
+
+**Inconsistent status** items list investigations that are cancelled but still hold a confirmed identification. HemoIQ does not let you cancel an investigation with an identification, or confirm one on a cancelled investigation, so this state only comes from older or imported data. Analytics does not count these records. Open the investigation and either **Reinstate** it to keep the identification, or clear the identification with a reason.
+
+**Duplicate lot** items list a lot number stored on two or more panels when at least one of them is active. Lots match ignoring capitals and surrounding spaces. Vendors match ignoring capitals, and a panel with no vendor matches any vendor. The detail lists each copy with its number, name, vendor and active state. Results can end up recorded against the wrong copy, so keep one active and deactivate or correct the others. Adding, editing or copying a panel with a lot number that is already stored asks for confirmation first.
+
+**Check typing** items list extra-antigen columns (for example Doa) that read negative on every cell of a panel with no record that anyone typed or verified them. Older versions filled a newly added extra antigen in as negative automatically, so such a column may be a default rather than real typing, and analysis would read it as antigen-negative. Compare the column with the vendor antigram. If it is correct, select the item and choose **Mark typing verified**; the confirmation is written to the audit log and the item clears (a supervisor is required once users are registered). If it is wrong, **Open** the panel and use **Edit** to correct the values or set them to NT. Nothing is changed automatically.
+
 ---
 
 # Specimens
@@ -136,7 +160,7 @@ The left pane lists accession number, type, final ID, expiration, created date, 
 
 - **Find** filters by accession, type, phenotype, previous antibodies, notes, DAT, or final ID.
 - **Add** opens a blank specimen record. **Edit** opens the selected record. Double-click a row to edit it.
-- **Delete** removes the selected specimen after you confirm.
+- **Delete** removes the selected specimen, with its panel links, reactions, and analysis, after you confirm. It is meant for a specimen entered in error. A specimen with a confirmed identification cannot be deleted; use **Cancel** on the investigation instead, or have a supervisor clear the identification first. A specimen named as the source of an eluate cannot be deleted until that link is removed. Each deletion is written to the audit log with the MRN, type, received date, linked panels, and how many reaction rows were removed.
 - **Refresh** reloads the list.
 - **Show Inactive** includes specimens that were marked inactive.
 - **Help** opens this chapter.
@@ -153,11 +177,123 @@ The right pane follows the selected specimen. Selecting a specimen updates the s
 
 **Clinical Context** shows phenotype, genotype, previous antibodies, DAT, notes, and the confirmed final ID. These fields are edited from the specimen record.
 
-**Linked Panels** are the lots used for this workup. **Attach Panel** picks a lot. **Detach** removes the selected link. Linking a panel makes it available when you enter reactions.
+**Visual hemolysis** in the specimen dialog records how the specimen looked when received: Not recorded, None, Slight, Moderate, or Gross.
+- A grossly hemolyzed specimen always adds a **REVIEW** note to analysis. Hemolysis in the test tubes cannot be told apart from the specimen's own, and free hemoglobin can hide weak agglutination, so consider a new specimen.
+- Slight or moderate hemolysis adds a note only when a hemolysis (H) grade was recorded, naming those cells.
+- No grade is changed or excluded.
+- Changes are audited and shown on the Timeline. The field is locked once an identification is confirmed. The identification worksheet prints it.
+
+**Linked Panels** are the lots used for this workup. **Attach Panel** picks a lot. **Detach** removes the selected link. A panel with grades for this specimen cannot be detached, because analysis would keep using those grades: clear its reactions on the Reactions tab (with a reason) first. Linking a panel makes it available when you enter reactions.
 
 **Pattern evidence** appears when the latest analysis has a panreactive, autoantibody, or high-prevalence note, including a cold or warm phase sentence and an adsorption comparison when one was run. When that analysis left a panreactive untreated run out of ordinary scores, that exclusion is listed first, and the adsorption comparison follows it. Residual reactivity after autoadsorption is visible with the suspected antibodies, ahead of the warm and pan sentences. A specimen with no suspected specificity and no such note says so. The wording is evidence, not a diagnosis. An ordinary alloantibody score stays in Suspected Antibodies and does not add this block.
 
 **Suspected Antibodies** and **Ruled-out Antibodies** follow the same current analysis as Pattern evidence. An older saved list is not shown in their place. A cell whose partner antigen is NT does not rule an antibody out. When nothing meets the criteria, the ruled-out pane says so. When a counted cell's check cell is 0, the Check cell column names that cell and says the check cell did not react. A counted cell at CC 2+ leaves that column blank. Change them by entering grades and running analysis, not by typing in these grids.
+
+## Specimen dating
+
+**Collection** in Clinical Context shows the collection and receipt times. When the transfusion record shows a transfusion within the Preferences **Dating look-back** (default 90 days), or the patient is pregnant or was pregnant within that look-back, the specimen should not be used after collection date + **Specimen dating** days. A **REVIEW** note appears here, at the top of the analysis suggestions, and on the worksheet when:
+
+- the recorded expiration is later than that date,
+- no expiration is recorded, or
+- no collection time is recorded, so dating cannot be checked.
+
+The note is a prompt; HemoIQ never changes the expiration itself.
+
+## Patient history
+
+When the specimen has an MRN, the detail pane lists the patient's other specimens, newest first. Each line shows the date and encounter number, the confirmed identification, DAT, transfusion status, and the phenotype and genotype recorded on that specimen. An earlier phenotype can be the pre-transfusion typing to compare with when the current phenotype is unreliable after a transfusion; HemoIQ shows it for review and does not use it in analysis. Specimen Summary and the identification worksheet print the same list. Search and the specimen filter match MRN.
+
+## Patient record
+
+The **Patient (permanent, shared by MRN)** box shows information that belongs to the patient rather than to this specimen: name, date of birth, sex, antigen-negative units, other transfusion requirements, and permanent blood bank comments. Select **Edit Patient** to change it. The button needs an MRN on the specimen. Every change is written to the audit log with the old and new values. A confirmed identification on one specimen does not lock the patient record, because the record spans all of the patient's specimens.
+
+Enter antigen-negative requirements in **Antigen-negative units** as antigen codes, for example `E, K, Fya` or `Fy(a-)`. A trailing `-`, `neg`, or `negative` is accepted. Capital and lower-case letters are different antigens (C is not c, K is not k). HemoIQ stores the list in panel order and prints it as, for example, E−, K−, Fy(a−). A word that is not an antigen, such as `irradiated`, is refused; write other requirements such as irradiated, CMV-safe, or washed in **Transfusion requirements**.
+
+When an antibody is known for the MRN (Previous antibodies, a confirmed call on this specimen, or a confirmed call on another specimen with the same MRN) and its antigen is not in **Antigen-negative units**, analysis lists a **REVIEW** suggestion at the top. If the requirement is written only in the free-text **Transfusion requirements** (for example from before this field existed), the suggestion asks you to add it to **Antigen-negative units** so it is explicit. HemoIQ never copies it for you. It is a prompt to check the record, not a transfusion order.
+
+**Sex** is Not recorded, Female, Male, or Other / X. It is shown after the date of birth wherever the patient is named, including reports.
+- If a specimen records **Pregnant** or **Recently pregnant** for a patient recorded as male, saving the specimen asks for confirmation, and analysis lists a **REVIEW** suggestion. The specimen may belong to another patient, or one of the records may be wrong.
+- The pregnancy context still applies to specimen dating until someone corrects it. Nothing is changed automatically.
+
+**HPC transplant** records a stem-cell or marrow transplant (None, Autologous, or Allogeneic) and its date.
+- **Allogeneic:** for specimens collected on or after the transplant date, analysis treats this patient's serologic phenotype as unreliable, as it does after a recent transfusion. Red cells may come from the donor or be mixed. The genotype is also listed as possibly the donor's: DNA from blood or marrow after an allogeneic transplant is the donor's, so the genotype counts for the patient only if it was done before the transplant or on a non-hematopoietic sample such as a buccal swab. If no date is recorded, every specimen is treated this way.
+- **Autologous:** typing is unaffected, because the cells are the patient's own.
+- **Where it appears:** the patient box, the Clinical Identification report, and the patient-typing notes on Analysis.
+- **What it never does:** add or remove an antibody.
+
+## Investigation status
+
+The grey strip at the top of the detail pane shows where the investigation stands. It is worked out from what has been recorded, so it cannot fall out of date:
+
+- **Steps:** ✓ Received, Panel attached, Reactions complete, Analysis current, ID confirmed. ○ marks a step that is not done. **Analysis current** follows the same rule as the Analysis tab warning and the Worklist: it clears when grades, analysis rules or clinical Preferences change after the last analysis.
+- **Status:** Awaiting panel, Testing in progress, Analysis needed, **Awaiting additional testing**, Awaiting identification, Completed, **Amended** (an identification was cleared and confirmed again), **Reopened** (cleared and not yet confirmed again), or Inactive – not completed.
+- **Next:** the specific next action, for example `Finish reactions: Panel A (1/2).`
+
+**Receipt** in Clinical Context is a checklist of what to record when the specimen arrives. It reads **Complete (8 of 8)** or lists what is missing, and hovering over it gives each item's reason.
+- **Required:** patient MRN, collection date/time, transfusion status, and the last transfusion date when the patient was transfused. These change how the analysis is read: patient history needs the MRN, and the transfusion window and specimen dating count from collection. While one is missing, the line is shaded amber, the **Received** step stays open, and the next action asks you to complete receipt with **Edit** before attaching a panel.
+- **Advisory:** received date/time, visual hemolysis, pregnancy status and DAT. These complete the record but do not hold the Received step.
+- **Patient history:** when another specimen with the same MRN records a red-cell transfusion within the recent-transfusion window, and this specimen says Not transfused or Unknown, **Transfusion status matches patient history** becomes a required gap. The same conflict appears as a REVIEW note on the analysis. A Transfused record whose date is older than the one on file adds an advisory item.
+- The checklist never blocks testing. The Clinical Identification worksheet prints the same line.
+
+**Awaiting additional testing** means the analysis is current but left questions that more testing could settle. Each analysis saves the open items, and **Next** lists them:
+- clinically significant antibodies the panels type that are not yet ruled out;
+- suspected antibodies that have not met the identification rule;
+- multiple-antibody separation shortfalls;
+- up to three recommended selected cells.
+
+An antibody the patient's own reliable typing or genotype argues against is not listed.
+
+Some reaction patterns change what is listed:
+- **Panreactive or autoantibody-like:** **Next** points to autocontrol, DAT and adsorption instead of a list of antibodies and cells, because selected cells cannot separate specificities when every cell reacts.
+- **High-prevalence or HTLA:** **Next** points to rare antigen-negative cells, titration or neutralization, with the recommended cells. This is a suggestion, not a block: you can still record the identification. Analyses saved before this version show **Awaiting identification** until analysis is run again.
+
+The identification worksheet prints the same status line.
+
+### Cancel and reinstate
+
+Use **Cancel Investigation…** to stop an investigation without deleting it, for example for a mislabeled or hemolyzed specimen or a cancelled order. A reason is required. A confirmed identification must be cleared first. A cancelled investigation:
+
+- shows status **Cancelled** with the date and reason,
+- is locked: reactions, panels, analysis saves, and confirming an identification are refused,
+- is removed from every Worklist queue.
+
+**Reinstate…** reopens it and also requires a reason. Both actions are written to the audit log and appear on the Timeline.
+
+### Supervisor review
+
+When Preferences requires supervisor review, a sixth step, **Supervisor reviewed**, appears. Select **Supervisor Review…** and enter your initials. Rules:
+
+- There must be a confirmed identification.
+- The reviewer cannot be the person who confirmed it (initials are compared without regard to case).
+- A specimen can be reviewed once. Clearing or re-confirming the identification removes the review, so the new call must be reviewed again.
+
+Each review is written to the audit log with the confirmed antibodies and who confirmed them. The worksheet prints *Supervisor reviewed by …* or *Supervisor review: PENDING*.
+
+## Timeline
+
+Expand **Timeline** to see the investigation in time order, with who did each step where it is known:
+
+- Specimen received, panel attached or removed, panel run started, and additional testing (ficin, papain, DTT, adsorption runs) started.
+- Reactions entered. Saves on the same run less than 15 minutes apart are combined, for example *3 save(s), 2 cell(s) on Panel A, Untreated*.
+- Each analysis run, with the rule-engine version.
+- Identification confirmed, cleared (with the reason), and supervisor review.
+- Changes to MRN, transfusion record, DAT, visual hemolysis, and the patient record.
+- Lab configuration changes made while the investigation was open: analysis rules added, changed or deleted, and changed clinical Preferences. Each entry names what changed, for example *Analysis rule changed: Jka dosage; minimum rule-out cells 3 → 2*. "Open" means after receipt, before an identification is confirmed or the investigation is cancelled, and again after one is cleared or reinstated. An analysis run before such an entry used the previous setting. The Worklist lists the investigation as **Stale analysis** until it is analyzed again.
+
+Receipt and run starts record only a date, so they show first on their day. The identification worksheet prints the same timeline. Panels attached before this version were not audited, so only their run start dates appear.
+
+## Eluate evidence
+
+Enter an eluate as its own specimen with Type **eluate**, set **Eluate of** to the source accession, attach a panel, and grade it like any panel. **Eluate link** in Clinical Context shows *Eluate of X* on the eluate and *Eluates: …* on the source.
+
+When the source specimen is analyzed, each linked eluate adds a note:
+
+- **No reactions entered yet** — the eluate is linked but not tested.
+- **Specificity** — the eluate's confirmed identification, or its suspected antibodies from its own analysis, with reactive and evaluated cell counts. After a recent transfusion, the note says this supports alloantibody coating transfused donor cells (possible delayed hemolytic or serologic transfusion reaction). An antibody in the eluate but not suspected in the source is named, because it may be bound to the red cells.
+- **Panreactive** — four or more evaluated cells, at least 80% reactive. This supports IgG autoantibody; adsorption is suggested before ruling out an alloantibody after transfusion.
+- **Nonreactive** — three or more evaluated cells, none reactive. With a positive DAT, the note lists drug-related antibodies, antibodies to antigens not on the panel, and complement-only coating. With a C3-only DAT, a nonreactive eluate is expected.
+
+These notes never add, remove, or rule out an antibody.
 
 ---
 
@@ -165,19 +301,47 @@ The right pane follows the selected specimen. Selecting a specimen updates the s
 
 Use this dialog to add or edit an accession. Open it with **Add** or **Edit** on the Specimens tab, or with Ctrl+N while Specimens is selected.
 
+## Sections
+
+The fields are on four tabs. Press Ctrl+Tab and Ctrl+Shift+Tab to move between them.
+
+- **Specimen**: accession, MRN and encounter, type, eluate source, collection and receipt, origin, expiration, and Active.
+- **Clinical context**: transfusion status and date, pregnancy, and RhIG.
+- **Serology**: DAT results, phenotype, genotype, and previous antibodies.
+- **Notes**: free text.
+
+The **Context** line under the tabs always lists what is recorded on Clinical context and Serology, for example *Context: Transfused (last 2026-10-30) · DAT IgG 2+ · previous anti-K*, so a value on a tab you have not opened is never hidden. Unknown, Not transfused, Not pregnant, and NT are left out. When **Save** finds a problem, it opens the tab that holds the field and puts the cursor there.
+
 ## Fields
 
 - **Accession Number** identifies the specimen. Use the accession your laboratory already uses.
-- **Type** is serum, plasma, or eluate. The default comes from Preferences.
+- **MRN** is the patient's medical record number. It is stored in capitals. Specimens with the same MRN share history: an antibody confirmed on an earlier specimen appears on this specimen's Patient Typing tab as historical evidence, with the accession it came from. Suspected antibodies that were never confirmed are not carried forward. MRN changes are audited and locked after an identification is confirmed.
+- **Collected** and **Received** are date and time (HH:mm, 24-hour). Received defaults to now on a new specimen. Neither may be in the future, and Received cannot be before Collected. On a new specimen, choosing a collection date sets Expiration to collection + the Preferences specimen-dating days. Changes are audited and locked after an identification is confirmed.
+- **Encounter** (beside MRN) is the encounter or account number the specimen was drawn under. It is optional, up to 64 characters, and spaces are removed. It is searchable on Search, prints on the worksheet's Origin line, and appears on the Timeline. Changes are audited and locked after an identification is confirmed.
+  - If the same encounter number is already on a specimen with a different MRN, you are warned before saving, because one of the specimens may be mislabeled or the number mistyped. You can save anyway or go back. If you save anyway, the warning is recorded in the audit log, shown on the Timeline ("Saved past a warning"), and counted under **Warnings overridden** on Analytics.
+- **Collected by / at** is who collected the specimen and where (unit, clinic, or draw site). **Ordered by / from** is the ordering provider and ordering location. Each is optional free text of up to 128 characters. They print on the worksheet, are searchable on Search, and the ordering location feeds **By ordering location** on Analytics. Changes are audited and locked after an identification is confirmed.
+- **Type** is serum, plasma, or eluate.
+- **Eluate of** is available when Type is eluate. Enter the accession of the serum or plasma specimen whose red cells were eluted. The eluate's results then appear in that specimen's analysis as reviewable notes (see *Eluate evidence* in the Specimens chapter). The link is audited and cannot point to the eluate itself or to another eluate. The default comes from Preferences.
 - **Expiration Date** is the specimen dating date. Preferences can pre-fill it from the specimen-dating setting. Clear the date if this specimen should not expire.
-- **DAT** is the direct antiglobulin test result: NT, Negative, W+, 1+, 2+, 3+, or 4+.
-- **Phenotype** is the serologic type, for example R1r, K−, Fy(a−b+). If the patient was recently transfused, say so in Notes. Analysis will not use a recently transfused phenotype to exclude alloantibodies.
+- **DAT polyspecific**, **DAT IgG**, and **DAT C3** are the direct antiglobulin test results: NT, Negative, W+, 1+–4+, or MF (mixed field). Any reactive result makes the DAT positive for the pattern notes. The DAT is negative only when every recorded result is negative. C3 reactive with IgG negative is noted as more typical of cold or complement-mediated reactivity. A mixed-field DAT is read against the transfusion record in the same way as a mixed-field autocontrol. IgG and C3 changes are audited and locked after an identification is confirmed.
+- **Transfusion status** is Unknown, Not transfused, or Transfused. Analysis reads this field before it reads Notes.
+- **Last transfusion** is the date of the most recent red-cell transfusion. It is available only when the status is Transfused. A date in the future is refused.
+- **Products / units** records what was given, if known: Red cells, Whole blood, Granulocytes, Platelets, Plasma, or Cryoprecipitate, and the number of units (1–999).
+  - If the products are recorded and none carry red cells (only platelets, plasma or cryoprecipitate), a recent transfusion does not make the phenotype unreliable, and the analysis note says why.
+  - Plasma-containing products (whole blood, platelets, plasma) add a note that antibodies can be passively transferred.
+  - Leave them unticked when not known; the phenotype is then treated as after a red-cell transfusion.
+  - Changes are audited and shown on the Timeline.
+- **Pregnancy** is Unknown, Not pregnant, Pregnant, or Recently pregnant. Recently pregnant requires the date the pregnancy ended. Pregnant, or a pregnancy that ended within the Preferences dating look-back, applies the specimen-dating check in the same way as a recent transfusion.
+- **RhIG given** is the date Rh immune globulin was last given. If anti-D is suspected or confirmed within the Preferences RhIG window after that date, analysis notes that passive anti-D is possible.
+- **Phenotype** is the serologic type, for example R1r, K−, Fy(a−b+). Analysis does not use the phenotype to exclude alloantibodies when the last transfusion falls within the Preferences recent-transfusion window, or when the status is Transfused with no date, unless the recorded products carry no red cells.
 - **Genotype** is the predicted type from molecular results, for example RHCE*ce/ce. It stays available for review after transfusion. It is evidence for the reader, not a diagnosis.
 - **Previous antibodies** records antibodies already known for this patient, for example anti-E.
 - **Active** hides the specimen from the default lists when it is unchecked. Turn on **Show Inactive** to see it again.
-- **Notes** holds free text such as transfusion history, medications, or why the workup was ordered.
+- **Notes** holds free text such as medications or why the workup was ordered. When Transfusion status is Unknown, analysis still checks Notes and Phenotype for wording such as "transfused". Analysis names that keyword check in Patient Typing, so record the status instead. When the status is Not transfused, the status decides and any transfusion wording in Notes is named for review.
 
-**Save** writes the record. **Cancel** discards the changes. **Help** opens this chapter.
+Every field is audited. Creating a specimen writes an audit entry. Changing type, expiration, Active, notes, phenotype, genotype, previous antibodies, or DAT polyspecific writes one entry listing only the fields that changed, with their old and new values, and the timeline shows *Specimen details changed* with the field names. Saving without changing anything writes nothing. Each change to the transfusion status or date is written to the audit log with the old and new values. The fields cannot be changed after an identification is confirmed.
+
+**Save** writes the record. The whole record is saved together: if any value is refused (for example an eluate source that does not exist, or a record locked by a confirmed identification), nothing from that save is kept, no audit entries are written for it, and the message says so. **Cancel** discards the changes. **Help** opens this chapter.
 
 ---
 
@@ -203,18 +367,25 @@ The Panels tab stores panel lots and the antigen profile of each cell. Analysis 
 
 ## List
 
+- **Typing** shows how completely each lot is typed, counting the cells but not the autocontrol. For example, *24 antigens · Fya partial · cell 3 untyped*:
+  - the number is how many antigens are typed on every cell;
+  - **partial** antigens are typed on some cells but NT on others;
+  - **untyped** cells have nothing typed positive.
+
+  Partial and untyped usually mean the antigram entry is unfinished, and the column turns amber. Antigens that are NT on every cell are simply not on the antigram. A new lot shows **Not typed**. The column updates when you save typing.
 - **Find** filters by name, lot, vendor, or expiration date. Find is unavailable while you are editing antigens. The name and lot stay on screen in full. If the list is narrowed, a long name is shortened and the full name shows when you point at it.
+- Selecting a lot updates the status line to name that panel and its lot. Opening a cell from Search brings that lot fully into view in the list, including when it is the last lot, names that cell, highlights it on the antigen grid, and brings the antigen from the search into view. When several antigens are set, those columns are shown first and stay on screen with the cell when that panel is scrolled, so the earlier one stays beside the later one. Choosing another lot restores the panel's own column order.
 - **Add** creates a lot. **Details** edits the name, lot, vendor, cell count, and expiration. **Copy** duplicates a lot so you can start a new lot from an existing antigram.
-- **Edit** turns on antigen editing for the selected panel. **Delete** removes the lot after you confirm.
+- **Edit** turns on antigen editing for the selected panel. **Save** writes only the cells you changed and records each change (for example *Cell 3 Jka: + → -*) in the audit log. If the lot holds test history (recorded reactions or a confirmed identification), Save lists the changes and asks for a reason, such as the vendor's corrected antigram; without one nothing is saved. The edit then appears on the timeline of every specimen tested with the lot. **Delete** removes the lot after you confirm. A lot that holds test history cannot be deleted: if any reactions were recorded on it, or it is linked to a specimen with a confirmed identification, HemoIQ refuses and says why. Deactivate it instead so it is no longer offered for new testing. Deleting a lot that is only linked (no reactions, no confirmed identification) removes the links too, and the audit entry lists the specimens. Importing a lot that is already stored never replaces one that holds test history, and an import or copy that fails part-way leaves the stored panels exactly as they were.
 - **Show Inactive** includes lots that are not active. Imported lots stay inactive until you review them.
 - Yellow rows are nearing expiration. Red rows are expired.
-- Selecting a lot updates the status line to name that panel and its lot. Opening a cell from Search brings that lot fully into view in the list, including when it is the last lot, names that cell, highlights it on the antigen grid, and brings the antigen from the search into view. When several antigens are set, those columns are shown first and stay on screen with the cell when that panel is scrolled, so the earlier one stays beside the later one. Choosing another lot restores the panel's own column order.
 
 ## Bring a lot in
 
 - **Import** creates a panel from a CSV lot sheet. The file uses a header row such as Cell, D, C, c, and the rest of the antigens.
 - **Download…** opens the vendor catalog, or lets you import a vendor PDF or CSV you already have.
 - After an import, the review dialog lets you **Activate now** or **Keep inactive**. You can also select an inactive lot later and click **Activate**.
+- **Antigen coverage at activation:** activating a lot compares it with the previous lot from the same vendor and product line. The prompt lists antigens the previous lot typed on every cell but this lot types on fewer cells, or none, for example "Fya (2 of 3 cells)". Antigens on the ACS list are named, because fewer cells will be available to rule them out. Untyped cells stay NT and are never used as antigen-negative. If you activate anyway, from the Panels tab or **Activate now** after an import, the audit log records the gaps and the previous lot.
 - **Artifact** opens the retained import file and its SHA-256 hash.
 - **Export** saves the selected antigen grid as CSV. **Antigram** saves a bench-copy PDF that leaves out an antigen column that is NT on every cell. A cell that is NT in a shown column prints NT. A typed minus stays a minus.
 
@@ -222,13 +393,17 @@ The Panels tab stores panel lots and the antigen profile of each cell. Analysis 
 
 The grid on the right is the antigram. Press **Edit** before changing it.
 
-- Click a cell to cycle **NT → + → ++ → −**. Antigens without an antithetical pair skip ++.
+Each antigen value is one of **+**, **-**, **++** (homozygous) or **NT** (not tested). HemoIQ stores nothing else: a value such as 0 or w is refused with the cell and antigen named, and an import lists such values in its review instead of storing them.
+
+- Click a cell, or press Space or Enter, to cycle **NT → + → ++ → −**. Antigens without an antithetical pair skip ++.
+- Press **+**, **−** or **N** to set the current cell to +, − or NT directly.
+- **Fill NT with −** types every NT cell in the selected antigen column as negative, skipping the autocontrol. For a new lot, enter the positives from the vendor antigram, then fill each column the antigram lists. Leave antigens the antigram does not list as NT. Nothing is stored until **Save**, which audits each change.
 - A new cell starts as NT. Green is + or ++. Light gray is a typed −. NT means the antigen was not typed, which is not the same as negative.
 - An antigen column that is NT on every cell is hidden. Press **Edit** to show those columns and type them. Save or Cancel hides them again if they are still NT.
 - Drag column headers to reorder while editing.
 - **Save** writes the grid (Ctrl+S does the same on this tab). **Cancel** leaves edit mode without saving.
 
-**Add antigen…** adds a non-standard antigen from the warehouse catalog to this panel only. **Remove antigen…** drops one of those extra columns. **Compare…** diffs this antigram against another stored lot.
+**Add antigen…** adds a non-standard antigen from the warehouse catalog to this panel only. Every cell starts as NT (not tested), so analysis treats the antigen as unknown until you type each cell with **Edit**; a new column is never assumed negative. **Remove antigen…** drops one of those extra columns. If any cell is typed for that antigen and the lot holds test history, removal is refused because the typing is evidence behind past results; mark wrong values NT with **Edit** instead. Adding, removing, and reordering antigen columns are recorded in the audit log. **Compare…** diffs this antigram against another stored lot.
 
 Antigen typing on the grid is the profile analysis uses. A blank or NT antigen is not treated as negative.
 
@@ -236,7 +411,9 @@ Antigen typing on the grid is the profile analysis uses. A blank or NT antigen i
 
 # Panel details
 
-This dialog creates a lot, edits its details, or copies an existing lot. Antigen reactions for each cell are edited on the Panels grid after you save the details.
+This dialog creates a lot, edits its details, or copies an existing lot. Antigen typing for each cell is entered on the Panels grid after you save the details. The cells of a new lot start as NT (not tested), never as negative, so a lot whose antigram has not been entered cannot be read as antigen-negative. The Worklist lists it as **Untyped cells** until the typing is in.
+
+Editing the details keeps every cell's typing. Changing **Number of Cells**, **Starting Cell #** or **Include AC** adds the new cells as NT and removes only the cells that fall outside the new range. Removing a cell with recorded grades is refused, because its typing is the evidence behind those results. Keep the range, or copy the panel to a new lot. A lot number that another stored panel already uses asks for confirmation before saving.
 
 ## Fields
 
@@ -285,6 +462,11 @@ Imported panels stay inactive until a qualified user reviews them. This dialog o
 
 The text box summarizes what was read: panel name, lot, vendor, cell count, and any parse notes. Read it against the manufacturer antigram.
 
+It also covers:
+- **Prior lot:** when an earlier lot of the same vendor and product line is stored, the summary says which antigen columns were added or removed.
+- **Typing:** how completely the new lot is typed, in the same format as the Panels list Typing column.
+- **Partly typed antigens:** any antigen the prior lot typed on every cell but the new lot types on only some, for example *Fya (1 of 3 cells)*. That usually means a blank column on the vendor sheet or a parsing gap. The cells left blank are stored as NT, never as negative. Check those columns before activating.
+
 - **Activate now** marks the lot active so it can be attached to specimens and used for reaction entry.
 - **Keep inactive** saves the lot without activating it. It remains on the Panels list when **Show Inactive** is checked. You can activate it later with **Activate**.
 
@@ -316,8 +498,9 @@ This view is the evidence of what was imported. It does not change the antigen g
 
 1. The dialog titles the lot you started from.
 2. Choose the other lot under **Compare with**.
-3. The explanation summarizes how the two antigrams differ.
-4. The grid lists each cell and antigen that does not match. **Selected** is the lot you started from. **Other** is the lot you picked. **Note** describes the difference.
+3. **Typing** shows how completely each lot is typed, as in the Panels list Typing column: antigens typed on every cell, partially typed antigens, and untyped cells.
+4. The explanation summarizes how the two antigrams differ. It names any antigen typed on every cell of the selected lot but not of the other, for example *Fya (9 of 11 cells)*. It also names cells on the other lot with nothing typed positive. Different donors explain different + and − values, but an antigen the earlier lot typed fully and the new lot types only partly usually means the new antigram entry is unfinished.
+5. The grid lists each cell and antigen that does not match. **Selected** is the lot you started from. **Other** is the lot you picked. **Note** describes the difference.
 
 Untyped antigens stay NT. An NT cell is not treated as negative, so a difference between NT and + is called out rather than hidden.
 
@@ -359,10 +542,34 @@ The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cel
 - **Hide ruled-out** hides antigen columns already ruled out for this specimen. The setting can also be turned on by default in Preferences.
 - **Show dosage** groups columns by blood-group system and marks homozygous ++, heterozygous +, or +/? when the antithetical antigen was not typed. This is display only. It does not change rule-out.
 - **Load Reactions** reloads grades from the database.
+- **Ctrl+V** on a phase cell (IS, 37°C, AHG, CC or an extra phase) pastes grades copied from a spreadsheet, starting at the selected cell.
+  - One line fills one cell, going down.
+  - A single column fills the selected phase. Several columns fill the selected phase and the phases to its right, in the order they appear on screen. For example, IS, 37°C and AHG copied together, with the IS cell selected.
+  - Values are read like keyed grades: 0, w or w+, 1–4 or 1+–4+, MF, H, NT. A blank value is NT, and a line with fewer columns is padded with NT.
+  - Any other value cancels the whole paste and lists the line and column to fix, because an unrecognized grade would otherwise count as reactive.
+  - The paste is also refused if it has more lines than there are cells below the selection, or more columns than phases to the right.
+  - If any cell already has a different grade, HemoIQ lists the changes and asks before replacing them.
+  - Pasted grades are unsaved until **Save**, and the unsaved-grade warnings apply to them.
 - **Save** writes grades without running analysis. Ctrl+S does the same.
 - **Save & Analyze** writes grades, runs analysis, and shows a green or red banner with the result.
+- **Unsaved grades** are protected in three places:
+  - Changing the specimen, panel or run asks whether to discard them.
+  - **Run Analysis** on the Analysis tab, for the same specimen, explains that analysis uses saved grades only. **Yes** saves them first, with the usual expired-lot and change-reason checks. **No** analyzes without them. **Cancel** does nothing.
+  - Quitting HemoIQ lists the unsaved grades, and an unfinished antigram edit on Panels, and asks before quitting. **No** is the default.
+- **Recovery after a crash:** while grades are unsaved, HemoIQ keeps a recovery copy on this computer, in `%LocalAppData%\HemoIQ\drafts`.
+- **View only:** when the status bar says "view only" (a Read-only user, or a login that is not registered once users exist), the grid shows grades but cannot be edited. Grade keys and paste do nothing, Save and Fill negatives are disabled, no recovery copy is written, and the progress line starts with "View only".
+- **Checked on save:** every grade must be 0, w+, 1+ to 4+, MF, H or NT. Common spellings such as "W", "2" or "mixed field" are stored in that standard form; anything else, such as "pos", is refused with the cell and phase named. Grades can only be saved for cells the panel has (and the autocontrol). If any row is refused, none of the grid is saved, so fix the value and save again.
+  - **Save**, discarding the grades, or quitting normally removes it.
+  - If HemoIQ closed unexpectedly (a crash, power loss, or the process ended), the next start says which specimen, panel and run, how many cells, and when they were last edited.
+  - **Yes** puts the grades back on the Reactions tab, still unsaved, for you to review and **Save**. **No** discards them.
+  - Recovered values are checked as grades, so an unrecognized value is not restored. Cells matching what is already saved are left out.
+  - If the identification was confirmed in the meantime, the grades are listed but not restored.
+- Saving graded results on a panel lot that has expired asks for confirmation first. If you record them anyway, analysis shows a REVIEW note and the Worklist lists the investigation as **Expired reagent**.
+- The grid is saved as one unit: if any cell cannot be saved, none is. Cells you did not change are not rewritten and add nothing to the audit log.
+- After the specimen has been analyzed, changing a recorded result (anything other than NT) asks for a reason. The prompt lists each change, for example *Cell 3 AHG: 2+ → 0*. Without a reason nothing is saved. The reason and the original value go into the audit log, and the timeline shows the reason on that entry. Entering a result in an empty or NT cell never needs a reason.
 - **Fill 0s** sets remaining NT phases to 0. Check cells become 2+ when AHG is 0. Grades you already entered are left alone.
 - **Clear** removes the grades on this run.
+- **Clear** and **Delete Run** keep a copy of every deleted grade in the audit log and appear on the investigation timeline. After the specimen has been analyzed, deleting graded cells asks for a reason instead of Yes/No; without one nothing is deleted. Neither is possible once an identification is confirmed.
 - **Help** opens this chapter.
 
 A blue banner names the cell or serum treatment when the run is not an ordinary untreated panel.
@@ -372,6 +579,8 @@ A blue banner names the cell or serum treatment when the run is not an ordinary 
 Antigen columns come from the panel. A column that is NT on every cell is hidden. A typed minus stays. Red header text means that antibody is ruled out for this specimen. A strikethrough header means the antigen is destroyed by the cell treatment, so that column cannot support a rule-out on this run.
 
 Row colors: blue when no grades have been entered, green when the row contributed to a rule-out. Phase cells use yellow for w+ or 1+, orange for 2+, red for 3+, 4+, or hemolysis, and purple for mixed field. A pink CC cell is invalid when AHG is 0.
+
+Mixed field on the autocontrol (AC) row is read against the specimen's transfusion record. After a recent transfusion, analysis notes that alloantibody may be coating surviving donor cells and suggests a DAT and an eluate. If the status is Not transfused, the note asks you to review transfusion history, transplant, and the specimen. If the status is Unknown, it asks you to record the status. Mixed field on a panel cell is still treated as reactive evidence. None of these notes changes the suspected or ruled-out lists.
 
 ## Keyboard
 
@@ -430,13 +639,15 @@ Analysis computes rule-outs, scores, and pattern statistics from the grades and 
 
 - **Find** filters specimens by accession, type, phenotype, previous antibodies, notes, or final ID.
 - **Specimen** selects the accession to review. Selecting a specimen updates the status line to name that accession.
-- An orange **Analysis is stale** warning means grades changed after the last run, or Preferences that change analysis were saved after that run. Click **Run Analysis** again before you rely on the saved result. A confirmed identification is not marked stale for a Preferences change.
+- An orange **Analysis is stale** warning says why the results shown are out of date. Either grades were saved after the last run, or analysis rules or clinical Preferences changed after it (for investigations without a confirmed identification). Click **Run Analysis** again before you rely on the tabs. The status strip on Specimens, the Worklist and the Pending Work report all use this same rule.
 - **Enter Reactions** jumps to the Reactions tab for this specimen.
 - **Clinical Report** opens the clinical identification report.
 - **Run Analysis** recalculates every inner tab.
 - **Help** opens help for the inner tab you are viewing, or this overview if no inner topic is available.
 
-When the engine has testing suggestions, they appear in the yellow **Suggestions** box under the toolbar. Read them as next steps, such as cells still worth testing.
+When the engine has testing suggestions, they appear in the yellow **Suggestions** box under the toolbar. Read them as next steps, such as cells still worth testing. The box is ordered by priority. Warnings and REVIEW items come first, then important next steps, then informational notes.
+
+The box shows the first three suggestions and stays short, so the tabs below remain visible. It scrolls if those three run long. **Show all N (+M more)** at its top right expands it to the full list, still in a scrolling box of limited height. **Show fewer** collapses it again. Each new analysis starts collapsed. The Analysis Results report and the clinical report print every suggestion.
 
 ## Inner tabs
 
@@ -483,6 +694,8 @@ This tab lists antibodies whose combined score meets the threshold from Preferen
 - **Ag- nonreactive** is the number of antigen-negative cells that did not react.
 - **ID rule** shows whether the row meets the identification cell rule from Preferences. The usual standard is 3 antigen-positive reactive cells and 3 antigen-negative nonreactive cells.
 
+- **Separation** appears when two or more rows meet the ID rule. It counts reactive cells that carry this antigen and are negative for every other called antigen, against the number set in Preferences (**Multiple-Ab separation**), for example **2 / 1**. A cell with an untested (NT) partner antigen does not count. **Exempt (history)** means the antibody is known from this patient's history, either in the specimen's previous antibodies or from a confirmed identification on another specimen with the same MRN. **Exempt (rule)** means a rule on the Rules tab exempts it. A count that falls short is shown in bold amber, and Suggestions says which phenotype to test next.
+
 Green rows meet that rule. Yellow rows do not. Double-click a row to add it to **Final ID**. A green row is a candidate that meets the cell rule. A yellow row can still be added, and the tooltip says that it does not yet meet the rule.
 
 ## Supporting and conflicting cells
@@ -497,7 +710,9 @@ Green rows meet that rule. Yellow rows do not. Double-click a row to add it to *
 - **Add selected** appends the highlighted row.
 - **Comment** is an optional note stored with the confirmation.
 - **Initials** identifies who confirmed the ID. Preferences can pre-fill this, and a successful confirmation updates the default initials.
-- **Confirm ID** locks the identification onto the specimen. Reports, Analytics, and the Worklist then treat the specimen as confirmed.
+- **Confirm ID** locks the identification onto the specimen. If the specimen was never analyzed, or the analysis is out of date (the orange warning), HemoIQ says why and asks whether to confirm anyway, with **No** as the default. If the latest analysis left testing open (for example clinically significant antibodies not yet ruled out, an ID-rule shortfall or recommended selected cells), HemoIQ lists the open items and asks whether to confirm anyway, with **No** as the default. When Final ID lists two or more antibodies and one falls short of the separation criterion, HemoIQ lists the shortfall and asks whether to confirm anyway. It does not block confirmation.
+  - Each warning you confirm past is recorded with the confirmation in the audit log. It is shown on the Timeline ("WARNINGS OVERRIDDEN"), on the identification worksheet ("Warning overridden at confirmation"), and in the Worklist's supervisor-review item, so the reviewer sees exactly what was overridden.
+  - Clearing the identification removes the overrides from the current record. The audit log keeps them. Reports, Analytics, and the Worklist then treat the specimen as confirmed.
 - **Clear** removes a confirmed ID. You must enter a reason. The reason is written to the audit log.
 
 Confirm only after you agree with the evidence. The software does not confirm an identification for you.
@@ -521,6 +736,14 @@ Green rows met the required count. Yellow rows did not. Hover a row to read the 
 ## Cells that counted
 
 Select a row. The lower grid lists the cells that counted toward that rule-out, with the panel, the run, and the grades. The check-cell grade sits beside AHG, so a rule-out cell shows whether the antiglobulin phase was controlled. When AHG is 0 and the check cell did not react, that CC cell is pink and the tooltip says check cells should react when AHG is 0. A reacting check cell, such as 2+, stays ordinary text. A cell counts when it is antigen-positive, nonreactive in the phases that count, and allowed by the zygosity rule. Homozygous cells are the usual standard. **Heterozygous OK** on a custom rule allows a heterozygous cell to count for that antibody.
+
+**Cells not counted for dosage.** For antigens with an antithetical partner (for example Jka/Jkb), a nonreactive cell counts only when it is homozygous, unless heterozygous cells are allowed. A cell is treated as heterozygous when the partner is typed +, and as of **unknown zygosity** when the partner is not typed. It never counts as homozygous. These cells are now named rather than silently skipped:
+- When no cell counts, the antibody still gets a row. Its explanation reads, for example, "Anti-Jka cannot currently be ruled out because the only nonreactive Jka-positive cells are heterozygous (cells 1, 2), and heterozygous cells are not allowed for this antibody (dosage)", and says what to test next.
+- When some cells count but not enough, the explanation adds "Not counted for dosage:" with the heterozygous and unknown-zygosity cells.
+- The same sentences appear in the analysis suggestions.
+- On the grid, a row with no counted cell has the status **Blocked by dosage**. Selecting any row lists all its nonreactive antigen-positive cells: first the counted ones (**Counted: Yes**), then those left out (**No (dosage)**). The Zygosity column says Homozygous, Heterozygous, or Unknown (for example "Unknown (Jkb not typed)").
+- **Explain** lists the same cells, each marked "not counted: heterozygous" or "not counted: zygosity unknown", and gives such an antibody the status **Not ruled out (dosage)**.
+- **Selected Cells** recommends untested inventory cells that are homozygous for that antigen, for example "It is homozygous Jka+ Jkb- and, if nonreactive, would count toward ruling out anti-Jka (0 of 1 so far)". Cells carrying the antigen of a suspected antibody are skipped, because they are expected to react.
 
 Antigen-positive cells that reacted do not rule the antibody out. w+, mixed field, and hemolysis are reactive, so they do not count as rule-outs. Cells whose antigen was destroyed by ficin, papain, or DTT are listed on **Special Panels** as gated rule-outs instead of counting here.
 
@@ -627,7 +850,7 @@ The text above the grid states an important limit: ordinary probability and patt
 
 Patient Typing lines each candidate up against the phenotype, genotype, and antibody history stored on the specimen.
 
-The note on the tab states the rule: patient phenotype and historical antibodies are evidence for or against a candidate. Recent transfusion makes the phenotype uninterpretable. Record that transfusion in the specimen notes. This tab is not a diagnosis.
+The note on the tab states the rule: patient phenotype and historical antibodies are evidence for or against a candidate. Recent transfusion makes the phenotype uninterpretable. Record the transfusion status and last-transfusion date on the specimen. A **[Transfusion]** line in Summary states which record decided this: the structured date and its day count against the Preferences window, or the Notes keyword check when the status is Unknown. This tab is not a diagnosis.
 
 Columns:
 
@@ -635,6 +858,23 @@ Columns:
 - **Kind** — which piece of patient information was used, such as phenotype or previous antibody.
 - **Patient** — the value on the specimen, such as antigen-negative or a historical antibody name.
 - **Explanation** — how that value supports or argues against the candidate.
+
+Historical rows also come from other specimens with the same MRN. Each antibody confirmed there is listed once, citing the earliest accession that confirmed it. An antibody already typed into Previous antibodies is not listed twice.
+
+**Earlier (pre-transfusion) phenotype.** When this specimen's phenotype cannot be used, or none was entered, HemoIQ looks at the patient's other specimens (same MRN) for the most recent phenotype that still reflects the patient's own cells:
+- The earlier specimen must have been collected before this specimen's last transfusion, or before this specimen when it is not transfused.
+- Its own typing must have been usable when it was collected, judged by the same transfusion rules.
+- It is not used when this specimen is marked Transfused with no date, because the earlier typing cannot be shown to predate the transfusion.
+- It is not used for a patient with an allogeneic HPC transplant.
+
+When used, each line names its source, for example "Earlier phenotype from 2026-001 (2026-03-02, before the current transfusion context): Patient types E+…". The **[Transfusion]** note says the earlier phenotype is used instead. It counts as patient-typing evidence like a current phenotype: an antigen-positive typing argues against the alloantibody and is flagged if that antibody is suspected. Review it as you would any historical record.
+
+**Transfusions recorded on the patient's other specimens** are also checked. If another specimen with the same MRN records a red-cell transfusion within the Preferences **Recent transfusion** window before this collection:
+- **Not transfused** on this specimen is contradicted. The suggestions start with a **REVIEW** note naming that specimen and date, and patient typing is treated as unreliable until you correct or confirm the status.
+- **Unknown** on this specimen: patient typing is treated as unreliable, and the note gives the date to record.
+- **Transfused** with an older last-transfusion date: a note asks you to update the date so the window is counted correctly. Reliability is otherwise decided as usual.
+
+Transfusions recorded only as platelets, plasma or cryo, transfusions after this collection, and specimens without an MRN are not used.
 
 Genotype remains available for review after transfusion because it is a molecular prediction, not a fresh serologic type. It is still evidence for you to accept or set aside.
 
@@ -652,6 +892,8 @@ The note on the tab says these are testing suggestions, not identifications. The
 - **Profile** — the antigen pattern that makes the cell useful.
 - **Score** — how much the cell would discriminate among the remaining candidates.
 - **Why this cell** — the short reason, such as which antibody it could rule out or support.
+
+When two or more antibodies are called together and one falls short of the multiple-antibody separation criterion (see **Separation** on Suspected Antibodies), cells with the missing phenotype rank first. For anti-E with anti-K, a K+ E- cell would rank first if anti-K falls short. **Why this cell** says the cell would count toward the criterion if the serum reacts with it, and Suggestions names these cells. A rule on the Rules tab that exempts a partner antigen removes that antigen from the phenotype needed.
 
 Use the list to choose the next cells to test. Enter the new grades on **Reactions**, then **Run Analysis** again. The suggestions box at the top of Analysis repeats the highest-priority next steps when the engine has them.
 
@@ -696,14 +938,15 @@ The Reports tab previews a text report and can copy, print, or export it. Every 
 The **Report** list has eight types:
 
 1. **Specimen Summary** — one accession, its clinical context, linked panels, and final ID. Suspected and ruled-out rows follow the current analysis, not an older saved list. When a counted cell's check cell is 0, that ruled-out line names the cell and says the check cell did not react. A counted cell at CC 2+ keeps the count only. Requires a specimen.
-2. **Panel Summary** — one lot’s identity and antigen grid. Requires a panel.
+2. **Panel Summary** — one lot’s identity, typing completeness and antigen grid. Requires a panel. If the lot has untyped cells, partially typed antigens, or a lot number stored on another panel, a **Data quality (review before use)** section lists them. These are the same checks the Worklist uses.
 3. **Analysis Results** — the current analysis for one specimen, including pattern evidence when a panreactive or autoantibody pattern is present. When autoadsorption leaves cells reactive, that residual comparison is included. Suspected and ruled-out rows follow that analysis. An older saved list is not printed. When a counted cell's check cell is 0, that ruled-out line names the cell and says the check cell did not react. A counted cell at CC 2+ keeps the count only. Requires a specimen.
 4. **All Specimens** — every specimen in the database.
-5. **All Panels** — every panel lot. The name, lot, vendor, cell count, and expiration stay in their own columns, including when the name is long.
-6. **Clinical Identification** — the identification report for one specimen, including the confirmed ID when you have confirmed one. A panreactive or autoantibody workup also lists the pattern evidence. Explain citations name the run, so a supporting cell on an autoadsorbed aliquot is not read as the untreated reaction. That wording is evidence, not a diagnosis. An ordinary alloantibody report does not add that block. Requires a specimen.
-7. **Panel Antigram** — the bench antigram for one lot. Requires a panel.
+5. **All Panels** — every panel lot, with its typing completeness. The name, lot, vendor, cell count, and expiration stay in their own columns, including when the name is long.
+6. **Clinical Identification** — the identification report for one specimen, including the confirmed ID when you have confirmed one. A panreactive or autoantibody workup also lists the pattern evidence. Explain citations name the run, so a supporting cell on an autoadsorbed aliquot is not read as the untreated reaction. That wording is evidence, not a diagnosis. An ordinary alloantibody report does not add that block. Requires a specimen. When two or more antibodies are called, the interpretation includes a **Multiple-antibody separation** section. It shows each antibody's isolated reactive cells against the required number, marked **SHORT** when they fall short, or the exemption. After confirmation it checks the confirmed antibodies; before confirmation it checks the suspected antibodies that meet the ID rule.
 
 Panel Summary, Panel Antigram, and the antigen grid on Clinical Identification leave out an antigen that is NT on every cell. A cell that is NT in a column typed on another cell prints NT. A typed minus stays a minus. The stored panel order is unchanged, and Edit on the Panels tab still shows the full order.
+7. **Panel Antigram** — the bench antigram for one lot. Requires a panel.
+
 8. **Pending Work** — specimens and panels that still need attention. It does not ask for a specimen or a panel.
 
 **Find** filters the specimen list by accession, type, phenotype, notes, or final ID. **Specimen** or **Panel** appears only for the report types that need one.
@@ -719,11 +962,25 @@ The preview is read-only. To change what it says, update the specimen, the panel
 
 **Help** opens this chapter.
 
+## Report record
+
+Every **Print**, **Export PDF**, and **Export CSV** is written to the audit log. The record holds the report type, the output, the file name, the software version, and a SHA-256 fingerprint of exactly what was issued. Specimen reports also record the confirmed identification and supervisor review at that moment, and appear on the specimen's Timeline, for example *Report exported to PDF: Clinical Identification (A123.pdf); ID at issue: anti-E; fingerprint 3F2A…*. Panel reports appear in the panel's audit history. An export that fails writes no record.
+
+If a Clinical Identification report was issued and the identification was later cleared and confirmed again, the specimen's status says **Reissue the Clinical Identification report** until a new one is printed or exported.
+
+A Clinical Identification report for a specimen whose identification was ever cleared is marked in its header:
+- **AMENDED REPORT** when an identification is confirmed again. Under the final identification, an **Amendment history** lists each earlier identification in order: what it was, who confirmed it and when, who cleared it and when, and the reason given.
+- **PREVIOUS IDENTIFICATION WITHDRAWN** when no identification is confirmed now. The same history appears in the interpretation.
+
+Below the history, **Superseded reports** lists each Clinical Identification report printed or exported before the identification was last cleared. Each entry shows when it was issued, how (print, PDF or CSV) and the file name, who issued it, the identification it carried, and the start of its fingerprint, so those copies can be found and recalled or marked superseded. Reports issued after the clear are not listed.
+
+The history comes from the audit log, so the report and the log always agree.
+
 ---
 
 # Analytics
 
-Analytics counts confirmed antibody identifications over a date range. It uses only identifications a user confirmed with **Confirm ID**. Suspected rows that were never confirmed are not included.
+Analytics counts confirmed antibody identifications over a date range. It uses only identifications a user confirmed with **Confirm ID**. Suspected rows that were never confirmed are not included. Cancelled investigations are left out of every figure on this tab: antibody counts, turnaround and workload.
 
 ## Date range
 
@@ -741,16 +998,89 @@ The line under the toolbar names the range that is actually in use. Changing the
 
 - **Confirmed specimens** is how many specimens had a confirmation in the range.
 - **Distinct IDs** is how many different specificities appear.
-- **Total occurrences** counts each specificity once per specimen. A call of anti-E; anti-K adds one to anti-E and one to anti-K.
+- **Total occurrences** counts each specificity once per specimen. A call of anti-E; anti-K adds one to anti-E and one to anti-K. Antigen names are case-sensitive, so anti-E and anti-e are counted separately; only the "anti-" prefix ignores capitals.
 - **Most common** is the specificity with the highest occurrence count.
 
 The two charts show counts by specificity and the trend over time. When the range has no confirmed identification, each chart shows that title and does not draw a negative count scale. The grid under the charts lists the same breakdown. Use the grid when you need the exact counts behind a bar.
 
+## Drill-down
+
+Select a row to list the investigations behind its count in the panel beside the antibody grid. Then choose **Open**, or double-click, to go to the investigation on the Specimens tab. You can select a row in:
+- the antibody grid: the confirmed investigations with that specificity in the range, newest first, with who confirmed each;
+- **Workload by technologist**: that person's confirmations and supervisor reviews in the range;
+- **By ordering location**: the investigations received from that location in the range, marked Confirmed, Open, or Inactive.
+
+Each list uses the same rules as the count it came from, so the number of rows matches the count. Changing the date range or choosing **Refresh** clears the list, because the old list may no longer match the new counts.
+
 Analytics describes work this laboratory confirmed in the application. It is not a population frequency and it does not change any specimen.
+
+## Turnaround
+
+The purple and red cards measure workflow time for investigations **received** in the selected date range. Cancelled investigations are not counted.
+
+- **Received → confirmed** is the median time from the received date to the confirmed identification, in days, with the 90th percentile and the number of investigations. When a received time is recorded on the specimen it is used exactly; otherwise the received date is counted from midnight and the figure is an upper bound.
+- **Confirmed → reviewed** is the median time from confirmation to supervisor review, in hours, for investigations that have a review.
+- **Overdue open investigations** counts active investigations with no confirmed identification that are older than the Preferences **Turnaround threshold (days)**, default 3.
+- **Warnings overridden** counts warnings a user chose to continue past in the range:
+  - an identification confirmed with the analysis missing or out of date, testing still open, or the multiple-antibody separation criterion not met;
+  - a specimen saved with an encounter number already on another patient's specimen, or a pregnancy recorded for a patient recorded as male.
+  - **Show cases** lists them in the investigations list below, newest first, with the warnings that were overridden and who confirmed. Select one and choose **Open**.
+  - Overrides are listed newest first, with the warnings and who continued past them.
+  - A confirmation that was later cleared still counts, because the override happened; its detail starts "No longer the current identification."
+  - **Export CSV** adds the list at the end.
+
+The overdue list at the bottom shows each case, oldest first, with its current status. Select one and choose **Open** to go to it. **Export CSV** adds the turnaround figures and the overdue list after the antibody counts. The 90th percentile uses the nearest-rank method.
+
+## Workload by technologist
+
+The table beside the overdue list shows work done in the selected date range by each set of initials.
+
+- **Confirmed** counts identifications whose **Identified by** is these initials and whose confirmation date is in the range.
+- **Multiple Ab** counts the confirmations that name more than one antibody, such as anti-E; anti-K.
+- **Reviews** counts supervisor reviews recorded under these initials with a review date in the range.
+- **Median TAT** is the median time from receipt to confirmation, in days, for this person's confirmations.
+
+Initials are matched regardless of case. When the initials belong to a user in **Preferences > Users & roles**, the name is shown too. Cancelled investigations are not counted. **Export CSV** adds this table after the turnaround figures.
+
+## By ordering location
+
+The **By ordering location** tab beside **Workload by technologist** groups investigations **received** in the date range by the ordering location recorded on the specimen. Locations match regardless of case and surrounding spaces. Specimens with no ordering location are listed last as **(not recorded)**.
+
+- **Received** is how many investigations came from that location.
+- **Confirmed** is how many of them have a confirmed identification.
+- **Open** is how many are active with no confirmed identification.
+- **Median TAT** is the median time from receipt to confirmation, in days.
+
+Cancelled investigations are not counted. **Export CSV** adds this table at the end.
+
+## Activity by user
+
+The **Activity by user** tab counts work recorded in the audit log, by Windows login and by the local date of each event in the range. It covers reaction entry and amendments, which initials-based workload cannot.
+
+- **Entered** is reaction cells saved for the first time, or saved where every phase was still NT.
+- **Changed** is reaction cells whose recorded result was replaced. The audit entry keeps the original value.
+- **Specimens** is how many different specimens the user saved reactions on, confirmed, cleared, or reviewed.
+- **Confirmed**, **Cleared**, and **Reviews** count identifications confirmed, identifications cleared (amendments), and supervisor reviews.
+- **Overrides** counts the warnings this login continued past: identifications confirmed past a Confirm ID warning, and specimens saved past a warning. It is the per-person view of the **Warnings overridden** card, and is not added to the activity total. Select a user's row to list those cases in the investigations list below, with the warnings that were overridden; select a case and choose **Open** to go to it.
+
+When the login belongs to a user in **Preferences > Users & roles**, the name and initials are shown with it. Saving a reaction grid without changing a cell writes nothing to the audit log, so it is not counted. **Export CSV** adds this table at the end.
 
 ---
 
 # Search
+
+The Search tab has two sections: **Investigations** and **Reagent cells by antigen**.
+
+## Investigations
+
+Type into the search box and press Enter or select **Search**. It matches accession, MRN, patient name, date of birth, final antibody, previous antibodies, final comment, the initials of whoever confirmed the identification, collector, locations, ordering provider, encounter number, and the name, manufacturer or lot number of any panel the specimen was tested on. To find every investigation tested on a lot (for example after a reagent recall or a lot problem), search for the lot number. Matching ignores case and finds partial text, so `mrn-12` finds MRN-1234. Every word must match, so `doe jka` finds Doe's anti-Jka investigation and nothing else.
+
+**From** and **To** limit results to specimens received in that range, including both end dates. A date range can be used without search text. An empty search is refused.
+
+Results are newest first and show the encounter, the derived investigation status, and the panels tested (name, manufacturer and lot). Double-click a row or select **Open** to go to that specimen on the Specimens tab.
+
+## Reagent cells by antigen
+
 
 Search finds panel cells whose antigen profile matches a pattern you build. Use it to locate cells for selected-cell testing or to see which lots carry a profile.
 
@@ -789,10 +1119,25 @@ Rules are optional, per-antibody overrides of the default rule-out settings. Whe
 ## The list
 
 - **Name** is the label you gave the rule. Selecting a rule updates the status line to name that rule.
-- **Antibody** is the specificity it applies to.
+- **Antibody** is the specificity it applies to. Capitals in "Anti-" do not matter, but the antigen is case-sensitive: a rule for anti-K does not apply to anti-k, and the same holds for C and c, E and e, and S and s.
 - **Het OK** means a heterozygous antigen-positive cell may count toward the rule-out.
 - **Add** creates a rule. Ctrl+N does the same while this tab is selected. **Edit** opens the selected rule. **Delete** removes it after you confirm. **Refresh** reloads the list.
+- Rules change which antibodies are ruled out. Once users are registered, adding, editing and deleting rules needs the Supervisor or Administrator role; other users see the reason and nothing changes.
+- Every add, edit and delete is written to the audit log with all the rule's settings: name, antibody, exception antigen, heterozygous cells, minimum count and separation exemption. An edit keeps the old and new values, and a delete keeps the deleted rule. Saving an edit that changes nothing writes no entry.
+- After a rule changes, open investigations analyzed before the change appear on the Worklist as **Stale analysis** until they are analyzed again. A changed clinical Preference has the same effect. Confirmed identifications are not reopened.
 - **Help** opens this chapter.
+
+## Export and import
+
+**Export…** saves every rule to a JSON file, for example to copy a validated rule set to another HemoIQ installation or keep it with your procedure documents.
+
+**Import…** reads such a file and changes nothing until you confirm:
+1. HemoIQ checks the file and lists what it would do: rules to **add**, rules to **update** (with each changed setting, such as "rule-out cells 2 → 3"), rules that are **unchanged**, and entries it **refuses**, with the reason.
+2. Rules are matched by antibody, so a file rule for anti-K updates your anti-K rule whatever it is named.
+3. Entries are refused when the antibody is not a known antigen in its exact case, the name is missing, the count is outside 1–5, the exception antigen is unknown, or the file has two rules for one antibody.
+4. When you confirm, the adds and updates are written together. Each is audited like a manual add or edit. If any write fails, none are kept.
+5. Rules that are not in the file are kept; this import never deletes a rule. To copy rules and Preferences together, and optionally remove rules the file lacks, use **Tools > Import Lab Configuration…** (see Preferences help).
+6. Importing needs the same role as editing rules. Open investigations analyzed before the import appear as **Stale analysis** on the Worklist.
 
 ## The detail pane
 
@@ -811,11 +1156,17 @@ Rules apply the next time you run analysis. They do not rewrite a final ID you h
 This dialog adds or edits one custom rule-out rule.
 
 - **Rule Name** is the label shown in the list.
-- **Antibody** is the specificity. Pick one from the list or type a name.
+- **Antibody** is the specificity. Pick one from the list or type a name such as anti-K.
+  - The antigen must be a known antigen in its exact case. For example anti-fya is refused with "Did you mean anti-Fya?", because a rule that names no real antigen would never apply.
+  - Each antibody can have only one rule, because only one is used for its rule-out count and separation settings. A second rule for the same antibody is refused and names the existing rule. Edit that rule instead.
+  - anti-K and anti-k are different antibodies and can each have a rule.
 - **Description** is a short note about why the laboratory uses this rule.
 - **Exception Antigen** is optional. Pick or type an antigen when the rule depends on one.
 - **Heterozygous OK** allows a heterozygous cell to count toward the rule-out. Leave it unchecked when only homozygous cells should count.
 - **Min Ruleout Count** is how many qualifying antigen-positive nonreactive cells are required. The box starts at 3. Preferences limits the default count to 1–5; a custom rule replaces that default for this antibody.
+
+- **Separation not required** exempts this antibody from the multiple-antibody separation criterion. Normally, when two or more antibodies are called together, each needs reactive cells that carry its antigen and are negative for the other called antigens.
+- **Exempt from (antigens)** limits the exemption to the listed partner antigens, separated by commas. For example, anti-f with **e, c** (f-positive cells are always c-positive and e-positive). Leave it blank to exempt the antibody from every partner. Antigen names are case-sensitive: E and e are different.
 
 **Save** stores the rule. The next analysis uses it for that antibody in place of the default count. **Cancel** discards the dialog. **Help** opens this chapter.
 
@@ -827,12 +1178,20 @@ Delete a rule from the Rules tab if you want that antibody to return to the defa
 
 Open **Tools → Preferences** to set laboratory defaults. **Save** writes them to this computer. **Cancel** discards the dialog. **Help** opens this chapter.
 
+On a small screen the settings scroll; **Save**, **Cancel** and the other buttons stay at the bottom of the window.
+
 ## Identity and thresholds
 
 - **Lab name** and **Department** identify the laboratory on this workstation.
-- **Score threshold** is the minimum combined score for the suspected list. The allowed range is 0.30 to 0.95.
+- **Score threshold** is the minimum combined score for the suspected list. The allowed range is 0.30 to 0.95. Type it with a decimal point or a decimal comma (0.70 or 0,70).
 - **ID cell rule** is how many antigen-positive reactive cells and antigen-negative nonreactive cells are required before a row is marked as meeting the identification rule. AABB 3 + 3 is the usual standard. The Suspected Antibodies tab turns those rows green.
+- **Multiple-Ab separation** applies when two or more antibodies are called together. It is the number of reactive cells each antibody needs that carry its antigen and are negative for every other called antigen. For anti-e, anti-f, and anti-Lea, that means reactive e+ f- Lea- cells, reactive e- f+ Lea- cells, and reactive e- f- Lea+ cells. The range is 0 to 5; 0 turns the check off, and the default is 1. An antibody known from patient history needs no cells of its own, and a rule on the Rules tab can exempt an antibody. This is a suggested criterion: HemoIQ warns but does not block.
 - **ACS rule-outs** is how many times each clinically significant antibody must be ruled out before the application can suggest that all clinically significant antibodies are ruled out. The range is 1 to 5.
+- **ACS antigens added** lists the antigens, beyond the fixed core, that the all-ruled-out result also covers:
+  - The core, which cannot be removed, is D, C, c, E, e, K, k, Fya, Fyb, Jka, Jkb, S and s.
+  - The default additions are Lea, Leb, M and N. Add others your procedure requires, such as P1 or Kpa, or clear the box to use the core only.
+  - Names are case-sensitive and must be known antigens; an unknown name is refused when you save.
+  - The analysis report lists the antibodies evaluated, the rule trace records the list, and changing it marks open analyses as stale.
 - **Default rule-outs** is the minimum number of qualifying antigen-positive nonreactive cells required to rule out an antibody when no custom rule exists. The range is 1 to 5. A rule on the Rules tab overrides this for that antibody.
 
 ## Specimens and the database
@@ -840,6 +1199,11 @@ Open **Tools → Preferences** to set laboratory defaults. **Save** writes them 
 - **Default specimen type** pre-selects serum, plasma, or eluate on a new specimen.
 - **Specimen dating (days)** pre-fills expiration when you add a specimen. 0 leaves the date blank. Three days is a typical antibody workup dating interval.
 - **Expiration warning (days)** is how far ahead the Worklist and the lists mark a specimen or panel as expiring.
+- **Require supervisor review before an investigation is Completed** adds a sixth status step. After an identification is confirmed, a second person must record **Supervisor Review…** on the Specimens tab before the investigation counts as Completed. Until then it shows *Awaiting supervisor review* and appears on the Worklist.
+- **Dating look-back (days)** is 1–365, default 90. A transfusion this recent before collection makes the specimen-dating check apply (collection + Specimen dating days).
+- **RhIG passive window (days)** is 1–365, default 84 (12 weeks). Anti-D within this many days after the recorded RhIG date is flagged for review as possibly passive.
+- **Turnaround threshold (days)** is 1–60, default 3. Open investigations older than this are listed as overdue on Analytics, and those still awaiting additional testing appear as **Overdue testing** on the Worklist.
+- **Recent transfusion (days)** is 1–365, default 90. If the specimen is Transfused and its last transfusion is this many days or fewer before the specimen date, the serologic phenotype is treated as possible donor cells and is not used against an alloantibody. The value is saved with each analysis snapshot.
 - **Max database size (MB)** warns when the database file reaches 80 percent of this size. The allowed range is 50 to 10240 MB. The warning can offer to open Purge Database.
 - **Default initials** pre-fills **Initials** on Confirm ID. Confirming an identification updates this value to the initials you used.
 - **Show inactive specimens and panels by default** turns on **Show Inactive** when those tabs open.
@@ -852,6 +1216,56 @@ Open **Tools → Preferences** to set laboratory defaults. **Save** writes them 
 - **Titer grid (Dil1–Dil128)** adds serial-dilution columns. The last reactive tube is the titer endpoint. Dilution grades are not IAT, and they do not rule out or identify an antibody.
 
 Changes apply to the next analysis and to new specimens. They do not rewrite identifications you have already confirmed. Saving a new score threshold, ID cell rule, ACS rule-out count, default rule-out count, or extra-phase list marks each unconfirmed analysis stale until you run analysis again. The lab name, department, and specimen defaults do not.
+
+## Users and roles
+
+**Users & roles…** registers people by their Windows login, with initials, name, and a role:
+
+| Role | Can also |
+|---|---|
+| Read-only | View specimens, panels, analyses, reports, Analytics and the audit log; print and export. Cannot change any laboratory data |
+| Technologist | Everything not listed below: specimens, reactions, analysis, confirming an identification, cancelling, reports |
+| Supervisor | Record supervisor review, clear a confirmed identification, reinstate a cancelled investigation, add, edit or delete analysis rules |
+| Administrator | Everything a Supervisor can, plus change Preferences and manage users |
+
+While **no user is registered**, everyone may do everything, as in earlier versions. Once the first user is saved, the rules apply to every Windows login. An unregistered login can then view but not change anything: it is treated like a Read-only user, so that every change is made by a registered person. To start, select **Use my login**, enter your initials, and save yourself as an **Administrator**. The first user must be an Administrator, the last active Administrator cannot be demoted or deactivated, and initials must be unique among active users.
+
+The right end of the status bar shows who is signed in and their role, for example "Signed in: Tom Tech (TE) (Technologist)". When the session can only view (a Read-only user, or a login that is not registered), the label turns amber, reads "view only", and the buttons that change laboratory data are disabled. These buttons are Add, Edit, Delete, Attach and Cancel on Specimens; Add, Edit, Copy, Import, Activate and the extra-antigen buttons on Panels; Save, Clear, Fill negatives and the run buttons on Reactions; Confirm ID and Clear on Analysis; and Add, Edit, Delete and Import on Rules. Hover over the label for details. The label updates when you close Preferences, so a role change takes effect immediately.
+
+When users are registered, the initials entered for a supervisor review must be the signed-in user's own. Every audit entry records the signed-in Windows login, and user changes are audited.
+
+## Export and import
+
+**Export…** saves the laboratory-wide Preferences, as last saved, to a JSON file. Use it to set up a second workstation the same way, or to keep a copy with your procedure documents. The file covers:
+- lab name and department;
+- probability threshold;
+- identification, ACS, separation and default rule-out counts, and the ACS antigens added;
+- default specimen type;
+- expiration warning, specimen dating, transfusion window, dating look-back and RhIG window;
+- supervisor review and turnaround threshold;
+- extra phases.
+
+Personal and workstation settings are not included: default initials, Worklist filters, display toggles and the database size limit.
+
+**Import…** reads such a file and changes nothing until you confirm:
+1. HemoIQ lists each setting it would change, as old → new.
+2. It also lists values it refuses, such as a count outside its allowed range, the wrong kind of value or a blank lab name, and names it does not transfer. Out-of-range values are refused, never adjusted.
+3. When you confirm, the changes are applied and saved, and this window closes. Unsaved edits in the window are discarded.
+4. Every import is written to the audit log. If analysis settings changed, open investigations analyzed before the import appear as **Stale analysis** on the Worklist, as after a manual change.
+5. Importing needs the Administrator role once users are registered.
+
+Analysis rules are exported and imported separately, on the Rules tab, or together with these Preferences (see below).
+
+## Whole lab configuration
+
+**Tools > Export Lab Configuration…** saves the rules and these Preferences together in one file. Analysis depends on both, so this is the safer way to set up a second workstation or restore one.
+
+**Tools > Import Lab Configuration…** previews both sections, then applies them in one step:
+- The preview shows the same rule and Preferences changes as the separate imports. It also lists your stored rules that are not in the file.
+- If the file has any refused entry, nothing is applied, because a partial copy would not match the source configuration.
+- You choose whether to keep or remove stored rules that are not in the file. Removing them makes your rules match the file exactly; each removal is audited.
+- Everything is written together. If any part fails, for example because of a missing role, nothing changes.
+- Importing needs the role for rule changes, and the Administrator role when Preferences change.
 
 ---
 
@@ -872,7 +1286,7 @@ The preview line states how many specimens match before you commit.
 
 **Create an archive of the purged data** is checked by default. Leave it checked unless you have another copy of the records. The archive holds specimen records and should be stored securely. The completion message includes the archive path. Open that file later with **Tools → Open Archive**.
 
-**Purge** deletes the matching specimens after you confirm. Panels that are still needed by remaining specimens stay. **Cancel** closes the dialog without deleting anything.
+**Purge** deletes the matching specimens after you confirm. Once users are registered, only an Administrator can purge. If any matching specimen has a confirmed identification, an archive is required: without one, the purge is refused and nothing is deleted. The deletion and its audit entry are saved together. Panels that are still needed by remaining specimens stay. **Cancel** closes the dialog without deleting anything.
 
 After a purge, every tab reloads. The status bar reports how many specimens were removed and the new database size. **Help** opens this chapter.
 

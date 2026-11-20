@@ -7,14 +7,14 @@ rule-outs are analytical evidence, not a diagnosis.
 Status: **Present** (usable), **Partial** (exists but incomplete or silent),
 **Missing**.
 
-Last updated: 2026-11-19 (iteration 129 — special panels stay empty on an untreated-only workup).
+Last updated: 2026-11-03 (iteration 66 — local users and roles enforcing review, clear, reinstate, Preferences).
 
 ## Capability matrix
 
 | Area | Capability | Status | Current evidence | Next action |
 |---|---|---|---|---|
 | Gap file | Living capability matrix | Present | This file | Update every iteration |
-| Import | Provider adapter framework | Partial | `IVendorPanelSource` + Bio-Rad/Ortho/Quotient public catalogs; Immucor/Grifols/Medion file-only | Authenticated portals only with vendor permission |
+| Import | Provider adapter framework | Partial | `IVendorPanelSource` + Bio-Rad/Quotient public catalogs; Ortho/Immucor/Grifols/Medion file-only (Ortho's public Quick Antigram PDFs are barcode/QR sheets with no readable antigen table) | Authenticated portals only with vendor permission |
 | Import | CSV | Present | Lab CSV + vendor CSV parser; lab import now reviews before activation | — |
 | Import | PDF | Partial | PdfPig positional grid; layout-fragile | Harden after schema work |
 | Import | XLSX / XML / JSON panels | Present | JSON/XML structured schema; first-sheet XLSX via zip/shared strings; same inactive+artifact review | Multi-sheet XLSX later |
@@ -28,15 +28,35 @@ Last updated: 2026-11-19 (iteration 129 — special panels stay empty on an untr
 | Reaction entry | w+, MF, hemolysis | Present | Combo + keys; treated as reactive evidence | — |
 | Reaction entry | RT, PEG, gel, solid phase as phases | Partial | Extra JSON plus Preferences RT/PEG/Gel/Solid and titer-grid checkboxes; empty stays tube-only; Gel/Solid/PEG are IAT-like; Dil1–Dil128 are titer only | Custom method names later |
 | Analysis | Transparent candidate evidence | Partial | Explain Analysis lists suspected, in-progress, historical, untypeable, pattern, enzyme, DTT, and cell-level adsorption comparisons. Adsorbed aliquots do not rule out or enter ordinary scores for specificities they are expected to remove. A panreactive untreated run paired with autoadsorption or rr/R1R1/R2R2 adsorption is omitted from ordinary scores. Unpaired ficin, papain, and DTT runs are named and are not compared with another panel | Cross-panel enzyme and DTT pairing stays out of scope |
-| Analysis | Configurable visible rule-out | Partial | `Rule.MinRuleoutCount` is now applied; lab default + explanation sentences. Heterozygous permission applies only to the antibody named on the rule, so an anti-D rule with exception C does not rule out anti-C on heterozygous cells. An analytics range with no confirmed ID shows the empty title without a negative count scale. Saving a new default rule-out count marks an unconfirmed analysis stale and leaves a confirmed ID unchanged. Audit Find keeps one accession such as E2E-WARM-AUTO. An archive row for the warm-auto specimen shows DAT Positive, and a confirmed anti-K row shows that final identification. The printed antigram omits an all-NT column and keeps typed E, K, Fya, and a typed minus. The warm-auto autocontrol prints NT for E, K, and Fya, and a typed minus stays. A restored specimen keeps the saved analysis snapshot, including its settings. A restored lot keeps a saved antigen order, and a lot still in the database keeps its current order. The reactions grid for the warm-auto lot shows E, K, and Fya and hides an all-NT column. A typed minus stays. Specimens leads with the untreated-run exclusion, and the ruled-out grid follows that analysis, so anti-E, anti-K, and anti-Fya are not listed when the partner antigen is NT. Analysis Explain for the warm-auto lot says D is NT on every cell, and does not call that column never imported. The Analysis Summary for that workup keeps the warm-auto pattern and does not say no antibodies are suspected. Analysis Results and Specimen Summary follow that same analysis, so the warm-auto report does not list anti-E, anti-K, or anti-Fya as ruled out, and Analysis Results includes the pattern. Analysis Results for E2E-WARM-AUTO-ALLOS names anti-E and anti-K and says one cell lost reactivity after autoadsorption while five remained reactive. Clinical Identification cites those supporting cells on the Autoadsorbed run. Specimens lists that residual comparison immediately after the untreated-run exclusion, ahead of the warm and pan sentences, with anti-E and anti-K suspected and nothing ruled out. Compare on the Autoadsorbed run of E2E-WARM-AUTO-ALLOS checks the cells that differ from Untreated, including cell 4 at AHG 0 versus 3+, and does not open a binding error. Those grade columns are named Autoadsorbed and Untreated, so cell 4 reads Autoadsorbed AHG 0 beside Untreated AHG 3+. The E2E warm auto plus allos panel hides every all-NT antigen column and keeps typed c, E, and K, including a typed minus. The panel list shows the full lot E2E-WARM-AUTO-ALLOS beside that name. An E+ search keeps allos cells 1, 3, and 5, cell 1 stays K−, and D on that cell is NT. A D− search leaves that lot out. Search results keep the column headings while scrolling, and the lot column shows E2E-WARM-AUTO-ALLOS. A homozygous E+ search leaves that lot out because e is NT, and the status line says positive cells are homozygous. Opening Search replaces a leftover worklist line, and returning to Search keeps the homozygous result. A rule-out cell in Explain names the run, so a ficin nonreactive cell is not read as untreated. A cell that blocks rule-out names the run as well. The Ruled Out cell grid shows the check-cell grade beside AHG. Supporting cells and conflicting cells on Suspected Antibodies show the check-cell grade beside AHG. Explain cites a supporting cell with its strongest phase and the check cell. Explain cites a rule-out cell with the run, the zygosity, the nonreactive phase grades, and the check cell. Explain cites a cell that blocks rule-out with the run, the strongest phase, and the check cell. A rule-out cell whose AHG is 0 and whose check cell did not react is pink on the Ruled Out grid, with the same warning Reactions uses. Explain says a rule-out cell at CC 0 did not react, and a rule-out cell at CC 2+ does not. The Ruled Out explanation names a counted cell whose check cell did not react, and a counted cell at CC 2+ is listed without that phrase. The Specimens ruled-out list names a counted cell whose check cell did not react, and a counted cell at CC 2+ leaves that column blank. Specimen Summary and Analysis Results name that same cell beside the count, and a counted cell at CC 2+ keeps the count only. Clinical Identification already names the cell in the ruled-out sentence. Specimen Summary CSV names a counted cell whose check cell did not react in the CheckCell column, and a counted cell at CC 2+ leaves that column blank. Changing the report on the Reports tab updates the status line to name that report. Changing the Analytics date range updates the status line to name that range and the confirmed-specimen count. Selecting another specimen updates the Specimens status line to name that accession. Selecting another panel updates the Panels status line to name that lot. Changing the run on Reactions updates the status line to name that run. Selecting another specimen on Analysis updates the status line to name that accession. Selecting another rule updates the Rules status line to name that rule. | Selecting a search result updates the Search status line to name that panel, lot, and cell. Opening a search result shows that panel and selects that cell. A finished search brings the antigen that matched into view on the result row, and the panel, lot, and cell stay on screen. When several antigens are set, the last of those is brought into view on the result row, and the panel, lot, and cell stay on screen. Opening that result shows the search antigens first on the panel, so the earlier one stays beside the later one, and the cell stays on screen. A finished search shows those antigens first on the result row, so the earlier one stays beside the later one. A finished search leaves off a warehouse antigen column, such as Kna, that is blank on every matching cell. Dia stays when a matching cell types it, and an untyped cell in that column shows NT. Scrolling to that column keeps the search antigens on the row with the panel, lot, and cell. Opening that result keeps those antigens on the panel with the cell when the panel is scrolled. Opening that result also brings the lot into view in the panel list. The last lot stays fully on screen, including its lot, cell count, and expiration. The panel list shows that name in full. The search result row shows that name in full as well. The Search help says the panel name and the lot are shown in full. Close dismisses that help. The All Panels report keeps a long name, its lot, the cell count, and the expiration in their own columns. The intended-use statement stays on the report preview. The specimen list shows the full accession and expiration. Reactions for the invalid check cell show pink CC 0 on the nonreactive cell and name the ruled-out antibody. Analysis names cell 1 check cell did not react and shows that cell at CC 0 beside cell 3 at CC 2+. Combinations for that specimen stay empty, which matches zero suspected antibodies. Pattern Matches stays empty because every panel cell is nonreactive. Special Panels stays empty because this workup has only an untreated run. |
+| Analysis | Configurable visible rule-out | Partial | `Rule.MinRuleoutCount` is now applied; lab default + explanation sentences | Watch seeded anti-D/anti-k rules; ACS remains separate; dosage-excluded cells (heterozygous / unknown zygosity) are named in the explanation, including antibodies with no qualifying cell (Iteration 141) |
 | Analysis | Single / multiple / dosage scoring | Partial | Fisher + pattern; pairwise combinations; dosage averages | Label as evidence, not diagnosis |
-| Analysis | Panreactive / cold / warm / HTLA / auto / HFA / LFA models | Partial | DAT scores; named LFA/pan cells; an adsorbed aliquot is left out of the cold/warm/panreactive pattern count. Enzyme and DTT comparisons name unpaired runs, short comparisons, no-fit comparisons, one-sided cells, cells missing from the panel list, and panel cells that were nonreactive on both runs. A DEMO scenario that has never been analyzed is analyzed on open; grades stay as seeded. The clinical identification report lists panreactive and autoantibody pattern evidence and does not call a warm-auto workup unsuspected. Search for a typed minus skips NT, and a result row shows NT for an untyped antigen. An anti-D rule with exception C does not grant a heterozygous anti-C rule-out. Empty analytics charts do not draw a negative count scale. A Preferences change to the default rule-out count marks an unconfirmed analysis stale. The audit log can be narrowed to one seeded accession. An archive of the warm-auto workup shows the stored DAT and does not invent an identification. The printed antigram omits an all-NT column and keeps typed E, K, Fya, and a typed minus. The warm-auto autocontrol prints NT for E, K, and Fya, and a typed minus stays. A restored specimen keeps the saved analysis snapshot, including its settings. A restored lot keeps a saved antigen order, and a lot still in the database keeps its current order. The reactions grid for the warm-auto lot shows E, K, and Fya and hides an all-NT column. A typed minus stays. Specimens leads with the untreated-run exclusion, and the ruled-out grid follows that analysis, so anti-E, anti-K, and anti-Fya are not listed when the partner antigen is NT. Analysis Explain for the warm-auto lot says D is NT on every cell, and does not call that column never imported. The Analysis Summary for that workup keeps the warm-auto pattern and does not say no antibodies are suspected. Analysis Results and Specimen Summary follow that same analysis, so the warm-auto report does not list anti-E, anti-K, or anti-Fya as ruled out, and Analysis Results includes the pattern. Analysis Results for E2E-WARM-AUTO-ALLOS names anti-E and anti-K and says one cell lost reactivity after autoadsorption while five remained reactive. Clinical Identification cites those supporting cells on the Autoadsorbed run. Specimens lists that residual comparison immediately after the untreated-run exclusion, ahead of the warm and pan sentences, with anti-E and anti-K suspected and nothing ruled out. Compare on the Autoadsorbed run of E2E-WARM-AUTO-ALLOS checks the cells that differ from Untreated, including cell 4 at AHG 0 versus 3+, and does not open a binding error. Those grade columns are named Autoadsorbed and Untreated, so cell 4 reads Autoadsorbed AHG 0 beside Untreated AHG 3+. The E2E warm auto plus allos panel hides every all-NT antigen column and keeps typed c, E, and K, including a typed minus. The panel list shows the full lot E2E-WARM-AUTO-ALLOS beside that name. An E+ search keeps allos cells 1, 3, and 5, cell 1 stays K−, and D on that cell is NT. A D− search leaves that lot out. Search results keep the column headings while scrolling, and the lot column shows E2E-WARM-AUTO-ALLOS. A homozygous E+ search leaves that lot out because e is NT, and the status line says positive cells are homozygous. Opening Search replaces a leftover worklist line, and returning to Search keeps the homozygous result. A rule-out cell in Explain names the run, so a ficin nonreactive cell is not read as untreated. A cell that blocks rule-out names the run as well. The Ruled Out cell grid shows the check-cell grade beside AHG. Supporting cells and conflicting cells on Suspected Antibodies show the check-cell grade beside AHG. Explain cites a supporting cell with its strongest phase and the check cell. Explain cites a rule-out cell with the run, the zygosity, the nonreactive phase grades, and the check cell. Explain cites a cell that blocks rule-out with the run, the strongest phase, and the check cell. A rule-out cell whose AHG is 0 and whose check cell did not react is pink on the Ruled Out grid, with the same warning Reactions uses. Explain says a rule-out cell at CC 0 did not react, and a rule-out cell at CC 2+ does not. The Ruled Out explanation names a counted cell whose check cell did not react, and a counted cell at CC 2+ is listed without that phrase. The Specimens ruled-out list names a counted cell whose check cell did not react, and a counted cell at CC 2+ leaves that column blank. Specimen Summary and Analysis Results name that same cell beside the count, and a counted cell at CC 2+ keeps the count only. Clinical Identification already names the cell in the ruled-out sentence. Specimen Summary CSV names a counted cell whose check cell did not react in the CheckCell column, and a counted cell at CC 2+ leaves that column blank. Changing the report on the Reports tab updates the status line to name that report. Changing the Analytics date range updates the status line to name that range and the confirmed-specimen count. Selecting another specimen updates the Specimens status line to name that accession. Selecting another panel updates the Panels status line to name that lot. Changing the run on Reactions updates the status line to name that run. Selecting another specimen on Analysis updates the status line to name that accession. Selecting another rule updates the Rules status line to name that rule. | Selecting a search result updates the Search status line to name that panel, lot, and cell. Opening a search result shows that panel and selects that cell. A finished search brings the antigen that matched into view on the result row, and the panel, lot, and cell stay on screen. When several antigens are set, the last of those is brought into view on the result row, and the panel, lot, and cell stay on screen. Opening that result shows the search antigens first on the panel, so the earlier one stays beside the later one, and the cell stays on screen. A finished search shows those antigens first on the result row, so the earlier one stays beside the later one. A finished search leaves off a warehouse antigen column, such as Kna, that is blank on every matching cell. Dia stays when a matching cell types it, and an untyped cell in that column shows NT. Scrolling to that column keeps the search antigens on the row with the panel, lot, and cell. Opening that result keeps those antigens on the panel with the cell when the panel is scrolled. Opening that result also brings the lot into view in the panel list. The last lot stays fully on screen, including its lot, cell count, and expiration. The panel list shows that name in full. The search result row shows that name in full as well. The Search help says the panel name and the lot are shown in full. Close dismisses that help. The All Panels report keeps a long name, its lot, the cell count, and the expiration in their own columns. The intended-use statement stays on the report preview. The specimen list shows the full accession and expiration. Reactions for the invalid check cell show pink CC 0 on the nonreactive cell and name the ruled-out antibody. Analysis names cell 1 check cell did not react and shows that cell at CC 0 beside cell 3 at CC 2+. Combinations for that specimen stay empty, which matches zero suspected antibodies. Pattern Matches stays empty because every panel cell is nonreactive. Special Panels stays empty because this workup has only an untreated run. |
+| Audit | Investigation timeline | Present | `InvestigationTimeline` merges receipt, panel link/unlink (now audited), runs, grouped reaction saves, analysis snapshots, confirm/clear/review, MRN/transfusion/DAT/patient edits; Specimens Timeline expander and worksheet section | Report print/PDF/CSV audited with SHA-256 and shown on the timeline |
+| Reporting | Turnaround metrics | Present | `TurnaroundService`: received→confirmed (days) and confirmed→reviewed (hours) median and nearest-rank 90th percentile by received date, cancelled excluded; overdue open list with status and Open; configurable threshold; CSV | Uses recorded received time when present |
+| Reporting | Workload by technologist | Present | `WorkloadService`: per initials, confirmations (by confirmed date), multi-antibody confirmations, supervisor reviews (by review date), median received→confirmed; names from the user registry; cancelled excluded; on Analytics and in CSV | Reaction entry and amendments per user are on the Activity by user tab (by login, from the audit log) |
+| Specimen | Collector, collection and ordering location, ordering provider | Present | Four optional specimen columns with DB length CHECK (128); trimmed and whitespace-collapsed; audited `update_origin`; locked after final call; on the timeline, detail pane, worksheet, and Search; `WorkloadService.ComputeByLocation` groups received investigations by ordering location on Analytics and CSV | Free text, not a configured location list |
+| Specimen | Collection/receipt time and dating check | Present | Audited `collected_at`/`received_at`; expiration defaults from collection; `SpecimenDating` REVIEW when transfused within the look-back and expiration exceeds collection + dating days, or cannot be checked | Pregnancy (current or within look-back) is a dating trigger; RhIG date flags possible passive anti-D |
+| Tests | Isolation from user data | Present | `AppDataPaths.RootOverride` set by a test-module initializer to a temp folder; live vendor test persists only to its isolated database; full run verified to leave %AppData%\HemoIQ untouched | One intermittent failure seen once and not reproduced in two reruns |
+| Search | Investigation search | Present | Search tab › Investigations: accession, MRN, patient name/DOB, final/previous antibodies, technologist; every word must match; inclusive date range; status column; Open jumps to Specimens | Panel lot/manufacturer used in an investigation not yet searchable |
+| Workflow | Investigation status and next step | Partial | `InvestigationStatusService` derives five steps and a status (awaiting panel → testing → analysis needed → awaiting ID → completed / amended / reopened / inactive) from panels, grades, analysis time, final call, and audit; shown on Specimens and the worksheet; Worklist shares the completeness check | Optional supervisor review step (two-person, audited, invalidated by clear/re-confirm, Worklist queue); audited Cancel/Reinstate with reason, locked and off work queues; local users/roles enforce review, clear, reinstate, Preferences, user management |
+| Patient | Permanent record and transfusion requirements | Present | `patients` table (MRN, name, DOB, comments, free-text requirements, structured `antigen_negative`); `AntigenNegativeRequirement` parses codes (case-sensitive C/c, E/e, K/k, S/s; Fy(a-) notation) and refuses non-antigens; audited add/update; Edit Patient on Specimens; reports and detail pane print E−, K−, Fy(a−); analysis raises REVIEW when a known antibody's antigen is not in the structured list, and asks to add it when only free text mentions it | Expiry or source of each requirement; product-level requirements (irradiated, CMV-safe) remain free text |
+| Patient | MRN and cross-specimen history | Partial | Indexed `specimens.mrn`; audited; confirmed final calls on the same MRN become Historical evidence citing the source accession; detail pane and reports list other specimens | Structured historical phenotype as analysis evidence (history lines now show encounter, earlier phenotype and genotype; sex is on the patient record) |
+| Specimen | DAT polyspecific / IgG / C3 | Present | `DatProfile` on specimen; MF grade; audited IgG/C3; positive if any reactive, negative only if all recorded negative; C3-only caveat on autoantibody notes; MF DAT donor-cell note | Eluate specimens link to their source; `EluateEvidence` reads specificity, panreactivity, and nonreactivity against DAT and transfusion |
+| Analysis | Panreactive / cold / warm / HTLA / auto / HFA / LFA models | Partial | DAT scores; named LFA/pan cells; enzyme lost/gained/resistant; DTT lost/resistant vs untreated. Unpaired runs, comparisons with fewer than 3 paired cells, and comparisons that meet no threshold are each named | Cells tested on only one of the paired runs stay unnamed |
 | Analysis | Selected-cell recommendations with “why” | Partial | Unused in-date vials preferred; P1−/Ch−/Sd(a−) selected cells ranked when neutralization favors soluble substance | More ISBT alleles later |
-| Analysis | Patient phenotype / genotype / transfusion limits | Partial | GYPA null/Mk En(a); RHCE*Ce vs ce case-sensitive; CeRN variant-C; RHD DAR/DVI/DNB partial D does not rule out anti-D; GATA still does not support anti-Fya | More ISBT alleles later |
-| UI | Antigram freeze / slashes / run compare | Partial | Cell plus IS, 37°C, AHG, and CC stay frozen ahead of the antigen columns. An explicit ++ stays visible when Show dosage is off. Specimens shows panreactive and autoantibody pattern sentences when the suspected grid is empty. A new panel cell starts as NT, and an E2E column that is negative on every cell is corrected to NT. A panel column that is NT on every cell is hidden while browsing. The Worklist "Never analyzed" row is for a paneled specimen that still has no analysis. Clinical Identification prints the same pattern sentences. Search results show NT for an untyped antigen. Heterozygous rule-out permission follows the antibody named on the rule. Empty analytics charts stay at zero. A Preferences change that affects analysis marks an unconfirmed specimen stale. Audit Find shows the rows for one accession, and Export CSV writes those rows. Archive rows show stored antibodies, DAT, and notes. The printed antigram omits an all-NT column and keeps typed E, K, Fya, and a typed minus. The warm-auto autocontrol prints NT for E, K, and Fya, and a typed minus stays. A restored specimen keeps the saved analysis snapshot, including its settings. A restored lot keeps a saved antigen order, and a lot still in the database keeps its current order. The reactions grid for the warm-auto lot shows E, K, and Fya and hides an all-NT column. A typed minus stays. Specimens leads with the untreated-run exclusion, and the ruled-out grid follows that analysis, so anti-E, anti-K, and anti-Fya are not listed when the partner antigen is NT. Analysis Explain for the warm-auto lot says D is NT on every cell, and does not call that column never imported. The Analysis Summary for that workup keeps the warm-auto pattern and does not say no antibodies are suspected. Analysis Results and Specimen Summary follow that same analysis, so the warm-auto report does not list anti-E, anti-K, or anti-Fya as ruled out, and Analysis Results includes the pattern. Analysis Results for E2E-WARM-AUTO-ALLOS names anti-E and anti-K and says one cell lost reactivity after autoadsorption while five remained reactive. Clinical Identification cites those supporting cells on the Autoadsorbed run. Specimens lists that residual comparison immediately after the untreated-run exclusion, ahead of the warm and pan sentences, with anti-E and anti-K suspected and nothing ruled out. Compare on the Autoadsorbed run of E2E-WARM-AUTO-ALLOS checks the cells that differ from Untreated, including cell 4 at AHG 0 versus 3+, and does not open a binding error. Those grade columns are named Autoadsorbed and Untreated, so cell 4 reads Autoadsorbed AHG 0 beside Untreated AHG 3+. The E2E warm auto plus allos panel hides every all-NT antigen column and keeps typed c, E, and K, including a typed minus. The panel list shows the full lot E2E-WARM-AUTO-ALLOS beside that name. An E+ search keeps allos cells 1, 3, and 5, cell 1 stays K−, and D on that cell is NT. A D− search leaves that lot out. Search results keep the column headings while scrolling, and the lot column shows E2E-WARM-AUTO-ALLOS. A homozygous E+ search leaves that lot out because e is NT, and the status line says positive cells are homozygous. Opening Search replaces a leftover worklist line, and returning to Search keeps the homozygous result. A rule-out cell in Explain names the run, so a ficin nonreactive cell is not read as untreated. A cell that blocks rule-out names the run as well. The Ruled Out cell grid shows the check-cell grade beside AHG. Supporting cells and conflicting cells on Suspected Antibodies show the check-cell grade beside AHG. Explain cites a supporting cell with its strongest phase and the check cell. Explain cites a rule-out cell with the run, the zygosity, the nonreactive phase grades, and the check cell. Explain cites a cell that blocks rule-out with the run, the strongest phase, and the check cell. A rule-out cell whose AHG is 0 and whose check cell did not react is pink on the Ruled Out grid, with the same warning Reactions uses. Explain says a rule-out cell at CC 0 did not react, and a rule-out cell at CC 2+ does not. The Ruled Out explanation names a counted cell whose check cell did not react, and a counted cell at CC 2+ is listed without that phrase. The Specimens ruled-out list names a counted cell whose check cell did not react, and a counted cell at CC 2+ leaves that column blank. Specimen Summary and Analysis Results name that same cell beside the count, and a counted cell at CC 2+ keeps the count only. Clinical Identification already names the cell in the ruled-out sentence. Specimen Summary CSV names a counted cell whose check cell did not react in the CheckCell column, and a counted cell at CC 2+ leaves that column blank. Changing the report on the Reports tab updates the status line to name that report. Changing the Analytics date range updates the status line to name that range and the confirmed-specimen count. Selecting another specimen updates the Specimens status line to name that accession. Selecting another panel updates the Panels status line to name that lot. Changing the run on Reactions updates the status line to name that run. Selecting another specimen on Analysis updates the status line to name that accession. Selecting another rule updates the Rules status line to name that rule. | Selecting a search result updates the Search status line to name that panel, lot, and cell. Opening a search result shows that panel and selects that cell. A finished search brings the antigen that matched into view on the result row, and the panel, lot, and cell stay on screen. When several antigens are set, the last of those is brought into view on the result row, and the panel, lot, and cell stay on screen. Opening that result shows the search antigens first on the panel, so the earlier one stays beside the later one, and the cell stays on screen. A finished search shows those antigens first on the result row, so the earlier one stays beside the later one. A finished search leaves off a warehouse antigen column, such as Kna, that is blank on every matching cell. Dia stays when a matching cell types it, and an untyped cell in that column shows NT. Scrolling to that column keeps the search antigens on the row with the panel, lot, and cell. Opening that result keeps those antigens on the panel with the cell when the panel is scrolled. Opening that result also brings the lot into view in the panel list. The last lot stays fully on screen, including its lot, cell count, and expiration. The panel list shows that name in full. The search result row shows that name in full as well. The Search help says the panel name and the lot are shown in full. Close dismisses that help. The All Panels report keeps a long name, its lot, the cell count, and the expiration in their own columns. The intended-use statement stays on the report preview. The specimen list shows the full accession and expiration. Reactions for the invalid check cell show pink CC 0 on the nonreactive cell and name the ruled-out antibody. Analysis names cell 1 check cell did not react and shows that cell at CC 0 beside cell 3 at CC 2+. Combinations for that specimen stay empty, which matches zero suspected antibodies. Pattern Matches stays empty because every panel cell is nonreactive. Special Panels stays empty because this workup has only an untreated run. |
+| Specimen | Structured transfusion context | Partial | Status (Unknown / Not transfused / Transfused) + last-transfusion date on the specimen; DB CHECK constraint; audited; locked after final call; Preferences window (default 90 days) in analysis snapshot; MF autocontrol named against the record | Product counts/types, pregnancy, HSCT/BMT, mixed-field concern |
+| Analysis | Patient phenotype / genotype / transfusion limits | Partial | Structured transfusion date vs configurable window decides phenotype reliability and is explained; note keywords only when status is Unknown; GYPA null/Mk En(a); RHCE*Ce vs ce case-sensitive; CeRN variant-C; RHD DAR/DVI/DNB partial D does not rule out anti-D; GATA still does not support anti-Fya | More ISBT alleles later |
+| UI | Antigram freeze / slashes / run compare | Partial | Frozen cell; slashes; compare extras; Show dosage; filter/sort; panel lot compare | — |
 | UI | Explain Analysis panel | Present | Explain tab + Summary + clinical report assemble rule-out, support, conflict, phenotype, additional testing | Keep wording as evidence, not diagnosis |
 | Audit | Panel, reactions, rules, settings, final ID | Partial | Snapshots store rule-engine version, rules JSON, operator, and the adsorption comparison (conclusions plus ordinary-score exclusions) | Cross-panel enzyme/DTT pairing later |
-| Tests | Synthetic cases with intermediate reasoning | Partial | Enzyme and DTT cases cover unpaired runs, short comparisons, no-fit comparisons, one-sided cells, cells missing from the panel list, both-nonreactive panel cells, and a partial destroyed pattern. E2E warm-auto cells keep typed E, K, and Fya and store untyped D as NT. Explicit ++ stays visible with dosage off. DEMO scenarios drop the Never analyzed worklist row after one analysis and keep the seeded AHG grade. The warm-auto clinical report includes the warm and autoantibody sentences; anti-K does not. Search for D− skips the warm-auto lot, and an E+ result row shows D as NT and K− as minus. Two heterozygous C+ nonreactive cells plus an anti-D exception for C do not rule out anti-C. Empty analytics charts are titled and limited to a non-negative range. A default rule-out change marks an unconfirmed analysis stale and does not list a confirmed ID. Audit Find matches E2E-WARM-AUTO and skips E2E-NEGATIVE. An archive inspection shows DAT Positive for the warm-auto specimen and anti-K for the confirmed row. The printed antigram omits an all-NT column and keeps typed E, K, Fya, and a typed minus. The warm-auto autocontrol prints NT for E, K, and Fya, and a typed minus stays. A restored specimen keeps the saved analysis snapshot, including its settings. A restored lot keeps a saved antigen order, and a lot still in the database keeps its current order. The reactions grid for the warm-auto lot shows E, K, and Fya and hides an all-NT column. A typed minus stays. Specimens leads with the untreated-run exclusion, and the ruled-out grid follows that analysis, so anti-E, anti-K, and anti-Fya are not listed when the partner antigen is NT. Analysis Explain for the warm-auto lot says D is NT on every cell, and does not call that column never imported. The Analysis Summary for that workup keeps the warm-auto pattern and does not say no antibodies are suspected. Analysis Results and Specimen Summary follow that same analysis, so the warm-auto report does not list anti-E, anti-K, or anti-Fya as ruled out, and Analysis Results includes the pattern. Analysis Results for E2E-WARM-AUTO-ALLOS names anti-E and anti-K and says one cell lost reactivity after autoadsorption while five remained reactive. Clinical Identification cites those supporting cells on the Autoadsorbed run. Specimens lists that residual comparison immediately after the untreated-run exclusion, ahead of the warm and pan sentences, with anti-E and anti-K suspected and nothing ruled out. Compare on the Autoadsorbed run of E2E-WARM-AUTO-ALLOS checks the cells that differ from Untreated, including cell 4 at AHG 0 versus 3+, and does not open a binding error. Those grade columns are named Autoadsorbed and Untreated, so cell 4 reads Autoadsorbed AHG 0 beside Untreated AHG 3+. The E2E warm auto plus allos panel hides every all-NT antigen column and keeps typed c, E, and K, including a typed minus. The panel list shows the full lot E2E-WARM-AUTO-ALLOS beside that name. An E+ search keeps allos cells 1, 3, and 5, cell 1 stays K−, and D on that cell is NT. A D− search leaves that lot out. Search results keep the column headings while scrolling, and the lot column shows E2E-WARM-AUTO-ALLOS. A homozygous E+ search leaves that lot out because e is NT, and the status line says positive cells are homozygous. Opening Search replaces a leftover worklist line, and returning to Search keeps the homozygous result. A rule-out cell in Explain names the run, so a ficin nonreactive cell is not read as untreated. A cell that blocks rule-out names the run as well. The Ruled Out cell grid shows the check-cell grade beside AHG. Supporting cells and conflicting cells on Suspected Antibodies show the check-cell grade beside AHG. Explain cites a supporting cell with its strongest phase and the check cell. Explain cites a rule-out cell with the run, the zygosity, the nonreactive phase grades, and the check cell. Explain cites a cell that blocks rule-out with the run, the strongest phase, and the check cell. A rule-out cell whose AHG is 0 and whose check cell did not react is pink on the Ruled Out grid, with the same warning Reactions uses. Explain says a rule-out cell at CC 0 did not react, and a rule-out cell at CC 2+ does not. The Ruled Out explanation names a counted cell whose check cell did not react, and a counted cell at CC 2+ is listed without that phrase. The Specimens ruled-out list names a counted cell whose check cell did not react, and a counted cell at CC 2+ leaves that column blank. Specimen Summary and Analysis Results name that same cell beside the count, and a counted cell at CC 2+ keeps the count only. Clinical Identification already names the cell in the ruled-out sentence. Specimen Summary CSV names a counted cell whose check cell did not react in the CheckCell column, and a counted cell at CC 2+ leaves that column blank. Changing the report on the Reports tab updates the status line to name that report. Changing the Analytics date range updates the status line to name that range and the confirmed-specimen count. Selecting another specimen updates the Specimens status line to name that accession. Selecting another panel updates the Panels status line to name that lot. Changing the run on Reactions updates the status line to name that run. Selecting another specimen on Analysis updates the status line to name that accession. Selecting another rule updates the Rules status line to name that rule. | Selecting a search result updates the Search status line to name that panel, lot, and cell. Opening a search result shows that panel and selects that cell. A finished search brings the antigen that matched into view on the result row, and the panel, lot, and cell stay on screen. When several antigens are set, the last of those is brought into view on the result row, and the panel, lot, and cell stay on screen. Opening that result shows the search antigens first on the panel, so the earlier one stays beside the later one, and the cell stays on screen. A finished search shows those antigens first on the result row, so the earlier one stays beside the later one. A finished search leaves off a warehouse antigen column, such as Kna, that is blank on every matching cell. Dia stays when a matching cell types it, and an untyped cell in that column shows NT. Scrolling to that column keeps the search antigens on the row with the panel, lot, and cell. Opening that result keeps those antigens on the panel with the cell when the panel is scrolled. Opening that result also brings the lot into view in the panel list. The last lot stays fully on screen, including its lot, cell count, and expiration. The panel list shows that name in full. The search result row shows that name in full as well. The Search help says the panel name and the lot are shown in full. Close dismisses that help. The All Panels report keeps a long name, its lot, the cell count, and the expiration in their own columns. The intended-use statement stays on the report preview. The specimen list shows the full accession and expiration. Reactions for the invalid check cell show pink CC 0 on the nonreactive cell and name the ruled-out antibody. Analysis names cell 1 check cell did not react and shows that cell at CC 0 beside cell 3 at CC 2+. Combinations for that specimen stay empty, which matches zero suspected antibodies. Pattern Matches stays empty because every panel cell is nonreactive. Special Panels stays empty because this workup has only an untreated run. |
+| Panels | Antigen-coverage check at activation | Present | `PanelActivationCoverage` compares the lot being activated with the previous vendor/product-line lot; gaps (fewer or no typed cells) and affected ACS antigens shown in the activation prompt; acknowledged gaps recorded on the `activate_panel` audit from every activation path | Previous lot chosen by vendor/product line only; no comparison for panels without a vendor |
+| Analysis | Cross-specimen transfusion check | Present | `TransfusionHistoryCheck`: a red-cell transfusion within the window on another same-MRN specimen contradicts Not transfused (REVIEW note) and fills Unknown, making typing unreliable with the source named; a stale Transfused date gets an update note | Uses only transfusions recorded in HemoIQ, not an external transfusion service |
+| Workflow | Specimen-receipt checklist | Present | `ReceiptChecklist`: required MRN, collection time, transfusion status (+ last transfusion date when transfused); advisory receipt time, hemolysis, pregnancy, DAT. Drives the Received step and the Awaiting-panel next action; shaded line with reasons on the Specimens detail pane; printed on the worksheet | Required items are fixed, not configurable per lab |
+| Reporting | Amended report marking | Present | Clinical Identification header shows AMENDED REPORT or PREVIOUS IDENTIFICATION WITHDRAWN when an identification was ever cleared; Amendment history lists each earlier identification, its confirmer, who cleared it, when and why, from `clear_final_call` audit entries | Text and PDF only; superseded issued copies are listed (Iteration 140), but recipients are not recorded |
+| Data integrity | Reaction/specimen/panel consistency | Present | Detaching a panel with grades is refused; `DataConsistencyCheck` lists legacy reactions on detached panels, grades for cells the panel lacks, and unrecognized grade values as Worklist "Data inconsistency" items with an Open target | Check runs on Worklist refresh only; no scheduled report. New invalid grades and grades for missing cells are refused at save (Iteration 144) |
+| Security | Roles and data-change permission | Present | Read-only, Technologist, Supervisor, Administrator; once users are registered every public data writer requires `RecordResults` (Technologist and above), so unregistered logins and Read-only users view only; guard test fails on any unguarded public writer; users table migrated to accept the new role | Role grants are fixed per role, not a configurable table; no Senior technologist or Medical director role. Status bar names the session; view-only sessions have change commands disabled (Iteration 132) |
+| Configuration | ACS antigen list | Present | Fixed core (Rh, Kell, Duffy, Kidd, Ss) plus lab-configured additions (default Lea, Leb, M, N), validated case-sensitively; used by ACS evaluation, open-testing list, untypeable classifier and clinical-significance flags; listed on the report, in the rule trace and in the clinical snapshot; transferred with Preferences | The core itself is fixed by design |
+| Configuration | Rules + Preferences transfer | Present | Separate rule and Preferences JSON exports; `ConfigurationBundle` exports both together; import previews both sections and the stored rules the file lacks, refuses a file with any refused entry, applies atomically with optional audited removal of local-only rules, one `import_configuration` audit | No signed or checksummed bundle; reaction grades and phases beyond extra phases are not yet configurable data |
+| Tests | Synthetic cases with intermediate reasoning | Partial | Enzyme and DTT cases cover unpaired runs, short comparisons, mixed loss/gain/persistence that fits no pattern, and a one-loss two-persistence case that stays a partial destroyed pattern | Expand case library |
 
 ## Iteration 1 (this change)
 
@@ -811,1493 +831,2860 @@ auth, CAPTCHA, licensing, or terms.
 
 ## Iteration 50 (this change)
 
-**Deficiency:** A ficin, papain, or DTT comparison named paired cells
-and skipped cells that were tested on only one of the two runs. A
-reviewer could not tell that those cells were left out of the pair
-count. The persistent case library also stopped at DEMO- and 2026-
-patterns, so warm, cold, auto, exotic, and combination workups were
-not all available to reopen later.
+Product review: iterations 44–49 all refined enzyme and DTT comparisons.
+This tick moves to specimen and patient context, which the workflow
+starts from.
 
-**Bounded improvement:** Same-panel enzyme and DTT notes now name
-cells tested only on the untreated run and cells tested only on the
-treated run, and say they were left out of the pair count. The
-sentence is evidence, not a diagnosis. `E2EWorkflowSeeder` writes
-idempotent E2E- accessions for warm allo (including Jka dosage), cold
-allo, warm auto, cold auto, warm auto plus two allos, mixed cold plus
-warm with prewarm, combinations, Vel, k, U, Dia, Wra, Kpb, an HTLA-like
-Chido case with a titer and neutralization grade, a negative panel,
-and panreactivity with a negative autocontrol. Existing rows are not
-overwritten. Load Demo Data and `--seed-clinical` call the seeder.
+**Deficiency:** Recent transfusion was detected only by keywords in the
+specimen notes or phenotype. "Received 2 PRBC" was missed, so a likely
+donor-cell E+ phenotype argued against anti-E. "No transfusion history"
+was flagged as transfused. No last-transfusion date was recorded, and
+the window was not configurable.
 
-**Not in this tick:** Naming cells that were recorded on both runs but
-omitted because they are not on the panel cell list. Authenticated
-vendor portals stay later and must not bypass auth, CAPTCHA, licensing,
-or terms.
+**Bounded improvement:** Specimens now store a transfusion status and a
+last-transfusion date. The status column has a database CHECK
+constraint, and changes are audited and blocked after a final call.
+Preferences has a recent-transfusion window (1–365 days, default 90),
+which is saved with each analysis snapshot. Analysis uses the structured
+status first. Transfused within the window, with no date, or with a date
+after the specimen makes the phenotype uninterpretable. A date outside
+the window leaves the phenotype usable. The note keywords decide only
+when the status is Unknown. Under Not transfused, transfusion wording in
+the notes is named for review. Each explanation states the date, the day
+count, and the window. Summary, suggestions, the specimen detail, and
+both specimen reports show it. Nothing is identified.
+
+**Not in this tick:** Product counts and types, pregnancy history,
+HSCT/BMT, mixed-field concern, and connecting transfusion context to
+mixed-field reaction notes. The legacy keyword check remains as the
+fallback for Unknown.
 
 ## Iteration 51 (this change)
 
-**Deficiency:** A cell recorded on both the untreated run and the
-ficin, papain, or DTT run was skipped with no sentence when that cell
-number was not on the panel cell list. A DTT cell in that position
-could also be counted as newly reactive even though the panel had no
-antigen typing for it.
+**Deficiency:** A mixed-field autocontrol produced no note, because the
+special-grade notes skip the AC row. After a recent transfusion that
+result is the classic sign of alloantibody coating surviving donor
+cells (possible delayed serologic or hemolytic transfusion reaction).
 
-**Bounded improvement:** Those cells are omitted from the pair count
-and named: "not on the panel cell list." The sentence is evidence, not
-a diagnosis. Explain Analysis and the clinical report show it. A cell
-that would have looked newly reactive on DTT is not counted as a gain.
+**Bounded improvement:** Every autocontrol phase graded MF, including
+extra phases, is named once per row and read against the transfusion
+assessment from iteration 50. The note covers four cases: recent
+transfusion (suggest a DAT and an eluate), Not transfused (review
+history, transplant, and the specimen), Transfused outside the window
+(donor cells less likely), and Unknown (record the status). Panel-cell
+MF is unchanged. Suspected and ruled-out lists are unchanged. The note
+reaches Summary, Explain Analysis, suggestions, and reports through the
+existing special-reaction notes.
 
-**Not in this tick:** Naming panel cells that were recorded on both
-runs but left out of the pair count because both grades were
-nonreactive. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** DAT has no mixed-field option, and DAT IgG/C3 are
+not recorded separately. Eluate results are not structured.
 
 ## Iteration 52 (this change)
 
-**Deficiency:** A panel cell recorded on both the untreated run and the
-ficin, papain, or DTT run disappeared from the comparison when both
-grades were nonreactive. A destroyed pattern could name the cells that
-lost reactivity and never say which other cells had been tested and
-stayed negative on both runs.
+**Deficiency:** The DAT was one polyspecific value with no IgG or C3
+result and no mixed-field grade. Pattern notes could not tell a warm
+IgG picture from C3-only reactivity. A mixed-field DAT after
+transfusion could not be recorded.
 
-**Bounded improvement:** Those cells stay out of the pair count and are
-named: "both grades were nonreactive." The sentence is evidence, not a
-diagnosis. Explain Analysis and the clinical report show it. An
-all-nonreactive comparison still stays incomplete and now lists the
-cells.
+**Bounded improvement:** Specimens store IgG and C3 DAT results beside
+the polyspecific value. MF is now a DAT grade. A `DatProfile` makes the
+DAT positive if any recorded result is reactive, and negative only when
+every recorded result is negative. Autoantibody-favoring pattern notes
+add a cold or complement caveat when only C3 reacts. A mixed-field DAT
+gets the donor-cell note from iteration 51. IgG and C3 changes are
+audited, validated against the grade list, and locked after a final
+call. The dialog, specimen detail, and reports show the full DAT.
+Polyspecific-only wording is unchanged.
 
-**Not in this tick:** The Reactions grid for E2E-WARM-JKA opens on the
-antigen columns. Stored grades are AHG 3+ on homozygous Jka cells and
-1+ on heterozygous cells, and E2E-COLD-M is IS 2+ only, but those
-phase columns were off the first screen. Authenticated vendor portals
-stay later and must not bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** Eluate results are not structured, and DAT history
+across specimens is not tracked by patient (there is no patient entity
+yet).
 
-## Iteration 53 (this change)
+## Iteration 53 — product review and patient link (this change)
 
-**Deficiency:** Reactions inserted the antigram at column 1, so IS,
-37°C, AHG, and CC sat past a full antigen row. A reviewer opening
-E2E-WARM-JKA saw Jka typing and had to scroll to the grades. An
-explicit ++ was also drawn as + until Show dosage was checked.
+**Product review.** Complete: panel import with review, reaction entry,
+transparent analysis with Explain Analysis, final call with audit and
+lock, structured transfusion and DAT context. Fragmented: everything is
+keyed by accession, with no patient identity, so history does not carry
+between specimens. No investigation object or status workflow exists
+beyond the Worklist categories. Analysis explanations are strong, but
+iterations 44–49 went deep on one niche (enzyme/DTT) while patient and
+specimen basics lagged. The roadmap below re-weights toward patient and
+investigation workflow.
 
-**Bounded improvement:** Antigen columns now follow the check-cell
-column, and those phase columns stay frozen. A stored ++ remains ++
-when Show dosage is off. Inferred zygosity (E+ e− shown as + until
-the checkbox) is unchanged. Nothing is identified. The Release
-screen for E2E-WARM-JKA shows AHG 3+ with Jka ++ on cells 1 and 4
-and AHG 1+ with Jka + on cells 2 and 5, with Show dosage unchecked.
-E2E-COLD-M shows IS 2+ on cells 1, 3, and 5 and 0 at 37°C and AHG.
+**Deficiency:** A confirmed antibody (for example an evanescent anti-Jka)
+did not reach the patient's next specimen unless someone retyped it into
+Previous antibodies.
 
-**Not in this tick:** The Specimens screen for warm auto and cold
-auto. Authenticated vendor portals stay later and must not bypass
-auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:** Specimens carry an indexed, audited MRN, locked
+after a final call. Analysis adds each antibody confirmed on another
+specimen with the same MRN as Historical evidence, citing the earliest
+accession and date, without duplicating Previous antibodies. Unconfirmed
+suspected lists are not carried. The detail pane, Specimen Summary, and
+worksheet list the patient's other specimens. The filter matches MRN.
+
+**Not in this tick:** A patient table (name, DOB, permanent blood-bank
+comments, special transfusion requirements) and warning when two
+specimens share an MRN but disagree on ABO/Rh or phenotype.
+
+## Roadmap after review
+
+1. Patient record: name, DOB, permanent comments, special transfusion
+   requirements (antigen-negative, irradiated), shown on every specimen
+   with that MRN.
+2. Investigation status workflow (created → testing → analysis → review
+   → completed/amended) with a visible step indicator per specimen.
+3. Eluate results as structured data feeding analysis.
+4. Product counts and types, pregnancy, HSCT/BMT on the transfusion record.
+5. Enzyme/DTT: name cells tested on only one run.
 
 ## Iteration 54 (this change)
 
-**Deficiency:** E2E-WARM-AUTO and E2E-COLD-AUTO stored no suspected
-specificity, so the Specimens screen looked like a negative workup.
-The warm-auto pattern count also mixed the all-negative autoadsorbed
-aliquot into the untreated cells, so the panreactive and warm notes
-never formed.
+**Deficiency:** The MRN linked specimens, but there was nowhere to keep
+permanent patient information. Nothing checked whether a known
+antibody's antigen-negative requirement was recorded.
 
-**Bounded improvement:** Cold, warm, and panreactive pattern counts
-skip adsorbed aliquots. Absorption notes still describe that aliquot.
-Specimens shows those pattern sentences, including the autoadsorption
-removal note, and says when a specimen has no suspected specificity
-and no panreactive or autoantibody note. An ordinary anti-K score
-does not add the block. Nothing is identified.
+**Bounded improvement:** A `patients` table keyed by MRN holds name,
+date of birth, permanent blood bank comments, and special transfusion
+requirements. Add and update are audited with before and after values.
+Future or invalid dates of birth are refused. The Specimens tab shows
+the patient in its own box, separate from specimen context, with Edit
+Patient. Specimen Summary and the worksheet print it. Analysis collects
+antibodies known for the MRN (Previous antibodies, this specimen's
+confirmed call, confirmed calls on other specimens). Each one whose
+antigen-negative requirement is not written on the patient record
+gives a REVIEW suggestion. Requirement matching is case-sensitive
+(C vs c) and accepts `K-negative`, `K neg`, `K−`, and `Fy(a-)`.
 
-**Not in this tick:** The Panels screen for the warm-auto lot.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+**Not in this tick:** Requirements are free text, not a structured
+list. Encounter, location, ordering provider, sex, and pregnancy history
+are not recorded. There is no patient search screen beyond the
+specimen filter.
 
 ## Iteration 55 (this change)
 
-**Deficiency:** The E2E warm-auto lot stored every antigen the seeder
-did not type as "-". On Panels, cells 1 through 6 and the autocontrol
-looked antigen-negative for D, C, c, and the rest of the standard
-columns. A typed minus on K or Fya was indistinguishable from an
-antigen that had never been tested.
+**Deficiency:** Where an investigation stood had to be pieced together
+from panel links, the reaction grid, analysis time, and the final call.
+A cleared and re-confirmed identification looked the same as one never
+changed.
 
-**Bounded improvement:** A new panel cell starts as NT. Opening the
-app rewrites an E2E column that is still "-" on every cell, including
-the autocontrol, to NT. A column with any + or ++ is unchanged, so
-the warm-auto K- and Fya- cells stay typed negatives. Nothing is
-identified.
+**Bounded improvement:** `InvestigationStatusService` derives five steps
+and a status from recorded data. No status is stored, so it cannot
+drift. Amended means a confirmed identification was cleared and
+confirmed again (from the audit log). Reopened means cleared and not yet
+re-confirmed. The next action names incomplete panels with
+entered/total counts. The Specimens detail pane shows a status strip,
+and the worksheet prints the status line. The Worklist now uses the same
+`GetIncompleteReactionPanels` check.
 
-**Not in this tick:** The Worklist rows for demo scenarios that still
-say Never analyzed. Authenticated vendor portals stay later and must
-not bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** Separate technologist and supervisor review steps,
+an explicit Cancel action with reason, and a status column in the
+specimen list.
 
 ## Iteration 56 (this change)
 
-**Deficiency:** The 11 DEMO scenarios stored finished grades and a
-linked panel, then never recorded an analysis. The Worklist listed
-each one as stale with the detail "Never analyzed."
+**Deficiency:** The Search tab only searched reagent cells by antigen
+profile. A patient's earlier workups could not be found by MRN or name,
+and there was no way to list every anti-Jka identification or every
+call by one technologist.
 
-**Bounded improvement:** Opening the application, loading demo data,
-or running the clinical seed analyzes a DEMO scenario only when it
-has a panel and no prior analysis. A second pass does nothing. Grades
-stay as seeded: DEMO-S1 cell 1 remains AHG 2+, and anti-E is stored
-as evidence. A specimen outside that list, including 2026- accessions,
-is not analyzed by this pass. Nothing is identified.
+**Bounded improvement:** The Search tab now opens on **Investigations**.
+`InvestigationSearch` matches accession, MRN, patient name and DOB,
+final and previous antibodies, final comment, and technologist
+initials. Every word must match. An optional inclusive date range can be
+used alone. Rows show the derived status and sort newest first. Open
+(or double-click) goes to the specimen. Empty searches and reversed date
+ranges are refused with a message. The antigen-profile search moved
+unchanged to its own section.
 
-**Not in this tick:** Reports for a seeded workup. Authenticated
-vendor portals stay later and must not bypass auth, CAPTCHA,
-licensing, or terms.
+**Not in this tick:** Searching by panel lot or manufacturer used in an
+investigation. The specimen-list filter still matches MRN but not
+patient name.
 
 ## Iteration 57 (this change)
 
-**Deficiency:** The Clinical Identification report for E2E-WARM-AUTO
-said "No antibodies suspected based on current reactions." Specimens
-already showed the warm IAT pattern, panagglutination, and the
-autoantibody note. The printed worksheet did not.
+**Deficiency:** A confirmed identification was final the moment one
+person entered it. There was no second-person review, no queue of calls
+awaiting review, and nothing on the report showing sign-off.
 
-**Bounded improvement:** When a result has a panreactive, autoantibody,
-or high-prevalence pattern, the clinical report lists those pattern
-sentences under "Pattern evidence (not a diagnosis)." The unsuspected
-sentence is left off in that case. An ordinary anti-K report does not
-get the block. Absorption notes stay in the absorption section.
-Nothing is identified.
+**Bounded improvement:** A Preferences option, *Require supervisor
+review*, adds a sixth status step. `SetSpecimenSupervisorReview` records
+reviewer initials and time on the specimen. It refuses a review when
+there is no confirmed call, when the call was already reviewed, when
+initials are blank, or when the reviewer is the person who confirmed the
+call. Each review is audited with the confirmed antibodies. Confirming
+or clearing the call removes any earlier review. Status shows *Awaiting
+supervisor review* until it is done. The Worklist adds a Supervisor
+review queue. The worksheet prints the reviewer or *PENDING*.
 
-**Not in this tick:** Search for a seeded antigen profile. The panel
-antigram still prints an all-NT antigen column. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing, or
-terms.
+**Not in this tick:** Role-based permissions (initials are not
+authenticated users), a Cancel action with reason, and a turnaround
+report for review time.
 
 ## Iteration 58 (this change)
 
-**Deficiency:** Search results drew every untyped antigen as −. On the
-E2E warm-auto lot, a search for E+ returned cell 1 with D shown as
-minus even though D is stored NT. A typed K− and an untyped D looked
-the same.
+**Deficiency:** Reconstructing an investigation meant reading the raw
+audit log, run records, and analysis snapshots separately. Attaching or
+removing a panel was not audited at all.
 
-**Bounded improvement:** A result row shows the stored typing. NT
-stays NT, a typed minus stays −, and an explicit ++ stays ++. A −
-criterion already matches only a stored minus, so the warm-auto lot
-is left out of a D− search and cell 1 still matches K−. Nothing is
-identified.
+**Bounded improvement:** Panel link and unlink are now audited with the
+panel name and lot, and an index on audit entity lookups was added.
+`InvestigationTimeline` builds one ordered list from receipt, runs
+(untreated or additional testing), reaction saves (grouped per run when
+less than 15 minutes apart, with save and cell counts), each analysis
+snapshot with operator and engine version, confirm, clear with reason,
+supervisor review, MRN, transfusion, and DAT edits, and the patient
+record's audit. Only this specimen's events appear. The Specimens tab
+has a Timeline expander, and the worksheet prints the timeline.
 
-**Not in this tick:** Rules for one seeded specificity. The panel
-antigram still prints an all-NT antigen column. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing, or
-terms.
+**Not in this tick:** Report printing or export is not yet audited, so
+it does not appear. Panels linked before this change show only their
+run start date.
 
-## Iteration 59 (this change)
+## Iteration 59 — product review (this change)
 
-**Deficiency:** The anti-D rule that allows heterozygous cells for
-exception antigen C was applied to anti-C. Two nonreactive
-heterozygous C+ cells then met rule-out for anti-C even when the
-workup was not an anti-D case. The rule's own antibody was ignored.
+**Product review.** Iterations 50–58 moved the product from
+accession-only records to a patient-linked investigation workflow:
+structured transfusion and DAT data, MRN and patient record, derived
+status with supervisor review, investigation search, and a timeline.
+The app was renamed back to HemoIQ by merging the existing rename
+branch. While doing that, the review found the most serious open
+problem: **the test suite wrote to the user's real data.** The log
+was written on every run, and a live vendor-download test imported
+downloaded vendor lots into `%AppData%\HemoIQ\hemoiq.db` (and a
+database beside the Release exe) with `replaceExisting: true`. It also
+rewrote antigen order on other imported panels from the same vendor.
+On this machine that added vendor panels 17, 19, and 21–24 and deleted
+18 and 20, which were themselves earlier test imports. None were linked
+to a specimen or had runs.
 
-**Bounded improvement:** Heterozygous permission applies only when
-the rule names that antibody. An exception antigen must be blank or
-the same antigen. The anti-D rule still requires 3 cells for anti-D.
-A rule that names anti-C and exception C still allows heterozygous
-C cells. Anti-C and anti-c stay separate. Nothing is identified.
+**Bounded improvement:** `AppDataPaths.RootOverride` lets the test
+project point the data root (default database, settings, logs,
+artifacts) at a per-run temp folder through a module initializer. The
+live vendor test persists only to its isolated database. New tests
+assert the root, log directory, settings path, and default database all
+resolve under the test folder. A full run was checked against the real
+%AppData% file timestamps and sizes, and nothing changed.
 
-**Not in this tick:** Analytics for one seeded workup. The panel
-antigram still prints an all-NT antigen column. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing, or
-terms.
+**Not in this tick:** The six test-imported vendor panels remain in the
+user's database pending the user's decision. One intermittent test
+failure appeared once and could not be reproduced.
+
+## Roadmap after review
+
+1. Audited report generation (print/PDF) so reports appear on the timeline.
+2. Structured eluate results feeding analysis.
+3. Cancel action with reason, and turnaround metrics from the timeline.
+4. Role-based permissions (initials are not authenticated users).
 
 ## Iteration 60 (this change)
 
-**Deficiency:** Analytics for the seeded workups, which have no
-confirmed identification, drew both charts on a scale from −10 to 10.
-A count of zero looked like a chart that could go negative.
+**Deficiency:** Printing and exporting a report left no record. Nobody
+could tell which identification a report carried or whether a report
+was issued before the identification was later amended.
 
-**Bounded improvement:** An empty specificity chart and an empty
-month chart keep their titles and use a 0 to 1 range with no tick
-labels. A range that has confirmed identifications is unchanged.
-Suspected results stay out of the counts. Nothing is identified.
+**Bounded improvement:** `ReportService` writes a `report_output` audit
+event after each successful PDF export, CSV export, or print. The event
+holds the report type, output, file name, SHA-256 of the issued
+content, software version, and, for specimen reports, the confirmed
+identification and reviewer at issue. Specimen reports attach to the
+specimen, panel reports to the panel, and list reports to `report`.
+The timeline shows each issue. When the latest Clinical Identification
+report predates the latest clear, an Amended investigation's next
+action is to reissue the report, until a newer report is issued. A
+failed export writes nothing.
 
-**Not in this tick:** Preferences for one seeded workup. The panel
-antigram still prints an all-NT antigen column. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing, or
-terms.
+**Not in this tick:** Printing has no confirmation that the printer
+completed the job (the event is written when the job is handed to
+Windows). There is no Worklist queue for reports needing reissue.
 
 ## Iteration 61 (this change)
 
-**Deficiency:** Saving a new score threshold, ID cell rule, ACS
-rule-out count, default rule-out count, or extra-phase list left
-every unconfirmed analysis looking current. The worklist stayed
-clear, and the Analysis tab did not say the saved result was from
-the previous Preferences.
+**Deficiency:** An eluate could be entered as a specimen of type eluate,
+but nothing tied it to the patient specimen it came from. Eluate
+findings, which are central to recognizing delayed transfusion reactions
+and warm autoantibodies, never reached the source investigation.
 
-**Bounded improvement:** An unconfirmed specimen whose latest
-analysis snapshot does not match those Preferences is listed as
-stale, with the detail "Preferences changed since last analysis."
-The Analysis tab uses the same reason. A lab-name change does not.
-A confirmed identification is not rewritten and is not listed.
-Nothing is identified.
+**Bounded improvement:** `specimens.source_accession` (indexed) links an
+eluate to its source. `SetEluateSource` refuses non-eluates,
+self-links, missing sources, and eluate sources, is audited, and is
+locked after the eluate's final call. `EluateEvidence` counts graded and
+reactive cells on each linked eluate's untreated runs and adds one note
+per eluate to the source analysis. The note covers: not yet tested;
+specificity (confirmed preferred over suspected), worded as possible
+DHTR/DSTR after a recent transfusion and naming antibodies not suspected
+in the source; panreactive (at least 80% of four or more cells); or
+nonreactive with a positive DAT, explained for a C3-only DAT. The dialog
+has *Eluate of*. The detail pane shows the link both ways, and the
+timeline shows link changes.
 
-**Not in this tick:** The audit log for one seeded workup. The panel
-antigram still prints an all-NT antigen column. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing, or
-terms.
+**Not in this tick:** Elution method and last-wash control are not
+recorded. Eluate antigen-negative rule-outs are not used for the source.
 
 ## Iteration 62 (this change)
 
-**Deficiency:** The audit log listed the newest 500 of 671 events and
-had no way to find one accession. Export CSV wrote a second, larger
-query instead of the rows on screen, so a seeded workup such as
-E2E-WARM-AUTO could not be reviewed as one record.
+**Deficiency:** An investigation could not be cancelled. A mislabeled
+or unacceptable specimen could only be deleted, which loses the record,
+or set inactive, which is meant for expiry and leaves the specimen
+editable and on work queues.
 
-**Bounded improvement:** The window loads the newest 5,000 events.
-Find narrows them by accession, action, Windows login, record type,
-or reason. Export CSV writes the rows that Find is showing. The
-Operator column remains the Windows login. Nothing is identified.
+**Bounded improvement:** `CancelInvestigation` and
+`ReinstateInvestigation` each require a reason and are audited.
+Cancelling is refused while an identification is confirmed or when
+already cancelled. The lock (`EnsureSpecimenUnlocked`, analysis save,
+and confirming a final call) now also covers cancelled records, with
+its own message. Status shows Cancelled with date and reason. The
+Worklist skips cancelled specimens. The timeline shows both events.
+Confirm ID on a cancelled record shows a message instead of an
+unhandled error.
 
-**Not in this tick:** The archive for one seeded workup. The panel
-antigram still prints an all-NT antigen column. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing, or
-terms.
+**Not in this tick:** Cancel reasons are free text (no configurable
+reason list). Turnaround metrics from the timeline remain.
 
 ## Iteration 63 (this change)
 
-**Deficiency:** Open Archive listed each specimen by accession, type,
-created date, and whether it was already in the live database. A
-seeded warm-auto specimen and a seeded anti-K specimen looked the
-same until someone restored them.
+**Deficiency:** Analytics only counted confirmed antibodies. There was
+no measure of investigation turnaround time and no view of open
+investigations that were running late.
 
-**Bounded improvement:** Each archive row shows the recorded
-evidence. A confirmed identification is shown as stored. Otherwise
-the row shows the antibodies stored with the specimen, the DAT, and
-the notes. E2E-WARM-AUTO shows DAT Positive. A confirmed anti-K row
-shows anti-K and does not pick up another antibody. Nothing is
-identified.
+**Bounded improvement:** `TurnaroundService` is a reporting-only
+service, separate from workflow code. For investigations received in
+the Analytics date range, with cancelled ones excluded, it computes
+received→confirmed in days and confirmed→reviewed in hours, each as a
+median and nearest-rank 90th percentile with a count. It also lists
+active open investigations older than the new Preferences turnaround
+threshold (1–60 days, default 3), oldest first, with their derived
+status. Analytics shows three cards and an overdue list with Open.
+Export CSV appends the figures and the list.
 
-**Not in this tick:** The panel antigram still prints an all-NT
-antigen column. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** A received time (only the date is recorded),
+workload by technologist, and a Worklist queue for overdue
+investigations.
 
-## Iteration 64 (this change)
+## Iteration 64 — product review and specimen timing (this change)
 
-**Deficiency:** Panel Summary, Panel Antigram, and the Clinical
-Identification worksheet printed every antigen. GetAntigen maps NT
-to a minus, so an E2E warm-auto column that is NT on every cell,
-including D, printed as negative.
+**Product review.** Iterations 60–63 completed audited report output,
+eluate evidence, cancel/reinstate, and turnaround metrics. The weakest
+remaining part of the specimen workflow was timing. Specimens had only
+a received date set at record creation and no collection or receipt
+time. Expiration defaulted from *today* instead of from collection.
+Nothing checked dating against recent transfusion. That is the
+highest-value gap and ties to the iteration-50 transfusion record.
 
-**Bounded improvement:** Those printed grids omit an antigen that is
-NT or blank on every cell. Typed E, K, and Fya stay on the warm-auto
-lot, and a typed minus stays. The stored panel order is unchanged.
-Nothing is identified.
+**Bounded improvement:** Specimens carry collection and receipt
+date-times. They are validated (not in the future, receipt not before
+collection), audited, locked after a final call, and on the timeline.
+On a new specimen, receipt defaults to now and choosing a collection
+date sets expiration from collection. `SpecimenDating` raises a REVIEW
+(Specimens pane, top of analysis suggestions, worksheet) when the
+patient was transfused within a configurable look-back (default 90
+days) and the expiration is later than collection + dating days, or
+when it cannot be checked because the collection time or expiration is
+missing. Turnaround uses the recorded receipt time.
 
-**Not in this tick:** An NT cell in a column that is typed on another
-cell still prints as a minus. The autocontrol on the warm-auto lot
-is that case for E, K, and Fya. Analysis snapshots are still not
-copied into an archive. Authenticated vendor portals stay later and
-must not bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** Pregnancy within 3 months as a dating trigger
+(no structured pregnancy field yet), collector and location.
+
+## Roadmap after review
+
+1. Structured pregnancy history on the patient record (also a dating trigger).
+2. Role-based permissions (initials are not authenticated users).
+3. Workload by technologist on Analytics.
 
 ## Iteration 65 (this change)
 
-**Deficiency:** After an all-NT column was omitted, an NT cell in a
-column that is typed on another cell still printed as a minus.
-The warm-auto autocontrol is NT for E, K, and Fya, so the worksheet
-showed that autocontrol as antigen-negative.
+**Deficiency:** Pregnancy could only be written in notes. It did not
+trigger the specimen-dating check, although pregnancy within 3 months
+triggers that rule just as transfusion does. RhIG was not recorded, so
+anti-D in a recently treated patient looked the same as an immune
+alloantibody.
 
-**Bounded improvement:** Panel Summary, Panel Antigram, and the
-Clinical Identification grid print NT for an untyped cell. A typed
-minus stays a minus. An E2E autocontrol left as minus by the old
-default is stored as NT, because those lots do not type the
-autocontrol. A donor cell keeps a typed minus. The warm-auto
-autocontrol prints NT for E, K, and Fya, and cell 1 keeps K as a
-typed minus. Nothing is identified.
+**Bounded improvement:** Specimens carry pregnancy status (Unknown,
+Not pregnant, Pregnant, Recently pregnant with a required end date) and
+an RhIG date. The status column has a CHECK constraint, and changes are
+validated (no future dates), audited, locked after a final call, and on
+the timeline. `SpecimenDating` now applies when the patient is
+pregnant, or the pregnancy ended within the look-back, and names every
+reason. When anti-D is suspected or confirmed and RhIG was given within
+the configurable window (default 84 days) before collection, analysis
+raises a REVIEW for possible passive anti-D. The dialog, detail pane,
+and worksheet show pregnancy and RhIG.
 
-**Not in this tick:** Analysis snapshots are still not copied into
-an archive. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** Gravida/para counts, anti-D titer tracking across
+pregnancies, and HSCT/BMT context.
 
 ## Iteration 66 (this change)
 
-**Deficiency:** Purge removes the analysis snapshot with the
-specimen. The archive did not copy that snapshot, so a restore
-brought the specimen back without the settings used to judge
-whether the analysis is stale.
+**Deficiency:** Anyone at the workstation could record a supervisor
+review under any initials, change analysis Preferences, clear a
+confirmed identification, or reinstate a cancelled investigation.
 
-**Bounded improvement:** The archive copies each saved analysis
-snapshot for the purged specimens. Restore writes those rows back
-for specimens that were missing. A specimen already in the live
-database is skipped, and a second restore does not add another
-snapshot. The settings, fingerprint, ruled-out list, suspected
-list, rule version, operator, and absorption note come back as
-stored. Nothing is identified.
+**Bounded improvement:** A `users` table keyed by Windows login holds
+initials, name, and role (Technologist, Supervisor, Administrator), with
+CHECK constraints. `AccessControl` gates actions in the service layer:
+supervisor review, clearing an identification, and reinstating require
+Supervisor or Administrator; Preferences and user management require
+Administrator. While no user is registered, everything stays allowed,
+so existing installs keep working. With users registered, review
+initials must be the signed-in user's own, unregistered logins are
+refused protected actions with a clear message, the first user must be
+an Administrator, the last active Administrator is protected, and
+initials are unique. User changes are audited, and every audit entry
+records the signed-in login. Preferences has **Users & roles…**.
 
-**Not in this tick:** The saved panel antigen order is still not
-copied into an archive. Authenticated vendor portals stay later
-and must not bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** A read-only role, per-lab configurable
+permissions, and password or second-factor sign-in (identity is the
+Windows login).
 
 ## Iteration 67 (this change)
 
-**Deficiency:** An archive copied the panel lot and its cells, but
-not the saved antigen order. After the lot was deleted, restore put
-the cells back in the default order.
+**Deficiency:** Analytics showed turnaround for the lab as a whole but
+not who did the work. A supervisor could not see how confirmations and
+reviews were spread across technologists, or whose cases took longest.
 
-**Bounded improvement:** The archive copies the saved order for
-each purged lot. Restore writes that order back only for a lot that
-was missing. A lot still in the database keeps the order it has
-now. A second restore does not change either order. Nothing is
-identified.
+**Bounded improvement:** `WorkloadService` is a reporting-only model
+over specimens. For each set of initials it counts confirmed
+identifications by confirmed date (Identified by), confirmations
+naming more than one antibody, and supervisor reviews by review date
+(Reviewed by), with the median received-to-confirmed time. Initials
+match case-insensitively; names come from Users and roles when the
+initials are registered. Cancelled investigations, unconfirmed cases
+and blank initials are excluded, and a confirmation recorded before
+receipt is counted but left out of the median. Analytics shows a
+**Workload by technologist** table beside the overdue list, and
+**Export CSV** appends it.
 
-**Not in this tick:** Authenticated vendor portals stay later and
-must not bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** Reaction-entry and amendment counts per user
+(audit entries record the Windows login, so they can be joined only
+when users are registered), and workload by location (no location
+field yet).
+
+## Product review (after iteration 67)
+
+**Complete enough to rely on:** specimen receipt through confirmation
+(status strip, worklist, timeline), transfusion/pregnancy/DAT context
+feeding analysis as named REVIEW notes, supervisor review with roles,
+cancel/reinstate, eluate linking, report-output audit, and
+turnaround/workload analytics.
+
+**Still fragmented:**
+- Specimen origin (collector, locations, provider) was not recorded,
+  so reports could not show where a specimen came from and workload by
+  location was impossible. Addressed in iteration 68.
+- Patient transfusion requirements are free text; the requirement
+  check relies on keywords. A structured antigen-negative requirement
+  list would make the check exact.
+- Reaction entry and amendments per user cannot be counted by
+  initials because the audit log stores the Windows login.
+- PDF import remains layout-fragile; vendor portals stay file-only.
+
+**Screens growing complex:** the Specimen dialog now has 21 rows. It
+should be split into Specimen and Patient context sections (or tabs)
+before more fields are added.
+
+**Testing gaps:** no UI automation; dialog validation is covered only
+through the service methods it calls.
+
+## Roadmap after review
+
+1. Specimen origin and workload by ordering location (iteration 68).
+2. Structured antigen-negative transfusion requirements on the patient record.
+3. Split the Specimen dialog into sections.
+4. Per-user reaction-entry and amendment counts from the audit log (registered users).
 
 ## Iteration 68 (this change)
 
-**Deficiency:** The Reactions grid for a seeded warm-auto workup
-showed every antigen column. Columns that are NT on every cell,
-including D, sat beside the typed E, K, and Fya columns.
+**Deficiency:** Specimens had no collector, collection location,
+ordering location, or ordering provider. The worksheet could not say
+where a specimen came from, Search could not find cases by unit or
+provider, and Analytics could not show workload by location.
 
-**Bounded improvement:** Those columns are hidden. A typed minus
-keeps its column. Dosage grouping still applies to the columns
-that remain. The warm-auto grid shows E, K, and Fya. Nothing is
-identified.
+**Bounded improvement:** Four optional specimen columns, each with a
+database CHECK of 128 characters. `UpdateSpecimenOrigin` trims and
+collapses whitespace, writes an `update_origin` audit with before and
+after values only when something changed, and is locked after a final
+call. The Specimen dialog has **Collected by / at** and **Ordered by /
+from**; the detail pane, timeline, and worksheet show the origin, and
+Search matches it. Analytics has a **By ordering location** tab
+(received, confirmed, open, median TAT; cancelled excluded; unrecorded
+last), included in Export CSV.
 
-**Not in this tick:** The Specimens screen for the same workup.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+**Not in this tick:** A configured location list (values are free
+text, so spelling variants count separately), and location on the
+patient record.
 
 ## Iteration 69 (this change)
 
-**Deficiency:** Specimens for E2E-WARM-AUTO listed saved rule-outs
-for anti-E, anti-K, and anti-Fya. The current analysis does not
-rule those out: the partner antigens are NT, so the cells are not
-homozygous rule-outs. The pattern block also omitted the sentence
-that the panreactive untreated run was left out of ordinary scores.
+**Deficiency:** Antigen-negative requirements lived only in free text,
+and the requirement check found them with a keyword pattern. A typo,
+an unusual phrasing, or C written for c could make the check pass or
+fail silently.
 
-**Bounded improvement:** Suspected and ruled-out rows follow the
-same current analysis as the pattern block. An older saved list is
-not shown in their place. The warm-auto ruled-out pane says no
-specificity meets the criteria. The exclusion of the untreated run
-is listed first and points to the autoadsorbed aliquot. An ordinary
-anti-K workup still has no pattern block and still shows anti-K.
-Nothing is identified.
+**Bounded improvement:** Patients carry a structured **Antigen-negative
+units** list (`patients.antigen_negative`), stored as canonical codes
+in panel order. Entry accepts commas, semicolons or spaces, a trailing
+-, neg or negative, and Fy(a-) notation; case decides C/c, E/e, K/k,
+S/s, and other antigens match case-insensitively only when one fits.
+Anything that is not a known antigen is refused by the dialog and by
+`SavePatient`, so the list never holds an unreadable entry. Saves are
+audited (re-entering the same set differently is not a change). The
+requirement check uses the structured list exactly. A requirement
+written only in the free text still raises a REVIEW asking the user to
+add it to the list; existing records are never rewritten
+automatically. The detail pane and worksheet print E−, K−, Fy(a−).
 
-**Not in this tick:** The Analysis screen for the same workup.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+**Not in this tick:** A one-click "add to patient record" action from
+the REVIEW note, requirement source and date, and product-level
+requirements (irradiated, CMV-safe) as structured fields.
 
 ## Iteration 70 (this change)
 
-**Deficiency:** Analysis Explain for E2E-WARM-AUTO said anti-D
-could not be typed because D was never imported. D is on that
-panel. Every cell stores D as NT. A typed antigen such as E stays
-available for scoring.
+**Deficiency:** The Specimen dialog had grown to 21 rows in one column.
+Transfusion, pregnancy, DAT, and typing fields sat between identity and
+notes, so users scrolled past fields they did not need and could miss
+the ones that change analysis. Validation errors did not say where the
+field was.
 
-**Bounded improvement:** An antigen that is NT on every linked
-cell is described that way. The Explain detail and the suggestion
-say NT on every cell, and they do not say the antigen was never
-imported. An antigen that is not on the panel still says never
-imported. Nothing is identified.
+**Bounded improvement:** The dialog has four tabs: Specimen (identity,
+collection, origin, expiration, Active), Clinical context (transfusion,
+pregnancy, RhIG, with a note on how they affect analysis), Serology
+(DAT, phenotype, genotype, previous antibodies), and Notes. A
+`SpecimenContextSummary` line under the tabs lists every recorded
+context and serology value as the user types, leaving out Unknown, Not
+transfused, Not pregnant, and NT, so nothing on a closed tab is hidden.
+Each validation error opens the tab holding the field and focuses it;
+pregnancy and RhIG future dates now have separate messages. Saved data
+and the save sequence are unchanged.
 
-**Not in this tick:** The Analysis Summary still says no
-antibodies are suspected when the warm-auto pattern is present.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+**Not in this tick:** Saving the specimen's fields in one transaction
+(the view model still calls several audited update methods in turn, so
+a later failure can leave earlier fields saved), and remembering the
+last tab.
 
 ## Iteration 71 (this change)
 
-**Deficiency:** The Analysis Summary for E2E-WARM-AUTO said no
-antibodies were suspected. The same summary already listed the
-warm pattern, the panagglutinin, and the autoantibody note. That
-sentence contradicted the pattern.
+**Deficiency:** Saving the Specimen dialog ran eight audited updates in
+turn. If a later one was refused (an eluate source that does not exist,
+received before collected), the earlier ones stayed saved. A new
+specimen could be created half-filled, and the audit log recorded
+changes the user was told had failed.
 
-**Bounded improvement:** Summary omits that sentence when a
-panreactive, autoantibody, or high-prevalence pattern is present.
-The pattern sentences stay. An ordinary anti-K workup still lists
-anti-K. A negative workup with no such pattern still says no
-antibodies are suspected. Nothing is identified.
+**Bounded improvement:** `DatabaseService.RunInTransaction` wraps work
+in a SQL savepoint, so every existing update method takes part without
+change and calls may nest. `SpecimenSaveService.Save` runs the whole
+dialog save inside it, for both add and edit. A refused step rolls back
+the specimen row, every field, and every audit entry from that save. The
+message now says "Nothing was saved" / "No changes were saved". Each
+step keeps its own validation and audit.
 
-**Not in this tick:** The Reports screen for the same workup.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+**Not in this tick:** Other multi-step writes (panel import with cells,
+patient save plus MRN link) still run step by step and should move to
+`RunInTransaction`.
 
 ## Iteration 72 (this change)
 
-**Deficiency:** Analysis Results and Specimen Summary for
-E2E-WARM-AUTO printed the saved rule-out list. That list still
-named anti-E, anti-K, and anti-Fya. The current analysis does
-not rule those out, because the partner antigens are NT. The
-analysis report also omitted the warm-auto pattern.
+**Deficiency:** Replacing an already-stored lot during import deleted
+the old panel first and then inserted the new one step by step. A
+failure part-way left the lot missing. Worse, `DeletePanel` cascades to
+specimen links and panel runs, and runs cascade to reactions, so
+deleting or replacing a lot that had been used for testing silently
+erased patients' recorded reactions. Panel copy and cell replacement
+were also multi-step without a transaction.
 
-**Bounded improvement:** Both reports use the current analysis.
-The warm-auto ruled-out count is zero. Analysis Results includes
-the pattern evidence, including the untreated-run exclusion. An
-ordinary anti-K report still names anti-K and does not add the
-pattern block. Nothing is identified.
+**Bounded improvement:** `GetPanelUsage` reports linked specimens,
+recorded reaction rows, and linked specimens with a confirmed
+identification. `DeletePanel` refuses a panel with reactions or a
+confirmed identification ("Deactivate it instead"), and the audit
+entry of an allowed delete lists the links it removed. Vendor and lab
+imports refuse to replace a stored lot that holds test history and
+otherwise run delete-plus-import in one `RunInTransaction`, so a
+failure keeps the stored lot. `ReplacePanelCells` and Copy Panel are
+transactional. The Panels Delete button shows the refusal instead of
+failing. A `RunInTransaction<T>` overload returns a value.
 
-**Not in this tick:** Analysis Results for E2E-WARM-AUTO-ALLOS,
-which has residual reactivity after autoadsorption. Authenticated
-vendor portals stay later and must not bypass auth, CAPTCHA,
-licensing, or terms.
+**Not in this tick:** A source artifact saved to disk before a failed
+import is left in the artifact folder (content-addressed, harmless,
+not referenced). Specimen deletion and archive purge were not reviewed
+in this pass.
 
 ## Iteration 73 (this change)
 
-**Deficiency:** Analysis Results for E2E-WARM-AUTO-ALLOS listed
-anti-E and anti-K, but the autoadsorption comparison was empty.
-Five cells stayed reactive after autoadsorption and only cell 4
-became negative. The comparison required two cells to lose
-reactivity before it would call that residual.
+**Deficiency:** Deleting a specimen wrote no audit entry and was allowed
+even with a confirmed identification, erasing the reactions, analysis,
+and final call by cascade. It could also leave eluates pointing at a
+missing source. Purge Database could permanently delete confirmed
+identifications with no archive, and any user could run it.
 
-**Bounded improvement:** One paired cell that loses reactivity
-while other paired cells remain reactive is residual reactivity.
-The report says 1 of 6 paired cells lost reactivity after
-Autoadsorbed and 5 remained reactive, and that this may be an
-underlying alloantibody or incomplete adsorption. anti-E and
-anti-K stay on the suspected list. A warm-auto aliquot that
-clears every cell still reads as removal, not residual. Nothing
-is identified.
+**Bounded improvement:** `DeleteSpecimen` refuses a specimen with a
+confirmed identification (cancel the investigation or clear the
+identification first) and one named as an eluate source. Allowed
+deletions run in one transaction with a `delete_specimen` audit entry
+listing the MRN, type, received date, linked panels, reaction rows, and
+cancelled state. Purge needs the new `PurgeData` permission
+(Administrator once users are registered), refuses to run without an
+archive when any matching specimen has a confirmed identification, and
+deletes and audits in one transaction before vacuuming. The Specimens
+Delete button shows the refusal.
 
-**Not in this tick:** Clinical Identification for the same
-workup. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** A purge can still remove an eluate's source when
+the eluate is newer than the cutoff (the eluate keeps the accession as
+text). Per-specimen delete has no reason prompt.
 
 ## Iteration 74 (this change)
 
-**Deficiency:** Clinical Identification for E2E-WARM-AUTO-ALLOS
-listed supporting cells for anti-E and anti-K as panel cells at
-AHG 2+ and did not name the run. The untreated run of those same
-cells is AHG 3+ on every cell, so the citation could be read as
-the panreactive serum.
+**Deficiency:** Every reaction save wrote an audit entry with only the
+new value, even when nothing changed. A changed result could not be
+told apart from first entry, the original value was lost from the
+audit trail, and per-user counts would have been inflated by repeated
+grid saves. Workload covered confirmations and reviews by initials only.
 
-**Bounded improvement:** Explain citations include the run label.
-The worksheet says cell 1 (Autoadsorbed, AHG 2+) and the same
-for the other supporting cells. anti-E and anti-K stay
-unconfirmed. Nothing is identified.
+**Bounded improvement:** `SaveReaction` compares with the stored row:
+unchanged saves write nothing; changes record the previous phases and
+extra phases as the audit before-value. The timeline names how many
+recorded results changed in each entry session. `UserActivityService`
+counts, per Windows login and local date range, reaction cells entered,
+recorded results changed, specimens touched, identifications confirmed,
+identifications cleared, and supervisor reviews, with registered names.
+Analytics shows it on an **Activity by user** tab and Export CSV
+includes it.
 
-**Not in this tick:** The Specimens screen for the same workup.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+**Not in this tick:** Reaction-change reasons (a change is recorded but
+no reason is asked), and per-user counts for panel and rule edits.
 
 ## Iteration 75 (this change)
 
-**Deficiency:** Specimens for E2E-WARM-AUTO-ALLOS led the pattern
-box with the untreated panreactive note. The comparison that one
-cell lost reactivity and five remained reactive came after the
-warm, pan, and autocontrol sentences, below the visible fold.
-anti-E and anti-K were listed beside the wrong run.
+**Deficiency:** A recorded reaction result could be changed after
+analysis with no reason, so the audit log showed what changed but not
+why. The grid also saved cell by cell, so a failure part-way left a mix
+of old and new grades. Iteration 74's change count also treated a
+stored empty extra-phase object as a recorded result, overcounting
+changes.
 
-**Bounded improvement:** The adsorption comparison follows the
-untreated-run exclusion and precedes the warm and pan sentences.
-The warm-auto workup that clears every cell still leads with the
-exclusion, then the removal sentence. anti-E and anti-K stay
-suspected. Nothing is ruled out, and nothing is identified.
+**Bounded improvement:** `DescribeReactionChanges` lists each recorded
+(non-NT) phase a save would replace ("Cell 3 AHG: 2+ → 0").
+`SaveReactions` saves a run's grid in one transaction; once the
+specimen has been analyzed, it refuses changes to recorded results
+without a reason (`ReasonRequiredException`, nothing saved). The grid
+shows the list and asks for the reason; the reason is stored only on
+the audit entries that replaced a result, and the timeline shows it.
+First entries never need a reason. Change detection now reads extra
+phases properly.
 
-**Not in this tick:** Reactions for the same workup. Authenticated
-vendor portals stay later and must not bypass auth, CAPTCHA,
-licensing, or terms.
+**Not in this tick:** Paste/fill and Add Run copy still use the
+single-cell save (they write new runs or empty cells), and a reason is
+not asked before analysis has run.
+
+## Product review (after iteration 75)
+
+**Method:** every public write method in `DatabaseService` was checked
+for an audit entry and for protection of test history.
+
+**Now complete:** specimen save, panel import, panel delete, specimen
+delete, purge, and reaction-grid save are all-or-nothing and audited;
+lots and specimens that hold test history cannot be deleted; recorded
+reaction results changed after analysis need a reason; workload and
+activity are reported by initials, location, and login.
+
+**Writes still without an audit entry (ranked):**
+1. Panel cell typing edits (`UpdatePanelCell`): editing a lot used for a
+   confirmed identification silently changed the evidence behind it.
+   Addressed in iteration 76.
+2. Run and reaction deletion (`DeletePanelRun`, `DeleteReactions` from
+   the Reactions tab): removes recorded results with no audit entry.
+3. `UpdateSpecimen` (notes, phenotype, genotype, previous antibodies,
+   expiration, type) and `AddSpecimen`: no before/after values.
+4. `SetSpecimenActive`, `RemovePanelExtraAntigen`, `SetPanelAntigenOrder`.
+5. Analysis outputs (`AddSpecimenAntibody`, rule-outs) are regenerated
+   by analysis and covered by analysis snapshots; acceptable.
+
+**Screens:** Analytics now has three workload tabs and stays readable;
+the Specimen dialog is tabbed. Reactions tab Clear and Delete Run are
+the remaining one-click destructive actions on clinical data.
+
+## Roadmap after review
+
+1. Panel typing edits audited and reason-gated (iteration 76).
+2. Audit and protect run/reaction deletion (refuse after a confirmed
+   identification; reason after analysis).
+3. Audit `UpdateSpecimen` with before/after values and `AddSpecimen`.
+4. Audit activation, extra-antigen removal, and antigen order changes.
 
 ## Iteration 76 (this change)
 
-**Deficiency:** Compare on the Autoadsorbed run of E2E-WARM-AUTO-ALLOS
-opened an error that a two-way binding cannot use the read-only
-AnyChanged property. The Changed boxes stayed clear even where
-AHG differed, including cell 4 at 0 against the untreated 3+.
+**Deficiency:** Editing a panel's antigen typing wrote every cell with
+no audit entry, even for a lot used for confirmed identifications.
+Analysis reads typing live, so a later re-analysis or reprint of those
+investigations would silently use different evidence.
 
-**Bounded improvement:** The Changed column reads that flag one way
-and does not accept edits. Cells that differ are checked. Grades
-are unchanged. Nothing is identified.
+**Bounded improvement:** `DescribePanelCellChanges` lists each typing or
+cell-metadata difference ("Cell 3 Jka: + → -"). `SavePanelCellEdits`
+saves only real changes in one transaction and writes an
+`edit_panel_typing` audit entry with the change list. When the lot holds
+test history, a reason is required (`ReasonRequiredException`
+otherwise) and the audit entry names the linked specimens. The Panels
+Save button lists the changes and asks for the reason; every linked
+specimen's timeline shows the edit and its reason.
 
-**Not in this tick:** The compare headers still say This and Other.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+**Not in this tick:** Extra-antigen removal and antigen display order
+are still unaudited (roadmap item 4).
 
 ## Iteration 77 (this change)
 
-**Deficiency:** Compare on E2E-WARM-AUTO-ALLOS labeled every grade
-column This or Other. Cell 4 showed AHG 0 beside AHG 3+ without
-saying which grade belonged to Autoadsorbed and which belonged to
-Untreated. The row note said this and other as well.
+**Deficiency:** Clear (all reactions on a run) and Delete Run removed
+recorded results with no audit entry and only a Yes/No prompt, even
+after analysis had used them. The deleted grades could not be
+recovered or reviewed.
 
-**Bounded improvement:** Grade columns use the run names, so the
-pair reads Autoadsorbed AHG and Untreated AHG. A difference note
-uses those same names. A comparison with no run name still says
-this and other. Grades are unchanged. Nothing is identified.
+**Bounded improvement:** `DeleteReactions` and `DeletePanelRun` run in
+one transaction and write `clear_reactions` / `delete_run` audit
+entries holding every deleted grade, the panel and run name, and the
+number of graded cells. After analysis, deleting graded cells requires
+a reason (`ReasonRequiredException` otherwise); the Reactions tab asks
+for it in place of Yes/No. Clearing an empty run writes nothing.
+Deletion stays refused after a confirmed identification. The timeline
+shows both actions with the reason.
 
-**Not in this tick:** The Panels screen for this lot. Authenticated
-vendor portals stay later and must not bypass auth, CAPTCHA,
-licensing, or terms.
+**Not in this tick:** Restoring deleted grades from the audit snapshot
+(they are kept and readable in the audit log, not one-click
+restorable).
 
 ## Iteration 78 (this change)
 
-**Deficiency:** The Panels list gave the name the width of its text.
-For E2E warm auto plus allos the lot was cut off at
-E2E-WARM-AUTO-AL, so the list did not show which lot was selected.
-The antigen grid itself was already right: only c, E, and K were
-shown, a typed minus stayed, and the autocontrol was NT.
+**Deficiency:** Creating a specimen and editing its type, expiration,
+Active flag, notes, phenotype, genotype, previous antibodies, or
+polyspecific DAT wrote no audit entry, so a changed phenotype or a
+removed "previous anti-K" left no trace. Every dialog save rewrote these
+fields whether or not they changed.
 
-**Bounded improvement:** The name and the lot stay on screen. The
-lot column fits E2E-WARM-AUTO-ALLOS. A longer name is shortened,
-and pointing at the name or the lot shows the full text. Antigen
-columns are unchanged. Nothing is identified.
+**Bounded improvement:** `AddSpecimen` writes `add_specimen`.
+`UpdateSpecimen` compares with the stored record, writes nothing when
+nothing changed, and otherwise writes one `update_specimen` entry with
+before and after values of only the changed fields; a locked specimen is
+refused only when something would change. `SetSpecimenActive` is audited
+when the value changes. The timeline shows "Specimen details changed:
+notes, phenotype" and active/inactive changes.
 
-**Not in this tick:** Search for this lot. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing,
-or terms.
+**Not in this tick:** Roadmap item 4 (panel activation reasons,
+extra-antigen removal, antigen order).
 
 ## Iteration 79 (this change)
 
-**Deficiency:** An E+ search returned 141 cells, but scrolling the
-results scrolled the column headings away with the rows. The lot
-column was too narrow for E2E-WARM-AUTO-ALLOS, so the matching
-allos cells could not be read as cell, lot, E, and K together.
-The match itself was already right: cells 1, 3, and 5 are E+,
-cell 1 is typed K−, D on those cells is NT, and a D− search does
-not include the lot.
+**Deficiency:** Adding an extra (warehouse) antigen to a panel filled
+every cell with "-", a typed negative, so a column nobody had typed was
+analyzed as antigen-negative on every cell. Removing an extra antigen
+deleted its typing with no audit entry, even on lots used for testing,
+and antigen order changes were unaudited.
 
-**Bounded improvement:** The results grid scrolls on its own, so
-the headings stay visible. Panel, lot, and cell stay on screen
-while the antigen columns scroll. The lot column fits
-E2E-WARM-AUTO-ALLOS. A longer panel name is shortened, and
-pointing at the name or the lot shows the full text. Grades and
-the stored typing are unchanged. Nothing is identified.
+**Bounded improvement:** New extra-antigen cells start as NT, so the
+antigen is unknown until typed (analysis already skips untyped cells).
+`add_extra_antigen` is audited when the column is new.
+`RemovePanelExtraAntigen` refuses to remove an antigen typed on any
+cell of a lot that holds test history; otherwise it runs in one
+transaction with a `remove_extra_antigen` entry holding the removed
+values. `SetPanelAntigenOrder` audits a change to a previously saved
+order. The Panels tab shows the refusal. Three tests that relied on the
+negative default now type the values they need.
 
-**Not in this tick:** A homozygous E+ search. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing,
-or terms.
+**Not in this tick:** Existing panels already carry "-" for extra
+antigens added before this change; they are not rewritten
+automatically, because some may be real typing. A data-quality check
+listing extra-antigen columns that are "-" on every cell would let a
+supervisor review them.
 
 ## Iteration 80 (this change)
 
-**Deficiency:** A homozygous E+ search already left out
-E2E-WARM-AUTO-ALLOS, because those E+ cells have e stored as NT
-and an untyped partner is not a typed minus. The status line
-still said "Found N matching cells for 1 criteria," the same
-sentence as an ordinary E+ search, so the smaller count did not
-say that positive cells had to be homozygous.
+**Deficiency:** Panels that gained an extra antigen before iteration 79
+still hold "-" (typed negative) on every cell for that column. Some may
+be real typing, some the old automatic default; analysis cannot tell,
+and nothing pointed a person at them.
 
-**Bounded improvement:** The status line says "Positive cells are
-homozygous" or "Positive cells are heterozygous" when that choice
-is in effect, and one criterion is named as a criterion. The
-match is unchanged: cells 1, 3, and 5 stay in an ordinary E+
-search, and a homozygous E+ search leaves the lot out. Grades
-and the stored typing are unchanged. Nothing is identified.
+**Bounded improvement:** `FindUnverifiedAllNegativeExtraAntigens` lists
+extra-antigen columns that are "-" on every non-AC cell (two or more)
+with no `add_extra_antigen`, no audited typing edit for that antigen,
+and no `verify_extra_antigen` entry. Each appears on the Worklist as
+**Check typing** (opens Panels). **Mark typing verified** records a
+`verify_extra_antigen` audit entry (supervisor permission once users are
+registered) and clears the item without changing typing; an audited
+Edit also clears it. Nothing is rewritten automatically.
 
-**Not in this tick:** The status line left behind by another
-screen. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** A count card for data-quality items on the
+Worklist header, and other data-quality checks (duplicate lots, panels
+with no typed antigens).
 
 ## Iteration 81 (this change)
 
-**Deficiency:** The status bar is one line for the whole window.
-Worklist writes "Worklist is clear." when it loads, and Search
-does not write a line until Search or Clear is pressed. After
-opening Search, the bar still said the worklist was clear. A
-worklist refresh from another screen could also replace that
-screen's line.
+**Deficiency:** Reactions could be recorded on a panel lot after its
+expiration date with no warning, and analysis and reports used them
+like any other results. Testing with expired reagent red cells is a
+quality-system nonconformance that should be visible and reviewed.
 
-**Bounded improvement:** Opening a screen writes a line for that
-screen. Search with no completed search says "Search by antigen
-profile." A finished search, including "Positive cells are
-homozygous," is shown again when Search is opened. Worklist
-refreshes while another screen is open no longer replace that
-screen's line. Grades and the stored typing are unchanged.
-Nothing is identified.
+**Bounded improvement:** `ExpiredReagentCheck` finds runs with graded
+results whose last recorded save (from the audit log, or the run date)
+is after the lot's expiration date. Analysis adds a REVIEW note per run
+("recorded 2026-11-05, after the lot expired 2026-11-04 … Not an
+exclusion"). The Worklist lists open or unreviewed investigations as
+**Expired reagent** (checked only for specimens linked to a lot that
+has expired, to keep the Worklist fast). The Reactions tab asks for
+confirmation before saving graded results on an expired lot.
 
-**Not in this tick:** Rule-out Explain lines name the panel and
-cell, and omit the run. Authenticated vendor portals stay later
-and must not bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** The worksheet does not yet print the note outside
+the analysis suggestions; a lab-configurable "block" mode is not
+offered (warn-and-review only).
 
 ## Iteration 82 (this change)
 
-**Deficiency:** Explain listed a rule-out cell as the panel, the
-cell number, and homozygous or heterozygous. The run was already
-stored, and the Ruled Out grid already showed it, but the
-Explain sentence did not. On a specimen with an untreated run and
-a ficin run, a nonreactive cell could be read as coming from
-either run.
+**Deficiency:** When several antibodies were called together, HemoIQ
+checked only each one's 3 + 3 rule. It did not check that the reactions
+could tell them apart. A pair where every K+ reactive cell was also E+
+could be pre-filled as "anti-E; anti-K" with no warning.
 
-**Bounded improvement:** The Explain sentence names the run with
-the zygosity, in the same shape as a supporting cell. A
-nonreactive E+ cell on the ficin run is cited as that run, and
-the untreated run is not named on that rule-out cell. The
-rule-out count is unchanged. Grades and the stored typing are
-unchanged. Nothing is identified.
+**Bounded improvement:** `MultipleAntibodySeparation` takes the antibodies
+called together (suspected rows meeting the ID rule, or the Final ID text
+at confirmation). For each, it counts reactive cells that carry its antigen
+and are typed negative for every other called antigen. A cell whose partner
+antigen is NT does not count. The required number is the lab setting
+**Multiple-Ab separation**: default 1, range 0–5, 0 is off. Two kinds of
+exemption apply:
+- **Patient history.** Antibodies in the specimen's previous antibodies, or
+  confirmed on another specimen with the same MRN, need no isolated cells
+  of their own. Partners still need to be negative for them.
+- **Rules tab.** A rule's new "Separation not required" option can list the
+  partner antigens it covers, for example anti-f: e, c, or leave the list
+  blank to cover every partner.
 
-**Not in this tick:** A cell that blocks rule-out is still cited
-as "cell N (antigen-positive and reactive)" without the run.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+The result appears in a Suspected Antibodies **Separation** column and in
+Suggestions, and as a Yes/No prompt at Confirm ID. The criterion only
+warns. The rule engine version is now 2, and the setting and rule fields
+are in the analysis snapshot's rule trace.
+
+**Not in this tick:** The clinical report does not print the separation
+evaluations. Selected-cell recommendations do not yet rank cells by their
+ability to separate the called antibodies.
 
 ## Iteration 83 (this change)
 
-**Deficiency:** Explain cited a cell that blocks rule-out as
-"cell N (antigen-positive and reactive)." The run was known when
-the cell was collected, and a rule-out cell already named its
-run, but this sentence did not. On a specimen with an untreated
-run and a ficin run, a reactive cell could not be told from a
-cell on the other run.
+**Deficiency:** Iteration 82 left three gaps:
+- The Clinical Identification report did not show separation results.
+- Selected-cell recommendations did not target a separation shortfall.
+- Patient history compared antibody names without regard to case, so a
+  prior anti-e could be treated as anti-E. This affected the history
+  exemption, the prior-antibody notes, and parsing of the specimen's
+  previous antibodies.
 
-**Bounded improvement:** The sentence names the panel, the cell,
-and the run, in the same shape as a rule-out cell. A reactive E+
-cell on the untreated run is cited on that run, and the ficin
-run is not named on that blocking cell. The rule-out count is
-unchanged. Grades and the stored typing are unchanged. Nothing
-is identified.
-
-**Not in this tick:** The Ruled Out cell grid shows IS, 37°C, and
-AHG, and omits CC. Authenticated vendor portals stay later and
-must not bypass auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- The report prints a "Multiple-antibody separation" section. It covers
+  the confirmed call once there is one, and otherwise the suspected
+  antibodies meeting the ID rule. Shortfalls are marked SHORT, and the
+  Suggestions list no longer repeats these lines.
+- Separation is now evaluated before selected cells are ranked. An unused
+  cell that carries a short antibody's antigen and is typed negative for
+  every non-exempt partner gets +6, and its explanation says it would count
+  toward the criterion if reactive. Suggestions name those cells.
+- `PatientHistory.AntibodyKey` keeps "Anti-E" and "anti-E" together but
+  anti-E and anti-e apart. `ConfirmedAntibodies` and
+  `PatientTypingParser` previous-antibody parsing dedupe on it with an
+  ordinal comparison.
 
 ## Iteration 84 (this change)
 
-**Deficiency:** The Ruled Out cell grid showed IS, 37°C, and AHG
-and left out the check cell. The grade was already stored on the
-rule-out cell, and the row already carried it, but the column
-was not on the grid. A nonreactive cell could not be checked for
-a valid antiglobulin control from that list.
+**Deficiency:** Cells of a manually created panel start typed negative for
+every antigen, not NT. If the antigram was never entered, analysis read
+every cell as antigen-negative. That fed the ID rule's negative cells, the
+separation counts, and the conflicts, and nothing flagged it. Duplicate
+lot numbers were checked only on vendor import. Manual add, edit and copy
+could store the same lot twice, and the Worklist did not show existing
+duplicates.
 
-**Bounded improvement:** The lower grid shows CC beside AHG. A
-ficin nonreactive E+ cell keeps the check-cell grade from that
-run, and the untreated reactive cell is not listed as a rule-out
-cell. The rule-out count is unchanged. Grades and the stored
-typing are unchanged. Nothing is identified.
+**Bounded improvement:**
+- `PanelIntegrityCheck.UntypedCells` finds non-AC cells with no antigen
+  typed positive. Every real cell carries c or C, e or E, and k or K.
+- **Untyped cells** Worklist items cover active panels, and analysis adds a
+  REVIEW note for any linked panel with untyped cells.
+- `DuplicateLotGroups` matches lots ignoring case and surrounding spaces.
+  Vendors match ignoring case, and a blank vendor matches any vendor.
+- **Duplicate lot** Worklist items cover groups with at least one active
+  panel.
+- Add, edit and copy on Panels ask Yes/No before saving a lot that is
+  already stored.
+- No data is changed automatically and there is no schema change.
 
-**Not in this tick:** Supporting cells and conflicting cells on
-Suspected Antibodies show IS, 37°C, and AHG, and omit CC.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+**Not in this tick:** New panel cells still default to "-" rather than NT.
+Changing that default touches every import path, so it is a separate
+change.
 
 ## Iteration 85 (this change)
 
-**Deficiency:** Supporting cells and conflicting cells on
-Suspected Antibodies showed IS, 37°C, and AHG and left out the
-check cell. The grade was already stored on the evidence cell,
-and the row already carried it, but neither grid had the column.
-A reactive cell could not be checked for a check-cell grade from
-that list.
+**Deficiency (data loss, found while tracing cell creation):**
+- `UpdatePanel` deleted and recreated every cell on each details edit
+  (name, lot or expiry). That erased all antigen typing, even when the cell
+  count did not change and on lots with test history.
+- The Edit dialog also passed no special notes, so each edit cleared the
+  vendor's special notes.
+- Separately, new cells started typed "-" for every standard antigen, so a
+  missing antigram read as antigen-negative. Iteration 84 only flagged this.
 
-**Bounded improvement:** Both grids show CC beside AHG. An
-antigen-positive cell that reacted at AHG keeps the stored check
-cell, including NT when no check cell was recorded. An
-antigen-negative cell that reacted at immediate spin keeps the
-check-cell grade from that run, and it is not listed as a
-supporting cell. The score is unchanged. Grades and the stored
-typing are unchanged. Nothing is identified.
+**Bounded improvement:**
+- `UpdatePanel` keeps cells in range with their ids and typing. It adds
+  only new cells, as NT, and removes only cells outside the new range.
+- It refuses to remove a cell with a real grade, so all-NT rows don't
+  count. The check runs before anything changes, and the update runs in a
+  savepoint. The audit records `cellsAdded` and `cellsRemoved`.
+- Panels → Edit passes the stored special notes through.
+- New cells start NT. `AddPanel(startTypedNegative: true)` exists only for
+  synthetic data: the demo seeder, and test fixtures that type only the
+  antigens under test.
+- Imports already wrote NT for antigens they did not read, so they are
+  unchanged. Existing stored cells are not altered.
+- Entry stays quick: the + / − / N keys set a value directly, and Fill NT
+  with − types the NT cells of a column as negative. Both stay unsaved
+  until Save, which audits each change.
 
-**Not in this tick:** Explain cites a supporting cell by its
-strongest phase and leaves out the check cell. Authenticated
-vendor portals stay later and must not bypass auth, CAPTCHA,
-licensing, or terms.
+## Product review (after iteration 85)
+
+I swept every destructive write in `DatabaseService` (DELETE and
+INSERT OR REPLACE).
+
+**Already well guarded:**
+- Specimen, panel and run deletion, and clearing reactions: refused after a
+  confirmed ID, a reason is required after analysis, and every deleted
+  grade is audited.
+- Purge: an archive is required when confirmed IDs would be lost.
+- Unlinking a panel: refused when the specimen is locked.
+- Panel edits: fixed in iteration 85.
+
+**Weakest area — analysis rules:**
+- No permission. Preferences need an Administrator, but anyone could add,
+  edit or delete a rule.
+- The audit stored only name and antibody, so an edit lost the old count and
+  heterozygous setting, and a delete lost the whole rule.
+- A rule change did not mark open analyses out of date.
+
+**Other observations, for the roadmap:**
+- Panel Summary does not report untyped cells or duplicate lots.
+- The Panels list does not show how completely each lot is typed.
+- The full test run takes about 2 minutes. One 3.5-minute run during
+  iteration 85 did not recur, so there is no regression.
+- Rule and Preference changes don't appear on specimen timelines.
 
 ## Iteration 86 (this change)
 
-**Deficiency:** Explain cited a supporting cell by the panel, the
-cell, the run, and the strongest phase. The check-cell grade was
-already stored on that cell, and the Suspected Antibodies grid
-already showed it, but the sentence did not. A reactive cell
-recorded as CC NT could be read as though a check cell had been
-performed.
-
-**Bounded improvement:** The sentence names the check cell with
-the strongest phase. An antigen-positive cell that reacted at
-AHG is cited with CC NT when that is the stored grade. An
-antigen-negative cell that reacted at immediate spin is cited
-with the check-cell grade from that run, and it is not listed as
-a supporting cell. The score is unchanged. Grades and the stored
-typing are unchanged. Nothing is identified.
-
-**Not in this tick:** Explain cites a rule-out cell with the run
-and zygosity and leaves out the check cell. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing,
-or terms.
+**Bounded improvement:**
+- New `Permission.ConfigureRules` (Supervisor, Administrator), demanded by
+  AddRule, UpdateRule and DeleteRule and checked by the Rules tab before a
+  dialog opens.
+- The rule audit now records every analysis-relevant field: before and after
+  on update (an unchanged save writes nothing), before on delete. Deleting a
+  missing rule writes nothing.
+- `LastAnalysisConfigurationChange()` is the latest add_rule, update_rule,
+  delete_rule or update_settings audit, in local time. A Worklist
+  **Stale analysis** item now also covers open investigations analyzed
+  before that time, and its detail says why. Confirmed investigations are
+  not listed.
+- No schema change.
 
 ## Iteration 87 (this change)
 
-**Deficiency:** Explain cited a rule-out cell by the panel, the
-cell, the run, and homozygous or heterozygous. The check-cell
-grade was already stored on that cell, and the Ruled Out grid
-already showed it, but the sentence did not. A nonreactive AHG
-could be read as an unchecked negative.
+**Deficiency:**
+- The Panels list gave no sign of how completely a lot was typed, so
+  half-entered antigrams were visible only on the Worklist or in the grid.
+- The Panel Summary and All Panels reports printed no data-quality
+  findings, so a reviewer signing off a lot on paper could miss them.
 
-**Bounded improvement:** The sentence names the check cell with
-the run and the zygosity. A ficin nonreactive E+ cell is cited
-as that run with CC 2+, and the untreated reactive cell is not
-listed as a rule-out cell. The rule-out count is unchanged.
-Grades and the stored typing are unchanged. Nothing is
-identified.
-
-**Not in this tick:** Explain cites a cell that blocks rule-out
-by the run and leaves out the strongest phase and the check
-cell. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `PanelIntegrityCheck.Summarize` counts, over non-AC cells:
+  - antigens typed on every cell;
+  - antigens typed on some cells but NT on others ("partial", a likely
+    entry gap);
+  - untyped cells.
+- It is shown in a new amber-on-issue **Typing** column on the Panels list,
+  which refreshes after a typing save.
+- **Panel Summary** prints a Typing line and a "Data quality (review before
+  use)" section: untyped cells, partial antigens, and the same lot stored
+  on another panel. **All Panels** gains a Typing column.
+- No schema change.
 
 ## Iteration 88 (this change)
 
-**Deficiency:** Explain cited a cell that blocks rule-out by the
-panel, the cell, and the run. The strongest phase and the check
-cell were known when the cell was collected, and a supporting
-cell already named both, but this sentence did not. A reactive
-cell recorded as CC NT could not be told from one with a
-performed check cell.
+**Deficiency:** The investigation timeline did not show lab configuration
+changes. When a rule or Preference changed mid-investigation, the timeline
+gave no sign that analyses before and after it were run under different
+criteria. The worksheet printed the same incomplete timeline.
 
-**Bounded improvement:** The sentence names the strongest phase
-and the check cell with the run. An untreated E+ cell that
-reacted at AHG is cited on that run as AHG 3+ with CC NT, and
-the ficin run is not named on that blocking cell. The rule-out
-count is unchanged. Grades and the stored typing are unchanged.
-Nothing is identified.
-
-**Not in this tick:** Explain cites a rule-out cell with the run,
-zygosity, and check cell and leaves out the nonreactive phase
-grades. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `InvestigationTimeline.OpenPeriods` builds the investigation's open
+  periods from its own audit trail. They run from receipt until a confirm
+  or cancel, and resume after a clear or reinstate.
+- Rule add, change and delete, and Preferences changes that fall inside an
+  open period now appear on the timeline (and so on the Clinical
+  Identification worksheet), with a field-by-field diff from the audit
+  JSON. Each entry notes that earlier analyses used the previous setting.
+- `DatabaseService.GetAnalysisConfigurationEvents` shares one audit query
+  helper with `GetAuditEventsForEntity`.
+- No schema change.
 
 ## Iteration 89 (this change)
 
-**Deficiency:** Explain cited a rule-out cell by the panel, the
-cell, the run, homozygous or heterozygous, and the check cell.
-The nonreactive phase grades were already stored on that cell,
-and the Ruled Out grid already showed them, but the sentence did
-not. A reader could not see whether the cell was negative at IS,
-37°C, and AHG without leaving Explain.
+**Deficiency:** Panel Compare listed every per-cell typing difference. A new
+lot always differs from the old one, because the donors are different, so an
+unfinished antigram entry (Fya left NT on two cells) was lost among the
+expected donor differences.
 
-**Bounded improvement:** The sentence names IS, 37°C, and AHG
-with the run, the zygosity, and the check cell. A ficin
-nonreactive E+ cell is cited on that run as IS 0, 37°C 0, AHG 0,
-CC 2+, and the untreated reactive cell is not listed as a
-rule-out cell. The rule-out count is unchanged. Grades and the
-stored typing are unchanged. Nothing is identified.
-
-**Not in this tick:** An invalid check cell is pink on Reactions
-and plain text on the Ruled Out cell grid. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing,
-or terms.
+**Bounded improvement:**
+- `PanelCompareResult` gains `LeftTyping` / `RightTyping` (the iteration 87
+  typing summary) and `CoverageGaps`. These are antigens typed on every
+  non-AC cell of the selected lot but not of the comparison lot, with
+  counts.
+- The explanation names the gaps and the comparison lot's untyped cells.
+- The dialog shows both typing summaries above the explanation.
+- Antigens the selected lot does not fully type are not flagged.
+- No schema change.
 
 ## Iteration 90 (this change)
 
-**Deficiency:** A check cell that did not react when AHG is 0 is
-pink on Reactions, with the tooltip that check cells should react
-when AHG is 0. The same cell, when it counted toward a rule-out,
-was ordinary text on the Ruled Out cell grid. A controlled
-negative (CC 2+) and a failed check cell (CC 0) looked the same
-there.
+**Deficiency:**
+- The import review compared only the antigen column list with the prior
+  lot. A vendor sheet with blank cells in a column it normally types fully
+  passed review with no mention, even though the blanks become NT, so that
+  antigen could no longer be ruled out on those cells.
+- The review showed no overall typing summary for the new lot.
 
-**Bounded improvement:** The Ruled Out CC cell uses that same pink
-and tooltip when AHG is 0 and the check cell did not react. A
-reacting check cell stays ordinary text. E2E-CC-INVALID keeps a
-homozygous K+ cell at AHG 0, CC 0 beside a homozygous K+ cell at
-AHG 0, CC 2+. The rule-out count is unchanged. Grades and the
-stored typing are unchanged. Nothing is identified.
+**Bounded improvement:**
+- `PanelImportReview` gains `TypingSummary` and `CoverageGaps`.
+- `PanelImportReviewer.ApplyCoverage` reuses `PanelComparer` (iteration 89)
+  on the stored cells of the prior lot and the new lot. Antigens missing
+  from every new cell are left out, because they are already reported as
+  removed columns.
+- The vendor and lab import services both call it, and the explanation
+  adds the Typing line and the partly-typed antigens.
+- No schema change.
 
-**Not in this tick:** Explain cites CC 0 on a rule-out cell and
-does not say the check cell failed to react. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing,
-or terms.
+## Iteration 91 (this change) — reaction-entry review
 
-## Iteration 91 (this change)
+**Review findings:**
+- Within Reactions, changing the specimen, panel or run already prompts
+  before discarding unsaved grades.
+- Fill negatives exists, and NT handling is explicit.
+- Two paths bypassed that protection:
+  1. **Quitting:** the generic "Quit the application?" said nothing about
+     unsaved grades or an open antigram edit, so a misclick lost the work.
+  2. **Run Analysis on the Analysis tab:** this analyzed saved grades only,
+     while unsaved grades for the same specimen sat on the Reactions tab.
+     The result looked current but left out what was just entered, an
+     analytical-safety gap.
 
-**Deficiency:** Explain cited a rule-out cell at AHG 0, CC 0 with
-the same shape as a controlled negative. The grade was visible,
-and the Ruled Out grid already paints that CC cell pink, but the
-sentence did not say the check cell failed to react.
+**Bounded improvement:**
+- New `UnsavedWorkGuard` holds the wording and decisions.
+- `ReactionsViewModel` exposes `UnsavedAccession`,
+  `UnsavedGradesDescription` and `SaveUnsavedGrades()`. The last one runs
+  the same expired-lot and change-reason checks as Save.
+- Run Analysis prompts Yes (save, then analyze), No (saved grades only) or
+  Cancel. If the save is declined or fails, analysis does not run.
+- Quit lists each kind of unsaved work, with No as the default.
+- No schema change.
 
-**Bounded improvement:** A rule-out cell at AHG 0 and CC 0 is
-cited with the phases and the words "check cell did not react."
-A rule-out cell at AHG 0 and CC 2+ keeps the grade and does not
-add that phrase. The rule-out count is unchanged. Grades and the
-stored typing are unchanged. Nothing is identified.
-
-**Not in this tick:** The Ruled Out explanation lists the failed
-check-cell cell with the controlled cell and does not say the
-check cell failed. Authenticated vendor portals stay later and
-must not bypass auth, CAPTCHA, licensing, or terms.
+**Still open in reaction entry:**
+- Pasting a column of grades from a spreadsheet.
+- Draft preservation across a crash: grades are only in memory until
+  saved.
 
 ## Iteration 92 (this change)
 
-**Deficiency:** The Ruled Out explanation listed every counted
-cell together. On a workup with one failed check cell and one
-controlled cell, both cell numbers appeared and the sentence did
-not say which check cell failed. Explain already said that for
-the cell citation.
+**Deficiency:**
+- Grades could only be keyed one cell at a time. A lab that records gel or
+  solid-phase reads in a spreadsheet or instrument export had to re-key
+  every value.
+- `ReactionGrade.Normalize` passes unrecognized text through unchanged and
+  `IsPositive` treats it as reactive. So any bulk-entry path needs strict
+  validation, or a typo becomes a positive reaction.
 
-**Bounded improvement:** When a counted cell is AHG 0 and CC 0,
-the explanation names that cell and says the check cell did not
-react. A counted cell at CC 2+ stays in the cell list without
-that phrase. The rule-out count is unchanged. Grades and the
-stored typing are unchanged. Nothing is identified.
+**Bounded improvement:**
+- `GradePaste.Parse` reads one value per line.
+  - It accepts only values that normalize to a canonical grade; a blank line
+    is NT.
+  - It refuses the whole paste on any unrecognized value (with line
+    numbers), on more values than cells below the selection, on
+    tab-separated multi-column clipboards, and on an empty clipboard.
+- `GradePaste.Overwrites` lists entered grades that would change, and the
+  user confirms before they are replaced.
+- Ctrl+V on a phase column applies the paste from the selected cell down,
+  through the same row setters as keyed entry. Grades are dirty-tracked and
+  unsaved until Save, and the status bar names the cells filled.
+- No schema change.
 
-**Not in this tick:** The Specimens ruled-out list shows anti-K
-with a count of 2 and does not say a counted cell's check cell
-failed. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+**Still open:**
+- A multi-column paste spanning phases.
+- Draft preservation across a crash.
 
 ## Iteration 93 (this change)
 
-**Deficiency:** The Specimens ruled-out list showed anti-K with a
-count of 2. The Ruled Out explanation already named cell 1 as the
-cell whose check cell did not react, but this list did not.
+**Deficiency:** Unsaved grades lived only in memory. A crash, power loss or
+killed process lost a whole run of entry. This is the last open item from
+the iteration 91 reaction-entry review.
 
-**Bounded improvement:** The Check cell column names that cell.
-A ruled-out row whose counted cells are CC 2+ leaves the column
-blank. The rule-out count is unchanged. Grades and the stored
-typing are unchanged. Nothing is identified.
+**Bounded improvement:**
+- `ReactionDraftStore` keeps one recovery file in
+  `%LocalAppData%\HemoIQ\drafts`.
+  - It holds the specimen, run, panel, description, operator, time and
+    every row's grades, including extra phases.
+  - It is written on every grade edit, through an atomic write via a temp
+    file, best effort.
+  - It is deleted on save, on a deliberate discard, and on a normal quit,
+    so a file present at startup means an unclean exit.
+- At startup, `OfferDraftRecovery`:
+  - discards the draft silently when the run or specimen no longer exists,
+    or when nothing differs from the saved grades;
+  - lists the grades without restoring them when the identification has
+    since been confirmed;
+  - otherwise asks, then reopens the run and refills only the changed
+    cells. The values pass through `GradePaste.Strict`, so an unrecognized
+    grade becomes NT and can never read as reactive. The grades stay
+    unsaved and unaudited until Save.
+- Drafts never write to the database. No schema change.
 
-**Not in this tick:** The clinical identification report lists
-anti-K (x2) and does not say a counted cell's check cell failed.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+## Iteration 94 (this change) — dashboard review
 
-## Iteration 94 (this change)
+**Review findings:**
+- **Antibody frequency table:** it grouped specificities ignoring case, so
+  anti-E and anti-e were counted as one. This is the same defect iteration
+  83 fixed in patient history, and it is a reporting-correctness problem.
+- **No drill-down:** only the overdue list opened the cases behind a
+  number. The antibody, technologist and location counts did not, though
+  the prompt asks for drill-down from metrics to cases.
+- **Cancelled investigations** with a final call still count in antibody
+  frequency, but not in workload or turnaround. The drill-down agrees with
+  its count, but the two rules differ. Noted, not changed this tick.
 
-**Deficiency:** Specimen Summary and Analysis Results listed
-anti-K as (x2). Specimens and the Ruled Out explanation already
-named cell 1 as the cell whose check cell did not react. Clinical
-Identification already includes that sentence. These two reports
-did not.
-
-**Bounded improvement:** A counted cell at AHG 0 and CC 0 is named
-on the ruled-out count line. A counted cell at CC 2+ keeps the
-count only. The rule-out count is unchanged. Grades and the
-stored typing are unchanged. Nothing is identified.
-
-**Not in this tick:** Specimen Summary CSV exports the stored
-rule-out count and does not include the check-cell note.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `AntibodyAnalyticsService.SpecificityKey` keeps the antigen
+  case-sensitive and ignores case only in the "anti-" prefix (via
+  `PatientHistory.AntibodyKey`). Other text is grouped ignoring case.
+- `ConfirmedInRange` is shared by `Compute` and the new `CasesForAntibody`,
+  so a drill-down list always matches its count.
+- `WorkloadService.CasesForTechnologist` (confirmations and reviews) and
+  `CasesForLocation` apply the same filters as their counts.
+- The Analytics tab gets a drill-down panel beside the antibody grid, filled
+  by selecting an antibody, technologist or location row. Open or
+  double-click goes to Specimens. A range change or Refresh clears the
+  panel.
+- No schema change.
 
 ## Iteration 95 (this change)
 
-**Deficiency:** Specimen Summary CSV wrote the stored rule-out
-count. The preview, Specimens, and the Ruled Out explanation
-already named cell 1 as the cell whose check cell did not react.
-The spreadsheet did not, and a stored row has no place for that
-note.
+**Deficiency:** Antibody frequency counted cancelled investigations that
+held a final ID; workload and turnaround did not.
 
-**Bounded improvement:** The spreadsheet uses the same current
-ruled-out list as the preview. A counted cell at AHG 0 and CC 0
-is named in the CheckCell column. A counted cell at CC 2+ leaves
-that column blank. The rule-out count is unchanged. Grades and
-the stored typing are unchanged. Nothing is identified.
+**Finding:** the application already blocks this state in both directions.
+`CancelInvestigation` requires the ID cleared first, and
+`SetSpecimenFinalCall` refuses a cancelled specimen. So such a record can
+only come from older or imported data, or direct database edits. Nothing
+surfaced it, and analytics counted it silently.
 
-**Not in this tick:** The Reports status line stays on Report:
-All Specimens after the preview changes to Clinical Identification.
-Authenticated vendor portals stay later and must not bypass auth,
-CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `AntibodyAnalyticsService.ConfirmedInRange` skips cancelled
+  investigations, which gives one rule across all analytics. The
+  frequency table, cards, trend and drill-down all inherit it.
+- **Inconsistent status** Worklist items list cancelled investigations
+  holding a confirmed ID. The item tells the user to reinstate (keeping
+  the ID) or clear the ID with a reason, and both paths were verified to
+  work in that state.
+- No schema change.
 
 ## Iteration 96 (this change)
 
-**Deficiency:** Opening Reports set the status line to Report:
-All Specimens. Changing the preview to Specimen Summary or
-Clinical Identification left that line in place.
+**Deficiency:** Paste took one phase at a time, so gel or tube results
+exported as IS / 37 / AHG columns needed three separate pastes.
 
-**Bounded improvement:** Changing the report while the Reports
-tab is open replaces the status line with the report now on
-screen. A report change while another tab is open does not
-overwrite that tab's status. Grades and the stored typing are
-unchanged. Nothing is identified.
+**Bounded improvement:**
+- `GradePaste.ParseBlock` reads tab-separated blocks.
+  - Each line is one cell, and each column one phase. Short lines are
+    padded with NT.
+  - Every value must be a recognized grade, and errors are reported by line
+    and column.
+  - It refuses more rows than cells below the selection, or more columns
+    than phases to the right.
+- The Reactions grid maps the columns onto the phases as they appear on
+  screen (reordered columns respected, hidden ones skipped), starting at
+  the selected phase.
+- Replaced grades are listed with their phase and confirmed, and the grades
+  stay unsaved until Save.
+- The old single-column `Parse` was removed, because a one-column block
+  does the same job. Its tests now run against `ParseBlock`.
+- No schema change.
 
-**Not in this tick:** Changing the Analytics date range leaves
-the status line on the range that was current when the tab
-opened. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+## Iteration 97 (this change) — specimen and patient record review
 
-## Iteration 97 (this change)
+**Review findings:**
+Checked against the prompt's patient, specimen and transfusion-context
+lists.
 
-**Deficiency:** Opening Analytics set the status line to the
-default 12-month range. Choosing All time or another preset
-changed the charts and left that status line in place.
+**Covered:**
+- MRN, name, date of birth, permanent comments, transfusion requirements
+  and antigen-negative units;
+- history across specimens;
+- collection, receipt and origin fields;
+- type, expiry and status;
+- transfusion status and date;
+- pregnancy and RhIG;
+- DAT IgG/C3;
+- phenotype and genotype;
+- eluate links.
 
-**Bounded improvement:** Changing the range while the Analytics
-tab is open replaces the status line with that range and the
-confirmed-specimen count. A range change while another tab is
-open does not overwrite that tab's status. Confirmed
-identifications are unchanged. Nothing is identified.
+**Missing, highest analytical impact:** stem-cell or marrow transplant.
+After an allogeneic HPC transplant, the patient's serologic phenotype is
+donor or mixed cells, and a genotype from blood or marrow is the donor's.
+HemoIQ used both for antigen-negative inferences (Supporting, Against,
+Predicted) with no warning. Only transfusion triggered "phenotype
+unreliable".
 
-**Not in this tick:** Selecting another specimen leaves the
-Specimens status line on the accession that was selected when
-the tab opened. Authenticated vendor portals stay later and
-must not bypass auth, CAPTCHA, licensing, or terms.
+**Still not modelled:**
+- visual hemolysis on the specimen;
+- testing methodology per specimen (it is recorded per run);
+- products and units transfused;
+- encounter or account identifiers.
+
+These are candidates, lower in analytical effect.
+
+**Bounded improvement:**
+- The patient record gains `HpcTransplant` (none, autologous or
+  allogeneic) and `HpcTransplantDate`.
+  - Migration: `patients.hpc_transplant` (default none) and
+    `hpc_transplant_date`.
+  - The type is normalized and the date validated (not in the future). The
+    audit records before and after values, and an unchanged save writes
+    nothing.
+- `TransplantContext.Apply` folds an allogeneic transplant into the typing
+  assessment for specimens collected (or, failing that, received) on or
+  after the transplant date, or always when the date is unknown. It marks
+  the phenotype unreliable and the genotype as possibly the donor's.
+  `PatientTypingParser.Evaluate` then reports predicted antigens as
+  Uninterpretable, saying when a genotype would still apply.
+- An autologous transplant has no effect.
+- The Patient dialog gains a type and date. The patient box and the
+  Clinical Identification report print it.
 
 ## Iteration 98 (this change)
 
-**Deficiency:** Opening Specimens set the status line to the
-accession that was selected at that moment. Choosing another
-specimen changed the detail pane and left that status line in
-place.
+**Deficiency:** The prompt lists visual hemolysis as a specimen property,
+and HemoIQ had nowhere to record it. A grossly hemolyzed specimen makes an
+H grade, or weak agglutination read through free hemoglobin, hard to
+interpret, and analysis gave no warning.
 
-**Bounded improvement:** Selecting a different accession while
-the Specimens tab is open replaces the status line with that
-accession. A selection change while another tab is open does not
-overwrite that tab's status. An analysis that cannot be read
-keeps its error line. Grades and the stored typing are
-unchanged. Nothing is identified.
+**Bounded improvement:**
+- `Specimen.Hemolysis` takes the values not recorded, none, slight,
+  moderate or gross (migration: `specimens.hemolysis`).
+- `UpdateSpecimenHemolysis` normalizes common wordings. It is audited as
+  `update_hemolysis` and shown on the timeline, a no-op save writes
+  nothing, and it is locked after a confirmed identification. It is saved
+  in the specimen dialog's transaction.
+- `SpecimenHemolysis.ReviewNotes`:
+  - **Gross:** always adds a REVIEW note.
+  - **Slight or moderate:** adds one only when an H grade is recorded,
+    naming those cells.
+  - Grades are never changed.
+- The Clinical Identification worksheet prints the hemolysis level.
 
-**Not in this tick:** Selecting another panel leaves the Panels
-status line on the lot that was selected when the tab opened.
-Authenticated vendor portals stay later and must not bypass
-auth, CAPTCHA, licensing, or terms.
+**Still not modelled:**
+- testing methodology per specimen;
+- products and units transfused;
+- encounter or account identifiers.
 
-## Iteration 99 (this change)
+## Iteration 99 (this change) — investigation workflow review
 
-**Deficiency:** Opening Panels set the status line to the lot
-that was selected at that moment. Choosing another lot changed
-the antigram and left that status line in place.
+**Review findings:**
+- Statuses map to the prompt's list as follows:
+  - Created → Awaiting panel;
+  - Testing in progress;
+  - Analysis available → Awaiting identification (this is the
+    technologist-review step);
+  - Supervisor review;
+  - Completed;
+  - Amended / Reopened;
+  - Cancelled.
+- "Awaiting additional testing" is not derived. It would need the analysis
+  result, not just recorded work. Candidate.
+- The real defect is that four places each had their own staleness rule:
+  the Analysis banner, the status strip, the Pending Work report and the
+  Worklist. Only the Worklist (iteration 86) counted rule and Preferences
+  changes. The strip could show "✓ Analysis current / Awaiting
+  identification" while the Worklist said "Stale analysis", and the
+  banner's text always said "reactions".
+- Confirm ID did not check staleness at all. An identification could be
+  confirmed from an analysis that predated the current grades or
+  configuration, or that never ran.
+- Seven test classes mutated `AppSettings.Current` outside the
+  `PersistentDatabase` collection. That race showed up as an intermittent
+  HTLA titration failure.
 
-**Bounded improvement:** Selecting a different lot while the
-Panels tab is open replaces the status line with that panel and
-its lot. A selection change while another tab is open does not
-overwrite that tab's status. Trying to change lots while antigen
-edits are open keeps the save-or-cancel line. Grades and the
-stored typing are unchanged. Nothing is identified.
-
-**Not in this tick:** Choosing another run on Reactions leaves
-the status line on the run that was current when the tab opened.
-Authenticated vendor portals stay later and must not bypass
-auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `AnalysisCurrency.StaleReason` is now the single rule: reactions saved
+  after the analysis, or a configuration change for an unconfirmed
+  investigation.
+- All four places use it, plus `DatabaseService.AnalysisStaleReason`. The
+  banner and Pending Work state the reason.
+- Confirm ID prompts, with No as the default, when the analysis is stale or
+  never ran.
+- The seven settings-mutating test classes now run in the serialized
+  collection.
+- No schema change.
 
 ## Iteration 100 (this change)
 
-**Deficiency:** Opening Reactions set the status line to
-Reactions for the untreated run. Loading that run again, or
-another run, replaced the line with "Loaded N cells" instead of
-keeping the same sentence for the run now on screen.
+**Deficiency:**
+- The status went straight from "Analysis needed" to "Awaiting
+  identification" even when the analysis had left clinically significant
+  antibodies unresolved.
+- The analysis snapshot did not record the open questions, so status could
+  not tell "ready to identify" from "needs more cells".
+- While building this I found that "not yet ruled out" cannot be read from
+  `RuleoutEvaluations`. An antibody with no antigen-positive nonreactive
+  cell has no evaluation at all, though it is the clearest case for more
+  testing.
 
-**Bounded improvement:** Loading grades while the Reactions tab
-is open sets the status line to the accession, panel, and run
-on screen, with the cell count. A load while another tab is
-open does not overwrite that tab's status. Grades and the
-stored typing are unchanged. Nothing is identified.
+**Bounded improvement:**
+- `AdditionalTestingNeeds.Compute` lists four kinds of open item:
+  - **Not yet ruled out:** clinically significant antibodies the panels
+    type that are not ruled out, identified or suspected. It skips any
+    the patient's own reliable typing or genotype argues against.
+  - **Identification rule:** suspected antibodies short of it.
+  - **Separation:** shortfalls.
+  - **Selected cells:** up to three in-date recommendations.
+- The list is saved with each analysis (migration:
+  `analysis_snapshots.additional_testing_json`). Older snapshots read as no
+  needs.
+- `InvestigationStatusService` shows **Awaiting additional testing** with
+  the needs as the next action when the analysis is current and the list is
+  not empty. It is a suggestion; identification is not blocked.
+- Two status tests with two-cell fixtures now expect it, which is correct:
+  those panels cannot rule out most antibodies.
 
-**Not in this tick:** Selecting another specimen on Analysis
-leaves the status line on the accession that was selected when
-the tab opened. Authenticated vendor portals stay later and
-must not bypass auth, CAPTCHA, licensing, or terms.
+**Not in this tick:** a Worklist "Awaiting testing" queue. It needs real-lab
+judgement on noise first.
 
-## Iteration 101 (this change)
+## Iteration 101 (this change) — product review of the new status on demo data
 
-**Deficiency:** Opening Analysis set the status line to the
-accession that was selected when the tab opened. Choosing
-another specimen reloaded that accession and left the status
-line on the first one.
+**Method:** analyzed the 10 clinical demo investigations and read the
+"Awaiting additional testing" items for each.
 
-**Bounded improvement:** Selecting a specimen while the Analysis
-tab is open sets the status line to that accession, including
-whether it is unanalyzed, stale, or the suspected and ruled-out
-counts. A selection while another tab is open does not overwrite
-that tab's status. A reload that fails does not replace the
-status with an empty count. Run Analysis still writes its own
-completion line. Grades and the stored typing are unchanged.
-Nothing is identified.
+**Findings:**
+- **Signal is reasonable:**
+  - 2 cases have no open items (single antibody, everything else ruled
+    out).
+  - The rest name specific open antibodies, separation shortfalls and
+    cells.
+  - A Worklist queue for these would hold most open investigations, so it
+    stays deferred. The status strip and the existing Suggestions carry
+    the information.
+- **Wrong direction for patterns:** in 2026-006 (warm, panreactive,
+  high-prevalence) the next action listed seven unmet identification
+  rules and three selected cells. Single selected cells cannot separate
+  specificities when every cell reacts.
+- **Anti-f separation:** 2026-007 (anti-e, anti-f, anti-Leb) reports a
+  separation shortfall for anti-e and anti-f. f+ cells are always c+ and
+  e+, so that separation is impossible by biology. The user asked that
+  exceptions come only from patient history or the Rules tab, so no
+  built-in exemption was added. A lab should add a Rules-tab exemption
+  (anti-f, from e, c). This is noted in help and here.
 
-**Not in this tick:** Selecting another rule leaves the status
-line on the rule count from when the tab opened. Authenticated
-vendor portals stay later and must not bypass auth, CAPTCHA,
-licensing, or terms.
+**Bounded improvement:** `AdditionalTestingNeeds` checks the reaction
+patterns first:
+- **Panreactive or autoantibody:** a single autocontrol, DAT and adsorption
+  item.
+- **High-prevalence or HTLA:** rare antigen-negative cells, titration or
+  neutralization, with the recommended cells.
+
+**No schema change.**
 
 ## Iteration 102 (this change)
 
-**Deficiency:** Opening Rules set the status line to the rule
-count. Choosing another rule left that count in place and did
-not name the rule on screen.
+**Deficiency:** The transfusion record had only a status and a date. Any
+recent transfusion made the serologic phenotype unreliable, including
+platelets-only or plasma-only transfusions, which carry few or no donor red
+cells. Nothing noted that plasma-containing products can passively
+transfer antibody. The prompt asks for "number/type of products where
+known".
 
-**Bounded improvement:** Selecting a rule while the Rules tab is
-open sets the status line to the rule count and that rule's name.
-Opening Rules names the rule that is already selected. A selection
-while another tab is open does not overwrite that tab's status.
-Adding, editing, or deleting a rule still leaves its own
-confirmation on the status line. Rule settings are unchanged.
-Nothing is identified.
-
-**Not in this tick:** Selecting a search result leaves the status
-line on the search count. Authenticated vendor portals stay later
-and must not bypass auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `TransfusionProducts` codes: red cells, whole blood, granulocytes,
+  platelets, plasma, cryo. Red-cell-containing and plasma-containing sets
+  are defined.
+- `Specimen.TransfusionProducts` and `TransfusionUnits` (migration:
+  `specimens.transfusion_products` and `transfusion_units`).
+- `UpdateSpecimenTransfusionProducts` keeps products only while the status
+  is Transfused and validates units (1–999). It is audited as
+  `update_transfusion_products`, shown on the timeline, a no-op save writes
+  nothing, and it is locked after confirmation.
+- `TransfusionContext.Assess(..., products)`:
+  - When the products are recorded and none carry red cells, the phenotype
+    stays usable and the explanation says why.
+  - Plasma-containing products add a passive-antibody note.
+  - Unknown products leave the current behaviour unchanged.
+- The specimen dialog has product checkboxes and a units field, with
+  validation. `TransfusionDisplay` (detail pane, history, reports) lists
+  them.
 
 ## Iteration 103 (this change)
 
-**Deficiency:** A finished search set the status line to the
-matching-cell count. Choosing a result row left that count in
-place and did not name the panel, lot, and cell on screen.
+**Deficiency:** A specimen had no encounter or account number. The prompt
+lists "Encounter/account identifiers" under patient information. Without one,
+a technologist cannot search by the visit number on the order, and nothing
+catches an encounter number that also appears under a different MRN, which is
+a sign of a mislabeled specimen or a mistyped number.
 
-**Bounded improvement:** Selecting a result while the Search tab
-is open adds that panel, lot, and cell to the status line after
-the count. Opening Search names a result that is already
-selected. A selection while another tab is open does not
-overwrite that tab's status. Running Search or Clear still
-leaves its own line, without a selected cell. Grades and the
-stored typing are unchanged. Nothing is identified.
-
-**Not in this tick:** A search result does not open that panel.
-Authenticated vendor portals stay later and must not bypass
-auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `specimens.encounter_number` (migration, CHECK length <= 64, NOCASE index).
+- `UpdateSpecimenEncounter`:
+  - removes whitespace, and blank clears the value;
+  - is audited as `update_encounter` and appears on the timeline;
+  - an unchanged save writes nothing;
+  - it is locked after confirmation.
+- `GetSpecimensByEncounter` and `EncounterCheck.Describe` warn when the
+  encounter is already on another MRN's specimen. Saves from the specimen
+  dialog ask for confirmation, and nothing is blocked.
+- The specimen dialog has an Encounter box beside MRN, saved in the same
+  transaction as the other fields.
+- `OriginDisplay` begins with "Encounter X", so the detail pane and the
+  worksheet Origin line show it. Search matches it.
 
 ## Iteration 104 (this change)
 
-**Deficiency:** A search result named its panel, lot, and cell
-and left the user on Search. Nothing opened that panel.
+**Deficiency:** "Awaiting additional testing" appeared only on the status
+strip of each investigation. The Worklist had no queue for workups waiting on
+selected cells, typing or adsorptions, so a case stuck there for days was
+visible only on the Analytics overdue table and gave no next step. Listing
+every awaiting case had been deferred as too noisy.
 
-**Bounded improvement:** Double-clicking a result, or selecting
-it and pressing Enter or Open, switches to Panels and selects
-that lot. The Panels status line names the panel and lot. Grades
-and the stored typing are unchanged. Nothing is identified.
-
-**Not in this tick:** Opening a search result does not select
-that cell on the panel. Authenticated vendor portals stay later
-and must not bypass auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `WorklistKind.OverdueAdditionalTesting` and `OverdueTesting.Item`.
+- A case is listed only when all of these hold:
+  - it has no confirmed identification;
+  - it is active and not cancelled;
+  - it is older than the Preferences `TurnaroundThresholdDays`, counted from
+    `ReceivedAt`, or from the created date when no received time is recorded;
+  - its computed status is Awaiting additional testing.
+- The detail gives the received date, the age, the threshold and the open
+  needs from the latest analysis snapshot. Open goes to Analysis.
+- The status is computed only for open cases past the threshold, so the
+  Worklist does not compute it for every specimen.
 
 ## Iteration 105 (this change)
 
-**Deficiency:** Opening a search result showed the panel and
-left every donor cell unmarked. The status line named the lot
-and did not name the cell from the search.
+**Deficiency:** The patient record had no sex. The prompt lists "Sex where
+operationally relevant". The relevant case is pregnancy. A specimen could be
+recorded as pregnant or recently pregnant for a male patient, which usually
+means a wrong-patient specimen or a data-entry error, and nothing noticed.
 
-**Bounded improvement:** Opening a result highlights that cell
-on the antigen grid and adds the cell number to the Panels
-status line. Choosing another lot clears the highlight and
-returns the status line to the lot alone. Antigen edits that
-are still open keep the save-or-cancel line. Grades and the
-stored typing are unchanged. Nothing is identified.
-
-**Not in this tick:** The opened cell does not bring the antigen
-that matched the search into view. Authenticated vendor portals
-stay later and must not bypass auth, CAPTCHA, licensing, or
-terms.
+**Bounded improvement:**
+- `PatientSex`: codes unknown, female, male and other. It accepts F, M and X
+  and labels them for display.
+- `patients.sex` migration: NOT NULL DEFAULT 'unknown', with a CHECK on the
+  code.
+- `SavePatient` normalizes and compares the sex. It is part of the audit
+  snapshot, so changes appear in update_patient with before and after values.
+- `Patient.Display` adds the sex label when it is known, so the detail pane
+  and reports show it.
+- Patient dialog: a Sex combo beside the date of birth.
+- `PatientSexCheck`:
+  - a REVIEW suggestion in analysis when the specimen records pregnant or
+    recently pregnant and the patient is recorded as male;
+  - a non-blocking confirmation when saving such a specimen.
 
 ## Iteration 106 (this change)
 
-**Deficiency:** Opening a search result highlighted the cell and
-left the antigen grid at the left. A match on a later antigen,
-such as Lub, stayed off the screen.
+**Correction:** the Iteration 105 "next tick" was wrong. A passive anti-D
+review note already exists: `SpecimenDating.PassiveAntiD`, with Preferences
+`RhigPassiveWindowDays`, applied in analysis and tested in
+`PregnancyContextTests`. No change was needed.
 
-**Bounded improvement:** Opening a result scrolls the antigen
-used in the search into view on that cell. The cell number stays
-on screen. Choosing another lot clears the highlight. When
-several antigens are set, the first of those is the one brought
-into view. Grades and the stored typing are unchanged. Nothing
-is identified.
+**Deficiency:** Investigation search could not find investigations by the
+panel manufacturer or lot they were tested on, both named in the prompt's
+search list. After a reagent recall or a suspected lot problem, a
+technologist could not list the affected investigations, and the results grid
+did not show which panels or encounter each one used.
 
-**Not in this tick:** The search results grid still starts at D,
-so that antigen can sit off the result row. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing,
-or terms.
+**Bounded improvement:**
+- `DatabaseService.GetPanelsBySpecimen()` builds, in one query, the panels each
+  specimen used, from linked panels and panel runs. Search therefore makes
+  one query for panels rather than one per specimen.
+- `InvestigationSearch` matches panel name, manufacturer and lot. Each row
+  gains `Encounter` and `Panels`, for example "Resolve A (Ortho, lot 1234)".
+- The Search grid has Encounter and Panels columns. The help describes
+  searching for every investigation tested on a lot.
 
-## Iteration 107 (this change)
+## Iteration 107 (this change): product review, and a rule-matching fix it found
 
-**Deficiency:** A finished search left the results grid at D.
-The antigen used in the search, such as Lub, sat off the result
-row. Panel, lot, and cell were already fixed on the left.
+### Review (since Iteration 101)
 
-**Bounded improvement:** A finished search scrolls that antigen
-into view on the result row. Panel, lot, and cell stay on
-screen. Clearing the search returns the grid to D. When several
-antigens are set, the first of those is the one brought into
-view. Grades and the stored typing are unchanged. Nothing is
-identified.
+**Workflows now complete end to end:**
+- Specimen receipt with origin, encounter, transfusion products, hemolysis,
+  pregnancy and RhIG.
+- Panel attach, reaction entry with drafts, analysis, Awaiting additional
+  testing (now also an overdue Worklist queue), confirm, supervisor review,
+  amend, and reports.
+- Search by patient, specimen, encounter, panel manufacturer or lot.
 
-**Not in this tick:** When several antigens are set, only the
-first is brought into view, so a later one can still sit off
-the result row. Authenticated vendor portals stay later and
-must not bypass auth, CAPTCHA, licensing, or terms.
+**Still fragmented:**
+- Patient history rows do not show the encounter number.
+- The Overdue testing queue has no count card or Show toggle.
+- The Worklist cards cover only four of its thirteen kinds.
+
+**Screens getting dense:**
+- The Specimen dialog (two tabs, 23 rows) and Preferences (22 rows).
+- Neither has room for more fields without regrouping. Prefer placing new
+  inputs beside related ones, as done for encounter and sex.
+
+**Configuration:** no duplicates found. Turnaround threshold, dating
+look-back and the RhIG window are distinct.
+
+**Services with no tests of their own:**
+- `RuleoutPolicy`, the rule-out policy core, was tested only through
+  analysis. It now has direct tests, and they found the bug below.
+- `StructuredPanelParser`, `XlsxGridReader` and `ImportArtifactStore` are
+  exercised only through import tests. Direct parser tests are a future
+  candidate.
+
+**Large files:**
+- `DatabaseService.cs` (4,371 lines), `AntibodyAnalyzer.cs` (1,573) and
+  `AnalysisViewModel.cs` (1,170).
+- No split now, because no change is blocked. Revisit if a feature needs a
+  separate repository or engine seam.
+
+### Fix: rule lookups ignored antigen case
+
+**Deficiency:**
+- `RuleoutPolicy.FindAntibodyRule` and `HeterozygousAllowed` compared antibody
+  names case-insensitively. `ReactionsViewModel` had a copy of the latter.
+- Antigens are case-sensitive, so a lab rule for anti-K (for example
+  "3 cells") also governed anti-k. A heterozygous-OK rule for anti-C also
+  applied to c. The first matching rule won.
+- This changed rule-out requirements without anyone seeing it.
+
+**Change:**
+- New `RuleoutPolicy.SameAntibody`: "Anti-" and "anti-" match, and the
+  antigen is ordinal (uses `PatientHistory.AntibodyKey`).
+- Rule lookup, heterozygous permission and the separation-exemption lookup
+  (through `FindAntibodyRule`) all use it.
+- `ReactionsViewModel` now delegates to `RuleoutPolicy`.
+- The duplicate checks for DTT and enzyme inferences are now ordinal.
+
+**Tests:** `RuleoutPolicyTests` (12):
+- `SameAntibody` cases for K/k, C/c, E/e and S/s;
+- required count and its clamping;
+- heterozygous permission by antibody and by exception antigen;
+- explanation wording;
+- an analysis regression where an anti-K rule of 3 leaves anti-k at the lab
+  default.
 
 ## Iteration 108 (this change)
 
-**Deficiency:** A finished search with several antigens scrolled
-the results grid to the first of those. A later antigen, such as
-P1 after D, stayed off the result row.
+**Deficiency:** This follows from Iteration 107. Rule lookup takes the first
+matching rule, ordered by name, and the Rule dialog's Antibody box accepted
+free text. That allowed:
+- a rule naming no real antigen ("anti-kell", "anti-fya", or a bare "K", as
+  one test fixture had), which silently never applied;
+- two rules for the same antibody, where which one applied depended on the
+  rule names, so renaming a rule could change rule-out counts.
 
-**Bounded improvement:** A finished search scrolls the last
-antigen used in the search into view on the result row. Panel,
-lot, and cell stay on screen. A search with one antigen still
-brings that antigen into view. Opening the result still brings
-the first antigen into view on the panel. Grades and the stored
-typing are unchanged. Nothing is identified.
-
-**Not in this tick:** Opening a result still brings only the
-first antigen into view on the panel, so a later one can sit
-off that grid. Authenticated vendor portals stay later and
-must not bypass auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `RuleValidation.NormalizeAntibody`, enforced in `DatabaseService.AddRule`
+  and `UpdateRule`:
+  - requires the anti- form and a known antigen in its exact case, with a
+    "Did you mean anti-Fya?" hint;
+  - refuses a second rule for the same antibody and names the existing rule;
+  - stores the normalized "anti-X". anti-K and anti-k stay separate.
+- `GetKnownAntigens` returns the standard and warehouse antigens plus any
+  stored extra antigen, for older data.
+- `RuleValidation.Problems` and a new Worklist kind, `RuleConflict` ("Rule
+  problem"), list stored rules that break these checks, naming the rule that
+  actually wins. Open goes to the Rules tab.
+- `GetAllRules` orders by name without regard to case, then by id, so the
+  order is fixed.
+- The Rules tab shows the refusal message when a save is refused.
 
 ## Iteration 109 (this change)
 
-**Deficiency:** Opening a search result scrolled the panel to
-the first antigen in the search. A later antigen, such as P1
-after D, stayed off that grid.
+**Deficiency:** Patient history lines showed the accession, date, confirmed
+identification, DAT and transfusion status for each earlier specimen. They did
+not show the encounter number, or the phenotype or genotype recorded on that
+specimen. The prompt asks for previous phenotype and previous genotype.
+When the current phenotype is unreliable after a transfusion, an earlier
+(often pre-transfusion) phenotype is what a technologist looks for. To find
+it, they had to open each older specimen.
 
-**Bounded improvement:** Opening a result scrolls the last
-antigen used in the search into view on that cell. The cell
-stays highlighted, and the status line names the cell. A
-search with one antigen still brings that antigen into view.
-The columns between the first and last antigen still fill the
-grid. Grades and the stored typing are unchanged. Nothing is
-identified.
-
-**Not in this tick:** The columns between the first and last
-antigen still fill the panel, so the earlier antigen can leave
-the screen. Authenticated vendor portals stay later and must
-not bypass auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `PatientHistory.Describe` adds the encounter after the date, and the
+  phenotype and genotype when recorded.
+- These lines are shown in the detail pane, Specimen Summary and the
+  identification worksheet.
+- They are shown for review only. Analysis does not use an earlier phenotype
+  as evidence, because its date and reliability are not structured.
 
 ## Iteration 110 (this change)
 
-**Deficiency:** Opening a search result brought the last
-antigen into view and left the columns between it and the
-first antigen in place. On Bio-Rad ID-DiaPanel, D left the
-screen when P1 came into view.
+**Deficiency:** The Iteration 107 review found that `StructuredPanelParser`
+(JSON and XML) and `XlsxGridReader` were tested only indirectly through
+import flows. Direct tests found three defects that could put wrong or
+missing antigen typing into an import preview:
+1. **Rows dropped.** In XLSX, a cell's `r` reference is optional. Rows whose
+   cells had none were dropped entirely, and a row mixing both kinds
+   misplaced the unreferenced cells.
+2. **Extra text in values.** Phonetic reading runs (`rPh`) in shared or
+   inline strings were appended to the cell text, so "Fya" read as "Fyaふ"
+   and the header was then unrecognized.
+3. **Duplicates missed.** The duplicate-cell check compared untrimmed
+   numbers, so " 1 " and "1" were both kept.
 
-**Bounded improvement:** Opening a result with several antigens
-shows those columns first, in search order, so the earlier one
-stays beside the later one. The cell stays highlighted, and the
-status line names the cell. A search with one antigen keeps the
-panel order and still brings that antigen into view. Choosing
-another lot restores the panel's own column order. Edit still
-shows the panel order, including all-NT columns. Grades and the
-stored typing are unchanged. Nothing is identified.
+**Change:**
+- `XlsxGridReader` places a cell without `r` after the previous cell and
+  ignores phonetic runs. `ColumnIndex` is now public.
+- `StructuredPanelParser` trims the cell number before the duplicate check.
 
-**Not in this tick:** The search results row still fills with
-the columns between the first and last antigen, so the earlier
-antigen can leave that row. Authenticated vendor portals stay
-later and must not bypass auth, CAPTCHA, licensing, or terms.
+**Tests:** `StructuredImportParserTests` (13):
+- JSON: K and k kept apart; value mapping (++, 0, numeric 1, nt); aliases
+  such as Fy(a); unknown antigens reported; no typing invented for antigens
+  a cell did not list; errors for an array root, bad JSON, bad values, a
+  missing cell number and duplicates; the UTF-8 BOM.
+- XML: attributes or child elements, and `ag id=`.
+- `ToLabResult`: NT values dropped.
+- XLSX: the workbook relationship followed to a non-default sheet; shared,
+  rich and inline strings; sparse and wide columns (AA); cells without
+  references; phonetic runs ignored.
 
 ## Iteration 111 (this change)
 
-**Deficiency:** A finished search brought the last antigen into
-view on the result row and left the columns between it and the
-first antigen in place. On a D+ and P1+ search, D left the row
-when P1 came into view. Panel, lot, and cell stayed on screen.
+**Deficiency:** The Worklist had count cards and Show toggles for four
+categories (Incomplete, Stale, Expiring, Expired). Its other ten kinds had no
+count and could not be isolated: overdue testing, supervisor review, expired
+reagent use, untyped cells, check typing, duplicate lots, rule problems and
+inconsistent status. A supervisor could not see how many review items were
+waiting, or list only those. Isolating a card left them mixed into the list.
 
-**Bounded improvement:** A finished search with several antigens
-shows those columns first, in search order, so the earlier one
-stays beside the later one. Panel, lot, and cell stay on screen.
-A search with one antigen keeps the usual column order and still
-brings that antigen into view. Clearing the search restores the
-usual column order. Grades and the stored typing are unchanged.
-Nothing is identified.
-
-**Not in this tick:** A result row still shows a warehouse
-antigen column, such as Kna, that is blank on every matching
-cell. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- New `LabSettings.WorklistCategory(kind)` maps every kind to exactly one card.
+  The kinds without their own card go to a fifth category, "Review", with a
+  `WorklistShowReview` preference.
+- The copied isolation logic in `LabSettings` and `WorklistViewModel` is
+  replaced by generic `ShowsWorklistCategory`, `SetWorklistCategory`,
+  `IsWorklistCategoryIsolated` and `IsolateOrRestoreWorklistCategory`. A new
+  kind can no longer be left off every card.
+- Worklist view: a fifth card ("Review", with its count), a Review Show
+  checkbox, and the label "Showing only items to review".
+- Behavior change: isolating another card now also hides Review items.
 
 ## Iteration 112 (this change)
 
-**Deficiency:** A finished search kept every warehouse antigen
-column. On a D+ and P1+ search, Kna stayed on the result row
-even though it was blank on all 109 matching cells. Dia was the
-only warehouse antigen those cells typed.
+**Deficiency:** Section 31 asks for controlled import and export of
+configuration and rules. Rules could only be typed in by hand on each
+installation. Copying a validated rule set to a second workstation, or
+restoring it, meant re-entering every count, zygosity choice and separation
+exemption, with room for transcription errors in settings that decide
+rule-outs.
 
-**Bounded improvement:** A finished search leaves off a warehouse
-column that is blank on every matching cell. Dia stays when a
-matching cell types it. Panel, lot, and cell stay on screen, and
-several search antigens still lead the row. A search with no
-matching cells, or Clear, shows the warehouse columns again.
-Grades and the stored typing are unchanged. Nothing is identified.
-
-**Not in this tick:** An untyped cell in a warehouse column that
-stays, such as Dia, is blank rather than NT. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing,
-or terms.
+**Bounded improvement:**
+- `RuleTransfer.Export` writes a versioned JSON file (`format:
+  "hemoiq-rules"`, `version: 1`).
+- `RuleTransfer.Preview` checks the file and plans each entry:
+  - Add, Update (each changed field named), Unchanged, or Error (with the
+    reason);
+  - nothing is written;
+  - rules are matched by antibody with case kept;
+  - entries are validated with `RuleValidation` (known antigen in exact
+    case, name required, count 1–5, known exception antigen, no duplicate
+    antibody in the file);
+  - a foreign or newer file format is refused.
+- `RuleTransfer.Apply` writes adds and updates in one transaction through the
+  normal audited, permission-checked `AddRule` and `UpdateRule`. It is all or
+  nothing, and it never deletes rules missing from the file.
+- The Rules tab has **Export…** and **Import…** buttons. Import shows the
+  summary and asks for confirmation.
 
 ## Iteration 113 (this change)
 
-**Deficiency:** A warehouse column that stayed, because some
-matching cell typed it, showed a blank on a cell that was not
-typed. On a D+ and P1+ search, Dia stayed and the ALBAcyte
-cells were blank in that column, while an untyped standard
-antigen such as Xga showed NT.
+**Deficiency:** Following Iteration 112, rules could move between
+installations but the laboratory-wide Preferences could not. Those
+Preferences decide analysis: probability threshold, ID rule, default
+rule-out count, separation cells, transfusion, dating and RhIG windows, and
+extra phases. Setting up a second workstation meant retyping them, and a
+mismatch would make the same reactions analyze differently on two
+workstations.
 
-**Bounded improvement:** An untyped cell in a warehouse column
-that stays shows NT, the same as an untyped standard antigen.
-A typed +, ++, or minus stays. A warehouse column that is NT
-on every matching cell, such as Kna, is still left off. Grades
-and the stored typing are unchanged. Nothing is identified.
+**Bounded improvement:**
+- `PreferenceTransfer.Export` writes a versioned JSON file (`format:
+  "hemoiq-preferences"`) of the laboratory-wide settings. Workstation and
+  personal settings are excluded: initials, Worklist filters, display
+  toggles and the database size.
+- `PreferenceTransfer.Preview` lists each change as old → new without
+  writing anything:
+  - each setting is checked against its own range and type, and refused
+    rather than clamped;
+  - unknown names are listed as not transferred;
+  - foreign files and newer versions are rejected.
+- `PreferenceTransfer.Apply`:
+  - requires the Preferences permission;
+  - audits `import_preferences` with every changed value;
+  - audits `update_settings` (the clinical snapshot) only when analysis
+    settings changed, so staleness behaves exactly as after a manual edit.
+- The Preferences dialog has **Export…** and **Import…** buttons. Import
+  confirms, saves and closes the dialog.
 
-**Not in this tick:** Scrolling the result row to a later
-column, such as Dia, still pushes the search antigens off that
-row. Panel, lot, and cell stay. Authenticated vendor portals
-stay later and must not bypass auth, CAPTCHA, licensing, or terms.
+## Iteration 114 (this change): product review and an antigen-case sweep
 
-## Iteration 114 (this change)
+### Review (since Iteration 107)
 
-**Deficiency:** Scrolling the result row to a later column, such
-as Dia, pushed the search antigens off that row. On a D+ and P1+
-search the visible antigens started at E. Panel, lot, and cell
-stayed.
+**Completed since the last review:**
+- Rule validation and the Rule problem queue (Iterations 108 and 111).
+- Encounter, phenotype and genotype in patient history (109).
+- Direct tests for the structured import parsers (110).
+- The Review card on the Worklist (111).
+- Rule and Preferences export/import with preview and confirm (112 and 113).
 
-**Bounded improvement:** When several antigens are set, those
-columns stay on screen with the panel, lot, and cell when the
-row is scrolled. One antigen, or Clear, leaves only the panel,
-lot, and cell frozen and restores the usual column order. Grades
-and the stored typing are unchanged. Nothing is identified.
+**Defect class reviewed.** Iteration 107 found that antigen case was ignored
+in rule lookups. This review searched the whole codebase for the same
+pattern: `OrdinalIgnoreCase` comparisons, dictionaries and sets keyed by an
+antigen or antibody name. Places that compare cell numbers, phase names,
+vendors, file names and SQL columns are correctly case-insensitive and were
+left alone.
 
-**Not in this tick:** Opening that result shows the search
-antigens first on the panel, and scrolling that panel still
-pushes them off while the cell stays. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing,
-or terms.
+### Fixes (10 sites; K/k, C/c, E/e, S/s had been treated as one)
+
+| Area | Effect before the fix |
+|---|---|
+| `AntibodyAnalyzer.SerumRemovesAntibody` | An adsorbed aliquot expected to remove anti-K was also treated as removing anti-k, which then left ordinary scoring |
+| `AntibodyAnalyzer.CollectConflictingReactiveCells` | One dictionary for anti-K and anti-k, so anti-K's conflicting reactive cells appeared on anti-k's rule-out evaluation |
+| `FinalAntibodyParser.Append` | Adding anti-k to a Final ID that already held anti-K did nothing |
+| `PanelComparer` (antigen union and normalize) | Lot comparison merged the K and k columns, so a K-typing change could be hidden |
+| `PanelImportReviewer.CompareSchema` | The import preview's schema-vs-prior-lot check missed an added or removed k (or c, e, s) column |
+| `SelectedCellRecommender.PatientAntigen` | Patient typing for K could be read as k when ranking selected cells |
+| `SelectedCellRecommender.ResolveCandidates` | anti-k was dropped from the candidates when anti-K was also suspected |
+| `VendorPanelImportService.IncomingAntigens` | With no explicit antigen order, k was dropped from the imported column order |
+| `ReactionsViewModel` ruled-out columns | K and k nonreactive-cell counts were added together, so a column could show as ruled out with too few cells |
+| `RuleoutRow.IsClinicallySignificantAntibody` | Matched names ignoring antigen case |
+
+**Tests:** `AntigenCaseRegressionTests`:
+- Final ID: appending anti-k beside anti-K; duplicates still ignored.
+- Lot comparison: the K and k columns stay separate, and the import schema
+  check reports a removed k.
+- Selected cells: patient K typing is not read as k.
+- Analysis: anti-K's conflicting reactive cell is not on anti-k's evaluation.
+- Clinical-significance matching.
+- The three private or internal sites (candidate list, vendor import column
+  order and Reactions ruled-out columns) are one-line comparer changes and
+  are covered by the full suite.
+
+### Roadmap
+
+1. A guard against this class of bug: one shared `AntigenComparer.Name`
+   (ordinal) used wherever an antigen or antibody name is compared or keyed,
+   or a test that fails on `OrdinalIgnoreCase` near antigen code.
+2. The Specimen dialog regrouping (the dialog is still dense).
+3. A single configuration bundle combining rules and Preferences.
 
 ## Iteration 115 (this change)
 
-**Deficiency:** Opening a D+ and P1+ result showed those antigens
-first on the panel, and scrolling that panel pushed them off.
-The cell column stayed.
+**Deficiency:** Two reviews (Iterations 107 and 114) fixed eleven places that
+ignored antigen case. Nothing stopped the next change from adding a twelfth,
+and the convention was written down nowhere a developer would look.
 
-**Bounded improvement:** When several antigens are set, those
-columns stay on screen with the cell when the panel is scrolled.
-One antigen, choosing another lot, or Edit leaves only the cell
-frozen and restores that screen's own column order. Grades and
-the stored typing are unchanged. Nothing is identified.
-
-**Not in this tick:** Bio-Rad ID-DiaPanel was already in the
-visible part of the panel list and was highlighted there, so
-this screen does not show whether a lot that starts further
-down the list is brought into view. Authenticated vendor
-portals stay later and must not bypass auth, CAPTCHA, licensing,
-or terms.
+**Bounded improvement:**
+- `AntigenCaseGuardTests` scans the application source. Every
+  case-insensitive comparison on a line that mentions antigens or antibodies
+  must appear in a reviewed list with a reason, or the test fails and names
+  the line.
+  - Sorting and the "anti-" prefix check are always allowed.
+  - A second test fails when a reviewed entry no longer matches anything, so
+    the list cannot go stale.
+  - A third test checks that the guard flags the original defect's shape.
+- The 15 current sites were reviewed and listed. Each is a non-antigen word
+  (DAT results, AC, XML element names, vendor or product names, filter
+  words) or a reviewed fallback that cannot merge a case pair.
+- New `docs/developer-conventions.md` covers case-sensitive antigen names,
+  audited changes, preview-before-write imports, schema migrations, and test
+  isolation for settings.
 
 ## Iteration 116 (this change)
 
-**Deficiency:** Opening a D+ and P1+ result selected the lot, and
-the panel list left it where it was. Grifols DG Gel ID-Panels
-is row 37 of the active list, below the first screen, so the
-opened lot stayed out of view.
+**Deficiency:** Confirm ID warned when the analysis was missing or stale, and
+when the separation criterion was not met. Confirming anyway was allowed but
+left no record that a warning was overridden. The prompt asks for overrides to
+be audited (section 27) and shown to supervisors (section 20). Confirm ID also
+did not warn when the latest analysis still had testing open, such as
+clinically significant antibodies not ruled out. Those items appeared only in
+the status strip.
 
-**Bounded improvement:** Opening a search result brings that lot
-into view in the panel list, including when the same lot is
-opened again. The row shows the panel name, lot, cell count,
-and expiration. Grades and the stored typing are unchanged.
-Nothing is identified.
-
-**Not in this tick:** Grifols landed on the last fully visible
-row. The following lot, Immucor CAPTURE-R Ready-ID, is only a
-sliver. This screen does not show whether the last lot in the
-list, Quotient BioResearch MicroTyping, is fully visible.
-Authenticated vendor portals stay later and must not bypass
-auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `ConfirmationOverrides` builds the override texts and the new
+  open-testing prompt.
+- Confirm ID now has three warnings: stale or missing analysis, testing still
+  open, and separation shortfall. Each defaults to No, and each one
+  confirmed past is collected.
+- `SetSpecimenFinalCall(..., overrides)` stores them in the same
+  `confirm_final_call` audit entry. The reason reads "Confirmed past N
+  warning(s)", so they are written together. No schema change.
+- The overrides are shown in three places:
+  - the Timeline, as "WARNINGS OVERRIDDEN: …";
+  - the identification worksheet, as one line per override;
+  - the supervisor-review Worklist item's detail.
+- They are read from the latest confirmation only, so a clean
+  re-confirmation after a clear shows none. Audit history is kept.
 
 ## Iteration 117 (this change)
 
-**Deficiency:** Opening a D+ and P1+ result for the last lot
-left the panel list where it was. Quotient BioResearch
-MicroTyping is the last active lot, below Grifols, so that row
-stayed out of view. Scrolling the row into view at the first
-layout pass did not move a list that was already scrolled.
+**Deficiency:** Iteration 116 recorded each warning confirmed past at Confirm
+ID. The operational dashboard asks for the "number of manual overrides" with
+drill-down to the cases, and Analytics had neither.
 
-**Bounded improvement:** After that layout, the list scrolls to
-the opened lot, including when it is the last lot. The row
-shows the panel name, lot, cell count, and expiration, and the
-row is fully on screen. Grades and the stored typing are
-unchanged. Nothing is identified.
-
-**Not in this tick:** The name column shortens Quotient
-BioResearch MicroTyping to Quotient BioResearch MicroT....
-The lot QUO2026D, 8 cells, expiration 2027-04-16, and the
-Active check are fully visible, and the status names the full
-panel. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `OverrideAnalytics.Cases` reads `confirm_final_call` audit entries that
+  carry overrides, by confirmation date in the selected range, newest first.
+  - Each case has the accession, date, Final ID, confirmer and the overridden
+    warnings.
+  - Confirmations that were later cleared, or replaced by a newer
+    confirmation, still count and are marked "No longer the current
+    identification."
+- The date-range test `UserActivityService.InRange` is now shared.
+- Analytics has a fifth stat card, **Confirmed past warnings**, showing the
+  count. **Show cases** fills the existing drill-down list, and Open goes to
+  the specimen.
+- The drill-down Detail column is wider, and Export CSV adds a "Confirmed past
+  warnings" section.
 
 ## Iteration 118 (this change)
 
-**Deficiency:** The panel list shortened a long name. Quotient
-BioResearch MicroTyping showed as Quotient BioResearch MicroT...,
-and the longest name, E2E panreactive negative autocontrol,
-was cut the same way. The lot, cell count, and expiration were
-already fully visible.
+**Deficiency:** Iteration 116 recorded Confirm ID overrides. The two
+specimen-save warnings could still be saved past without any record: an
+encounter number already on another patient's specimen (Iteration 103), and
+a pregnancy for a patient recorded as male (Iteration 105). Both are
+data-quality and misidentification signals that a supervisor should be able
+to review.
 
-**Bounded improvement:** The list is wide enough to show the
-full name beside the lot, cell count, and expiration. A narrowed
-list still shortens the name, and pointing at it shows the full
-text. Grades and the stored typing are unchanged. Nothing is
-identified.
+**Bounded improvement:**
+- `SpecimenEdit.SavedPastWarnings`: the specimen dialog collects each warning
+  the user saved past.
+- `SpecimenSaveService.Save` records each as a `save_override` audit entry,
+  with the warning as the reason, inside the same transaction. A failed save
+  records nothing.
+- The Timeline shows "Saved past a warning: …".
+- `OverrideAnalytics` now lists save overrides alongside confirmation
+  overrides, newest first. The Analytics card is renamed **Warnings
+  overridden**, and the CSV section is renamed to match.
 
-**Not in this tick:** This screen is the panel list. It does not
-show the search result row, where a long panel name is still
-shortened. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+## Iteration 119 (this change): product review and an audit-coverage sweep
 
-## Iteration 119 (this check)
+### Review (since Iteration 114)
 
-**Checked:** An E+ and K+ search returns 12 cells. The result
-row shows the longest panel name, E2E panreactive negative
-autocontrol, in full, with lot E2E-PAN-AC-NEG. Quotient
-BioResearch MicroTyping and the longest lot, E2E-WARM-AUTO-ALLOS,
-are also in full. The status is "Found 12 matching cells for 2
-criteria." No code change.
+**Completed since the last review:**
+- The antigen-case guard and developer conventions (115).
+- Confirm ID overrides: recorded (116), counted on Analytics (117), and
+  extended to specimen-save warnings (118).
+- A supervisor can now see every warning someone continued past, on the
+  Timeline, the worksheet, the review queue and Analytics.
 
-**Not in this tick:** The search help still says a long name on
-the result row is shortened. This screen shows the name in full.
-Authenticated vendor portals stay later and must not bypass
-auth, CAPTCHA, licensing, or terms.
+**Defect class reviewed.** The prompt says "never silently overwrite
+clinically important historical information". Every `DatabaseService` method
+that writes data was checked for an `AppendAudit` call. 22 had none. Most are
+derived analysis output, timestamps, or helpers whose callers audit. Two were
+real gaps.
+
+### Fixes
+
+| Gap | Before | Now |
+|---|---|---|
+| Startup auto-deactivation of expired specimens and panels | Switched to inactive with no record, so they left the Worklist with nothing on their history | One `auto_deactivate_expired` entry per record, with the expiration date and before/after; Timeline "Made inactive automatically: Expired …" |
+| `AddPanelRun` | Treated or labelled runs (ficin, DTT, prewarm and so on) were not audited, while run deletion was, and additional testing never appeared on the Timeline | `add_run` audit with panel, treatments and label; Timeline "Run added: …" for treated or labelled runs, with the implied untreated default run omitted |
+
+**Guard:** `AuditCoverageGuardTests` fails on any new unaudited writer that
+is not on its reviewed list of 19 entries with reasons, and it fails when an
+entry goes stale. `docs/developer-conventions.md` documents it.
+
+**Tests:** `WriteAuditCoverageTests` covers the run audit and Timeline
+wording, and startup deactivation (audited once, not repeated on the next
+start).
+
+### Roadmap
+
+1. The Specimen dialog regrouping (dense, flagged since Iteration 107).
+2. One configuration bundle for rules and Preferences.
+3. Overrides by technologist on Analytics.
 
 ## Iteration 120 (this change)
 
-**Deficiency:** The Search help still said a long result name
-is shortened, after the result row already showed E2E
-panreactive negative autocontrol and Quotient BioResearch
-MicroTyping in full.
+**Roadmap item checked:** "Specimen dialog regrouping (dense)", carried since
+Iteration 107. The dialog was rendered off-screen to images, one per tab, and
+inspected. All four tabs (Specimen, Clinical context, Serology, Notes) fit,
+with no clipped or crowded fields, so no regrouping was made. The roadmap
+item is closed.
 
-**Bounded improvement:** User Manual — Search, under Run it,
-now says the column headings stay visible and the panel name
-and the lot are shown in full. Grades and the stored typing
-are unchanged. Nothing is identified.
+**Found while checking:**
+- The Clinical context note still said a recent transfusion always makes the
+  phenotype unusable. Since Iteration 102 a transfusion of only platelets,
+  plasma or cryoprecipitate does not. The text is corrected.
+- The Iteration 119 reviewed-list claim was verified: both callers of
+  `UpdatePanelCell` (typing edits and import replacement) audit. The
+  method stays public because tests use it to set up data.
 
-**Not in this tick:** The help window's Close button stayed
-highlighted and the window stayed open after the click and
-after Escape. The help window's title-bar control dismissed
-it. Authenticated vendor portals stay later and must not
-bypass auth, CAPTCHA, licensing, or terms.
+**Guard:** `SpecimenDialogSectionsTests.EveryTab_FitsWithoutClipping` renders
+the dialog with the most content (transfused with products, recent
+pregnancy). It fails if any tab needs more height than it has. The Specimen
+tab has about one row of spare room, which is documented in
+`docs/developer-conventions.md`.
 
 ## Iteration 121 (this change)
 
-**Deficiency:** The Search help Close button left User Manual —
-Search open. The button stayed highlighted after the click, and
-Escape left the same window open. The help window's title-bar
-control was what dismissed it.
+**Deficiency:** Analytics counted warnings overridden overall (Iterations 117
+and 118) but not by person. A supervisor could not see whether overrides
+cluster with one technologist, which is a training and competency signal.
 
-**Bounded improvement:** Close dismisses the manual. Escape
-dismisses it as well. The Search screen returns, and the status
-stays "Search by antigen profile." Grades and the stored typing
-are unchanged. Nothing is identified.
-
-**Not in this tick:** This screen has no search criteria and
-Results is 0. It does not show another shortened name or a
-stuck help window. Authenticated vendor portals stay later and
-must not bypass auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- `UserActivity.Overrides`, per Windows login from the audit log, counts:
+  - `confirm_final_call` entries that carry overrides;
+  - `save_override` entries.
+- It is not added to the activity total, which still measures work.
+- The Analytics user-activity table has an **Overrides** column. The activity
+  CSV gains "Warnings overridden".
 
 ## Iteration 122 (this change)
 
-**Deficiency:** The All Panels report used a 25-character name
-column. E2E panreactive negative autocontrol, E2E mixed cold
-and warm, and E2E warm auto plus allos ran into the lot, so
-the lot, vendor, cell count, and expiration no longer sat
-under their headings.
+**Deficiency:** The Preferences dialog sized itself to its content, with 22
+rows of 36 px plus buttons (about 860 px), and had no scrolling. On a common
+1366×768 lab workstation, where the work area is about 728 px, the window ran
+past the bottom of the screen. Save and Cancel were unreachable by mouse;
+only Enter or Esc worked. Checked because Iteration 120 left the
+Preferences dialog without a layout test.
 
-**Bounded improvement:** Those columns follow the longest name,
-lot, vendor, cell count, and expiration. On the All Panels
-report, E2E panreactive negative autocontrol stays in the name
-column with lot E2E-PAN-AC-NEG, vendor E2E, 6 cells, and
-expiration 2027-11-17. E2E-MIXED-COLD-WARM and
-E2E-WARM-AUTO-ALLOS stay in the lot column the same way. The
-status is "Report: All Panels." Grades and the stored typing
-are unchanged. Nothing is identified.
-
-**Not in this tick:** The intended-use sentence still runs off
-the right edge of the preview, ending at "confirm identifi".
-Authenticated vendor portals stay later and must not bypass
-auth, CAPTCHA, licensing, or terms.
+**Bounded improvement:**
+- The button row is docked at the bottom.
+- The settings grid sits in a vertical `ScrollViewer`.
+- The window's `MaxHeight` is the screen work area minus 40 px, with a
+  minimum of 300.
+- Checked by rendering at a 420 px limit: the settings scroll and the
+  buttons stay visible.
+- `SettingsDialogLayoutTests`:
+  - the default cap is no taller than the work area;
+  - at 420 px the dialog stays within the limit, the settings scroll, and
+    Save is fully inside the window.
 
 ## Iteration 123 (this change)
 
-**Deficiency:** The intended-use sentence was one line, so the
-All Panels preview cut it off at "confirm identifi". The rest,
-including that the software does not issue or release blood
-units, was off the right edge.
+**Deficiency:** Iteration 122 found Preferences taller than a 1366×768
+screen. The other dialogs that size to their content had never been
+measured, and nothing would catch a future field addition pushing one past
+the screen.
 
-**Bounded improvement:** The statement wraps onto the preview.
-All Specimens shows the product name and version, then the
-full sentence through "licensed clinical judgment." The status
-is "Report: All Specimens." Grades and the stored typing are
-unchanged. Nothing is identified.
+**Result:** Each dialog was measured off-screen with no height cap:
 
-**Not in this tick:** The specimen list continues below the
-window. Accession, type, status, created date, and expiration
-stay in their columns on the rows that are on screen.
-Authenticated vendor portals stay later and must not bypass
-auth, CAPTCHA, licensing, or terms.
+| Dialog | Height (px) |
+|---|---|
+| Specimen | 549 |
+| Patient | 459 |
+| Panel | 491 |
+| Rule | 419 |
+| Purge database | 279 |
+| Preferences, uncapped | 875 |
 
-## Iteration 124 (this change)
+Preferences is already fixed. Every other dialog fits the roughly 728 px work
+area, so no layout changes were needed.
 
-**Deficiency:** The specimen list cut a long accession and the
-expiration. E2E-WARM-AUTO-ALLOS showed as E2E-WARM-AUTO-AL,
-E2E-MIXED-COLD-WARM showed as E2E-MIXED-COLD-W, and the
-expiration column showed as Expir with the date cut at 2027-0.
-Show Inactive was cut to Show In.
+**Guard:** `DialogHeightGuardTests` shows every dialog off-screen and fails
+when its natural height exceeds 728 px, unless the dialog caps itself and
+scrolls. The measurement was checked against uncapped Preferences, which it
+flags. Developer conventions say to add new dialogs to the test.
 
-**Bounded improvement:** The list shows the full accession and
-the full expiration. E2E-WARM-AUTO-ALLOS and
-E2E-MIXED-COLD-WARM stay complete, each with expiration
-2027-01-01, created 2026-11-17, and Active checked. Show
-Inactive is fully visible. The status is "Specimens: 44 shown.
-Selected E2E-CC-INVALID." The ruled-out row for anti-K still
-says cell 1 check cell did not react. Grades and the stored
-typing are unchanged. Nothing is identified.
+## Iteration 124 (this change): product review and a date-culture sweep
 
-**Not in this tick:** More specimens continue below
-E2E-COMBO-JK. This screen does not show another cut-off
-accession. Authenticated vendor portals stay later and must
-not bypass auth, CAPTCHA, licensing, or terms.
+### Review (since Iteration 119)
 
-## Iteration 125 (this check)
+**Completed since the last review:**
+- Audit coverage guard (119).
+- Specimen dialog checked and fit-tested (120).
+- Overrides per technologist (121).
+- Preferences usable on short screens (122).
+- Every dialog height-guarded (123).
 
-**Checked:** Enter Reactions for E2E-CC-INVALID opens the
-untreated run of E2E invalid check cell. Cell 1 is 0 at IS,
-37°C, and AHG, with CC 0 in pink, K+, and anti-K ruled out.
-Cells 2 and 3 are 0 at those phases with CC 2+. Cell 2 is K−
-k+ and rules out anti-k. Cell 3 is K+ and rules out anti-K.
-The autocontrol is 0 with CC 0 in pink. The status is
-"Reactions for E2E-CC-INVALID / E2E invalid check cell
-(Untreated): 4 cells." No code change.
+**Defect class reviewed.** Dates are stored as Gregorian text and compared
+as text. 44 `ToString("yyyy…")` calls and 15 interpolated `{x:yyyy…}`
+formats had no culture, and about 10 `DateTime.TryParse` calls (mostly in
+dialogs) had no culture. Under the workstation's regional settings this
+corrupts stored data:
+- Thai (Buddhist calendar) writes year 2569 for 2026.
+- Saudi Arabic (Um al-Qura calendar) writes a Hijri year.
+- Finnish writes "10.30" for 10:30, which breaks ordinal date comparisons
+  for turnaround and specimen dating.
 
-**Not in this tick:** This screen is the grade grid. It does
-not show the analysis explanation for these same cells.
-Authenticated vendor portals stay later and must not bypass
-auth, CAPTCHA, licensing, or terms.
+Each of these was confirmed in a test before the fix.
 
-## Iteration 126 (this check)
+### Fix
 
-**Checked:** Analysis for E2E-CC-INVALID shows 0 suspected and
-2 ruled out. Anti-k meets the rule-out on cell 2, homozygous,
-untreated, 0 at IS, 37°C, and AHG, CC 2+. Anti-K meets it on
-cells 1 and 3. Cell 1 is homozygous, untreated, 0 at those
-phases, with CC 0 in pink, and the explanation says cell 1
-check cell did not react. Cell 3 is the same phases with CC
-2+. The status is "E2E-CC-INVALID: 0 suspected, 2 ruled out."
-No code change.
+`AppCulture.Apply()` runs first in `App.OnStartup` and covers every current
+and future site in one place:
+- The user's culture is kept for language and numbers.
+- The calendar is forced to Gregorian; if the culture cannot use Gregorian,
+  invariant date formatting is used instead.
+- The time separator is forced to ":".
 
-**Not in this tick:** This is the second check in a row with
-no in-scope issue. The 30-minute loop stops. Authenticated
-vendor portals stay later and must not bypass auth, CAPTCHA,
-licensing, or terms.
+**Tests:** `AppCultureTests` (7):
+- each case first shows the defect under the raw culture (th-TH, ar-SA,
+  fi-FI), then shows the normalized culture fixes it;
+- stored ISO dates parse as the same day;
+- en-US is unchanged in effect, and month names stay localized;
+- an end-to-end database save under normalized Thai stores "2026-…";
+- a source check that startup calls `Apply()` before any data access.
 
-## Iteration 127 (this check)
+### Roadmap
 
-**Checked:** Combinations for E2E-CC-INVALID is empty. The
-caption says a pair is listed when the combination score
-exceeds 50%. The headings Antibody Pair, Individual Scores,
-Combination Score, Both +, Ab1 Only, Ab2 Only, and Neither
-are on screen. This specimen has 0 suspected antibodies, and
-a pair is scored only when at least two antibodies are
-suspected. The status stays "E2E-CC-INVALID: 0 suspected, 2
-ruled out." No code change.
+1. One configuration bundle for rules and Preferences.
+2. Number formatting: verify that stored decimals, such as the probability
+   threshold, use the invariant culture. The Preferences threshold already
+   does.
 
-**Not in this tick:** This screen does not show Pattern
-Matches. The stop bar is now five consecutive checks with no
-in-scope issue. Iterations 125, 126, and 127 are three of
-those five. Authenticated vendor portals stay later and must
-not bypass auth, CAPTCHA, licensing, or terms.
+## Iteration 125 (this change)
 
-## Iteration 128 (this check)
+**Sweep:** Following the date fix in Iteration 124, numbers were checked
+under comma-decimal regional settings (de-DE).
+- No data corruption: Preferences are stored as JSON, database values are
+  typed parameters, and the turnaround CSV already used the invariant
+  culture.
+- Two defects were fixed.
 
-**Checked:** Pattern Matches for E2E-CC-INVALID is empty. The
-headings Antibody, Matches, Mismatches, and Confidence are on
-screen. A row is added only for a positive reaction on a typed
-cell, and ruled-out antibodies are left out of this list.
-Every panel cell on this run is 0, so there is no pattern to
-match. The status stays "E2E-CC-INVALID: 0 suspected, 2 ruled
-out." No code change.
+**Fixes:**
+1. **Score threshold input.** Preferences accepted only "0.70". A user on
+   comma-decimal settings typing "0,70" was told the value must be "between
+   0.30 and 0.95". `LabSettings.TryParseDecimal` now accepts a decimal point
+   or a single decimal comma, and refuses thousands separators and ambiguous
+   text.
+2. **Antibody-count CSV.** The percentage column was written with the local
+   format ("12,5%", quoted), unlike the other CSV sections. The From and To
+   dates were also culture-formatted. Both now use the invariant culture.
 
-**Not in this tick:** This screen does not show Dosage.
-Iterations 125 through 128 are four consecutive checks with
-no in-scope issue. The loop stops only after five. Authenticated
-vendor portals stay later and must not bypass auth, CAPTCHA,
-licensing, or terms.
+**Tests:** `CommaDecimalCultureTests` (10):
+- the decimal parser cases, also run under German settings;
+- the turnaround CSV, the antibody CSV (which fails without fix 2) and the
+  Preferences export round trip, all run under German settings.
 
-## Iteration 129 (this check)
+## Iteration 126 (this change)
 
-**Checked:** Special Panels for E2E-CC-INVALID. Treatment
-comparison, gated rule-outs, treatment inferences, and
-absorption comparison are empty. This workup has one untreated
-run and no enzyme, DTT, or adsorption run to compare. The
-section sentences are on screen, including that scores are
-evidence and not a diagnosis. The status stays
-"E2E-CC-INVALID: 0 suspected, 2 ruled out." No code change.
+**Deficiency:** Iteration 121 added an Overrides count per login, but a
+supervisor could not see which cases those were without reading the audit
+log. The operational dashboard asks for drill-down from metrics to cases.
 
-**Not in this tick:** This is the fifth consecutive check with
-no in-scope issue. The 30-minute loop stops. Authenticated
-vendor portals stay later and must not bypass auth, CAPTCHA,
-licensing, or terms.
+**Bounded improvement:**
+- `OverrideAnalytics.Cases(..., login)` filters to one Windows login. The
+  match ignores case, as Windows logins do.
+- "Current identification" is still decided across every user's
+  confirmations before filtering. A clean re-confirmation by someone else
+  therefore marks the earlier override "No longer the current
+  identification".
+- Analytics, Activity by user: selecting a row fills the investigations list
+  with that user's override cases. Open goes to each case. The selection
+  clears when the date range changes.
 
-## Loop stopped
+## Iteration 127 (this change)
 
-Iterations 125 through 129 found no in-scope issue. The
-invalid check-cell grades, the ruled-out explanation, and the
-empty Combinations, Pattern Matches, and Special Panels
-screens agree. The recurring check is stopped.
+**Deficiency:** The prompt asks for historical phenotype and asks that
+analysis account for an unreliable serologic phenotype after transfusion.
+When a recent transfusion made the current phenotype unusable, analysis lost
+all patient-typing evidence. The patient's earlier phenotype, typed before
+the transfusion, was ignored even when recorded on an earlier specimen with
+the same MRN; since Iteration 109 it was only displayed in history lines.
 
+**Bounded improvement:**
+- `HistoricalPhenotype.Find` returns the most recent earlier specimen with a
+  phenotype, under these rules:
+  - it applies only when the current phenotype is unreliable or empty;
+  - the earlier specimen was collected before the current last-transfusion
+    date, or before the current specimen when it is not transfused;
+  - the earlier specimen's own transfusion assessment was reliable;
+  - a current specimen marked Transfused with no date is skipped, because the
+    earlier typing cannot be shown to predate the transfusion;
+  - allogeneic HPC transplant patients are skipped.
+- Its Supporting and Against considerations are added to the analysis, each
+  labelled with the source accession and date. The transfusion note states
+  that the earlier phenotype is used instead.
+- Existing consumers then apply it as reliable typing:
+  - the suspected-but-patient-positive WARNING;
+  - the open-testing list;
+  - selected-cell ranking.
+
+**Tests:** `HistoricalPhenotypeTests` (4):
+- the earlier phenotype is used and labelled;
+- in a full analysis, the consideration and the note appear;
+- it is not used for an earlier specimen after the transfusion, or one that
+  was itself recently transfused, and a valid older one is picked instead;
+- it is not used when the transfusion date is missing, after an allogeneic
+  transplant, or when the current typing is usable.
+
+No existing test changed behavior (1101 passed).
+
+## Iteration 128 (this change): product review of historical-record mutation
+
+**Review scope:** every path that can change data a confirmed identification
+relied on.
+- Specimen fields lock after confirmation (since earlier iterations).
+- Patient, rule and Preferences changes are audited and mark analyses stale.
+- **Defect found:** panel typing. The Panels tab edit was already reasoned and
+  audited (`SavePanelCellEdits`). The public direct writers did not check
+  history, though: `UpdatePanelCell`, `UpdatePanelCellAntigen`,
+  `UpdatePanelCellMetadata`, `DeletePanelCells`, `ReplacePanelCells` and
+  `CopyPanelCells`. Any future caller could therefore silently rewrite the
+  antigram behind a confirmed identification, against "never silently
+  overwrite clinically important historical information".
+
+**Bounded improvement:**
+- Each direct writer now refuses a panel that was used for a confirmed
+  identification. The message points the user to the reasoned Edit on the
+  Panels tab.
+- The SQL moved into private `…Core` methods, which the audited edit calls.
+- App callers (imports, copy, seeders) only write to panels they just
+  created, so they are unaffected.
+- The guard covers confirmed identifications only, not panels with reactions
+  alone. Those remain editable directly, because the analyzer re-reads typing
+  on every run and an unconfirmed workup is not yet a record. The audited edit
+  still asks for a reason on them.
+- `AuditCoverageGuardTests` lists the `…Core` methods, with the reason that
+  their public wrappers refuse confirmed panels.
+
+**Tests:** `PanelTypingEditTests` (+2):
+- every direct writer is refused on a confirmed panel and the typing is
+  unchanged;
+- the reasoned edit still saves.
+
+No existing test changed behavior (1103 passed).
+
+## Iteration 129 (this change)
+
+**Deficiency:** Rule-outs depend on both the rules (Rules tab) and the
+laboratory-wide Preferences (counts, windows, thresholds). These were
+exported and imported separately, and with gaps:
+- A workstation could take one without the other and reach different
+  rule-outs from the same reactions.
+- Rule import kept stored rules missing from the file, without listing them.
+  A local extra rule could therefore silently change rule-outs after a
+  "copy of the reference configuration".
+- Each import skipped refused entries and applied the rest.
+
+**Bounded improvement:**
+- `ConfigurationBundle.Export` writes one file (`hemoiq-configuration`, v1)
+  that nests the existing rule and Preferences formats.
+- `Preview` reuses both existing previews and adds `LocalOnlyRules`, the
+  stored rules with no counterpart in the file. It writes nothing.
+- `Apply`:
+  - refuses a file with any refused rule or Preference;
+  - checks the needed roles before writing;
+  - writes rule adds and updates, optional audited removals of local-only
+    rules, Preference audits and one `import_configuration` audit in a single
+    transaction;
+  - changes the live settings only after the commit.
+  Preference changes are audited as `update_settings`, so open analyses
+  become stale as after a manual edit.
+- UI: Tools > Export Lab Configuration… and Import Lab Configuration…. The
+  import shows one combined preview, a Yes/No/Cancel choice to remove or keep
+  local-only rules, and a final confirmation. On success, Preferences are
+  saved and the Rules tab and Worklist refresh.
+
+**Tests:** `ConfigurationBundleTests` (6):
+- the round trip reproduces rules and Preferences, with the audits;
+- local-only rules are listed, kept by default and removed on request;
+- a file with a refused value changes nothing;
+- wrong format, newer version and a missing section are refused;
+- a Supervisor cannot apply Preference changes, and the rules roll back too;
+- a mid-apply failure rolls everything back and leaves the settings untouched.
+
+No existing test changed behavior (1109 passed).
+
+## Iteration 130 (this change): product review of configurable laboratory policy
+
+**Review:** which laboratory choices are data, and which are still in code.
+
+Configured as data:
+- per-antibody rules (count, heterozygous, exception, separation exemption);
+- lab Preferences (score threshold, ID, ACS, separation and default counts,
+  windows, review, turnaround, extra phases);
+- users and roles;
+- warehouse antigens on panels;
+- since Iteration 129, all of the above transfer together.
+
+Still in code:
+
+| Item | Assessment |
+|---|---|
+| ACS antigen list | **Fixed in this iteration.** It decides when "All Clinically Significant Antibodies Ruled Out" is suggested, and labs differ on Lea/Leb/M/N/P1. |
+| Reaction grades | Fixed. They are standard serology, and changing them would break stored reactions; not worth configuring. |
+| Standard phases (IS/37/AHG/CC) | Fixed, with configurable extras. Adequate. |
+| Ficin/DTT antigen effects | Fixed and published; low value to configure. |
+| Dosage (antithetical pairs) | Fixed and genetic; per-antibody rules already govern heterozygous use. |
+| Role-to-permission grants | Fixed by role. A configurable grant table is a candidate if labs need a senior-technologist role. |
+| Antigram system grouping | Fixed. Display only. |
+
+**Bounded improvement:**
+- The ACS list is now a fixed core (D, C, c, E, e, K, k, Fya, Fyb, Jka, Jkb,
+  S, s) plus `LabSettings.AcsAdditionalAntigens`, defaulting to Lea, Leb, M,
+  N. With the default, behavior is unchanged.
+- `AntigenConstants.TryParseAcsAdditions` accepts known antigens in exact
+  case, drops core antigens and repeats, and orders the rest as on the
+  antigram. Unknown names are refused in Preferences and in Preferences
+  import. When settings load, unknown names are dropped.
+- Every consumer uses the configured list:
+  - ACS evaluation;
+  - the open-testing list;
+  - the untypeable-specificity classifier;
+  - the clinical-significance flag on rule-out rows.
+- `AcsEvaluation.Antigens` records the antibodies evaluated. The clinical
+  report lists them when ACS is suggested.
+- The rule trace (`Serialize` and `Explain`) and `ClinicalSnapshot` include
+  the list, so changing it is audited and open analyses become stale.
+
+**Tests:** `AcsAntigenConfigurationTests` (8):
+- the default equals the previous list;
+- parsing (order, core and repeats dropped, wrong case refused, blank means
+  core only);
+- core-only makes ACS eligible without Lewis/MN rule-outs;
+- an added P1 must be ruled out;
+- the rule trace serializes and explains the list;
+- the snapshot changes when the list changes;
+- `Clamp` drops unknown names;
+- Preferences transfer carries the list and refuses unknown names.
+
+No existing test changed behavior (1117 passed).
+
+## Iteration 131 (this change)
+
+**Deficiency:** Once a lab registered users, only supervisor and
+administrator actions were checked. Specimens, panels, reactions,
+identifications and patient records could be changed by any Windows login,
+including one that was never registered. The audit log then names a login no
+one is accountable for. There was also no role for staff who should see but
+not change results, such as reporting staff, auditors or a medical director's
+delegate.
+
+**Bounded improvement:**
+- New permission `RecordResults`, granted to Technologist, Supervisor and
+  Administrator.
+- New role `Read-only` (`readonly`), which holds no permissions.
+- Every public `DatabaseService` method that changes laboratory data calls
+  `EnsureCanRecord()` first (44 method bodies, including both `DeleteReactions`
+  overloads). With no registered users, everything is still allowed, as
+  before.
+- Exempt: derived analysis output and snapshots, so a Read-only user can open
+  an analysis; and the empty default run needed to open the reaction grid.
+- Migration `MigrateUserRoles` rebuilds an existing `users` table in a
+  transaction, keeping its rows, so its role CHECK accepts `readonly`.
+- The Users dialog lists the new role automatically. A refused change shows
+  who the user is, their role, and the roles that are allowed.
+
+**Tests:** `RecordResultsPermissionTests` (6):
+- a Read-only user can read and run an analysis, but adding a specimen,
+  saving a reaction, confirming an ID, adding a panel or saving a patient is
+  refused and nothing changes;
+- an unregistered login is refused with a clear message;
+- a Technologist records results as before;
+- an empty registry still allows everything;
+- an old database's users table is migrated and keeps its users;
+- a source-scanning guard fails if any public writer lacks a permission check
+  and is not on its reviewed list. On its first run it found the unguarded
+  `DeleteReactions`.
+
+`AccessControlTests` setup now adds its specimen before registering users.
+
+All 1123 tests pass.
+
+## Iteration 132 (this change)
+
+**Deficiency:** After Iteration 131, a Read-only user or an unregistered
+login could not change data, but nothing on screen showed this. Every change
+button looked available, and the refusal came only after the user had filled
+in a dialog or typed a reaction grid. Nor did any screen show who the
+application thought was signed in.
+
+**Bounded improvement:**
+- `SessionAccess.Describe` reports the session as one of:
+  - users not registered: all actions allowed;
+  - a named user and role, who may record;
+  - a named Read-only user: view only;
+  - an unregistered login: view only.
+  The description includes a detail tooltip. `Refresh` caches it for
+  screens.
+- Status bar: the session label sits at the right and turns amber when the
+  session is view only. It refreshes at startup, after Preferences closes
+  (users and roles are managed there) and on Refresh All. A view-only
+  startup also says so in the status text.
+- Change commands require `SessionAccess.CanRecord`, so their buttons are
+  disabled for view-only sessions:
+  - Specimens (7 commands);
+  - Panels (10 commands);
+  - Reactions (6 commands);
+  - Analysis (Confirm ID, Clear);
+  - Rules (4 commands).
+- Navigation, Refresh, print, export, analysis and reports stay available.
+- The database permission check from Iteration 131 remains the enforcement.
+  A stale cached state can only hide a button, never allow a change.
+
+**Tests:** `SessionAccessTests` (9):
+- empty registry;
+- named Technologist, with case-insensitive login matching;
+- Read-only user and unregistered login are view only;
+- `Refresh` updates the cache, which is reset afterwards;
+- a source check, per view model, that each change command's can-execute
+  includes `SessionAccess.CanRecord`.
+
+All 1132 tests pass.
+
+## Iteration 133 (this change): product review after the access-control series
+
+**What is now complete:**
+- **Access chain**, built over Iterations 128–132. Registered users and
+  roles, with every data writer permission-checked. Confirmed panels cannot
+  be silently rewritten. The session is visible on the status bar, and change
+  commands are disabled for view-only sessions.
+- **Configuration chain**, from Iterations 129–130. Rules, Preferences and
+  the ACS list are data, transferred together, audited, and they mark
+  analyses stale.
+
+**Fragmented or inconsistent:**
+- Reaction entry in view-only sessions. **Fixed here.** The grid still
+  accepted typing, grade hot-keys and Ctrl+V paste, and it wrote local
+  recovery drafts. Those drafts could never be saved, and the next
+  technologist at that workstation would be offered them as "unsaved work".
+- Specimen and patient dialogs open from Edit, which is now disabled for
+  view-only sessions. Read-only users read the same details in the detail
+  pane, so no separate read-only dialog is needed yet.
+- Role grants are a fixed table in code. No lab has asked for Senior
+  technologist or Medical director roles; revisit if one does.
+
+**Lacking automated tests:** WPF behavior (enabled state, grid edit mode) is
+covered by source checks, not UI automation. This is accepted, consistent
+with earlier UI guards.
+
+**Database structures limiting future work:** none found in this review.
+
+**Bounded improvement:**
+- `ReactionsViewModel.GradesReadOnly` is true when the session may not
+  record. The grid binds `IsReadOnly` to it, and `PreviewKeyDown` ignores
+  grade keys and paste.
+- `WriteDraft` writes nothing, and the progress line starts with a
+  "View only" note.
+- `MainViewModel.RefreshSession` notifies the Reactions view, so a role
+  change in Preferences applies immediately.
+
+**Tests:** `SessionAccessTests` (+2):
+- source checks for the grid binding, the key-handler guard, the draft guard
+  and the session notification;
+- the wording of the view-only note.
+
+All 1134 tests pass.
+
+### Roadmap (after the Iteration 133 review)
+
+1. Workflow: a specimen-receipt checklist tying patient, specimen, screen
+   and panels before testing starts.
+2. Reporting: an amended-report marker and the reason on reprints after an
+   identification is cleared and re-confirmed.
+3. Data integrity: a periodic consistency check (orphaned runs, reactions on
+   unlinked panels) shown on the Worklist Review category.
+4. Configuration: a role-to-permission table, only if requested.
+
+## Iteration 134 (this change)
+
+**Deficiency:** Analysis reads every run recorded for a specimen
+(`GetAllSpecimenRuns`). Detach, though, removed only the specimen–panel link,
+even when that panel held grades. The detached panel's reactions kept
+driving the analysis while the Specimens tab, reports and Reactions panel
+list no longer showed it: hidden evidence. Foreign keys cannot catch this, or
+grades left on cell numbers a panel no longer has, or stored grade values
+outside the recognized set (from older or imported data). All three stayed
+silent.
+
+**Bounded improvement:**
+- Prevention: `UnlinkSpecimenPanel` refuses when the panel has graded cells
+  for the specimen. It says how many and tells the user to clear them, with
+  a reason, first. The Specimens tab shows this as a warning instead of an
+  error.
+- Detection:
+  - `DatabaseService.GetReactionRecords` returns each stored reaction with
+    its raw grades (four phases plus extra phases), whether its panel is
+    attached and whether the panel still has the cell. The autocontrol is
+    exempt from the cell check.
+  - `DataConsistencyCheck.Find` reports, per specimen and panel: grades on a
+    detached panel, grades for missing cells, and unrecognized grade values.
+    Each finding has a detail, an action and an Open target.
+- Worklist: a new `DataInconsistency` kind in the Review category, with
+  "Resolve" urgency. Detached-panel findings open the specimen, where the
+  panel can be re-attached; the others open Reactions. Nothing is changed
+  automatically.
+
+**Tests:** `DataConsistencyCheckTests` (5):
+- clean data yields no findings and no Worklist items;
+- detaching a panel with grades is refused, the link stays, and after the
+  reactions are cleared with a reason the panel detaches;
+- a legacy detached panel is found and listed on the Worklist, with the
+  Specimens target and the Review category;
+- grades on a deleted cell and an unrecognized grade "pos" are found;
+- ungraded rows on detached panels are not reported, the autocontrol needs
+  no panel cell, and grade recognition is case-exact.
+
+All 1139 tests pass.
+
+## Iteration 135 (this change)
+
+**Deficiency:** After a confirmed identification was cleared, with a reason,
+and confirmed again, the status said "Amended" and asked for the report to be
+reissued. The reissued Clinical Identification report, though, looked
+exactly like an original. It did not say it was amended, which
+identification it replaced, or why. A clinician comparing two printed
+reports could not tell which was current, or what had changed.
+
+**Bounded improvement:**
+- `AmendmentHistory.For` reads each `clear_final_call` audit entry, oldest
+  first. For each one it records:
+  - the identification before the clear, with who confirmed it and when;
+  - who cleared it and when;
+  - the reason.
+  Unreadable older snapshots say "not recorded" rather than failing.
+- The report header carries a banner:
+  - **AMENDED REPORT** when an identification is confirmed again;
+  - **PREVIOUS IDENTIFICATION WITHDRAWN** when none is confirmed now.
+- The interpretation lists a numbered **Amendment history**, under the final
+  identification or, when none is confirmed, at the top of the
+  interpretation.
+- PDF export uses the same text, so it carries the banner too.
+
+**Tests:** `AmendmentHistoryTests` (4):
+- a never-cleared identification has no banner;
+- cleared and re-confirmed: the banner is in the header, and the history
+  names the replaced identification, its confirmer, the clearer and the
+  reason;
+- cleared and not re-confirmed: the withdrawn banner;
+- several clears are numbered oldest first, and an unreadable snapshot says
+  "not recorded".
+
+All 1143 tests pass.
+
+### Roadmap
+
+1. Configurable role permissions, only if requested.
+
+## Iteration 136 (this change)
+
+**Deficiency:** The investigation's first step, "Received", was always
+marked done. A specimen could go to testing and analysis with no MRN, no
+collection time and an Unknown transfusion status. Without the MRN there is
+no patient history or transfusion requirements. Without the collection time
+the transfusion window and specimen dating cannot be counted. With an Unknown
+transfusion status the phenotype cannot be judged. Nothing told the
+technologist this at receipt.
+
+**Bounded improvement:**
+- `ReceiptChecklist.Evaluate`:
+  - required: MRN, collection date/time, transfusion status, and the last
+    transfusion date when the patient was transfused;
+  - advisory: received date/time, visual hemolysis, pregnancy status, DAT.
+  Each item states why it matters. `Summary` lists the missing required
+  items first, then the advisory ones; `Detail` gives the reasons for the
+  tooltip.
+- Investigation status:
+  - the **Received** step is done only when the required items are
+    present;
+  - the Awaiting-panel next action names the missing items and says to
+    complete them with Edit.
+- Specimens detail pane: a **Receipt** line, shaded amber when required
+  items are missing, with a tooltip listing the reasons.
+- The Clinical Identification worksheet prints the same line.
+- It reports only and never blocks testing.
+
+**Tests:** `ReceiptChecklistTests` (6):
+- a complete specimen;
+- a new specimen's ordered gaps and the reason text;
+- a transfused specimen without a date is incomplete, and a not-transfused
+  one needs no date;
+- advisory gaps do not hold the step;
+- the status step and next action follow the checklist;
+- the worksheet line.
+
+Three `InvestigationStatusTests` now record the required receipt items first.
+That is the intended change: a bare new specimen is no longer "Received" in
+full.
+
+All 1149 tests pass.
+
+## Iteration 137 (this change)
+
+**Deficiency:** Each specimen's transfusion status was judged on its own. A
+new specimen recorded as **Not transfused**, or left **Unknown**, had its
+serologic phenotype used as evidence. That held even when another specimen
+for the same MRN recorded a red-cell transfusion ten days earlier. Typing
+that may reflect donor cells could argue against a real alloantibody, the
+case the transfusion window exists to prevent, and the conflict was not
+shown anywhere.
+
+**Bounded improvement:**
+- `TransfusionHistoryCheck.Find` looks at the patient's other specimens and
+  takes the latest recorded red-cell transfusion on or before this
+  collection, within the recent-transfusion window. Transfusions of
+  platelets, plasma or cryo only are excluded. Then:
+  - **Not transfused** gets a **REVIEW** conflict note, and typing is
+    treated as unreliable;
+  - **Unknown** has typing treated as unreliable, with the date to record;
+  - **Transfused** with an older date gets an update note, and reliability
+    is unchanged.
+- `Apply` marks the assessment unreliable, appends the reason, and sets
+  `Source = "history"`.
+- The analyzer applies the check after the transplant check. The note leads
+  the suggestions and appears in the [Transfusion] note, and the earlier
+  phenotype rule (Iteration 127) still applies.
+
+**Tests:** `TransfusionHistoryCheckTests` (4):
+- the Not-transfused conflict, in full analysis (unreliable, note, suggestion);
+- Unknown is filled, and `Apply` composes the explanation;
+- an older Transfused date gets a note without changing reliability;
+- no finding outside the window, for platelets or plasma only, without an
+  MRN, or for a transfusion after this collection.
+
+All 1153 tests pass.
+
+## Iteration 138 (this change): product review of Iterations 134–137
+
+**What is now complete:**
+- Receipt to report: receipt checklist, consistency check on stored
+  reactions, amended-report marking, and the cross-specimen transfusion
+  check.
+- Every new check follows the same pattern: it reports with a reason, never
+  blocks, and has a route to fix the problem.
+
+**Fragmented (fixed here):** the Iteration 136 receipt checklist and the
+Iteration 137 history check did not know about each other. A specimen marked
+Not transfused, contradicted by a recent transfusion on the patient's other
+specimen, showed "Receipt: Complete" and a done Received step on the
+Specimens tab. The conflict appeared only on the Analysis tab, after testing.
+
+**Bounded improvement:**
+- `ReceiptChecklist.Evaluate(db, specimen)` adds the history finding:
+  - a contradiction or a filled-in Unknown becomes the required item
+    **Transfusion status matches patient history**, with the source
+    specimen, date and day count;
+  - an older Transfused date becomes an advisory item.
+- The status service, the Specimens detail pane and the worksheet use the
+  database-aware form. The specimen-only form is unchanged, for callers
+  without a database.
+
+**Other review findings (no change needed):**
+- Screens: the Specimens detail pane now carries Receipt, Collection,
+  Transfusion and Pregnancy lines. Its layout at 1366×768 was not checked in
+  this review; the dialog height guard does not cover panes.
+- Duplicated configuration: none new. The ACS list, windows and counts live
+  only in Preferences.
+- Testing: every check from Iterations 134–137 has database-level tests.
+  Specimens-pane bindings rely on the same view-model properties.
+- Database structures: none blocking.
+
+**Tests:** `ReceiptChecklistTests` (+2):
+- a contradicted status is a required gap, holds the Received step and names
+  the source in the next action, and the specimen-only form is unchanged;
+- an older Transfused date is advisory only.
+
+All 1155 tests pass.
+
+### Roadmap
+
+1. Configurable role permissions, only if requested.
+2. Reports: an optional "Report to" distribution list per specimen, so an
+   amended report can name who received the earlier one.
+3. Panels: lot comparison already exists. Next would be a warning when a new
+   lot drops an antigen the previous lot typed (antigen coverage
+   regression).
+
+## Iteration 139 (this change)
+
+**Deficiency:** The import review compared a new lot's antigen coverage with
+the previous lot, but only once, in the dialog at import. Activation often
+comes later, from the Panels tab, and showed only the source hash. Lots
+entered by hand or copied were never compared. Activating a lot that types
+Fya on fewer cells, or not at all, silently reduced the cells available to
+rule out anti-Fya, and the audit did not record that anyone accepted it.
+
+**Bounded improvement:**
+- `PanelActivationCoverage.Check` takes the previous lot
+  (`FindPriorVendorPanel`; never the lot itself) and runs the existing
+  `PanelComparer` coverage comparison. It returns the gaps (fewer typed
+  cells, or none) and the affected ACS antigens.
+- The activation prompt shows an **ANTIGEN COVERAGE** paragraph, with a
+  warning icon, naming the ACS antibodies that will have fewer rule-out
+  cells.
+- `SetPanelActive(id, true, coverage)` records the gaps on `activate_panel`:
+  - the reason "Activated with coverage gaps against lot X";
+  - `priorPanelId` and `coverageGaps` in the after-JSON.
+- All three activation paths pass the check: the Panels tab, Activate now
+  after a file import, and Activate now after a vendor download. A plain
+  activation keeps its original audit shape.
+
+**Tests:** `PanelActivationCoverageTests` (4):
+- partial and absent typing are reported, with the ACS antigen named in the
+  message;
+- activating anyway records the reason, the previous lot and the gaps;
+- no report when coverage matches, the vendor differs or there is no vendor,
+  and a plain activation's audit is unchanged;
+- an antigen added by the new lot is not a gap.
+
+All 1159 tests pass.
+
+## Iteration 140 (this change)
+
+**Deficiency:** An amended Clinical Identification report (Iteration 135)
+said what was cleared and why. It did not say which earlier copies were out
+there, although every print and export is audited. Recalling the earlier
+report meant searching the audit log for the right entries.
+
+**Choice:** The roadmap item proposed a per-specimen "Report to" list. A new
+free-text recipient field would add data entry and a schema change, and it
+would only be as complete as people kept it. The audit log already records
+each issue with its time, operator, output, file name, SHA-256 and the
+identification at issue. This iteration uses that record instead.
+Recipients remain unrecorded.
+
+**Bounded improvement:**
+- `AmendmentHistory.SupersededReports` lists the Clinical Identification
+  `report_output` entries issued before the last `clear_final_call`, oldest
+  first. Each entry has when it was issued, the output and file, who issued
+  it, the identification at issue, and an 8-character fingerprint. Other
+  report types, and reports issued after the clear, are excluded.
+  Unreadable entries are tolerated.
+- The amended report adds **Superseded reports (N)**, under the amendment
+  history, with the instruction to recall these copies or mark them
+  superseded.
+
+**Tests:** `AmendmentHistoryTests` (+2):
+- only the clinical report issued before the clear is listed, with its
+  output, identification, fingerprint and issuer, and the report text shows
+  the section;
+- with no clear there is nothing, and broken audit JSON and an issue
+  without an identification are handled.
+
+All 1161 tests pass.
+
+### Roadmap
+
+1. Configurable role permissions, only if requested.
+2. Recipients for reports, if labs need them beyond the issue record.
+
+## Iteration 141 (this change)
+
+**Audit:** cells of unknown zygosity (antigen +, antithetical not typed).
+`PanelCell.IsHomozygousFor` requires the partner to be typed negative, or
+the cell marked ++, and a typed + partner overrides a ++ mark. An
+unknown-zygosity cell is therefore never treated as homozygous and counts
+only where heterozygous cells are allowed. That is safe; no change was
+needed.
+
+**Deficiency found:** The explanation was missing, the case the
+requirements use as their example. When every nonreactive Jka-positive cell
+was heterozygous, or of unknown zygosity, and heterozygous cells were not
+allowed, anti-Jka got **no** rule-out evaluation at all, because only
+antibodies with at least one qualifying cell were evaluated. Nothing said why
+anti-Jka was not ruled out. A short evaluation (1 of 2) also did not say
+which cells had been left out for dosage.
+
+**Bounded improvement:**
+- `GetDetailedRuleouts` now also returns the dosage-excluded cells: those
+  that pass every other gate (serum removal, treatment destruction) and fail
+  only the zygosity rule.
+- `RuleoutEvaluation.DosageExcludedCells` holds them.
+  `BuildRuleoutEvaluations` evaluates the union of antibodies with
+  qualifying cells and antibodies with dosage-excluded cells.
+- `RuleoutPolicy.FormatExplanation`:
+  - with no qualifying cell: "cannot currently be ruled out because the only
+    nonreactive Jka-positive cells are heterozygous (cells …) or are of
+    unknown zygosity because Jkb is not typed (cell …), and heterozygous cells
+    are not allowed for this antibody (dosage)", plus the next step;
+  - when short: "Not counted for dosage: …".
+- The rule-out results (`RuledOut` holds only evaluations that meet the
+  criteria) are unchanged. The new rows add explanation only.
+
+**Tests:** `DosageRuleoutExplanationTests` (5):
+- heterozygous only gives the full sentence, which also appears in the
+  suggestions;
+- an untyped partner is reported as unknown zygosity;
+- a short evaluation lists the dosage-excluded cell;
+- a homozygous rule-out, or heterozygous cells allowed, gives no dosage note;
+- antigens without a partner are never excluded.
+
+All 1166 tests pass.
+
+## Iteration 142 (this change)
+
+**Deficiency:** The rows added in Iteration 141 for antibodies whose rule-out
+is blocked by dosage showed badly in the UI:
+- The Ruled Out grid called them "In progress" with Count 0.
+- The cell list below was empty, because it showed only counted cells.
+- Explain gave "Rule-out in progress" and listed no cells.
+The explanation text was right, but the structured views gave no evidence.
+
+**Bounded improvement:**
+- `RuleoutRow.From`: status **Blocked by dosage** when no cell counted and
+  some were left out for dosage. A short rule-out stays "In progress".
+- `AnalysisViewModel.DetailRowsFor` lists the counted cells (Counted: Yes),
+  then the dosage-excluded cells (Counted: No (dosage)). `ZygosityLabel`
+  distinguishes Homozygous, Heterozygous, and "Unknown (Jkb not typed)".
+  The cell grid has a Counted column and a header that says what it lists.
+- `AnalysisExplainer`: the rule-out cells include the excluded ones ("not
+  counted: heterozygous" or "not counted: zygosity unknown, Jkb not
+  typed"), and the status is **Not ruled out (dosage)**.
+
+**Tests:** `DosageRuleoutExplanationTests` (+3):
+- grid status and excluded-cell rows with their zygosity;
+- a short rule-out lists counted cells first, then excluded ones, and stays
+  In progress;
+- Explain status, cell lines and criteria.
+
+All 1169 tests pass.
+
+## Iteration 143 (this change): product review of Iterations 139–142
+
+**What is now complete:**
+- The dosage chain for ruling out is complete. Unknown zygosity is never
+  homozygous (audited in Iteration 141). The explanation names the excluded
+  cells, the grid and Explain show them, and the recommender points to the
+  cell that would complete the rule-out (this iteration).
+- Panel activation compares antigen coverage with the previous lot.
+- Amended reports list the superseded copies.
+
+**Fragmented (fixed here):** The Iteration 141 explanation tells the user to
+"Test 1 homozygous Jka-positive cell(s)". Selected Cells never pointed to
+one, for two reasons:
+- its candidates are suspected antibodies (or pattern matches), and an
+  antibody blocked by dosage is neither;
+- with no candidates, `ScoreCell` returned before any other scoring, so a
+  homozygous cell in inventory was never considered.
+
+**Bounded improvement:**
+- `SelectedCellRecommender.HasDosageBlockedRuleout` covers rule-outs that are
+  short, have dosage-excluded cells and are not suspected. It keeps the
+  recommender running and passes the `ScoreCell` early return.
+- `ApplyDosageRuleoutCompletion` adds +5 per such rule-out for an untested
+  cell homozygous for the antigen, with the note "is homozygous Jka+ Jkb- and,
+  if nonreactive, would count toward ruling out anti-Jka (0 of 1 so far)".
+  Cells carrying a suspected antibody's antigen are skipped, since they
+  would react.
+- `SelectedCellRecommendation.CompletesRuleout` is a new flag, separate from
+  `FillsSeparation`, so the two reasons are not conflated.
+
+**Other review findings (no change needed):**
+- Configuration: no new duplicated settings.
+- Database: no new structures needed.
+- Testing: every iteration in 139–142 added tests at the analysis level. UI
+  column widths at 1366×768 for the new Counted and Zygosity columns remain
+  unchecked.
+
+**Tests:** `DosageRuleoutExplanationTests` (+2):
+- through a full analysis, an unlinked selected-cell panel's homozygous cell
+  is recommended with the note, and its heterozygous cell is not;
+- a recommender unit test: a cell carrying a suspected antigen is not
+  offered, and a clean homozygous cell is.
+
+All 1171 tests pass.
+
+### Roadmap
+
+1. Configurable role permissions, only if requested.
+2. Report recipients, only if requested.
+3. Check Analysis-tab column widths at 1366×768.
+
+## Iteration 144 (this change)
+
+**Deficiency:** `SaveReaction` stored grades exactly as given and never
+checked the cell number. A caller could store "pos", "999" or "5+", or a
+grade for cell 9 on a 2-cell panel. Analysis reads such grades as neither
+reactive nor nonreactive, and cannot match a missing cell to typing.
+Iteration 134 only *detected* these after the fact on the Worklist; the
+`ValidationStressTests` even asserted that garbage was "stored as provided".
+
+**Bounded improvement:**
+- Every save path goes through `SaveReaction`: the grid's `SaveReactions`,
+  add-run copy, and the seeders.
+  - Each phase, including extra phases, is passed through
+    `ReactionGrade.Normalize`. Recognized synonyms are stored in standard
+    form ("W" becomes w+, "2" becomes 2+, "mixed field" becomes MF).
+    Anything outside `ReactionGrade.All` is refused with the cell, phase and
+    value named.
+  - The cell must exist on the run's panel; the autocontrol (AC) is exempt.
+  - `SaveReactions` runs in one transaction, so one bad row means nothing
+    from the grid is saved, and the Reactions tab shows the message.
+- Older data that already holds bad values is still detected by
+  `DataConsistencyCheck`, and analysis still tolerates it.
+
+**Tests:**
+- `ReactionSaveValidationTests` (5): synonyms are normalized; a missing cell
+  is refused; AC is accepted; a bad row rolls back the whole grid; extra
+  phases are validated and normalized.
+- `ValidationStressTests`, rewritten to the new contract (2): unrecognized
+  values are refused and nothing is stored; garbage written directly to the
+  database, as older data can hold, still analyzes without crashing.
+
+All 1176 tests pass.
+
+## Iteration 145 (this change)
+
+**Deficiency:** The Panels editor cycles only through +, ++, - and NT, and
+imports report invalid values in their review (`PanelTypingInspector`
+InvalidValue). The database method `UpdatePanelCellAntigen`, used by seeders
+and any future caller, stored whatever it was given, for example "0", "w" or
+"+w". Analysis treats anything that is not +, - or ++ as untyped, so such a
+value would silently drop the cell from that antigen's evidence. The
+warehouse-antigen table behaved the same way.
+
+**Bounded improvement:**
+- `UpdatePanelCellAntigenCore`, shared by the direct writer and the audited
+  edit, calls `RequireAntigenValue` first:
+  - +, -, ++ and NT are stored, trimmed; blank becomes NT;
+  - anything else is refused with the cell number, the antigen and the
+    value.
+- This applies to standard and warehouse antigens alike.
+- Unchanged: `UpdatePanelCell` and imports still map unreadable values to NT
+  before writing, and the import review lists them as InvalidValue, so the
+  user sees them before activation.
+
+**Tests:** `PanelTypingValueTests` (11 cases):
+- six accepted inputs, with trimming and blank as NT;
+- four refused inputs, with the exact message and the typing unchanged;
+- a warehouse antigen is validated the same way.
+
+All 1187 tests pass.
+
+## Merge of main (commit 4cdb7a1) into HemoIQ
+
+Main had one commit (4cdb7a1) that HemoIQ lacked, made on the
+`AntibodyPanels/` layout before the HemoIQ rename. It was merged into
+HemoIQ and adapted to the HemoIQ names. What it brought:
+- **Check cell in rule-out evidence.** A counted rule-out cell whose check
+  cell is 0 is named in the explanation. Conflicting reactive cells carry
+  their run, strongest phase and CC (`ReactiveConflictCell`).
+- **Per-screen status.** `ScreenStatus` and `AnnounceStatus` on each view
+  model: the status line names what the open screen shows. This sits
+  alongside HemoIQ's signed-in session label on the status bar.
+- **User manual.** `UserManual` writes `docs/USER_MANUAL.md` and a PDF from
+  the help topics when the shortcut is built.
+- **Workflow seeder.** `E2EWorkflowSeeder`, with tests.
+- **Search.** Panel search results gain Open and frozen columns.
+- **Panels.** Antigen columns that are NT on every cell are hidden outside
+  Edit, and printed antigrams leave them out.
+- **Settings-drift staleness.** Each analysis snapshot keeps its clinical
+  Preferences; a differing current setting marks an unconfirmed analysis
+  stale.
+
+How the overlaps were resolved:
+- **Staleness: both rules kept.** An analysis is stale when grades changed,
+  when audited rules or Preferences changed after it (HemoIQ), or when this
+  workstation's clinical Preferences differ from those saved with it
+  (main). `DatabaseService.AnalysisStaleText` gives the reason;
+  `GetAnalysisStaleReason` gives the category. Unconfirmed analyses saved
+  before Iteration 130 (which added the ACS list to the snapshot) show as
+  stale once and need re-analysis.
+- **Heterozygous rule permission: main's fix taken.** An exception antigen
+  now widens heterozygous use only for the rule's own antibody. Before,
+  HemoIQ applied any rule's exception antigen to every antibody.
+- **Case-sensitive antibody keys: HemoIQ kept.** Main's conflicting-cell map
+  was case-insensitive, which would merge anti-K with anti-k.
+- **All Panels report.** Main's sized columns, with HemoIQ's Typing column.
+- **Gap analysis.** HemoIQ's iteration log is kept. Main's separate log
+  (its own iteration numbering) remains in main's git history.
+
+## Likely next tick
+
+A product review is due at Iteration 148. Before then: the archive restore
+path copies grades and typing as stored. Check that it reports values the
+new save checks would refuse, without blocking the restore.

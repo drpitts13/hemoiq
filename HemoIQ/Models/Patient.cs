@@ -1,0 +1,34 @@
+namespace HemoIQ.Models
+{
+    /// <summary>
+    /// Permanent patient information keyed by MRN, shared by every specimen
+    /// with that MRN. Separate from specimen (current investigation) fields.
+    /// </summary>
+    public class Patient
+    {
+        public string Mrn { get; set; } = string.Empty;
+        public string? Name { get; set; }
+        /// <summary>yyyy-MM-dd.</summary>
+        public string? DateOfBirth { get; set; }
+        /// <summary><see cref="PatientSex"/> code; "unknown" when not recorded.</summary>
+        public string Sex { get; set; } = PatientSex.Unknown;
+        /// <summary>Permanent blood bank comments (e.g. "warm auto since 2024").</summary>
+        public string? BloodBankComments { get; set; }
+        /// <summary>Special transfusion requirements, e.g. "K-negative, E-negative; irradiated".</summary>
+        public string? TransfusionRequirements { get; set; }
+        /// <summary>
+        /// Structured antigen-negative unit requirement as canonical antigen codes,
+        /// e.g. "E, K, Fya". See <see cref="Services.AntigenNegativeRequirement"/>.
+        /// </summary>
+        public string? AntigenNegative { get; set; }
+        /// <summary>HPC (stem-cell or marrow) transplant: none, autologous or allogeneic. See <see cref="Services.HpcTransplant"/>.</summary>
+        public string HpcTransplant { get; set; } = Services.HpcTransplant.None;
+        /// <summary>yyyy-MM-dd; optional.</summary>
+        public string? HpcTransplantDate { get; set; }
+        public string? UpdatedAt { get; set; }
+
+        public string Display =>
+            (string.IsNullOrWhiteSpace(Name) ? Mrn : $"{Name} ({Mrn}){(string.IsNullOrWhiteSpace(DateOfBirth) ? "" : $", DOB {DateOfBirth}")}") +
+            (PatientSex.Normalize(Sex) == PatientSex.Unknown ? "" : $", {PatientSex.Label(Sex)}");
+    }
+}

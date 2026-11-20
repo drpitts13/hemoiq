@@ -1,31 +1,78 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Builds AntibodyPanels and creates a desktop shortcut with the blood bag icon.
+    Builds HemoIQ and creates a desktop shortcut with the blood bag icon.
 .DESCRIPTION
     1. Builds the project in Release mode via dotnet build.
     2. Converts blood_bag_icon.png into a proper multi-size .ico file.
     3. Places the .ico next to the executable.
     4. Creates (or updates) a shortcut on the current user's desktop.
+
+    The shortcut always points at the checkout this script lives in. Run the
+    copy in the checkout whose code you want to launch.
+
+    If HemoIQ is already running from this build folder, the build
+    cannot replace the executable. The script asks before closing it; pass
+    -Force to close it without asking.
+.PARAMETER Force
+    Close a running HemoIQ from this build folder without prompting.
 #>
+param([switch]$Force)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $ProjectRoot = $PSScriptRoot
-$CsprojPath  = Join-Path $ProjectRoot 'AntibodyPanels\AntibodyPanels.csproj'
-$PngPath     = Join-Path $ProjectRoot 'AntibodyPanels\blood_bag_icon.png'
-$ExePath     = Join-Path $ProjectRoot 'AntibodyPanels\bin\Release\net8.0-windows\AntibodyPanels.exe'
-$IcoPath     = Join-Path $ProjectRoot 'AntibodyPanels\bin\Release\net8.0-windows\blood_bag.ico'
-$ShortcutPath = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Antibody Panels.lnk'
+$CsprojPath  = Join-Path $ProjectRoot 'HemoIQ\HemoIQ.csproj'
+$PngPath     = Join-Path $ProjectRoot 'HemoIQ\blood_bag_icon.png'
+$ExePath     = Join-Path $ProjectRoot 'HemoIQ\bin\Release\net8.0-windows\HemoIQ.exe'
+$IcoPath     = Join-Path $ProjectRoot 'HemoIQ\bin\Release\net8.0-windows\blood_bag.ico'
+$ShortcutPath = Join-Path ([Environment]::GetFolderPath('Desktop')) 'HemoIQ.lnk'
+
+# ---------------------------------------------------------------------------
+# 0. Make sure the running app is not holding the executable open
+# ---------------------------------------------------------------------------
+$running = @(Get-Process -Name 'HemoIQ' -ErrorAction SilentlyContinue |
+    Where-Object { $_.Path -and ([IO.Path]::GetFullPath($_.Path) -ieq [IO.Path]::GetFullPath($ExePath)) })
+if ($running.Count -gt 0) {
+    Write-Host "`nHemoIQ is running from this build folder and must close so the new build can replace it." -ForegroundColor Yellow
+    if (-not $Force) {
+        $answer = Read-Host "Close it now? Unsaved work in the app will be lost. (y/N)"
+        if ($answer -notmatch '^(y|yes)$') { throw "Close HemoIQ and run this script again." }
+    }
+    $running | ForEach-Object { $_.CloseMainWindow() | Out-Null }
+    $running | ForEach-Object { if (-not $_.WaitForExit(10000)) { Stop-Process -Id $_.Id -Force } }
+    Write-Host "    Closed." -ForegroundColor Green
+}
 
 # ---------------------------------------------------------------------------
 # 1. Build
 # ---------------------------------------------------------------------------
-Write-Host "`n==> Building AntibodyPanels (Release)..." -ForegroundColor Cyan
+$branch = (git -C $ProjectRoot rev-parse --abbrev-ref HEAD 2>$null)
+$commit = (git -C $ProjectRoot log -1 --format='%h %s' 2>$null)
+Write-Host "`n==> Building HemoIQ (Release)..." -ForegroundColor Cyan
+Write-Host "    Source:  $ProjectRoot"
+if ($branch) { Write-Host "    Branch:  $branch" }
+if ($commit) { Write-Host "    Commit:  $commit" }
+
+$buildStarted = Get-Date
 dotnet build $CsprojPath --configuration Release --nologo -v quiet
 if ($LASTEXITCODE -ne 0) { throw "dotnet build failed (exit $LASTEXITCODE)." }
-Write-Host "    Build succeeded." -ForegroundColor Green
+if (-not (Test-Path $ExePath)) { throw "Build finished but $ExePath was not produced." }
+
+# The executable is only rewritten when inputs changed, so check the main
+# assembly against the newest source file instead of the build start time.
+$dllPath = [IO.Path]::ChangeExtension($ExePath, '.dll')
+$newestSource = Get-ChildItem (Join-Path $ProjectRoot 'HemoIQ') -Recurse -File `
+        -Include *.cs, *.xaml, *.md |
+    Where-Object { $_.FullName -notmatch '\\(bin|obj)\\' } |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$built = Get-Item $dllPath
+if ($newestSource -and $built.LastWriteTime -lt $newestSource.LastWriteTime) {
+    throw "Build output ($($built.LastWriteTime)) is older than $($newestSource.Name) ($($newestSource.LastWriteTime)). The build did not pick up the latest code."
+}
+$state = if ($built.LastWriteTime -ge $buildStarted) { 'rebuilt' } else { 'already up to date' }
+Write-Host "    Build succeeded ($state, $($built.LastWriteTime))." -ForegroundColor Green
 
 $ManualPath = Join-Path $ProjectRoot 'docs\USER_MANUAL.md'
 Write-Host "`n==> Writing the user manual..." -ForegroundColor Cyan
@@ -81,7 +128,8 @@ function ConvertPngToIco {
     $entrySize  = 16
     $dataOffset = $headerSize + $entrySize * $Sizes.Count
 
-    $stream = [System.IO.File]::OpenWrite($Destination)
+    # Create (not OpenWrite) so a smaller icon does not leave old bytes behind.
+    $stream = [System.IO.File]::Create($Destination)
     $w = [System.IO.BinaryWriter]::new($stream)
 
     # ICONDIR
@@ -120,13 +168,19 @@ Write-Host "    Icon written to: $IcoPath" -ForegroundColor Green
 # ---------------------------------------------------------------------------
 Write-Host "`n==> Creating desktop shortcut: $ShortcutPath ..." -ForegroundColor Cyan
 
+# Remove shortcuts left by builds named "Antibody Panels", "Antibody Panel Management System", or "AntigramIQ".
+foreach ($oldName in @('Antibody Panels.lnk', 'Antibody Panel Management System.lnk', 'AntigramIQ.lnk')) {
+    $oldPath = Join-Path ([Environment]::GetFolderPath('Desktop')) $oldName
+    if (Test-Path $oldPath) { Remove-Item $oldPath; Write-Host "    Removed old shortcut: $oldName" }
+}
+
 $WshShell  = New-Object -ComObject WScript.Shell
 $shortcut  = $WshShell.CreateShortcut($ShortcutPath)
 $shortcut.TargetPath       = $ExePath
 $shortcut.WorkingDirectory = Split-Path $ExePath
 $shortcut.IconLocation     = "$IcoPath,0"
-$shortcut.Description      = 'Antibody Panels'
+$shortcut.Description      = 'HemoIQ'
 $shortcut.Save()
 
-Write-Host "    Shortcut created." -ForegroundColor Green
-Write-Host "`nDone! Double-click 'Antibody Panels' on your desktop to launch the app.`n" -ForegroundColor Yellow
+Write-Host "    Shortcut created -> $ExePath" -ForegroundColor Green
+Write-Host "`nDone! Double-click 'HemoIQ' on your desktop to launch the app.`n" -ForegroundColor Yellow

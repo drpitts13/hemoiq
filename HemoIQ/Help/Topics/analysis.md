@@ -1,0 +1,30 @@
+# Analysis
+
+Analysis computes rule-outs, scores, and pattern statistics from the grades and the antigram. The results are analytical evidence for a qualified professional. They are not a diagnosis, and the application does not release blood.
+
+## Top of the tab
+
+- **Find** filters specimens by accession, type, phenotype, previous antibodies, notes, or final ID.
+- **Specimen** selects the accession to review. Selecting a specimen updates the status line to name that accession.
+- An orange **Analysis is stale** warning says why the results shown are out of date. Either grades were saved after the last run, or analysis rules or clinical Preferences changed after it (for investigations without a confirmed identification). Click **Run Analysis** again before you rely on the tabs. The status strip on Specimens, the Worklist and the Pending Work report all use this same rule.
+- **Enter Reactions** jumps to the Reactions tab for this specimen.
+- **Clinical Report** opens the clinical identification report.
+- **Run Analysis** recalculates every inner tab.
+- **Help** opens help for the inner tab you are viewing, or this overview if no inner topic is available.
+
+When the engine has testing suggestions, they appear in the yellow **Suggestions** box under the toolbar. Read them as next steps, such as cells still worth testing. The box is ordered by priority. Warnings and REVIEW items come first, then important next steps, then informational notes.
+
+The box shows the first three suggestions and stays short, so the tabs below remain visible. It scrolls if those three run long. **Show all N (+M more)** at its top right expands it to the full list, still in a scrolling box of limited height. **Show fewer** collapses it again. Each new analysis starts collapsed. The Analysis Results report and the clinical report print every suggestion.
+
+## Inner tabs
+
+- **Explain** lists every candidate with the evidence behind it.
+- **Suspected Antibodies** shows scores and is where you enter and confirm the final ID.
+- **Ruled Out** shows which antibodies met the rule-out count and which cells counted.
+- **Pattern Matches**, **Combinations**, and **Dosage** are additional views of the same run.
+- **Special Panels** covers enzyme and DTT rule-out gates, treatment inferences, and adsorption comparison.
+- **Patient Typing** lines the candidates up against phenotype, genotype, and history.
+- **Selected Cells** suggests unused panel cells that would separate the remaining candidates.
+- **Summary** is a single text review of the run.
+
+Press **F1** on this tab to open the chapter for the inner tab that is selected. Confirm an identification only from **Suspected Antibodies**, and only after you have reviewed the evidence.
