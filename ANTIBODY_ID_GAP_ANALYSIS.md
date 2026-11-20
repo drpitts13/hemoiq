@@ -4234,10 +4234,29 @@ No new issue or gap worth fixing. All 1281 tests pass.
 
 No new issue or gap worth fixing. All 1281 tests pass.
 
+## Iteration 165 (clean pass): Explain tab, investigation status, reaction grid
+
+**Reviewed:**
+- **Investigation status.**
+  - Derived on each call from panels, reactions, analysis time, final call
+    and audit, so nothing is stored that could drift.
+  - Uses the shared `AnalysisCurrency` stale rule (audit-id ordered since
+    Iteration 152) and the receipt checklist.
+  - "Report predates the last clear" compares audit ids, not clock times.
+- **Explain tab.** Built from the same `AnalysisResult` as the Suspected
+  and Ruled-out tabs, so its reasons cannot disagree with them. The rule
+  trace line on reports names the snapshot's software, rules, settings and
+  input fingerprint.
+- **Reaction grid.** Frozen phase columns and compare headers are display
+  only (Iteration 149). Every save goes through the validated, lock-checked
+  `SaveReaction` (Iteration 154).
+
+No new issue or gap worth fixing. All 1281 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: analysis explainability (Explain tab against
-the rule trace), the investigation status strip, and keyboard navigation in
-the reaction grid.
+Continue clean-pass reviews: the analysis engine's rule-out with enzyme
+and DTT-treated runs, and the ACS (antibody combination screen)
+suggestion path.
 
-Loop clean passes: 3/5
+Loop clean passes: 4/5
