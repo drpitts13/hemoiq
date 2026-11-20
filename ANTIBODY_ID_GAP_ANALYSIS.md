@@ -3932,9 +3932,32 @@ All 1247 tests pass.
 
 No new issue or gap worth fixing. All 1247 tests pass.
 
+## Iteration 154 (clean pass): reaction entry, specimen locks, users and roles
+
+**Reviewed:**
+- **Reactions.**
+  - Every save goes through `SaveReaction(runId, …)`, which demands Record
+    Results, refuses a locked specimen, normalizes and validates each grade
+    (extra phases too) and refuses a cell the panel lacks.
+  - Batch saves run in one transaction and require a reason for changes
+    after analysis.
+  - Unchanged saves write nothing. Quit warns about unsaved grades.
+- **Specimens.** All eleven field-level writers (`UpdateSpecimen*`, link and
+  unlink panel) demand the permission, refuse a locked record and audit
+  before and after values.
+  - `DeleteSpecimen` refuses a confirmed identification or an eluate
+    source.
+  - Activation, final call and supervisor review have their own audited
+    flows.
+- **Users.** `SaveUser` demands Manage Users, validates login, initials and
+  role, and keeps initials unique among active users. It refuses any change
+  that would leave no active Administrator, and audits add and update.
+
+No new issue or gap worth fixing. All 1247 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Reactions entry (grade validation and
-unsaved-work guard), Specimens editing and locks, Users and roles.
+Continue clean-pass reviews: configuration export and import (secrets,
+validation, audit), screening cells and selected-cell workflow, eluates.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
