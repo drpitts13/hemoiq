@@ -4895,9 +4895,25 @@ overdue line escaped Iteration 157. Nothing would stop the next one.
 
 All 1330 tests pass.
 
+## Iteration 188 (clean pass): Search output and the panel compare view
+
+**Reviewed:**
+- **Search.** It has no export or clipboard path of its own; results are
+  read-only grid rows. Nothing writes data outside HemoIQ from this tab.
+- **Panel compare** (`PanelComparer`).
+  - Antigen names from both lots are joined with an ordinal comparer, so K
+    and k stay separate columns.
+  - Case-insensitive comparison is used only for cell numbers and typing
+    values (+, -, ++, NT), where case carries no meaning.
+  - The autocontrol is left out of the cell comparison.
+  - Cells only on one lot are listed separately.
+
+No new issue or gap worth fixing. All 1330 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Search tab's results export and copy (if
-any), and the Panels tab's compare view.
+Continue clean-pass reviews: the Specimens tab's patient history panel
+(earlier antibodies, antigen-negative requirement) against the clinical
+report.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
