@@ -3570,6 +3570,7 @@ namespace HemoIQ.Data
         {
             Services.AccessControl.Demand(this, Services.Permission.ConfigureRules);
             antibody = Services.RuleValidation.NormalizeAntibody(antibody, GetKnownAntigens(), GetAllRules(), null);
+            minRuleoutCount = Services.RuleValidation.RequireRuleoutCount(minRuleoutCount);
             separationExemptFrom = NormalizeSeparationList(separationExempt, separationExemptFrom);
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
@@ -3607,6 +3608,7 @@ namespace HemoIQ.Data
         {
             Services.AccessControl.Demand(this, Services.Permission.ConfigureRules);
             antibody = Services.RuleValidation.NormalizeAntibody(antibody, GetKnownAntigens(), GetAllRules(), ruleId);
+            minRuleoutCount = Services.RuleValidation.RequireRuleoutCount(minRuleoutCount);
             separationExemptFrom = NormalizeSeparationList(separationExempt, separationExemptFrom);
             var before = RuleAuditJson(GetRule(ruleId));
             using var cmd = _conn.CreateCommand();

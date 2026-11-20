@@ -189,11 +189,12 @@ public class ValidationStressTests
     }
 
     [Fact]
-    public void RuleCrud_InvalidMinRuleoutCount_StillPersists()
+    public void RuleCrud_InvalidMinRuleoutCount_IsRefused()
     {
+        // Analysis clamps the count to 1-5, so storing -1 would show a rule that is not what analysis uses.
         using var iso = new IsolatedDatabase();
-        var ruleId = iso.Db.AddRule("Edge Rule", null, "anti-D", null, false, -1);
-        var rule = iso.Db.GetAllRules().First(r => r.RuleId == ruleId);
-        Assert.Equal(-1, rule.MinRuleoutCount);
+        var ex = Assert.Throws<ArgumentException>(() => iso.Db.AddRule("Edge Rule", null, "anti-D", null, false, -1));
+        Assert.Equal("Rule-out cells must be a whole number from 1 to 5; -1 was entered.", ex.Message);
+        Assert.DoesNotContain(iso.Db.GetAllRules(), r => r.Name == "Edge Rule");
     }
 }

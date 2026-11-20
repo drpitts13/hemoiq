@@ -4138,9 +4138,47 @@ No new issue or gap worth fixing. All 1271 tests pass.
 
 All 1274 tests pass.
 
+## Iteration 161: a rule's rule-out count is stored as analysis uses it
+
+**Reviewed, no gap:**
+- **Preferences.** Every numeric box is range-checked and the ACS antigen
+  list is validated. The ID rule is a fixed choice. Saving demands
+  Configure Preferences and audits `update_settings`.
+- **Startup data migration.** It moves or merges legacy folders without
+  overwriting and never deletes. It stops once the current folder has a
+  database, and a failure leaves the old files in place.
+
+**Deficiency found (configuration integrity):**
+- `RuleoutPolicy.RequiredCount` clamps a rule's rule-out count to 1–5, but
+  neither `AddRule`, `UpdateRule` nor the Rules dialog checked the value.
+- A rule could be stored and shown as 0, 9 or −1 while analysis silently
+  used 1 or 5. A stress test recorded that −1 persisted.
+- The dialog read unparseable text as 3 without a word.
+- Configuration import already refused out-of-range counts, so the paths
+  disagreed.
+
+**Bounded improvement:**
+- `RuleValidation.RequireRuleoutCount` refuses counts outside 1–5 in
+  `AddRule` and `UpdateRule`, with the entered value in the message.
+- The Rules dialog validates the box as a whole number from 1 to 5 before
+  saving.
+- `RuleValidation.Problems`, shown on the Rules tab and Worklist, reports a
+  stored rule outside the range with the count analysis uses.
+- The stress test now expects the refusal. Help (Rules) explains it.
+
+**Tests:** `RuleoutCountValidationTests` (7 cases):
+- 0, 6 and −3 are refused;
+- 1 and 5 are stored;
+- an update to 9 is refused and leaves the rule unchanged;
+- a stored 0 is reported with "analysis uses 1".
+
+`ValidationStressTests` was updated.
+
+All 1281 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Preferences dialog validation, Rules dialog
-validation, startup data migration.
+Continue clean-pass reviews: Worklist categories and counts, Specimens
+search and filters, keyboard and F1 help coverage.
 
 Loop clean passes: 0/5

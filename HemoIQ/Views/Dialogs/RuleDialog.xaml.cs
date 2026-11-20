@@ -11,7 +11,7 @@ namespace HemoIQ.Views.Dialogs
         public string Antibody => AntibodyBox.Text.Trim();
         public string? ExceptionAntigen => string.IsNullOrWhiteSpace(ExceptionAntigenBox.Text) ? null : ExceptionAntigenBox.Text.Trim();
         public bool HeterozygousOk => HeterozygousCheck.IsChecked == true;
-        public int MinRuleoutCount => int.TryParse(MinCountBox.Text, out var n) ? n : 3;
+        public int MinRuleoutCount => int.Parse(MinCountBox.Text.Trim(), System.Globalization.CultureInfo.InvariantCulture);
         public bool SeparationExempt => SeparationExemptCheck.IsChecked == true;
         public string? SeparationExemptFrom => SeparationExempt && !string.IsNullOrWhiteSpace(SeparationFromBox.Text)
             ? SeparationFromBox.Text.Trim() : null;
@@ -42,6 +42,16 @@ namespace HemoIQ.Views.Dialogs
             {
                 MessageBox.Show("Name and Antibody are required.", "Validation",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (!int.TryParse(MinCountBox.Text.Trim(), System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out var count) ||
+                count < Services.RuleoutPolicy.MinAllowedCount || count > Services.RuleoutPolicy.MaxAllowedCount)
+            {
+                MessageBox.Show(
+                    $"Rule-out cells must be a whole number from {Services.RuleoutPolicy.MinAllowedCount} to " +
+                    $"{Services.RuleoutPolicy.MaxAllowedCount}.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MinCountBox.Focus();
                 return;
             }
             var unknown = Services.MultipleAntibodySeparation.ParseAntigenList(SeparationExemptFrom)

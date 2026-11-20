@@ -27,7 +27,7 @@ Rules are optional, per-antibody overrides of the default rule-out settings. Whe
 
 ## The detail pane
 
-The right pane is read-only. It shows the name, antibody, exception antigen, whether heterozygous cells are allowed, the minimum rule-out count, and the description. Change those fields with **Edit**.
+The right pane is read-only. It shows the name, antibody, exception antigen, whether heterozygous cells are allowed, the minimum rule-out count, and the description. Change those fields with **Edit**. The minimum rule-out count must be a whole number from 1 to 5; anything else is refused when you save. A rule saved by an earlier version with a count outside that range is listed as a problem, with the count analysis actually uses.
 
 **Exception antigen** limits heterozygous permission to that antigen on the antibody named in the rule. A rule for anti-D with exception C does not let heterozygous C cells rule out anti-C. Leave the exception blank when the rule is only a count and a zygosity choice for its own antibody.
 

@@ -42,6 +42,18 @@ namespace HemoIQ.Services
         /// Problems in the stored rules: antibodies that are not known antigens in their exact
         /// case, and antibodies with more than one rule. Each entry is (rule names, description).
         /// </summary>
+        /// <summary>
+        /// The rule-out cell count a rule stores. Analysis clamps to this range, so a value outside it would be shown
+        /// on the Rules tab but not used; it is refused instead, as configuration import already does.
+        /// </summary>
+        public static int RequireRuleoutCount(int count)
+        {
+            if (count < RuleoutPolicy.MinAllowedCount || count > RuleoutPolicy.MaxAllowedCount)
+                throw new ArgumentException(
+                    $"Rule-out cells must be a whole number from {RuleoutPolicy.MinAllowedCount} to {RuleoutPolicy.MaxAllowedCount}; {count} was entered.");
+            return count;
+        }
+
         public static List<(string Title, string Detail)> Problems(IEnumerable<Rule> rules, IEnumerable<string> knownAntigens)
         {
             var list = new List<(string, string)>();
@@ -54,6 +66,11 @@ namespace HemoIQ.Services
                     list.Add(($"Rule '{r.Name}'",
                         $"Antibody '{r.Antibody}' is not a known antigen in its exact case, so this rule never applies. " +
                         "Edit the rule and choose the antibody from the list."));
+                if (r.MinRuleoutCount < RuleoutPolicy.MinAllowedCount || r.MinRuleoutCount > RuleoutPolicy.MaxAllowedCount)
+                    list.Add(($"Rule '{r.Name}'",
+                        $"Rule-out cells is stored as {r.MinRuleoutCount}, outside {RuleoutPolicy.MinAllowedCount} to " +
+                        $"{RuleoutPolicy.MaxAllowedCount}, so analysis uses {RuleoutPolicy.ClampRequiredCount(r.MinRuleoutCount)}. " +
+                        "Edit the rule and enter the count you intend."));
             }
             foreach (var group in all.Where(r => PatientHistory.AntibodyKey(r.Antibody) != null)
                          .GroupBy(r => PatientHistory.AntibodyKey(r.Antibody)!, StringComparer.Ordinal)
