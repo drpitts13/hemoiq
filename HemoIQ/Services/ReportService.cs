@@ -56,6 +56,13 @@ namespace HemoIQ.Services
         /// Whether the lot may be used, so a printed antigram of an imported lot awaiting review, an expired lot or
         /// a deactivated lot is not mistaken for one in use.
         /// </summary>
+        /// <summary>The lot status in a word or two, for list reports and their CSV.</summary>
+        public static string PanelStatusShort(Panel p) =>
+            p.IsExpired ? "Expired"
+            : !p.IsActive && !string.IsNullOrWhiteSpace(p.ImportedAt) ? "Imported, inactive"
+            : !p.IsActive ? "Inactive"
+            : "Active";
+
         public static string PanelStatusLine(Panel p)
         {
             if (p.IsExpired)
@@ -677,6 +684,7 @@ namespace HemoIQ.Services
 
         private string GetSpecimenStatus(Specimen s)
         {
+            if (s.IsCancelled) return "Cancelled";
             if (s.HasFinalCall) return "Confirmed";
             if (s.LastAnalyzedAt == null) return "Not analyzed";
             if (AnalysisCurrency.StaleReason(s, _db.LastAnalysisConfigurationChange(), _db.SettingsDrifted(s)) != null) return "Stale";
@@ -756,7 +764,8 @@ namespace HemoIQ.Services
             var vendorW = ColumnWidth("Vendor", panels.Select(p => p.Vendor ?? "N/A"));
             var cellsW = ColumnWidth("Cells", panels.Select(p => p.NumCells.ToString()));
             var expW = ColumnWidth("Expires", panels.Select(p => p.ExpirationDate ?? "N/A"));
-            var lineW = nameW + lotW + vendorW + cellsW + expW + 4;
+            var statusW = ColumnWidth("Status", panels.Select(PanelStatusShort));
+            var lineW = nameW + lotW + vendorW + cellsW + expW + statusW + 5;
             var sb = new StringBuilder();
             sb.AppendLine($"ALL PANELS ({panels.Count})");
             sb.AppendLine(new string('=', lineW));
@@ -766,6 +775,7 @@ namespace HemoIQ.Services
                 "Vendor".PadRight(vendorW),
                 "Cells".PadRight(cellsW),
                 "Expires".PadRight(expW),
+                "Status".PadRight(statusW),
                 "Typing"));
             sb.AppendLine(new string('-', lineW));
             foreach (var p in panels)
@@ -775,6 +785,7 @@ namespace HemoIQ.Services
                     (p.Vendor ?? "N/A").PadRight(vendorW),
                     p.NumCells.ToString().PadRight(cellsW),
                     (p.ExpirationDate ?? "N/A").PadRight(expW),
+                    PanelStatusShort(p).PadRight(statusW),
                     PanelIntegrityCheck.Summarize(_db.GetPanelCells(p.PanelId)).Display));
             return sb.ToString();
         }
@@ -861,13 +872,15 @@ namespace HemoIQ.Services
                 case ReportType.AllSpecimens:
                     csv.WriteRecords(_db.GetAllSpecimens().Select(s => new
                     {
-                        s.AccessionNumber, s.Type, s.CreatedDate, s.ExpirationDate, s.LastAnalyzedAt
+                        s.AccessionNumber, s.Type, s.CreatedDate, s.ExpirationDate, s.LastAnalyzedAt,
+                        Status = GetSpecimenStatus(s)
                     }));
                     break;
                 case ReportType.AllPanels:
                     csv.WriteRecords(_db.GetAllPanels().Select(p => new
                     {
-                        p.Name, p.LotNumber, p.Vendor, p.NumCells, p.ExpirationDate
+                        p.Name, p.LotNumber, p.Vendor, p.NumCells, p.ExpirationDate,
+                        Status = PanelStatusShort(p)
                     }));
                     break;
                 case ReportType.SpecimenSummary when specimenId != null:

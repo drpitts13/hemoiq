@@ -4710,9 +4710,39 @@ review and expired, each on both reports, and deactivated without an import.
 
 All 1318 tests pass.
 
+## Iteration 181: list reports show record status
+
+**Reviewed, no gap:** Pending Work lists active specimens by stage, uses the
+shared stale rule, and carries the letterhead.
+
+**Deficiency found (reporting, data integrity):**
+- **All Panels.** The report and its CSV had no status. Expired lots,
+  deactivated lots and imported lots awaiting review were listed exactly
+  like lots in use, the same gap Iteration 180 closed on the single-panel
+  reports.
+- **All Specimens.** `GetSpecimenStatus` did not check cancellation, so a
+  cancelled investigation was listed as "Not analyzed" or "Analyzed". Its
+  CSV had no status column at all.
+
+**Bounded improvement:**
+- `ReportService.PanelStatusShort` gives Active, "Imported, inactive",
+  Inactive or Expired. All Panels has a sized Status column, and the CSV a
+  Status field.
+- `GetSpecimenStatus` returns Cancelled first. The All Specimens CSV adds
+  the Status field.
+- Help (Reports) lists the values.
+
+**Tests:** `ListReportStatusTests` (3 cases):
+- four lots with each status, in the text and the CSV;
+- a cancelled investigation shown as Cancelled in the text and the CSV,
+  beside a not-analyzed one.
+
+All 1322 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the All Panels and All Specimens list reports
-(status columns, letterhead) and the Pending Work report.
+Continue clean-pass reviews: the remaining Analysis-tab copy and export
+paths against the printed reports (the copied text includes gated
+rule-outs; check it matches).
 
 Loop clean passes: 0/5
