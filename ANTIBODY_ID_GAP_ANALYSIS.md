@@ -4217,9 +4217,27 @@ No new issue or gap worth fixing. All 1281 tests pass.
 
 No new issue or gap worth fixing. All 1281 tests pass.
 
+## Iteration 164 (clean pass): report fingerprints, specimen dialog, help window
+
+**Reviewed:**
+- **Report fingerprints.** `RecordReportOutput` hashes the exact bytes
+  issued (CSV exports read the written file back). It records the type,
+  output, file name, software version, and for specimen reports the
+  confirmed call and supervisor review at that moment.
+- **Specimen dialog.** The accession is trimmed and required, and can no
+  longer be changed when editing. Collection and receipt times are
+  validated and refuse future times (`SpecimenDating`). Saves go through
+  `SpecimenSaveService` with the dialog's values. Only seeders and tests
+  call `AddSpecimen` directly.
+- **Help window.** Escape and Close dismiss it once. Saving the manual uses
+  a Save dialog with an overwrite prompt, as reviewed in Iteration 149.
+
+No new issue or gap worth fixing. All 1281 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: report fingerprints against issued content,
-specimen dialog validation (dates, accession format), and the help window.
+Continue clean-pass reviews: analysis explainability (Explain tab against
+the rule trace), the investigation status strip, and keyboard navigation in
+the reaction grid.
 
-Loop clean passes: 2/5
+Loop clean passes: 3/5
