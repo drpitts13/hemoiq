@@ -4021,9 +4021,51 @@ The full suite showed no caller relied on re-confirming.
 
 All 1252 tests pass.
 
+## Iteration 157: CSV exports cannot run formulas
+
+**Reviewed, no gap:**
+- `SavePatient` demands the permission and validates the MRN, dates and
+  antigen codes. It audits before and after values.
+- Removing an antigen-negative requirement is caught at the next analysis:
+  `TransfusionRequirementCheck` reports a clinically significant antibody
+  with no matching requirement.
+
+**Deficiency found (security, data integrity):** none of the CSV exports
+neutralized spreadsheet formulas. A cell starting with =, +, -, @, tab or CR
+runs as a formula when the file is opened in Excel, so a typed value could
+fetch a URL or launch a DDE command on the reader's machine. The affected
+exports were:
+- audit log: reason and before/after JSON;
+- Reports: panel names, lots, vendors, accessions, notes;
+- Analytics: final calls, user names, override warnings;
+- the panel antigram CSV.
+
+**Bounded improvement:**
+- `CsvText.Safe` adds a leading apostrophe to a value a spreadsheet would
+  run, and `CsvText.Field` quotes it.
+- Values made only of + and - (panel typing "+", "++", "-") and plain
+  numbers are unchanged. An exported antigram re-imports with the same
+  typing.
+- `CsvText.Writer` (a CsvHelper writer) applies it to every field, both
+  through `WriteRecords` and through `WriteField`. CsvHelper's own escaping
+  is not used because it would alter "-" typing.
+- Report, Analytics, panel and audit exports all use it. Files are UTF-8
+  with a BOM, so °C reads correctly in spreadsheets.
+- Help (Audit log, Reports) and developer conventions explain it.
+
+**Tests:** `CsvInjectionTests` (19 cases):
+- 14 Safe cases: formulas neutralized, typing and numbers kept;
+- Field quoting;
+- writer fields;
+- a panel CSV round trip with +, ++ and - unchanged;
+- a formula panel name in the All Panels report;
+- a source guard that no `new CsvWriter(` exists outside `CsvText`.
+
+Analytics keeps its quote-when-needed format through `CsvText.Minimal`. All 1271 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: patient records and antigen-negative
-requirements, the audit log viewer's filters and export.
+Continue clean-pass reviews: PDF and print outputs (what free text they
+include), the Timeline, and investigation cancel and reinstate.
 
 Loop clean passes: 0/5

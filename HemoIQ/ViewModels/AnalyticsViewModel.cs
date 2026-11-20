@@ -295,7 +295,7 @@ namespace HemoIQ.ViewModels
 
         public static IEnumerable<string> WorkloadCsvLines(IEnumerable<TechnologistWorkload> rows)
         {
-            static string Q(string v) => v.Contains(',') || v.Contains('"') ? $"\"{v.Replace("\"", "\"\"")}\"" : v;
+            static string Q(string v) => CsvText.Minimal(v);
             yield return "";
             yield return "Workload by technologist (confirmations by confirmed date, reviews by review date)";
             yield return "Initials,Name,Confirmed,Multiple antibodies,Supervisor reviews,Median received to confirmed (days)";
@@ -306,7 +306,7 @@ namespace HemoIQ.ViewModels
 
         public static IEnumerable<string> LocationCsvLines(IEnumerable<LocationWorkload> rows)
         {
-            static string Q(string v) => v.Contains(',') || v.Contains('"') ? $"\"{v.Replace("\"", "\"\"")}\"" : v;
+            static string Q(string v) => CsvText.Minimal(v);
             yield return "";
             yield return "Workload by ordering location (investigations received in the range)";
             yield return "Ordering location,Received,Confirmed,Open,Median received to confirmed (days)";
@@ -317,7 +317,7 @@ namespace HemoIQ.ViewModels
 
         public static IEnumerable<string> UserActivityCsvLines(IEnumerable<UserActivity> rows)
         {
-            static string Q(string v) => v.Contains(',') || v.Contains('"') ? $"\"{v.Replace("\"", "\"\"")}\"" : v;
+            static string Q(string v) => CsvText.Minimal(v);
             yield return "";
             yield return "Activity by user (from the audit log, by local date of the event)";
             yield return "Login,Name,Reaction cells entered,Recorded results changed,Specimens,Identifications confirmed,Identifications cleared,Supervisor reviews,Warnings overridden";
@@ -327,7 +327,7 @@ namespace HemoIQ.ViewModels
 
         public static IEnumerable<string> OverrideCsvLines(IEnumerable<AnalyticsCase> cases)
         {
-            static string Q(string v) => "\"" + v.Replace("\"", "\"\"") + "\"";
+            static string Q(string v) => CsvText.Field(v);
             yield return "";
             yield return "Warnings overridden";
             yield return "Accession,Date,Final ID,Detail";

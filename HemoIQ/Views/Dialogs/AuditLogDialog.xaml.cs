@@ -55,13 +55,9 @@ namespace HemoIQ.Views.Dialogs
                     Csv(ev.EntityType), Csv(ev.EntityId), Csv(ev.Reason),
                     Csv(ev.BeforeJson), Csv(ev.AfterJson)));
             }
-            File.WriteAllText(dlg.FileName, sb.ToString());
+            File.WriteAllText(dlg.FileName, sb.ToString(), new UTF8Encoding(true));
         }
 
-        private static string Csv(string? value)
-        {
-            var t = value ?? "";
-            return "\"" + t.Replace("\"", "\"\"") + "\"";
-        }
+        private static string Csv(string? value) => Services.CsvText.Field(value);
     }
 }

@@ -777,9 +777,8 @@ namespace HemoIQ.Services
 
         private void WriteCsv(ReportType type, string filePath, string? specimenId, int? panelId)
         {
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture);
-            using var writer = new StreamWriter(filePath, false, Encoding.UTF8);
-            using var csv = new CsvWriter(writer, config);
+            using var writer = CsvText.File(filePath);
+            using var csv = CsvText.Writer(writer);
 
             switch (type)
             {

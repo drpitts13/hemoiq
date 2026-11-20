@@ -135,9 +135,8 @@ namespace HemoIQ.Services
         {
             var fromText = from?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "";
             var toText = to?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "";
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture);
-            using var writer = new StreamWriter(filePath, false, Encoding.UTF8);
-            using var csv = new CsvWriter(writer, config);
+            using var writer = CsvText.File(filePath);
+            using var csv = CsvText.Writer(writer);
             csv.WriteRecords(result.Rows.Select(r => new
             {
                 r.Antibody,

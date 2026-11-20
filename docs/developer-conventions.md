@@ -97,6 +97,14 @@ unregistered logins, and must not change panel typing, grades or identifications
 still wanted checks `AccessControl.Can(db, Permission.RecordResults)` first and does nothing otherwise.
 `StartupDataSafetyTests` checks this.
 
+## CSV exports neutralize formulas
+
+Write every CSV through `CsvText.Writer(CsvText.File(path))`, or `CsvText.Field(value)` for hand-built
+lines. Spreadsheets run a cell starting with =, +, -, @, tab or CR as a formula, and reasons, notes,
+names and final calls are typed by users. `CsvText.Safe` adds a leading apostrophe to such values and
+leaves typing made only of + and - and plain numbers unchanged, so exported antigrams re-import.
+`CsvInjectionTests` fails if a `new CsvWriter(` appears anywhere else.
+
 ## Tests
 
 - Use `IsolatedDatabase` for anything that touches the database.

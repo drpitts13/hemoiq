@@ -33,9 +33,8 @@ namespace HemoIQ.Services
         public static void Export(IReadOnlyList<PanelCell> cells, string filePath,
             IReadOnlyList<string>? columnOrder = null)
         {
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture);
-            using var writer = new StreamWriter(filePath, false, Encoding.UTF8);
-            using var csv = new CsvWriter(writer, config);
+            using var writer = CsvText.File(filePath);
+            using var csv = CsvText.Writer(writer);
 
             var extras = ExtraAntigensOnCells(cells);
             var antigens = AntigenConstants.ResolveDisplayOrder(columnOrder, extras);
