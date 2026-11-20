@@ -4063,9 +4063,28 @@ exports were:
 
 Analytics keeps its quote-when-needed format through `CsvText.Minimal`. All 1271 tests pass.
 
+## Iteration 158 (clean pass): cancel and reinstate, Timeline, PDF and print
+
+**Reviewed:**
+- **Cancel.** It demands Record Results and a reason. It refuses an
+  investigation that is already cancelled, and one with a confirmed
+  identification, which must be cleared with a reason first. It is
+  audited, and the record locks.
+- **Reinstate.** It demands its own Reinstate Investigation permission and
+  a reason, is audited with the cancellation as it stood, and refuses an
+  investigation that is not cancelled.
+- **Timeline.** Built only by reading specimen data and the audit log; it
+  writes nothing. Clears show the identification as it stood and the
+  reason, so since Iteration 156 every change of a confirmed call appears.
+- **PDF and print.** These render the report text as text: nothing in them
+  is evaluated, unlike the CSV formula case fixed in Iteration 157. Each
+  issue is audited with its SHA-256 fingerprint.
+
+No new issue or gap worth fixing. All 1271 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: PDF and print outputs (what free text they
-include), the Timeline, and investigation cancel and reinstate.
+Continue clean-pass reviews: DAT and autocontrol entry, phenotype and
+genotype entry, selected-cell recommendations.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
