@@ -58,11 +58,21 @@ public class WarehouseAntigenTests
     [Fact]
     public void TreatmentEffects_NewWarehouseFicinEnhanced()
     {
-        foreach (var ag in new[] { "VS", "Goa", "LWa", "LWb", "Inb" })
+        foreach (var ag in new[] { "VS", "Goa", "LWa", "LWb" })
         {
             Assert.Equal(AntigenEffect.Enhanced,
                 AntigenTreatmentEffects.GetCellEffect(CellTreatment.Ficin, ag));
         }
+    }
+
+    [Fact]
+    public void TreatmentEffects_IndianInb_IsDestroyedByEnzymesAndDtt()
+    {
+        // CD44 is protease-sensitive: an enzyme-treated cell cannot rule out anti-Inb.
+        foreach (var treatment in new[] { CellTreatment.Ficin, CellTreatment.Papain, CellTreatment.DTT })
+            Assert.Equal(AntigenEffect.Destroyed, AntigenTreatmentEffects.GetCellEffect(treatment, "Inb"));
+        Assert.Equal("Ficin/DTT destroyed",
+            AntigenConstants.WarehouseCatalog.Single(d => d.Name == "Inb").TreatmentNote);
     }
 
     [Fact]

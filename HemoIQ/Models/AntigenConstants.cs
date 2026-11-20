@@ -117,7 +117,7 @@ namespace HemoIQ.Models
                 new WarehouseAntigenDefinition { Name = "Yka", System = "Knops", Antithetical = null, TreatmentNote = "Ficin unaffected; DTT destroyed" },
                 new WarehouseAntigenDefinition { Name = "Hy", System = "Dombrock", Antithetical = null, TreatmentNote = "Ficin unaffected; DTT destroyed" },
                 new WarehouseAntigenDefinition { Name = "Joa", System = "Dombrock", Antithetical = null, TreatmentNote = "Ficin unaffected; DTT destroyed" },
-                new WarehouseAntigenDefinition { Name = "Inb", System = "Indian", Antithetical = null, TreatmentNote = "Ficin enhanced; DTT destroyed" },
+                new WarehouseAntigenDefinition { Name = "Inb", System = "Indian", Antithetical = null, TreatmentNote = "Ficin/DTT destroyed" },
                 new WarehouseAntigenDefinition { Name = "Jra", System = "Jr", Antithetical = null, TreatmentNote = "Ficin/DTT unaffected" },
                 new WarehouseAntigenDefinition { Name = "Cra", System = "Cromer", Antithetical = null, TreatmentNote = "Ficin unaffected; DTT destroyed" },
                 new WarehouseAntigenDefinition { Name = "Ata", System = "Augustine", Antithetical = null, TreatmentNote = "Ficin/DTT unaffected" },

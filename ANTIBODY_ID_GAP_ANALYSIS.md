@@ -4291,9 +4291,48 @@ No new issue or gap worth fixing. All 1281 tests pass.
 
 All 1282 tests pass.
 
+## Iteration 167: Indian Inb is destroyed by enzymes (a false rule-out removed)
+
+**Reviewed, no change:**
+- Ficin and papain: Mia, Vw, Mur, Ch, Rg and Ge2 stay Destroyed.
+  - Ch, Rg and Ge2 are protease-sensitive in the references.
+  - For the variable MNS hybrid antigens (Mia, Vw, Mur), Destroyed is the
+    conservative reading: enzyme-treated cells do not rule them out, so the
+    table cannot produce a false rule-out.
+- DTT: the Kell, Lutheran, Dombrock, Yt, LW, Knops, Indian and Cromer
+  entries match the references.
+  - Ch, and the Lutheran and Cromer antigens, are classically weakened;
+    Destroyed is the conservative reading.
+
+**Deficiency found (patient safety):**
+- Inb (Indian system, on CD44) was listed as Enhanced by ficin and papain,
+  and its warehouse note read "Ficin enhanced".
+- Indian antigens are destroyed by proteolytic enzymes, as they are by DTT,
+  which the table already had right (AABB Technical Manual; FactsBook).
+- So a nonreactive ficin- or papain-treated Inb+ cell counted as a rule-out
+  for anti-Inb, although the antigen was gone: a false rule-out of a
+  clinically significant antibody.
+
+**Bounded improvement:**
+- Inb is Destroyed under ficin and papain (and DTT), with the source in the
+  code. The warehouse note reads "Ficin/DTT destroyed".
+- Enzyme-treated cells are now gated for anti-Inb on Special Panels, like
+  the other destroyed antigens.
+- Help (Special Panels) states it.
+- This changes clinical logic; the laboratory should confirm it against its
+  procedure manual.
+
+**Tests:**
+- `WarehouseAntigenTests.TreatmentEffects_IndianInb_IsDestroyedByEnzymesAndDtt`
+  (new);
+- the ficin-enhanced list no longer includes Inb.
+
+All 1283 tests pass.
+
 ## Likely next tick
 
-Review the enzyme pattern explanations for other antigens listed as
-"variable" (Mia, Vw, Mur, Ch, Rg, Ge2) against the same references.
+Continue clean-pass reviews: the remaining treatment tables (trypsin and
+chymotrypsin, if modelled), absorption specificity lists, and prewarm
+interpretation.
 
 Loop clean passes: 0/5

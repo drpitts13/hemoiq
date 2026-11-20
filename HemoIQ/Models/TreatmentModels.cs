@@ -61,6 +61,9 @@ namespace HemoIQ.Models
             { "Ge2", AntigenEffect.Destroyed },
             { "Ch",  AntigenEffect.Destroyed },
             { "Rg",  AntigenEffect.Destroyed },
+            // Indian antigens sit on CD44, which proteolytic enzymes cleave (AABB Technical Manual; FactsBook).
+            // Listed as enhanced before, a nonreactive ficin-treated cell could rule out anti-Inb.
+            { "Inb", AntigenEffect.Destroyed },
 
             // Enhanced by ficin/papain
             { "D",   AntigenEffect.Enhanced },
@@ -84,7 +87,6 @@ namespace HemoIQ.Models
             { "Goa", AntigenEffect.Enhanced },
             { "LWa", AntigenEffect.Enhanced },
             { "LWb", AntigenEffect.Enhanced },
-            { "Inb", AntigenEffect.Enhanced },
         };
 
         // ── DTT / 2-ME ────────────────────────────────────────────────────────
