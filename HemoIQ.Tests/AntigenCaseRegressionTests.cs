@@ -73,7 +73,7 @@ public class AntigenCaseRegressionTests
 
         var result = iso.Analyzer.AnalyzeSpecimen("AC-1", updateDb: false);
         var antik = Assert.Single(result.RuleoutEvaluations, e => e.Antibody == "anti-k");
-        Assert.DoesNotContain("1", antik.ConflictingReactiveCells);
+        Assert.DoesNotContain(antik.ConflictingReactiveCells, c => c.CellNumber == "1");
     }
 
     [Fact]

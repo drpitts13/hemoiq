@@ -219,6 +219,9 @@ namespace HemoIQ.ViewModels
 
         public void Refresh() => Recompute();
 
+        public void AnnounceStatus() =>
+            _main?.SetStatus(ScreenStatus.Analytics(RangeLabel, ConfirmedSpecimens));
+
         private void ApplyRange(DateTime? from, DateTime? to)
         {
             _fromDate = from;
@@ -272,6 +275,8 @@ namespace HemoIQ.ViewModels
             DrillCases.Clear();
             DrillTitle = "Select a row to see its investigations";
             ChartDataChanged?.Invoke(this, EventArgs.Empty);
+            if (_main?.SelectedTabIndex == 6)
+                AnnounceStatus();
         }
 
         public static IEnumerable<string> TurnaroundCsvLines(TurnaroundResult t)

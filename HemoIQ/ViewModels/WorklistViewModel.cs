@@ -184,14 +184,10 @@ namespace HemoIQ.ViewModels
             SelectedItem = Items.FirstOrDefault(i => i.Title == title && i.Kind == kind)
                 ?? Items.FirstOrDefault();
 
-            if (_allItems.Count == 0)
-                _main.SetStatus("Worklist is clear.");
-            else if (Items.Count == 0)
-                _main.SetStatus("No worklist items match the selected filters.");
-            else if (Items.Count == _allItems.Count)
-                _main.SetStatus($"Worklist: {Items.Count} item(s) need attention.");
-            else
-                _main.SetStatus($"Worklist: {Items.Count} of {_allItems.Count} item(s) shown.");
+            // A refresh while another screen is open must not replace that
+            // screen's status. Opening Worklist announces on its own.
+            if (_main.SelectedTabIndex == 0)
+                AnnounceStatus();
         }
 
         private void VerifySelectedTyping()
@@ -214,6 +210,9 @@ namespace HemoIQ.ViewModels
             _main.SetStatus($"{antigen} typing on {SelectedItem.Title} marked verified.");
             Refresh();
         }
+
+        public void AnnounceStatus() =>
+            _main.SetStatus(ScreenStatus.Worklist(_allItems.Count, Items.Count));
 
         private void PersistFilters()
         {

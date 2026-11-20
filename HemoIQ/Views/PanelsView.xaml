@@ -16,7 +16,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="340" MinWidth="200"/>
+            <ColumnDefinition Width="680" MinWidth="320"/>
             <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
@@ -62,14 +62,16 @@
                           IsEnabled="{Binding IsEditingAntigens, Converter={x:Static views:InverseBoolConverter.Instance}}"
                           VerticalAlignment="Center" Margin="0,0,0,4"/>
             </WrapPanel>
-            <DataGrid ItemsSource="{Binding Panels}"
+            <DataGrid x:Name="PanelList"
+                      ItemsSource="{Binding Panels}"
                       SelectedItem="{Binding SelectedPanel}"
                       AutoGenerateColumns="False" IsReadOnly="True"
                       SelectionMode="Single" GridLinesVisibility="Horizontal"
                       HeadersVisibility="Column"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
-                      ScrollViewer.CanContentScroll="True">
+                      ScrollViewer.CanContentScroll="True"
+                      FrozenColumnCount="2">
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
                         <Style.Triggers>
@@ -85,20 +87,22 @@
                     </Style>
                 </DataGrid.RowStyle>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="Auto" MinWidth="140">
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" MinWidth="120">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextWrapping" Value="NoWrap"/>
-                                <Setter Property="TextTrimming" Value="None"/>
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                <Setter Property="ToolTip" Value="{Binding Name}"/>
                                 <Setter Property="Padding" Value="4,0"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
-                    <DataGridTextColumn Header="Lot #" Binding="{Binding LotNumber}" Width="Auto" MinWidth="56">
+                    <DataGridTextColumn Header="Lot #" Binding="{Binding LotNumber}" Width="200">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextWrapping" Value="NoWrap"/>
-                                <Setter Property="TextTrimming" Value="None"/>
+                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                <Setter Property="ToolTip" Value="{Binding LotNumber}"/>
                                 <Setter Property="Padding" Value="4,0"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
@@ -141,9 +145,21 @@
             </DockPanel>
             <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6" Foreground="#546E7A" FontSize="13"
                        Text="Press Edit to change antigens (click or Space cycles NT → + → ++ → −; antigens without an antithetical pair skip ++; keys + − N set a value directly). New cells start NT. Enter the positives, then Fill NT with − for each column the antigram lists. Green = +/++, light gray = −, NT = not typed. Drag headers to reorder. Save or Cancel to leave edit mode."/>
+            <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6" Foreground="#546E7A" FontSize="13"
+                       Text="{Binding PanelColumnNote}" TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding PanelColumnNote}" Value="">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
 
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                <DataGrid x:Name="AntigenGrid"
+            <DataGrid x:Name="AntigenGrid"
                           ItemsSource="{Binding CellRows}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
@@ -155,15 +171,38 @@
                           FrozenColumnCount="1"
                           SelectionUnit="Cell"
                           FontSize="13"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
                           Loaded="AntigenGrid_Loaded"
                           ColumnDisplayIndexChanged="AntigenGrid_ColumnDisplayIndexChanged"
                           PreviewMouseLeftButtonDown="AntigenGrid_PreviewMouseLeftButtonDown"
                           PreviewKeyDown="AntigenGrid_PreviewKeyDown">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSearchFocus}" Value="True">
+                                    <Setter Property="Background" Value="#E3F2FD"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Cell" Binding="{Binding CellNumber}" Width="50" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Cell" Binding="{Binding CellNumber}" Width="50" IsReadOnly="True">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSearchFocus}" Value="True">
+                                            <Setter Property="Background" Value="#1565C0"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
                     </DataGrid.Columns>
-                </DataGrid>
-            </ScrollViewer>
+            </DataGrid>
         </DockPanel>
 
         <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal"

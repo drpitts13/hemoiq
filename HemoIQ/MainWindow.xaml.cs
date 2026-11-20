@@ -60,6 +60,10 @@ namespace HemoIQ
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            E2EWorkflowSeeder.RepairBlanketNegatives(ViewModel.Database);
+            DemoDataSeeder.AnalyzeIfNeverAnalyzed(ViewModel.Database, ViewModel.Analyzer);
+            ViewModel.PanelsVM.Refresh();
+            ViewModel.WorklistVM.Refresh();
             AcknowledgeIntendedUseIfNeeded();
             ViewModel.RefreshSession();
             if (ViewModel.SessionViewOnly)
@@ -126,10 +130,12 @@ namespace HemoIQ
         private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.Source != MainTabControl) return;
-            if (MainTabControl.SelectedItem is TabItem { Header: "Analysis" })
+            var header = (MainTabControl.SelectedItem as TabItem)?.Header as string;
+            if (header == "Analysis")
                 ViewModel.AnalysisVM.OnTabSelected();
-            else if (MainTabControl.SelectedItem is TabItem { Header: "Worklist" })
+            else if (header == "Worklist")
                 ViewModel.WorklistVM.Refresh();
+            ViewModel.AnnounceScreen(header);
         }
 
         private void SaveCurrent()
@@ -207,13 +213,16 @@ namespace HemoIQ
             {
                 ClinicalDataSeeder.SeedIfNeeded(ViewModel.Database, ViewModel.Analyzer);
                 DemoDataSeeder.SeedIfNeeded(ViewModel.Database);
+                DemoDataSeeder.AnalyzeIfNeverAnalyzed(ViewModel.Database, ViewModel.Analyzer);
+                E2EWorkflowSeeder.SeedIfNeeded(ViewModel.Database, ViewModel.Analyzer);
                 ViewModel.RefreshAll();
                 ViewModel.SetStatus("Sample workload and demo scenarios loaded.");
                 MessageBox.Show(
                     "Sample data loaded.\n\n" +
                     "• 10 clinical specimens (2026-001 … 2026-010) on 5 shared panels\n" +
                     "• Enzyme (ficin) and absorption runs mixed in\n" +
-                    "• 11 DEMO- scenarios including warehouse antigens with ficin/DTT runs",
+                    "• 11 DEMO- scenarios including warehouse antigens with ficin/DTT runs\n" +
+                    "• E2E- workups for warm, cold, auto, exotic, and combination patterns",
                     "Done", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (System.Exception ex)

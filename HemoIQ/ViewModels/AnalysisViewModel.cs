@@ -75,7 +75,16 @@ namespace HemoIQ.ViewModels
         public Specimen? SelectedSpecimen
         {
             get => _selectedSpecimen;
-            set { if (SetField(ref _selectedSpecimen, value)) AutoLoadAnalysis(); }
+            set
+            {
+                var previous = _selectedSpecimen?.AccessionNumber;
+                if (!SetField(ref _selectedSpecimen, value)) return;
+                var loaded = AutoLoadAnalysis();
+                if (loaded
+                    && _main.SelectedTabIndex == 4
+                    && !string.Equals(previous, _selectedSpecimen?.AccessionNumber, StringComparison.Ordinal))
+                    AnnounceStatus();
+            }
         }
 
         private string _summaryText = string.Empty;
@@ -100,9 +109,10 @@ namespace HemoIQ.ViewModels
             private set => SetField(ref _staleMessage, value);
         }
 
-        private void RefreshStale()
+        /// <summary>Recomputes the stale banner for the selected specimen (also called after Preferences change).</summary>
+        public void RefreshStaleState()
         {
-            var reason = SelectedSpecimen == null ? null : _db.AnalysisStaleReason(SelectedSpecimen.AccessionNumber);
+            var reason = SelectedSpecimen == null ? null : _db.AnalysisStaleText(SelectedSpecimen.AccessionNumber);
             IsStale = reason != null;
             StaleMessage = reason == null ? string.Empty : $"⚠ Analysis is stale — {reason} Run Analysis again.";
         }
@@ -252,36 +262,47 @@ namespace HemoIQ.ViewModels
 
         public void OnTabSelected()
         {
-            if (SelectedSpecimen != null)
-                RefreshStale();
+            RefreshStaleState();
         }
+
+        public void AnnounceStatus() =>
+            _main.SetStatus(ScreenStatus.Analysis(
+                SelectedSpecimen?.AccessionNumber,
+                SelectedSpecimen?.LastAnalyzedAt != null,
+                IsStale,
+                SuspectedRows.Count,
+                RuleoutRows.Count));
 
         /// <summary>
         /// Called automatically when the selected specimen changes.
         /// If the specimen has been analyzed before, reloads those results without
         /// updating the database (preserving the stale-analysis indicator).
         /// </summary>
-        private void AutoLoadAnalysis()
+        private bool AutoLoadAnalysis()
         {
             ClearResults();
             if (SelectedSpecimen == null)
             {
                 LoadFinalCall(null);
-                return;
+                return true;
             }
 
-            RefreshStale();
+            RefreshStaleState();
             LoadFinalCall(SelectedSpecimen);
 
             // Only auto-populate if a previous analysis run exists
-            if (SelectedSpecimen.LastAnalyzedAt == null) return;
+            if (SelectedSpecimen.LastAnalyzedAt == null) return true;
 
             try
             {
                 var result = _analyzer.AnalyzeSpecimen(SelectedSpecimen.AccessionNumber, updateDb: false);
                 PopulateFromResult(result);
+                return true;
             }
-            catch { /* silently ignore — user can click Run Analysis to retry */ }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>Triggered by the Run Analysis button — computes, persists, and refreshes.</summary>
@@ -307,7 +328,7 @@ namespace HemoIQ.ViewModels
                 var result = _analyzer.AnalyzeSpecimen(SelectedSpecimen.AccessionNumber, updateDb: true);
                 PopulateFromResult(result);
                 OfferAcsException(result);
-                RefreshStale();
+                RefreshStaleState();
                 _main.SetStatus($"Analysis complete — {SuspectedRows.Count} suspected, {RuleoutRows.Count} ruled out.");
                 _main.SpecimensVM.Refresh();
                 _main.WorklistVM.Refresh();
@@ -624,7 +645,7 @@ namespace HemoIQ.ViewModels
 
             var overrides = new List<string>();
             var neverAnalyzed = SelectedSpecimen.LastAnalyzedAt == null;
-            var staleReason = neverAnalyzed ? null : _db.AnalysisStaleReason(SelectedSpecimen.AccessionNumber);
+            var staleReason = neverAnalyzed ? null : _db.AnalysisStaleText(SelectedSpecimen.AccessionNumber);
             if (ConfirmStalePrompt(staleReason, neverAnalyzed) is string staleWarning)
             {
                 if (MessageBox.Show(staleWarning, "Analysis out of date",
@@ -859,7 +880,7 @@ namespace HemoIQ.ViewModels
                 }
                 sb.AppendLine();
             }
-            else
+            else if (IncludeNoSuspectedSummary(r))
             {
                 sb.AppendLine("No antibodies suspected based on current data.");
                 sb.AppendLine();
@@ -983,6 +1004,14 @@ namespace HemoIQ.ViewModels
 
             SummaryText = sb.ToString();
         }
+
+        /// <summary>
+        /// A warm-auto or other panreactive pattern is evidence. Summary does
+        /// not add "no antibodies suspected" on top of that pattern.
+        /// </summary>
+        public static bool IncludeNoSuspectedSummary(AnalysisResult result) =>
+            (result.Suspected == null || result.Suspected.Count == 0)
+            && SpecimenPatternEvidence.PatternLines(result).Count == 0;
 
         private static string PatientTypingHeader(AnalysisResult r)
         {
@@ -1203,6 +1232,13 @@ namespace HemoIQ.ViewModels
         public string C37 { get; set; } = string.Empty;
         public string AHG { get; set; } = string.Empty;
         public string CC { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Same check-cell warning as the reactions grid: AHG is negative and
+        /// the check cell did not react.
+        /// </summary>
+        public bool IsCcInvalid =>
+            ReactionGrade.IsNegative(AHG) && !ReactionGrade.IsPositive(CC);
     }
 
     public class DosageRow

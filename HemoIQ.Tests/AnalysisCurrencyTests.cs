@@ -51,12 +51,12 @@ public class AnalysisCurrencyTests
 
         var current = InvestigationStatusService.Compute(iso.Db, iso.Db.GetSpecimen("AC-S")!, requireReview: false);
         Assert.Equal(InvestigationStatusService.AwaitingAdditionalTesting, current.Label);
-        Assert.Null(iso.Db.AnalysisStaleReason("AC-S"));
+        Assert.Null(iso.Db.AnalysisStaleText("AC-S"));
 
         Thread.Sleep(1100); // last_analyzed_at has one-second resolution
         iso.Db.AddRule("Later rule", null, "anti-K", null, false, 2);
 
-        var reason = iso.Db.AnalysisStaleReason("AC-S");
+        var reason = iso.Db.AnalysisStaleText("AC-S");
         Assert.Contains("Analysis rules or Preferences changed", reason);
         var status = InvestigationStatusService.Compute(iso.Db, iso.Db.GetSpecimen("AC-S")!, requireReview: false);
         Assert.Equal(InvestigationStatusService.AnalysisNeeded, status.Label);

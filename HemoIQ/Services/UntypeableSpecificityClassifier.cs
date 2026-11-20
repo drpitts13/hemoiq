@@ -12,25 +12,32 @@ namespace HemoIQ.Services
     /// </summary>
     public static class UntypeableSpecificityClassifier
     {
-        public static List<UntypeableSpecificity> Classify(IReadOnlyCollection<string>? typedOnPanels)
+        public static List<UntypeableSpecificity> Classify(
+            IReadOnlyCollection<string>? typedOnPanels,
+            IReadOnlyCollection<string>? ntOnEveryCell = null)
         {
             var typed = typedOnPanels as HashSet<string>
                 ?? new HashSet<string>(typedOnPanels ?? Array.Empty<string>(), StringComparer.Ordinal);
             if (typed.Count == 0)
                 return new List<UntypeableSpecificity>();
 
+            var nt = new HashSet<string>(ntOnEveryCell ?? Array.Empty<string>(), StringComparer.Ordinal);
             var cs = new HashSet<string>(AppSettings.Current.AcsAntigenList(), StringComparer.Ordinal);
             var list = new List<UntypeableSpecificity>();
             foreach (var ag in AntigenConstants.Antigens)
             {
                 if (typed.Contains(ag)) continue;
                 var clinicallySignificant = cs.Contains(ag);
+                var notTested = nt.Contains(ag);
                 list.Add(new UntypeableSpecificity
                 {
                     Antibody = $"anti-{ag}",
                     Antigen = ag,
                     IsClinicallySignificant = clinicallySignificant,
-                    Explanation = FormatExplanation(ag, clinicallySignificant),
+                    NotTestedOnEveryCell = notTested,
+                    Explanation = notTested
+                        ? FormatNotTested(ag, clinicallySignificant)
+                        : FormatExplanation(ag, clinicallySignificant),
                 });
             }
 
@@ -42,6 +49,13 @@ namespace HemoIQ.Services
             var cs = clinicallySignificant ? " (clinically significant)" : "";
             return $"anti-{antigen}{cs} cannot be typed from the current panels because {antigen} " +
                    "was never imported or tested on any linked cell. This is not a rule-out and not an identification.";
+        }
+
+        public static string FormatNotTested(string antigen, bool clinicallySignificant)
+        {
+            var cs = clinicallySignificant ? " (clinically significant)" : "";
+            return $"anti-{antigen}{cs} cannot be interpreted because {antigen} is NT on every cell " +
+                   "of the linked panel. This is not a rule-out and not an identification.";
         }
     }
 }

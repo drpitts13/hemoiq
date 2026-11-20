@@ -47,6 +47,75 @@ public class CandidateExplanationTests
     }
 
     [Fact]
+    public void RuleoutCell_NamesTheRunThatSuppliedIt()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("EX-RUN-RO", "serum", null);
+        var panelId = iso.Db.AddPanel("Run panel", "L", "V", 2, null, false);
+        iso.Db.LinkSpecimenPanel("EX-RUN-RO", panelId);
+        var cells = iso.Db.GetPanelCells(panelId);
+        iso.Db.UpdatePanelCellAntigen(cells[0].Id, "E", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[0].Id, "e", "-");
+        iso.Db.UpdatePanelCellAntigen(cells[1].Id, "E", "-");
+        iso.Db.UpdatePanelCellAntigen(cells[1].Id, "e", "+");
+
+        iso.Db.SaveReaction("EX-RUN-RO", panelId, "1", "0", "0", "3+", "NT");
+        iso.Db.SaveReaction("EX-RUN-RO", panelId, "2", "0", "0", "0", "2+");
+
+        var ficin = iso.Db.AddPanelRun(
+            "EX-RUN-RO", panelId, CellTreatment.Ficin, SerumTreatment.None, "Ficin");
+        iso.Db.SaveReaction(ficin, "1", "0", "0", "0", "2+");
+        iso.Db.SaveReaction(ficin, "2", "0", "0", "0", "2+");
+
+        var result = iso.Analyzer.AnalyzeSpecimen("EX-RUN-RO", updateDb: false);
+        var exp = RequireExplanation(result, "anti-E");
+
+        Assert.Contains(exp.RuleoutCells, c =>
+            c.Contains("cell 1", StringComparison.Ordinal) &&
+            c.Contains("Ficin, homozygous, IS 0, 37°C 0, AHG 0, CC 2+", StringComparison.Ordinal));
+        Assert.DoesNotContain(exp.RuleoutCells, c =>
+            c.Contains("Untreated", StringComparison.Ordinal));
+        Assert.Contains("Ficin, homozygous, IS 0, 37°C 0, AHG 0, CC 2+", exp.Narrative);
+        Assert.DoesNotContain("check cell did not react", exp.Narrative);
+        Assert.Contains(exp.ConflictingCells, c =>
+            c.Contains("cell 1", StringComparison.Ordinal) &&
+            c.Contains("Untreated, AHG 3+, CC NT, antigen-positive and reactive", StringComparison.Ordinal));
+        Assert.DoesNotContain(exp.ConflictingCells, c =>
+            c.Contains("Ficin, antigen-positive and reactive", StringComparison.Ordinal));
+
+        var details = result.DetailedRuleouts["anti-E"];
+        Assert.Contains(details, d =>
+            d.CellNumber == "1" && d.RunLabel == "Ficin" && d.CC == "2+");
+        Assert.DoesNotContain(details, d => d.RunLabel == "Untreated");
+    }
+
+    [Fact]
+    public void RuleoutCell_FailedCheckCell_SaysTheCheckCellDidNotReact()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("EX-CC-FAIL", "serum", null);
+        var panelId = iso.Db.AddPanel("P", "L", "V", 2, null, false);
+        iso.Db.LinkSpecimenPanel("EX-CC-FAIL", panelId);
+        var cells = iso.Db.GetPanelCells(panelId);
+        iso.Db.UpdatePanelCellAntigen(cells[0].Id, "K", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[0].Id, "k", "-");
+        iso.Db.UpdatePanelCellAntigen(cells[1].Id, "K", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[1].Id, "k", "-");
+        iso.Db.SaveReaction("EX-CC-FAIL", panelId, "1", "0", "0", "0", "0");
+        iso.Db.SaveReaction("EX-CC-FAIL", panelId, "2", "0", "0", "0", "2+");
+
+        var result = iso.Analyzer.AnalyzeSpecimen("EX-CC-FAIL", updateDb: false);
+        var exp = RequireExplanation(result, "anti-K");
+        var failed = Assert.Single(exp.RuleoutCells, c => c.Contains("cell 1", StringComparison.Ordinal));
+        var controlled = Assert.Single(exp.RuleoutCells, c => c.Contains("cell 2", StringComparison.Ordinal));
+
+        Assert.Contains("IS 0, 37°C 0, AHG 0, CC 0, check cell did not react", failed);
+        Assert.Contains("IS 0, 37°C 0, AHG 0, CC 2+", controlled);
+        Assert.DoesNotContain("check cell did not react", controlled);
+        Assert.Contains("check cell did not react", exp.Narrative);
+    }
+
+    [Fact]
     public void ReactiveEPositive_ListedAsConflict_NotAsRuleoutCell()
     {
         using var iso = new IsolatedDatabase();
@@ -103,11 +172,65 @@ public class CandidateExplanationTests
             Assert.True(exp.SupportingCells.Count >= 2);
             Assert.Contains("Supporting evidence", exp.Narrative);
             Assert.Contains("cell 1", exp.Narrative);
+            Assert.Contains(exp.SupportingCells, c =>
+                c.Contains("cell 1", StringComparison.Ordinal) &&
+                c.Contains("AHG 3+", StringComparison.Ordinal) &&
+                c.Contains("CC NT", StringComparison.Ordinal));
+            Assert.Contains("CC NT", exp.Narrative);
+            var evidence = result.SuspectedEvidence["anti-E"];
+            Assert.Contains(evidence.SupportingCells, c =>
+                c.CellNumber == "1" && c.AHG == "3+" && c.CC == "NT");
+            Assert.DoesNotContain(evidence.SupportingCells, c => c.CellNumber == "3");
+            Assert.Empty(evidence.ConflictingCells);
         }
         finally
         {
             AppSettings.Current.IdentificationCellCount = previous;
         }
+    }
+
+    [Fact]
+    public void AgNegativeReactiveCell_KeepsTheCheckCellGrade()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("EX-E-CC", "serum", null);
+        var panelId = iso.Db.AddPanel("P", "L", "V", 5, null, false);
+        iso.Db.LinkSpecimenPanel("EX-E-CC", panelId);
+        var cells = iso.Db.GetPanelCells(panelId);
+        iso.Db.UpdatePanelCellAntigen(cells[0].Id, "E", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[0].Id, "e", "-");
+        iso.Db.UpdatePanelCellAntigen(cells[1].Id, "E", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[1].Id, "e", "-");
+        iso.Db.UpdatePanelCellAntigen(cells[2].Id, "E", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[2].Id, "e", "-");
+        iso.Db.UpdatePanelCellAntigen(cells[3].Id, "E", "-");
+        iso.Db.UpdatePanelCellAntigen(cells[3].Id, "e", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[4].Id, "E", "-");
+        iso.Db.UpdatePanelCellAntigen(cells[4].Id, "e", "+");
+        iso.Db.SaveReaction("EX-E-CC", panelId, "1", "0", "0", "3+", "NT");
+        iso.Db.SaveReaction("EX-E-CC", panelId, "2", "0", "0", "2+", "NT");
+        iso.Db.SaveReaction("EX-E-CC", panelId, "3", "0", "0", "1+", "NT");
+        iso.Db.SaveReaction("EX-E-CC", panelId, "4", "2+", "0", "0", "2+");
+        iso.Db.SaveReaction("EX-E-CC", panelId, "5", "0", "0", "0", "2+");
+
+        var result = iso.Analyzer.AnalyzeSpecimen("EX-E-CC", updateDb: false);
+        Assert.True(result.Suspected.ContainsKey("anti-E"),
+            $"Expected anti-E suspected. Found: {string.Join(", ", result.Suspected.Keys)}");
+        var evidence = result.SuspectedEvidence["anti-E"];
+        Assert.Contains(evidence.ConflictingCells, c =>
+            c.CellNumber == "4" && c.AHG == "0" && c.CC == "2+" && c.RunLabel == "Untreated");
+        Assert.DoesNotContain(evidence.SupportingCells, c => c.CellNumber == "4");
+        Assert.Contains(evidence.SupportingCells, c =>
+            c.CellNumber == "1" && c.CC == "NT");
+        var exp = RequireExplanation(result, "anti-E");
+        Assert.Contains(exp.SupportingCells, c =>
+            c.Contains("cell 1", StringComparison.Ordinal) &&
+            c.Contains("Untreated, AHG 3+, CC NT", StringComparison.Ordinal));
+        Assert.Contains(exp.ConflictingCells, c =>
+            c.Contains("cell 4", StringComparison.Ordinal) &&
+            c.Contains("Untreated, IS 2+, CC 2+", StringComparison.Ordinal));
+        Assert.DoesNotContain(exp.SupportingCells, c =>
+            c.Contains("cell 4", StringComparison.Ordinal));
     }
 
     [Fact]

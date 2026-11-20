@@ -4,7 +4,7 @@ Rules are optional, per-antibody overrides of the default rule-out settings. Whe
 
 ## The list
 
-- **Name** is the label you gave the rule.
+- **Name** is the label you gave the rule. Selecting a rule updates the status line to name that rule.
 - **Antibody** is the specificity it applies to. Capitals in "Anti-" do not matter, but the antigen is case-sensitive: a rule for anti-K does not apply to anti-k, and the same holds for C and c, E and e, and S and s.
 - **Het OK** means a heterozygous antigen-positive cell may count toward the rule-out.
 - **Add** creates a rule. Ctrl+N does the same while this tab is selected. **Edit** opens the selected rule. **Delete** removes it after you confirm. **Refresh** reloads the list.
@@ -29,7 +29,7 @@ Rules are optional, per-antibody overrides of the default rule-out settings. Whe
 
 The right pane is read-only. It shows the name, antibody, exception antigen, whether heterozygous cells are allowed, the minimum rule-out count, and the description. Change those fields with **Edit**.
 
-**Exception antigen** names an antigen that changes how the rule is applied for that antibody, when your laboratory’s rule needs one. Leave it blank when the rule is only a count and a zygosity choice.
+**Exception antigen** limits heterozygous permission to that antigen on the antibody named in the rule. A rule for anti-D with exception C does not let heterozygous C cells rule out anti-C. Leave the exception blank when the rule is only a count and a zygosity choice for its own antibody.
 
 **Min Ruleout Count** replaces the default count for this antibody only. The Ruled Out tab shows that number in the **Needed** column and explains when the custom rule was used.
 

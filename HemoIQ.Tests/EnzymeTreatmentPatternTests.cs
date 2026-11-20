@@ -19,6 +19,8 @@ public class EnzymeTreatmentPatternTests
         Assert.Contains("1", note.SupportingCells);
         Assert.Contains("Fya", note.Explanation);
         Assert.Contains("lost reactivity", note.Explanation);
+        Assert.Contains("both grades were nonreactive: 4", note.Explanation);
+        Assert.DoesNotContain("4", note.SupportingCells);
         Assert.Contains("Not a diagnosis", note.Explanation);
         Assert.Contains("evidence score", note.Explanation, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(result.TreatmentInferences, i =>
@@ -226,6 +228,7 @@ public class EnzymeTreatmentPatternTests
         var note = Assert.Single(result.ReactionPatterns);
         Assert.Equal(EnzymeTreatmentPatternClassifier.IncompleteKind, note.Kind);
         Assert.Contains("0 cell(s) could be paired (none)", note.Explanation);
+        Assert.Contains("both grades were nonreactive: 1, 2, 3", note.Explanation);
         Assert.Contains("The comparison is incomplete", note.Explanation);
         Assert.DoesNotContain(result.ReactionPatterns, n => n.Kind == EnzymeTreatmentPatternClassifier.ResistantKind);
     }
@@ -459,6 +462,146 @@ public class EnzymeTreatmentPatternTests
         var report = iso.Reports.GeneratePreviewText(ReportType.ClinicalIdentification, "ENZ-MIX");
         Assert.Contains("No pattern was assigned", report);
         Assert.Contains("Not a diagnosis", report);
+    }
+
+    [Fact]
+    public void CellsTestedOnOnlyOneRun_AreNamedAndLeftOutOfThePairCount()
+    {
+        var untreated = Ctx(1, 1, CellTreatment.None);
+        var ficin = Ctx(2, 1, CellTreatment.Ficin);
+        var untreatedRx = Rxns("2+", "2+", "2+", "0");
+        untreatedRx.Add(new Reaction { CellNumber = "5", IS = "0", C37 = "0", AHG = "2+", CC = "NT" });
+        var ficinRx = Rxns("0", "0", "0", "0");
+        ficinRx.Add(new Reaction { CellNumber = "6", IS = "0", C37 = "0", AHG = "0", CC = "2+" });
+        var cells = FyaCells(new[] { "+", "+", "+", "-" });
+        cells.Add(Cell("5", "Fya", "+"));
+        cells.Add(Cell("6", "Fya", "-"));
+
+        var result = new AnalysisResult();
+        EnzymeTreatmentPatternClassifier.Apply(
+            result,
+            new Dictionary<int, List<Reaction>> { [1] = untreatedRx, [2] = ficinRx },
+            new Dictionary<int, RunContext> { [1] = untreated, [2] = ficin },
+            new Dictionary<int, List<PanelCell>> { [1] = cells });
+
+        var note = Assert.Single(result.ReactionPatterns, n => n.Kind == EnzymeTreatmentPatternClassifier.DestroyedKind);
+        Assert.Equal(3, note.MatchingCells);
+        Assert.DoesNotContain("5", note.SupportingCells);
+        Assert.DoesNotContain("6", note.SupportingCells);
+        Assert.Contains("left out of the pair count", note.Explanation);
+        Assert.Contains("untreated only 5", note.Explanation);
+        Assert.Contains("treated only 6", note.Explanation);
+        Assert.Contains("Not a diagnosis", note.Explanation);
+        Assert.Contains("Cells left out of the pair count", AnalysisExplainer.FormatDocument(result));
+    }
+
+    [Fact]
+    public void CellsOnBothRunsButMissingFromThePanel_AreNamedAndNotPaired()
+    {
+        var untreated = Ctx(1, 1, CellTreatment.None);
+        var ficin = Ctx(2, 1, CellTreatment.Ficin);
+        var untreatedRx = Rxns("2+", "2+", "2+", "0");
+        untreatedRx.Add(new Reaction { CellNumber = "7", IS = "0", C37 = "0", AHG = "2+", CC = "NT" });
+        var ficinRx = Rxns("0", "0", "0", "0");
+        ficinRx.Add(new Reaction { CellNumber = "7", IS = "0", C37 = "0", AHG = "0", CC = "2+" });
+
+        var result = new AnalysisResult();
+        EnzymeTreatmentPatternClassifier.Apply(
+            result,
+            new Dictionary<int, List<Reaction>> { [1] = untreatedRx, [2] = ficinRx },
+            new Dictionary<int, RunContext> { [1] = untreated, [2] = ficin },
+            new Dictionary<int, List<PanelCell>> { [1] = FyaCells(new[] { "+", "+", "+", "-" }) });
+
+        var note = Assert.Single(result.ReactionPatterns, n => n.Kind == EnzymeTreatmentPatternClassifier.DestroyedKind);
+        Assert.Equal(3, note.MatchingCells);
+        Assert.DoesNotContain("7", note.SupportingCells);
+        Assert.Contains("not on the panel cell list: 7", note.Explanation);
+        Assert.Contains("Not a diagnosis", note.Explanation);
+        Assert.Contains("not on the panel cell list: 7", AnalysisExplainer.FormatDocument(result));
+    }
+
+    [Fact]
+    public void Analyzer_CellMissingFromPanel_IsNamedOnTheReport()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("ENZ-MISS", "serum", null);
+        var panelId = iso.Db.AddPanel("P", "L", "V", 4, null, false);
+        iso.Db.LinkSpecimenPanel("ENZ-MISS", panelId);
+        var cells = iso.Db.GetPanelCells(panelId);
+        iso.Db.UpdatePanelCellAntigen(cells[0].Id, "Fya", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[1].Id, "Fya", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[2].Id, "Fya", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[3].Id, "Fya", "-");
+        var untreated = iso.Db.GetOrCreateDefaultRun("ENZ-MISS", panelId);
+        iso.Db.SaveReaction(untreated, "1", "0", "0", "2+", "NT");
+        iso.Db.SaveReaction(untreated, "2", "0", "0", "2+", "NT");
+        iso.Db.SaveReaction(untreated, "3", "0", "0", "2+", "NT");
+        iso.Db.SaveReaction(untreated, "4", "0", "0", "0", "2+");
+        var ficin = iso.Db.AddPanelRun("ENZ-MISS", panelId, CellTreatment.Ficin, SerumTreatment.None, "Ficin");
+        iso.Db.SaveReaction(ficin, "1", "0", "0", "0", "2+");
+        iso.Db.SaveReaction(ficin, "2", "0", "0", "0", "2+");
+        iso.Db.SaveReaction(ficin, "3", "0", "0", "0", "2+");
+        iso.Db.SaveReaction(ficin, "4", "0", "0", "0", "2+");
+        // Grades for a cell the panel lacks can no longer be saved; older data can still hold them.
+        using (var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={iso.DbPath};Pooling=False"))
+        {
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "INSERT INTO reactions (run_id, cell_number, \"IS\", C37, AHG, CC) VALUES " +
+                              $"({untreated}, '7', '0', '0', '2+', 'NT'), ({ficin}, '7', '0', '0', '0', '2+')";
+            cmd.ExecuteNonQuery();
+        }
+
+        var result = iso.Analyzer.AnalyzeSpecimen("ENZ-MISS", updateDb: false);
+        var note = Assert.Single(result.ReactionPatterns, n => n.Kind == EnzymeTreatmentPatternClassifier.DestroyedKind);
+        Assert.Contains("not on the panel cell list: 7", note.Explanation);
+        Assert.DoesNotContain("7", note.SupportingCells);
+        var report = iso.Reports.GeneratePreviewText(ReportType.ClinicalIdentification, "ENZ-MISS");
+        Assert.Contains("not on the panel cell list: 7", report);
+        Assert.Contains("Not a diagnosis", report);
+    }
+
+    [Fact]
+    public void Analyzer_OneSidedFicinCells_AreNamedOnTheReport()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("ENZ-SIDE", "serum", null);
+        var panelId = iso.Db.AddPanel("P", "L", "V", 5, null, false);
+        iso.Db.LinkSpecimenPanel("ENZ-SIDE", panelId);
+        var cells = iso.Db.GetPanelCells(panelId);
+        iso.Db.UpdatePanelCellAntigen(cells[0].Id, "Fya", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[1].Id, "Fya", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[2].Id, "Fya", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[3].Id, "Fya", "+");
+        iso.Db.UpdatePanelCellAntigen(cells[4].Id, "Fya", "-");
+        var untreated = iso.Db.GetOrCreateDefaultRun("ENZ-SIDE", panelId);
+        iso.Db.SaveReaction(untreated, "1", "0", "0", "2+", "NT");
+        iso.Db.SaveReaction(untreated, "2", "0", "0", "2+", "NT");
+        iso.Db.SaveReaction(untreated, "3", "0", "0", "2+", "NT");
+        iso.Db.SaveReaction(untreated, "4", "0", "0", "2+", "NT");
+        var ficin = iso.Db.AddPanelRun("ENZ-SIDE", panelId, CellTreatment.Ficin, SerumTreatment.None, "Ficin");
+        iso.Db.SaveReaction(ficin, "1", "0", "0", "0", "2+");
+        iso.Db.SaveReaction(ficin, "2", "0", "0", "0", "2+");
+        iso.Db.SaveReaction(ficin, "3", "0", "0", "0", "2+");
+        iso.Db.SaveReaction(ficin, "5", "0", "0", "0", "2+");
+
+        var result = iso.Analyzer.AnalyzeSpecimen("ENZ-SIDE", updateDb: false);
+        var note = Assert.Single(result.ReactionPatterns, n => n.Kind == EnzymeTreatmentPatternClassifier.DestroyedKind);
+        Assert.Contains("untreated only 4", note.Explanation);
+        Assert.Contains("treated only 5", note.Explanation);
+        Assert.Contains("left out of the pair count", note.Explanation);
+        Assert.DoesNotContain("4", note.SupportingCells);
+        var report = iso.Reports.GeneratePreviewText(ReportType.ClinicalIdentification, "ENZ-SIDE");
+        Assert.Contains("untreated only 4", report);
+        Assert.Contains("treated only 5", report);
+        Assert.Contains("Not a diagnosis", report);
+    }
+
+    private static PanelCell Cell(string number, string antigen, string value)
+    {
+        var cell = new PanelCell { CellNumber = number };
+        cell.SetAntigen(antigen, value);
+        return cell;
     }
 
     private static AnalysisResult AnalyzePairs(

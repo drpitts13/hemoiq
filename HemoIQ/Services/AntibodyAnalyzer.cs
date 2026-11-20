@@ -62,7 +62,8 @@ namespace HemoIQ.Services
             var untypedCs = AppSettings.Current.AcsAntigenList()
                 .Where(ag => !antigens.Contains(ag))
                 .ToList();
-            var untypeable = UntypeableSpecificityClassifier.Classify(antigens);
+            var untypeable = UntypeableSpecificityClassifier.Classify(
+                antigens, AntigensNtOnEveryCell(contexts));
 
             var result = new AnalysisResult
             {
@@ -269,6 +270,43 @@ namespace HemoIQ.Services
             return AntigenConstants.GetAnalyzedAntigens(extrasOnPanels)
                 .Where(typed.Contains)
                 .ToList();
+        }
+
+        /// <summary>
+        /// Antigens on a linked panel that are NT on every cell.
+        /// A saved import order is the sheet. A panel with no saved order uses
+        /// the antigens stored on its cells. An antigen outside that set was
+        /// not on the panel.
+        /// </summary>
+        private List<string> AntigensNtOnEveryCell(Dictionary<int, RunContext> contexts)
+        {
+            var nt = new HashSet<string>(StringComparer.Ordinal);
+            var seenPanels = new HashSet<int>();
+            foreach (var ctx in contexts.Values)
+            {
+                if (!seenPanels.Add(ctx.Run.PanelId)) continue;
+                var cells = _db.GetPanelCells(ctx.Run.PanelId);
+                var typed = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var cell in cells)
+                {
+                    foreach (var ag in cell.Antigens.Keys)
+                    {
+                        if (cell.HasTypedAntigen(ag))
+                            typed.Add(ag);
+                    }
+                }
+
+                var order = _db.GetPanelAntigenOrder(ctx.Run.PanelId);
+                IEnumerable<string> onPanel = order.Count > 0
+                    ? order.Concat(_db.GetPanelExtraAntigens(ctx.Run.PanelId))
+                    : cells.SelectMany(c => c.Antigens.Keys);
+                foreach (var ag in onPanel)
+                {
+                    if (!AntigenConstants.IsKnown(ag) || typed.Contains(ag)) continue;
+                    nt.Add(ag);
+                }
+            }
+            return nt.ToList();
         }
 
         private static Dictionary<int, List<Reaction>> GroupByRun(List<Reaction> reactions)
@@ -571,7 +609,7 @@ namespace HemoIQ.Services
                     PolicySource = rule != null ? "antibody rule" : "lab default",
                     Cells = cells,
                     DosageExcludedCells = dosageExcluded.TryGetValue(antibody, out var excluded) ? excluded : new List<RuleoutDetail>(),
-                    ConflictingReactiveCells = conflicting ?? new List<string>(),
+                    ConflictingReactiveCells = conflicting ?? new List<ReactiveConflictCell>(),
                 };
                 evaluation.Explanation = RuleoutPolicy.FormatExplanation(evaluation);
                 list.Add(evaluation);
@@ -580,17 +618,24 @@ namespace HemoIQ.Services
             return list;
         }
 
-        private Dictionary<string, List<string>> CollectConflictingReactiveCells(
+        private Dictionary<string, List<ReactiveConflictCell>> CollectConflictingReactiveCells(
             Dictionary<int, List<Reaction>> byRun,
             Dictionary<int, RunContext> contexts,
             IReadOnlyList<string> antigens,
             ISet<string> scoreExclusions)
         {
             // Ordinal: anti-K and anti-k are different antibodies with different conflicting cells.
-            var result = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            var result = new Dictionary<string, List<ReactiveConflictCell>>(StringComparer.Ordinal);
+            var seen = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+            var panelNames = new Dictionary<int, string>();
             foreach (var (runId, runReactions) in byRun)
             {
                 if (!contexts.TryGetValue(runId, out var ctx)) continue;
+                if (!panelNames.TryGetValue(ctx.Run.PanelId, out var panelName))
+                {
+                    panelName = _db.GetPanel(ctx.Run.PanelId)?.Name ?? $"Panel {ctx.Run.PanelId}";
+                    panelNames[ctx.Run.PanelId] = panelName;
+                }
                 var cellDict = _db.GetPanelCells(ctx.Run.PanelId).ToDictionary(c => c.CellNumber);
                 foreach (var rxn in runReactions)
                 {
@@ -603,13 +648,27 @@ namespace HemoIQ.Services
                         if (cell.GetAntigen(ag) != "+") continue;
                         var antibody = $"anti-{ag}";
                         if (ExcludedFromOrdinaryScores(ctx, antibody, scoreExclusions)) continue;
+                        if (!seen.TryGetValue(antibody, out var keys))
+                        {
+                            keys = new HashSet<string>(StringComparer.Ordinal);
+                            seen[antibody] = keys;
+                        }
+                        if (!keys.Add($"{runId}:{rxn.CellNumber}")) continue;
                         if (!result.TryGetValue(antibody, out var cells))
                         {
-                            cells = new List<string>();
+                            cells = new List<ReactiveConflictCell>();
                             result[antibody] = cells;
                         }
-                        if (!cells.Contains(rxn.CellNumber))
-                            cells.Add(rxn.CellNumber);
+                        var (phase, value) = ctx.GetStrongestPhase(rxn);
+                        cells.Add(new ReactiveConflictCell
+                        {
+                            PanelName = panelName,
+                            CellNumber = rxn.CellNumber,
+                            RunLabel = ctx.Run.DisplayLabel,
+                            StrongestPhase = phase,
+                            StrongestValue = value,
+                            CC = rxn.CC,
+                        });
                     }
                 }
             }
@@ -1182,6 +1241,22 @@ namespace HemoIQ.Services
             return acs;
         }
 
+        private static void AddUntypeableSuggestion(
+            List<string> informational,
+            AnalysisResult result,
+            bool notTestedOnEveryCell,
+            string reason)
+        {
+            var names = result.UntypeableSpecificities
+                .Where(u => !u.IsClinicallySignificant && u.NotTestedOnEveryCell == notTestedOnEveryCell)
+                .Select(u => u.Antibody)
+                .ToList();
+            if (names.Count == 0) return;
+            var shown = string.Join(", ", names.Take(8));
+            var more = names.Count > 8 ? $" (+{names.Count - 8} more)" : "";
+            informational.Add($"Current panels also cannot type {shown}{more} {reason}");
+        }
+
         private List<string> GenerateSuggestions(AnalysisResult result)
         {
             var critical = new List<string>();
@@ -1221,24 +1296,23 @@ namespace HemoIQ.Services
                 var shown = string.Join(", ", result.UntypedClinicallySignificant.Take(8));
                 var more = result.UntypedClinicallySignificant.Count > 8
                     ? $" (+{result.UntypedClinicallySignificant.Count - 8} more)" : "";
+                var ntOnPanel = new HashSet<string>(
+                    result.UntypeableSpecificities
+                        .Where(u => u.NotTestedOnEveryCell)
+                        .Select(u => u.Antigen),
+                    StringComparer.Ordinal);
+                var reason = result.UntypedClinicallySignificant.All(ntOnPanel.Contains)
+                    ? "because that antigen is NT on every cell."
+                    : "because the antigen was not tested.";
                 informational.Add(
                     $"This panel does not type {shown}{more}. Those antibodies cannot be " +
-                    "ruled out or supported from these cells because the antigen was not tested.");
+                    $"ruled out or supported from these cells {reason}");
             }
 
-            var otherUntypeable = result.UntypeableSpecificities
-                .Where(u => !u.IsClinicallySignificant)
-                .Select(u => u.Antibody)
-                .ToList();
-            if (otherUntypeable.Count > 0)
-            {
-                var shown = string.Join(", ", otherUntypeable.Take(8));
-                var more = otherUntypeable.Count > 8
-                    ? $" (+{otherUntypeable.Count - 8} more)" : "";
-                informational.Add(
-                    $"Current panels also cannot type {shown}{more} because those antigens were " +
-                    "never imported. This is not a rule-out.");
-            }
+            AddUntypeableSuggestion(informational, result, notTestedOnEveryCell: true,
+                "because that antigen is NT on every cell. This is not a rule-out.");
+            AddUntypeableSuggestion(informational, result, notTestedOnEveryCell: false,
+                "because those antigens were never imported. This is not a rule-out.");
 
             foreach (var (ab, ev) in result.SuspectedEvidence)
                 if (ev.TotalConflicting > 0)
@@ -1497,10 +1571,14 @@ namespace HemoIQ.Services
             Dictionary<int, List<Reaction>> byRun,
             Dictionary<int, RunContext> contexts)
         {
+            // An all-negative adsorbed aliquot must not cancel a panreactive
+            // untreated run. Adsorption evidence stays in the absorption notes.
             var observations = new List<PatternCellObservation>();
             foreach (var (runId, rxns) in byRun)
             {
                 contexts.TryGetValue(runId, out var ctx);
+                if (ctx != null && IsAdsorptionRun(ctx))
+                    continue;
                 foreach (var rxn in rxns)
                     observations.Add(ReactionPatternClassifier.Observe(rxn, ctx));
             }

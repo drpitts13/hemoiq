@@ -19,6 +19,8 @@ public class DttTreatmentPatternTests
         Assert.Contains("1", note.SupportingCells);
         Assert.Contains("K", note.Explanation);
         Assert.Contains("lost reactivity", note.Explanation);
+        Assert.Contains("both grades were nonreactive: 4", note.Explanation);
+        Assert.DoesNotContain("4", note.SupportingCells);
         Assert.Contains("DTT-destroyed", note.Explanation);
         Assert.Contains("Not a diagnosis", note.Explanation);
         Assert.Contains("evidence score", note.Explanation, StringComparison.OrdinalIgnoreCase);
@@ -154,6 +156,7 @@ public class DttTreatmentPatternTests
         var note = Assert.Single(result.ReactionPatterns);
         Assert.Equal(DttTreatmentPatternClassifier.IncompleteKind, note.Kind);
         Assert.Contains("0 cell(s) could be paired (none)", note.Explanation);
+        Assert.Contains("both grades were nonreactive: 1, 2, 3", note.Explanation);
         Assert.Contains("The comparison is incomplete", note.Explanation);
         Assert.DoesNotContain(result.ReactionPatterns, n => n.Kind == DttTreatmentPatternClassifier.ResistantKind);
     }
@@ -304,6 +307,69 @@ public class DttTreatmentPatternTests
 
         Assert.Contains(result.ReactionPatterns, n => n.Kind == DttTreatmentPatternClassifier.DestroyedKind);
         Assert.DoesNotContain(result.ReactionPatterns, n => n.Kind == DttTreatmentPatternClassifier.NoFitKind);
+    }
+
+    [Fact]
+    public void CellsTestedOnOnlyOneRun_AreNamedAndLeftOutOfThePairCount()
+    {
+        var untreated = Ctx(1, 1, CellTreatment.None);
+        var dtt = Ctx(2, 1, CellTreatment.DTT);
+        var untreatedRx = Rxns("2+", "2+", "2+", "0");
+        untreatedRx.Add(new Reaction { CellNumber = "8", IS = "0", C37 = "0", AHG = "2+", CC = "NT" });
+        var dttRx = Rxns("0", "0", "0", "0");
+        dttRx.Add(new Reaction { CellNumber = "9", IS = "0", C37 = "0", AHG = "2+", CC = "NT" });
+        var cells = KCells(new[] { "+", "+", "+", "-" });
+        cells.Add(Cell("8", "+"));
+        cells.Add(Cell("9", "-"));
+
+        var result = new AnalysisResult();
+        DttTreatmentPatternClassifier.Apply(
+            result,
+            new Dictionary<int, List<Reaction>> { [1] = untreatedRx, [2] = dttRx },
+            new Dictionary<int, RunContext> { [1] = untreated, [2] = dtt },
+            new Dictionary<int, List<PanelCell>> { [1] = cells });
+
+        var note = Assert.Single(result.ReactionPatterns, n => n.Kind == DttTreatmentPatternClassifier.DestroyedKind);
+        Assert.Equal(3, note.MatchingCells);
+        Assert.DoesNotContain("8", note.SupportingCells);
+        Assert.DoesNotContain("9", note.SupportingCells);
+        Assert.Contains("left out of the pair count", note.Explanation);
+        Assert.Contains("untreated only 8", note.Explanation);
+        Assert.Contains("treated only 9", note.Explanation);
+        Assert.Contains("Not a diagnosis", note.Explanation);
+    }
+
+    [Fact]
+    public void CellsOnBothRunsButMissingFromThePanel_AreNamedAndNotCountedAsGained()
+    {
+        var untreated = Ctx(1, 1, CellTreatment.None);
+        var dtt = Ctx(2, 1, CellTreatment.DTT);
+        var untreatedRx = Rxns("2+", "2+", "2+", "0");
+        untreatedRx.Add(new Reaction { CellNumber = "7", IS = "0", C37 = "0", AHG = "0", CC = "2+" });
+        var dttRx = Rxns("0", "0", "0", "0");
+        dttRx.Add(new Reaction { CellNumber = "7", IS = "0", C37 = "0", AHG = "2+", CC = "NT" });
+
+        var result = new AnalysisResult();
+        DttTreatmentPatternClassifier.Apply(
+            result,
+            new Dictionary<int, List<Reaction>> { [1] = untreatedRx, [2] = dttRx },
+            new Dictionary<int, RunContext> { [1] = untreated, [2] = dtt },
+            new Dictionary<int, List<PanelCell>> { [1] = KCells(new[] { "+", "+", "+", "-" }) });
+
+        var note = Assert.Single(result.ReactionPatterns, n => n.Kind == DttTreatmentPatternClassifier.DestroyedKind);
+        Assert.Equal(3, note.MatchingCells);
+        Assert.Contains("3 of 3 paired cells", note.Explanation);
+        Assert.Contains("not on the panel cell list: 7", note.Explanation);
+        Assert.DoesNotContain("7", note.SupportingCells);
+        Assert.DoesNotContain(note.Explanation, "became reactive", StringComparison.Ordinal);
+        Assert.Contains("Not a diagnosis", note.Explanation);
+    }
+
+    private static PanelCell Cell(string number, string k)
+    {
+        var cell = new PanelCell { CellNumber = number };
+        cell.SetAntigen("K", k);
+        return cell;
     }
 
     private static AnalysisResult AnalyzePairs(string[] untreatedAhg, string[] dttAhg, string[] k)

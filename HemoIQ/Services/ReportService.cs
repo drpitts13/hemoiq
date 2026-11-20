@@ -111,14 +111,7 @@ namespace HemoIQ.Services
             foreach (var p in panels) sb.AppendLine($"  {p.Name} (Lot: {p.LotNumber ?? "N/A"})");
             sb.AppendLine();
 
-            var antibodies = _db.GetSpecimenAntibodies(specimenId);
-            sb.AppendLine($"SUSPECTED ANTIBODIES ({antibodies.Count}):");
-            foreach (var a in antibodies) sb.AppendLine($"  {a.Antibody}  {a.Probability * 100:F1}%");
-            sb.AppendLine();
-
-            var ruleouts = _db.GetSpecimenRuleouts(specimenId);
-            sb.AppendLine($"RULED-OUT ANTIBODIES ({ruleouts.Count}):");
-            foreach (var r in ruleouts) sb.AppendLine($"  {r.Antibody}  (x{r.RuleoutCount})");
+            AppendCurrentSuspectedAndRuleouts(sb, specimenId);
             return sb.ToString();
         }
 
@@ -177,7 +170,8 @@ namespace HemoIQ.Services
 
         private void AppendAntigenGrid(StringBuilder sb, int panelId, IReadOnlyList<PanelCell> cells)
         {
-            var headerAntigens = _db.GetPanelDisplayAntigens(panelId);
+            var fullOrder = _db.GetPanelDisplayAntigens(panelId);
+            var headerAntigens = PanelCell.AntigensTypedOnAnyCell(fullOrder, cells);
             sb.Append($"{"Cell",-6}");
             foreach (var ag in headerAntigens) sb.Append($" {ag,4}");
             sb.AppendLine();
@@ -185,26 +179,42 @@ namespace HemoIQ.Services
             foreach (var cell in cells)
             {
                 sb.Append($"{cell.CellNumber,-6}");
-                foreach (var ag in headerAntigens) sb.Append($" {cell.GetAntigen(ag),4}");
+                foreach (var ag in headerAntigens) sb.Append($" {cell.PrintedAntigen(ag),4}");
                 sb.AppendLine();
             }
+            AppendOmittedAntigenNote(sb, fullOrder.Count, headerAntigens.Count);
+        }
+
+        private static void AppendOmittedAntigenNote(StringBuilder sb, int fullCount, int printedCount)
+        {
+            if (printedCount < fullCount)
+                sb.AppendLine("Antigens that are NT on every cell are omitted.");
         }
 
         private string AnalysisResultsText(string? specimenId)
         {
             if (specimenId == null) return "No specimen selected.";
-            var antibodies = _db.GetSpecimenAntibodies(specimenId);
-            var ruleouts = _db.GetSpecimenRuleouts(specimenId);
             var runs = _db.GetAllSpecimenRuns(specimenId);
             var sb = new StringBuilder();
             sb.AppendLine($"ANALYSIS RESULTS — {specimenId}");
             sb.AppendLine(new string('=', 50));
             sb.AppendLine(AnalysisTraceLine(specimenId));
-            sb.AppendLine($"Suspected Antibodies: {antibodies.Count}");
-            foreach (var a in antibodies) sb.AppendLine($"  {a.Antibody}  {a.Probability * 100:F1}%");
-            sb.AppendLine();
-            sb.AppendLine($"Ruled-out Antibodies: {ruleouts.Count}");
-            foreach (var r in ruleouts) sb.AppendLine($"  {r.Antibody}  (x{r.RuleoutCount})");
+            var result = TryAnalyze(specimenId);
+            if (result == null)
+            {
+                AppendSavedSuspectedAndRuleouts(sb, specimenId);
+            }
+            else
+            {
+                AppendSuspectedAndRuleouts(sb, result);
+                var pattern = SpecimenPatternEvidence.Format(result);
+                if (!string.IsNullOrWhiteSpace(pattern))
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("PATTERN EVIDENCE (not a diagnosis):");
+                    sb.AppendLine(pattern);
+                }
+            }
 
             if (runs.Count > 0)
             {
@@ -277,7 +287,8 @@ namespace HemoIQ.Services
                 sb.AppendLine($"Panel: {panel?.Name ?? run.PanelName}   Lot: {panel?.LotNumber ?? "N/A"}   Vendor: {panel?.Vendor ?? "N/A"}");
                 sb.AppendLine($"Run: {run.DisplayLabel}");
 
-                var antigens = _db.GetPanelDisplayAntigens(run.PanelId);
+                var fullOrder = _db.GetPanelDisplayAntigens(run.PanelId);
+                var antigens = PanelCell.AntigensTypedOnAnyCell(fullOrder, cells);
                 sb.Append($"{"Cell",-5}");
                 foreach (var ag in antigens)
                     sb.Append(ag.PadLeft(Math.Max(3, ag.Length) + 1));
@@ -292,12 +303,13 @@ namespace HemoIQ.Services
                     foreach (var ag in antigens)
                     {
                         var w = Math.Max(3, ag.Length) + 1;
-                        var v = cell.GetAntigen(ag);
+                        var v = cell.PrintedAntigen(ag);
                         sb.Append(v.PadLeft(w));
                     }
                     sb.Append($"  {(rxn?.IS ?? "NT"),-4} {(rxn?.C37 ?? "NT"),-4} {(rxn?.AHG ?? "NT"),-4} {rxn?.CC ?? "NT"}");
                     sb.AppendLine();
                 }
+                AppendOmittedAntigenNote(sb, fullOrder.Count, antigens.Count);
                 sb.AppendLine();
             }
 
@@ -358,11 +370,13 @@ namespace HemoIQ.Services
                     foreach (var (ab, prob) in analysis.Suspected.OrderByDescending(x => x.Value))
                         sb.AppendLine(FormatSuspectedAntibodyLine(ab, prob, analysis));
                 }
-                else if (!analysis.Acs.IsEligible && !analysis.Acs.IsEligibleWithException)
+                else if (!analysis.Acs.IsEligible && !analysis.Acs.IsEligibleWithException
+                         && SpecimenPatternEvidence.PatternLines(analysis).Count == 0)
                 {
                     sb.AppendLine("No antibodies suspected based on current reactions.");
                 }
             }
+            AppendPatternEvidence(sb, analysis);
             sb.AppendLine();
             if (analysis.RuleoutEvaluations.Count > 0)
             {
@@ -446,6 +460,99 @@ namespace HemoIQ.Services
             return sb.ToString();
         }
 
+        private static void AppendPatternEvidence(StringBuilder sb, AnalysisResult analysis)
+        {
+            var lines = SpecimenPatternEvidence.PatternLines(analysis);
+            if (lines.Count == 0) return;
+            sb.AppendLine();
+            sb.AppendLine("Pattern evidence (not a diagnosis):");
+            foreach (var line in lines)
+                sb.AppendLine("  " + line);
+        }
+
+        private void AppendCurrentSuspectedAndRuleouts(StringBuilder sb, string specimenId)
+        {
+            var result = TryAnalyze(specimenId);
+            if (result == null)
+            {
+                AppendSavedSuspectedAndRuleouts(sb, specimenId);
+                return;
+            }
+            AppendSuspectedAndRuleouts(sb, result);
+        }
+
+        private static void AppendSuspectedAndRuleouts(StringBuilder sb, AnalysisResult result)
+        {
+            var suspected = SpecimenPatternEvidence.SuspectedRows(result);
+            sb.AppendLine($"SUSPECTED ANTIBODIES ({suspected.Count}):");
+            foreach (var a in suspected)
+                sb.AppendLine($"  {a.Antibody}  {a.Probability * 100:F1}%");
+            sb.AppendLine();
+            var ruleouts = SpecimenPatternEvidence.RuleoutRows(result);
+            sb.AppendLine($"RULED-OUT ANTIBODIES ({ruleouts.Count}):");
+            foreach (var r in ruleouts)
+                sb.AppendLine(FormatRuleoutCountLine(r));
+        }
+
+        private static string FormatRuleoutCountLine(SpecimenRuleout r)
+        {
+            var line = $"  {r.Antibody}  (x{r.RuleoutCount})";
+            return string.IsNullOrWhiteSpace(r.Note) ? line : $"{line}  {r.Note}";
+        }
+
+        private void AppendSavedSuspectedAndRuleouts(StringBuilder sb, string specimenId)
+        {
+            var antibodies = _db.GetSpecimenAntibodies(specimenId);
+            sb.AppendLine($"SUSPECTED ANTIBODIES ({antibodies.Count}):");
+            foreach (var a in antibodies)
+                sb.AppendLine($"  {a.Antibody}  {a.Probability * 100:F1}%");
+            sb.AppendLine();
+            var ruleouts = _db.GetSpecimenRuleouts(specimenId);
+            sb.AppendLine($"RULED-OUT ANTIBODIES ({ruleouts.Count}):");
+            foreach (var r in ruleouts)
+                sb.AppendLine(FormatRuleoutCountLine(r));
+        }
+
+        private void WriteSpecimenSummaryCsv(CsvWriter csv, string specimenId)
+        {
+            var result = TryAnalyze(specimenId);
+            var antibodies = result == null
+                ? _db.GetSpecimenAntibodies(specimenId)
+                : SpecimenPatternEvidence.SuspectedRows(result);
+            var ruleouts = result == null
+                ? _db.GetSpecimenRuleouts(specimenId)
+                : SpecimenPatternEvidence.RuleoutRows(result);
+
+            csv.WriteField("Antibodies");
+            csv.NextRecord();
+            csv.WriteRecords(antibodies.Select(a => new { a.Antibody, Score = $"{a.Probability * 100:F1}%" }));
+            csv.WriteField("Ruleouts");
+            csv.NextRecord();
+            csv.WriteField("Antibody");
+            csv.WriteField("RuleoutCount");
+            csv.WriteField("CheckCell");
+            csv.NextRecord();
+            foreach (var r in ruleouts)
+            {
+                csv.WriteField(r.Antibody);
+                csv.WriteField(r.RuleoutCount);
+                csv.WriteField(r.Note);
+                csv.NextRecord();
+            }
+        }
+
+        private AnalysisResult? TryAnalyze(string specimenId)
+        {
+            try
+            {
+                return new AntibodyAnalyzer(_db).AnalyzeSpecimen(specimenId, updateDb: false);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         private string AnalysisTraceLine(string specimenId)
         {
             var settings = AppSettings.Current;
@@ -496,7 +603,7 @@ namespace HemoIQ.Services
         {
             if (s.HasFinalCall) return "Confirmed";
             if (s.LastAnalyzedAt == null) return "Not analyzed";
-            if (AnalysisCurrency.StaleReason(s, _db.LastAnalysisConfigurationChange()) != null) return "Stale";
+            if (AnalysisCurrency.StaleReason(s, _db.LastAnalysisConfigurationChange(), _db.SettingsDrifted(s)) != null) return "Stale";
             return "Analyzed";
         }
 
@@ -517,8 +624,8 @@ namespace HemoIQ.Services
 
             var notAnalyzed = pending.Where(s => s.LastAnalyzedAt == null).ToList();
             var configChanged = _db.LastAnalysisConfigurationChange();
-            var stale = pending.Where(s => AnalysisCurrency.StaleReason(s, configChanged) != null).ToList();
-            var analyzed = pending.Where(s => s.LastAnalyzedAt != null && AnalysisCurrency.StaleReason(s, configChanged) == null).ToList();
+            var stale = pending.Where(s => AnalysisCurrency.StaleReason(s, configChanged, _db.SettingsDrifted(s)) != null).ToList();
+            var analyzed = pending.Where(s => s.LastAnalyzedAt != null && AnalysisCurrency.StaleReason(s, configChanged, _db.SettingsDrifted(s)) == null).ToList();
 
             if (notAnalyzed.Count > 0)
             {
@@ -538,7 +645,7 @@ namespace HemoIQ.Services
                 foreach (var s in stale)
                 {
                     sb.AppendLine($"  {s.AccessionNumber,-20} {s.Type,-8} {s.ExpirationDate ?? "N/A",-12} {s.LastAnalyzedAt ?? "—"}");
-                    sb.AppendLine($"    {AnalysisCurrency.StaleReason(s, configChanged)}");
+                    sb.AppendLine($"    {AnalysisCurrency.StaleReason(s, configChanged, _db.SettingsDrifted(s))}");
                 }
                 sb.AppendLine();
             }
@@ -568,16 +675,36 @@ namespace HemoIQ.Services
         private string AllPanelsText()
         {
             var panels = _db.GetAllPanels();
+            var nameW = ColumnWidth("Name", panels.Select(p => p.Name));
+            var lotW = ColumnWidth("Lot", panels.Select(p => p.LotNumber ?? "N/A"));
+            var vendorW = ColumnWidth("Vendor", panels.Select(p => p.Vendor ?? "N/A"));
+            var cellsW = ColumnWidth("Cells", panels.Select(p => p.NumCells.ToString()));
+            var expW = ColumnWidth("Expires", panels.Select(p => p.ExpirationDate ?? "N/A"));
+            var lineW = nameW + lotW + vendorW + cellsW + expW + 4;
             var sb = new StringBuilder();
             sb.AppendLine($"ALL PANELS ({panels.Count})");
-            sb.AppendLine(new string('=', 60));
-            sb.AppendLine($"{"Name",-25} {"Lot",-15} {"Vendor",-15} {"Cells",-6} {"Expires",-12} Typing");
-            sb.AppendLine(new string('-', 90));
+            sb.AppendLine(new string('=', lineW));
+            sb.AppendLine(string.Join(" ",
+                "Name".PadRight(nameW),
+                "Lot".PadRight(lotW),
+                "Vendor".PadRight(vendorW),
+                "Cells".PadRight(cellsW),
+                "Expires".PadRight(expW),
+                "Typing"));
+            sb.AppendLine(new string('-', lineW));
             foreach (var p in panels)
-                sb.AppendLine($"{p.Name,-25} {p.LotNumber ?? "N/A",-15} {p.Vendor ?? "N/A",-15} {p.NumCells,-6} {p.ExpirationDate ?? "N/A",-12} " +
-                              PanelIntegrityCheck.Summarize(_db.GetPanelCells(p.PanelId)).Display);
+                sb.AppendLine(string.Join(" ",
+                    p.Name.PadRight(nameW),
+                    (p.LotNumber ?? "N/A").PadRight(lotW),
+                    (p.Vendor ?? "N/A").PadRight(vendorW),
+                    p.NumCells.ToString().PadRight(cellsW),
+                    (p.ExpirationDate ?? "N/A").PadRight(expW),
+                    PanelIntegrityCheck.Summarize(_db.GetPanelCells(p.PanelId)).Display));
             return sb.ToString();
         }
+
+        private static int ColumnWidth(string header, IEnumerable<string> values) =>
+            Math.Max(header.Length, values.Select(v => v.Length).DefaultIfEmpty(0).Max());
 
         // ── Report output audit ───────────────────────────────────────────────
 
@@ -669,23 +796,19 @@ namespace HemoIQ.Services
                     }));
                     break;
                 case ReportType.SpecimenSummary when specimenId != null:
-                    var abs = _db.GetSpecimenAntibodies(specimenId);
-                    var ros = _db.GetSpecimenRuleouts(specimenId);
-                    csv.WriteField("Antibodies"); csv.NextRecord();
-                    csv.WriteRecords(abs.Select(a => new { a.Antibody, Score = $"{a.Probability * 100:F1}%" }));
-                    csv.WriteField("Ruleouts"); csv.NextRecord();
-                    csv.WriteRecords(ros.Select(r => new { r.Antibody, r.RuleoutCount }));
+                    WriteSpecimenSummaryCsv(csv, specimenId);
                     break;
                 case ReportType.PanelSummary when panelId.HasValue:
                     var cells = _db.GetPanelCells(panelId.Value);
-                    var antigens = _db.GetPanelDisplayAntigens(panelId.Value);
+                    var antigens = PanelCell.AntigensTypedOnAnyCell(
+                        _db.GetPanelDisplayAntigens(panelId.Value), cells);
                     csv.WriteField("Cell");
                     foreach (var ag in antigens) csv.WriteField(ag);
                     csv.NextRecord();
                     foreach (var cell in cells)
                     {
                         csv.WriteField(cell.CellNumber);
-                        foreach (var ag in antigens) csv.WriteField(cell.GetAntigen(ag));
+                        foreach (var ag in antigens) csv.WriteField(cell.PrintedAntigen(ag));
                         csv.NextRecord();
                     }
                     break;

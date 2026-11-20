@@ -2,6 +2,8 @@
 
 Combinations lists antibody pairs whose combination score is above 50 percent. That score suggests both antibodies may be present together when a single specificity leaves reactions unexplained.
 
+The grid is empty when fewer than two antibodies are suspected. A pair is taken from the suspected list only. It is listed when at least one reactive cell carries both antigens and the combination score exceeds 50 percent. The score is the share of those reactive cells that carry one or both antigens. A workup with nothing suspected, including a nonreactive panel used for rule-out, has no pairs.
+
 The note at the top of the tab states that threshold. The grid columns are:
 
 - **Antibody Pair** — the two specificities.

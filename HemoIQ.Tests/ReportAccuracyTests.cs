@@ -32,7 +32,7 @@ public class ReportAccuracyTests
         var text = _fixture.Reports.GeneratePreviewText(ReportType.AnalysisResults, "2024-003");
 
         Assert.Contains("ANALYSIS RESULTS", text);
-        Assert.Contains($"Suspected Antibodies: {antibodies.Count}", text);
+        Assert.Contains($"SUSPECTED ANTIBODIES ({antibodies.Count}):", text);
         foreach (var ab in antibodies)
         {
             Assert.Contains(ab.Antibody, text);
@@ -72,6 +72,30 @@ public class ReportAccuracyTests
         Assert.Contains($"ALL PANELS ({panels.Count})", text);
         foreach (var p in panels)
             Assert.Contains(p.Name, text);
+    }
+
+    [Fact]
+    public void AllPanelsReport_KeepsLotUnderItsHeading()
+    {
+        var panels = _fixture.Db.GetAllPanels();
+        var text = _fixture.Reports.GeneratePreviewText(ReportType.AllPanels);
+        var lines = text.Split('\n');
+        var header = lines.First(l => l.StartsWith("Name ", StringComparison.Ordinal));
+        var lotAt = header.IndexOf("Lot", StringComparison.Ordinal);
+        var cellsAt = header.IndexOf("Cells", StringComparison.Ordinal);
+        var expiresAt = header.IndexOf("Expires", StringComparison.Ordinal);
+        Assert.True(lotAt > "Name".Length);
+        foreach (var p in panels)
+        {
+            var row = lines.First(l => l.StartsWith(p.Name + " ", StringComparison.Ordinal)
+                || l.StartsWith(p.Name + "\r", StringComparison.Ordinal)
+                || l == p.Name);
+            var lot = p.LotNumber ?? "N/A";
+            Assert.Equal(lot, row.Substring(lotAt, lot.Length));
+            Assert.Equal(p.NumCells.ToString(), row.Substring(cellsAt, p.NumCells.ToString().Length));
+            var expires = p.ExpirationDate ?? "N/A";
+            Assert.Equal(expires, row.Substring(expiresAt, expires.Length));
+        }
     }
 
     [Fact]

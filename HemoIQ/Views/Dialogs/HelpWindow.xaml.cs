@@ -1,7 +1,10 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using HemoIQ.Help;
+using HemoIQ.Services;
+using Microsoft.Win32;
 
 namespace HemoIQ.Views.Dialogs;
 
@@ -36,6 +39,24 @@ public partial class HelpWindow : Window
     private void Window_Loaded(object sender, RoutedEventArgs e) =>
         ApplyTree(HelpCatalog.Tree(), _pendingId);
 
+    private bool _dismissed;
+
+    private void CloseClick(object sender, RoutedEventArgs e) => Dismiss();
+
+    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != System.Windows.Input.Key.Escape || e.Handled) return;
+        e.Handled = true;
+        Dismiss();
+    }
+
+    private void Dismiss()
+    {
+        if (_dismissed) return;
+        _dismissed = true;
+        Close();
+    }
+
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (!IsLoaded) return;
@@ -62,6 +83,35 @@ public partial class HelpWindow : Window
 
     private void PrintManualClick(object sender, RoutedEventArgs e) =>
         Print(MarkdownToFlowDocument.ConvertManual(HelpCatalog.InReadingOrder()), "User Manual");
+
+    private void SaveManualClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "Save user manual",
+            Filter = "PDF (*.pdf)|*.pdf|Markdown (*.md)|*.md|Text (*.txt)|*.txt",
+            FileName = $"{SoftwareIdentity.ProductName} User Manual.pdf",
+            AddExtension = true,
+            OverwritePrompt = true
+        };
+        if (dialog.ShowDialog() != true) return;
+        var path = dialog.FileName;
+        if (string.IsNullOrEmpty(Path.GetExtension(path)))
+        {
+            path += dialog.FilterIndex switch
+            {
+                2 => ".md",
+                3 => ".txt",
+                _ => ".pdf"
+            };
+        }
+        if (path.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            UserManualPdf.Save(path);
+        else
+            File.WriteAllText(path, UserManual.Build());
+        MessageBox.Show(this, "The user manual was saved.", "User Manual",
+            MessageBoxButton.OK, MessageBoxImage.Information);
+    }
 
     private void ApplyTree(IReadOnlyList<HelpTopicNode> roots, string preferredId)
     {

@@ -19,6 +19,53 @@ public class PanelAdministrationTests
     }
 
     [Fact]
+    public void GridAntigens_HidesColumnWhenEveryCellIsNt()
+    {
+        var order = new[] { "D", "C", "E", "K", "Fya" };
+        var rows = new List<PanelCellRow>
+        {
+            Row("1", ("E", "+"), ("K", "-"), ("Fya", "+")),
+            Row("2", ("E", "-"), ("K", "+"), ("Fya", "-")),
+            Row("AC", ("E", "NT"), ("K", "NT"), ("Fya", "NT")),
+        };
+
+        Assert.Equal(new[] { "E", "K", "Fya" }, PanelsViewModel.AntigensForGrid(order, rows, showUntypedColumns: false));
+        Assert.Equal(order, PanelsViewModel.AntigensForGrid(order, rows, showUntypedColumns: true));
+    }
+
+    [Fact]
+    public void GridAntigens_KeepsColumnWhenAnyCellIsTyped()
+    {
+        var rows = new List<PanelCellRow>
+        {
+            Row("1", ("D", "NT"), ("E", "+")),
+            Row("AC", ("D", "-"), ("E", "NT")),
+        };
+
+        Assert.Equal(new[] { "D", "E" }, PanelsViewModel.AntigensForGrid(new[] { "D", "E", "C" }, rows, showUntypedColumns: false));
+    }
+
+    [Fact]
+    public void PlaceSearchAntigensFirst_GroupsSeveralCriteria()
+    {
+        var browsing = new[] { "D", "C", "E", "K", "P1" };
+        Assert.Equal(browsing, PanelsViewModel.PlaceSearchAntigensFirst(browsing, null));
+        Assert.Equal(browsing, PanelsViewModel.PlaceSearchAntigensFirst(browsing, new[] { "D" }));
+        Assert.Equal(new[] { "D", "P1", "C", "E", "K" },
+            PanelsViewModel.PlaceSearchAntigensFirst(browsing, new[] { "D", "P1" }));
+        Assert.Equal(new[] { "D", "K", "C", "E", "P1" },
+            PanelsViewModel.PlaceSearchAntigensFirst(browsing, new[] { "D", "Vel", "K" }));
+    }
+
+    private static PanelCellRow Row(string cellNumber, params (string Antigen, string Value)[] antigens)
+    {
+        var cell = new PanelCell { CellNumber = cellNumber };
+        foreach (var (antigen, value) in antigens)
+            cell.SetAntigen(antigen, value);
+        return new PanelCellRow(cell);
+    }
+
+    [Fact]
     public void AddPanel_CreatesCellsUntested_NotTypedNegative()
     {
         using var iso = new IsolatedDatabase();
@@ -241,6 +288,7 @@ public class PanelAdministrationTests
         var panelId = iso.Db.AddPanel("Edit NT", "L", "V", 1, null, false, startTypedNegative: true);
         var cell = iso.Db.GetPanelCells(panelId).Single();
         var row = new PanelCellRow(cell);
+        row.SetAntigen("D", "+");
         row.SetAntigen("K", "-");
         row.ToggleAntigen("K");
         Assert.Equal("NT", row.K);

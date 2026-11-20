@@ -44,12 +44,15 @@ public class RuleoutPolicyTests
     [Fact]
     public void HeterozygousAllowed_ByAntibodyOrExceptionAntigen_CaseSensitive()
     {
-        var rules = new[] { R("anti-C", het: true), R("other", het: true, exception: "Jkb"), R("anti-Fya", het: false) };
+        var rules = new[] { R("anti-C", het: true), R("anti-Jkb", het: true, exception: "Jkb"), R("anti-D", het: true, exception: "E"),
+                            R("anti-Fya", het: false) };
         Assert.True(RuleoutPolicy.HeterozygousAllowed("C", rules));
         Assert.False(RuleoutPolicy.HeterozygousAllowed("c", rules));
         Assert.True(RuleoutPolicy.HeterozygousAllowed("Jkb", rules));
         Assert.False(RuleoutPolicy.HeterozygousAllowed("jkb", rules));
         Assert.False(RuleoutPolicy.HeterozygousAllowed("Fya", rules));
+        // An exception antigen on another antibody's rule does not widen heterozygous use.
+        Assert.False(RuleoutPolicy.HeterozygousAllowed("E", rules));
     }
 
     [Fact]

@@ -93,7 +93,7 @@ namespace HemoIQ.Services
             }
             if (result.UntypeableSpecificities.Count > 0)
             {
-                sb.AppendLine("Specificities the current panels cannot type (antigen never imported):");
+                sb.AppendLine("Specificities the current panels cannot type:");
                 foreach (var u in result.UntypeableSpecificities)
                     sb.AppendLine("  " + u.Explanation);
                 sb.AppendLine();
@@ -137,7 +137,7 @@ namespace HemoIQ.Services
             {
                 exp.RuleoutCriteria = ruleEval.Explanation;
                 exp.RuleoutCells = ruleEval.Cells
-                    .Select(c => $"{c.PanelName} cell {c.CellNumber} ({(c.IsHomozygous ? "homozygous" : "heterozygous")})")
+                    .Select(FormatRuleoutCell)
                     .Concat(ruleEval.DosageExcludedCells.Select(c =>
                         $"{c.PanelName} cell {c.CellNumber} (not counted: " +
                         (c.AntitheticalValue == null ? $"zygosity unknown, {c.Antithetical} not typed" : "heterozygous") + ")"))
@@ -153,10 +153,10 @@ namespace HemoIQ.Services
             if (evidence != null)
             {
                 exp.SupportingCells = evidence.SupportingCells
-                    .Select(c => $"{c.PanelName} cell {c.CellNumber} ({c.StrongestPhase} {c.StrongestValue})")
+                    .Select(FormatEvidenceCell)
                     .ToList();
                 exp.ConflictingCells = evidence.ConflictingCells
-                    .Select(c => $"{c.PanelName} cell {c.CellNumber} ({c.StrongestPhase} {c.StrongestValue})")
+                    .Select(FormatEvidenceCell)
                     .ToList();
             }
 
@@ -164,8 +164,12 @@ namespace HemoIQ.Services
             {
                 foreach (var cell in ruleEval.ConflictingReactiveCells)
                 {
-                    var line = $"cell {cell} (antigen-positive and reactive)";
-                    if (!exp.ConflictingCells.Any(x => x.Contains($"cell {cell}", StringComparison.Ordinal)))
+                    var line = FormatBlockingCell(cell);
+                    var alreadyCited = exp.ConflictingCells.Any(x =>
+                        x.Contains($"cell {cell.CellNumber}", StringComparison.Ordinal) &&
+                        (string.IsNullOrWhiteSpace(cell.RunLabel) ||
+                         x.Contains(cell.RunLabel, StringComparison.Ordinal)));
+                    if (!alreadyCited)
                         exp.ConflictingCells.Add(line);
                 }
             }
@@ -230,12 +234,15 @@ namespace HemoIQ.Services
                     ? "Historical — cannot type from current panels"
                     : "Cannot type from current panels",
                 RuleoutCriteria = untypeable.Explanation,
-                PhaseNote = "Phase scores were not computed because the antigen was never imported.",
+                PhaseNote = untypeable.NotTestedOnEveryCell
+                    ? "Phase scores were not computed because the antigen is NT on every cell."
+                    : "Phase scores were not computed because the antigen was never imported.",
                 PhenotypeNote = phenotype.Count == 0
                     ? "No patient phenotype evidence was parsed for this antibody."
                     : string.Join(" ", phenotype.Select(p => p.Explanation)),
-                AdditionalTesting =
-                    $"Import or select cells that type {untypeable.Antigen} before this antibody can be ruled out or supported.",
+                AdditionalTesting = untypeable.NotTestedOnEveryCell
+                    ? $"Type {untypeable.Antigen} on the linked cells before this antibody can be ruled out or supported."
+                    : $"Import or select cells that type {untypeable.Antigen} before this antibody can be ruled out or supported.",
             };
             exp.Narrative = FormatNarrative(exp, score: 0, suspected: false);
             return exp;
@@ -254,6 +261,48 @@ namespace HemoIQ.Services
             if (phenotype.Any(p => p.Kind == PatientTypingKind.Historical)) return "Historical";
             if (pattern != null) return "Pattern only";
             return "Considered";
+        }
+
+        private static string FormatBlockingCell(ReactiveConflictCell cell)
+        {
+            const string note = "antigen-positive and reactive";
+            var phase = $"{cell.StrongestPhase} {cell.StrongestValue}".Trim();
+            if (!string.IsNullOrWhiteSpace(cell.CC))
+                phase = string.IsNullOrWhiteSpace(phase) ? $"CC {cell.CC}" : $"{phase}, CC {cell.CC}";
+            var detail = string.IsNullOrWhiteSpace(phase) ? note : $"{phase}, {note}";
+            var where = string.IsNullOrWhiteSpace(cell.RunLabel)
+                ? detail
+                : $"{cell.RunLabel}, {detail}";
+            var panel = string.IsNullOrWhiteSpace(cell.PanelName) ? "Panel" : cell.PanelName;
+            return $"{panel} cell {cell.CellNumber} ({where})";
+        }
+
+        private static string FormatRuleoutCell(RuleoutDetail cell)
+        {
+            var zygosity = cell.IsHomozygous ? "homozygous" : "heterozygous";
+            var where = string.IsNullOrWhiteSpace(cell.RunLabel)
+                ? zygosity
+                : $"{cell.RunLabel}, {zygosity}";
+            where = $"{where}, IS {Grade(cell.IS)}, 37°C {Grade(cell.C37)}, AHG {Grade(cell.AHG)}";
+            if (!string.IsNullOrWhiteSpace(cell.CC))
+                where = $"{where}, CC {cell.CC}";
+            if (ReactionGrade.IsNegative(cell.AHG) && ReactionGrade.IsNegative(cell.CC))
+                where = $"{where}, check cell did not react";
+            return $"{cell.PanelName} cell {cell.CellNumber} ({where})";
+        }
+
+        private static string Grade(string? value) =>
+            string.IsNullOrWhiteSpace(value) ? "NT" : value;
+
+        private static string FormatEvidenceCell(EvidenceCell cell)
+        {
+            var phase = $"{cell.StrongestPhase} {cell.StrongestValue}".Trim();
+            if (!string.IsNullOrWhiteSpace(cell.CC))
+                phase = string.IsNullOrWhiteSpace(phase) ? $"CC {cell.CC}" : $"{phase}, CC {cell.CC}";
+            var where = string.IsNullOrWhiteSpace(cell.RunLabel)
+                ? phase
+                : $"{cell.RunLabel}, {phase}";
+            return $"{cell.PanelName} cell {cell.CellNumber} ({where})";
         }
 
         private static string FormatPhaseNote(string antibody, AnalysisResult result)

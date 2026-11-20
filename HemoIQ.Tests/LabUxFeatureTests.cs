@@ -773,4 +773,51 @@ public class LabUxFeatureTests
     {
         Assert.Equal(expected, ReactionsViewModel.FormatEntryProgress(entered, total));
     }
+
+    [Fact]
+    public void PreferencesChange_MarksUnconfirmedAnalysisStale_AndLeavesConfirmed()
+    {
+        using var iso = new IsolatedDatabase();
+        var panelId = iso.Db.AddPanel("Pref Panel", "LOT-P", "Vendor", 1, null, false);
+        iso.Db.AddSpecimen("PREF-OPEN", "serum", null);
+        iso.Db.LinkSpecimenPanel("PREF-OPEN", panelId);
+        iso.Db.SetSpecimenLastAnalyzed("PREF-OPEN");
+        var saved = AppSettings.Current.ClinicalSettingsJson();
+        iso.Db.SaveAnalysisSnapshot("PREF-OPEN", "test", saved, "fp", null, null, null);
+
+        Assert.DoesNotContain(iso.Db.GetWorklistItems(14),
+            i => i.AccessionNumber == "PREF-OPEN" && i.Kind == WorklistKind.StaleAnalysis);
+        Assert.Equal(AnalysisStaleReason.None, iso.Db.GetAnalysisStaleReason("PREF-OPEN"));
+
+        var previousName = AppSettings.Current.LabName;
+        var previousRuleouts = AppSettings.Current.DefaultMinRuleoutCount;
+        try
+        {
+            AppSettings.Current.LabName = "Other Laboratory";
+            Assert.DoesNotContain(iso.Db.GetWorklistItems(14),
+                i => i.AccessionNumber == "PREF-OPEN" && i.Kind == WorklistKind.StaleAnalysis);
+
+            AppSettings.Current.DefaultMinRuleoutCount = previousRuleouts == 3 ? 1 : 3;
+            var drifted = iso.Db.GetWorklistItems(14)
+                .Single(i => i.AccessionNumber == "PREF-OPEN" && i.Kind == WorklistKind.StaleAnalysis);
+            Assert.Equal("Preferences changed since last analysis.", drifted.Detail);
+            Assert.Equal(AnalysisStaleReason.Preferences, iso.Db.GetAnalysisStaleReason("PREF-OPEN"));
+
+            iso.Db.SetSpecimenFinalCall("PREF-OPEN", "anti-K", null, "DP");
+            Assert.DoesNotContain(iso.Db.GetWorklistItems(14),
+                i => i.AccessionNumber == "PREF-OPEN" && i.Kind == WorklistKind.StaleAnalysis);
+            Assert.Equal(AnalysisStaleReason.None, iso.Db.GetAnalysisStaleReason("PREF-OPEN"));
+        }
+        finally
+        {
+            AppSettings.Current.LabName = previousName;
+            AppSettings.Current.DefaultMinRuleoutCount = previousRuleouts;
+        }
+
+        Assert.Equal(
+            "Reactions and Preferences changed since last analysis.",
+            AnalysisFreshness.WorklistDetail(AnalysisStaleReason.ReactionsAndPreferences));
+        Assert.Contains("Preferences changed",
+            AnalysisFreshness.Banner(AnalysisStaleReason.Preferences));
+    }
 }

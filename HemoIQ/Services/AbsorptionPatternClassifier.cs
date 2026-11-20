@@ -214,7 +214,7 @@ namespace HemoIQ.Services
                         Score(lost.Count, paired))
                 });
             }
-            else if (lost.Count >= 2 && persisted.Count >= 1)
+            else if (lost.Count >= 1 && persisted.Count >= 1)
             {
                 Add(result, new AbsorptionConclusion
                 {

@@ -15,9 +15,9 @@ Green rows meet that rule. Yellow rows do not. Double-click a row to add it to *
 
 ## Supporting and conflicting cells
 
-**Supporting cells** are antigen-positive cells that reacted, with the panel, run, cell number, and phase grades.
+**Supporting cells** are antigen-positive cells that reacted, with the panel, run, cell number, phase grades, and the check cell.
 
-**Conflicting cells (Ag− but reactive)** are cells that lack the antigen and still reacted. Conflicts mean another antibody, a typing discrepancy, or a reaction that the single specificity does not explain. Resolve them before you confirm.
+**Conflicting cells (Ag− but reactive)** are cells that lack the antigen and still reacted. The same grades are shown, including the check cell. Conflicts mean another antibody, a typing discrepancy, or a reaction that the single specificity does not explain. Resolve them before you confirm.
 
 ## Final ID
 

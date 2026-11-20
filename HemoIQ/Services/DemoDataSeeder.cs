@@ -26,7 +26,31 @@ namespace HemoIQ.Services
         public const string Scenario10Id = "DEMO-S10-FICIN-VS";
         public const string Scenario11Id = "DEMO-S11-DTT-JRA";
 
+        public static readonly string[] ScenarioIds =
+        {
+            Scenario1Id, Scenario2Id, Scenario3Id, Scenario4Id, Scenario5Id, Scenario6Id,
+            Scenario7Id, Scenario8Id, Scenario9Id, Scenario10Id, Scenario11Id
+        };
+
         public static void SeedIfNeeded(DatabaseService db) => Seed(db);
+
+        /// <summary>
+        /// Records analysis for a DEMO scenario that has a panel and has never been analyzed.
+        /// Grades, panel typing, and an analysis that already exists are left alone.
+        /// </summary>
+        public static int AnalyzeIfNeverAnalyzed(DatabaseService db, AntibodyAnalyzer analyzer)
+        {
+            int analyzed = 0;
+            foreach (var id in ScenarioIds)
+            {
+                var specimen = db.GetSpecimen(id);
+                if (specimen == null || specimen.LastAnalyzedAt != null) continue;
+                if (db.GetSpecimenPanels(id).Count == 0) continue;
+                analyzer.AnalyzeSpecimen(id, updateDb: true);
+                analyzed++;
+            }
+            return analyzed;
+        }
 
         public static void Seed(DatabaseService db)
         {

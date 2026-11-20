@@ -11,5 +11,8 @@ namespace HemoIQ.Models
         public string? Reason { get; set; }
         public string? BeforeJson { get; set; }
         public string? AfterJson { get; set; }
+
+        public bool MatchesFilter(string? query) =>
+            TextFilter.Matches(query, Operator, Action, EntityType, EntityId, Reason);
     }
 }

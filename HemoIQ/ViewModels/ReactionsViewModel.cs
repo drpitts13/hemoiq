@@ -759,9 +759,22 @@ namespace HemoIQ.ViewModels
             }
             ExtraAntigens = _db.GetPanelExtraAntigens(SelectedPanel.PanelId);
             var order = _db.GetPanelDisplayAntigens(SelectedPanel.PanelId);
-            AntigenDisplayOrder = ShowAntigramDosage
-                ? AntigramDisplay.GroupBySystem(order)
-                : order;
+            var cells = _db.GetPanelCells(SelectedPanel.PanelId);
+            AntigenDisplayOrder = AntigensForReactions(order, cells, ShowAntigramDosage);
+        }
+
+        /// <summary>
+        /// Antigen columns on the reactions grid. A column that is NT or blank
+        /// on every cell is omitted. A typed minus keeps the column. Dosage
+        /// grouping still applies to the columns that remain.
+        /// </summary>
+        public static IReadOnlyList<string> AntigensForReactions(
+            IReadOnlyList<string> order,
+            IReadOnlyList<PanelCell> cells,
+            bool groupBySystem)
+        {
+            var typed = PanelCell.AntigensTypedOnAnyCell(order, cells);
+            return groupBySystem ? AntigramDisplay.GroupBySystem(typed) : typed;
         }
 
         private IReadOnlyList<string> VisibleAntigens =>
@@ -828,10 +841,16 @@ namespace HemoIQ.ViewModels
             ApplyVisibleRows();
             RefreshEntryProgress();
             MarkGradesClean();
-            _main.SetStatus(
-                $"Loaded {Rows.Count} cells for {SelectedSpecimen.AccessionNumber} / " +
-                $"{SelectedRun.PanelName} ({SelectedRun.DisplayLabel})");
+            if (_main.SelectedTabIndex == 3)
+                AnnounceStatus();
         }
+
+        public void AnnounceStatus() =>
+            _main.SetStatus(ScreenStatus.Reactions(
+                SelectedSpecimen?.AccessionNumber,
+                SelectedRun?.PanelName,
+                SelectedRun?.DisplayLabel,
+                Rows.Count));
 
         private void SaveGradesOnly()
         {
@@ -1363,10 +1382,16 @@ namespace HemoIQ.ViewModels
             return diffs;
         }
 
-        private static void AddDiff(List<string> diffs, string phase, string left, string right)
+        public static string RunName(string? label, string fallback) =>
+            string.IsNullOrWhiteSpace(label) ? fallback : label.Trim();
+
+        public static string GradeHeader(string? runLabel, string phase, string fallback) =>
+            $"{RunName(runLabel, fallback)} {phase}";
+
+        private void AddDiff(List<string> diffs, string phase, string left, string right)
         {
             if (SameGrade(left, right)) return;
-            diffs.Add($"{phase} (this {left} vs other {right})");
+            diffs.Add($"{phase} ({RunName(LeftLabel, "this")} {left} vs {RunName(RightLabel, "other")} {right})");
         }
 
         private static bool SameGrade(string? left, string? right) =>

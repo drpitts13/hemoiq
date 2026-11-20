@@ -24,6 +24,14 @@ public class UntypeableSpecificityTests
         Assert.DoesNotContain(list, u => u.Antigen == "Vel");
         Assert.Contains("never imported", list.Single(u => u.Antibody == "anti-Fya").Explanation);
         Assert.Contains("not a rule-out", list.Single(u => u.Antibody == "anti-Fya").Explanation);
+        Assert.False(list.Single(u => u.Antibody == "anti-Fya").NotTestedOnEveryCell);
+
+        var nt = UntypeableSpecificityClassifier.Classify(new[] { "E", "K", "Fya" }, new[] { "D" });
+        var d = nt.Single(u => u.Antigen == "D");
+        Assert.True(d.NotTestedOnEveryCell);
+        Assert.Contains("NT on every cell", d.Explanation);
+        Assert.DoesNotContain("never imported", d.Explanation);
+        Assert.Contains("never imported", nt.Single(u => u.Antigen == "C").Explanation);
     }
 
     [Fact]

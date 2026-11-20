@@ -98,7 +98,8 @@ public class UntypedAntigenAnalysisTests
         Assert.True(ev == null || ev.ObservedCount == 0);
         Assert.False(result.RuledOut.ContainsKey("anti-E"));
         if (ev != null)
-            Assert.Contains("1", ev.ConflictingReactiveCells);
+            Assert.Contains(ev.ConflictingReactiveCells, c =>
+                c.CellNumber == "1" && c.RunLabel == "Untreated");
     }
 
     private static int PersistSubset(IsolatedDatabase iso, string csv, string lot)

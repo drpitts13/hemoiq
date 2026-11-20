@@ -19,7 +19,13 @@ namespace HemoIQ.ViewModels
         public Rule? SelectedRule
         {
             get => _selectedRule;
-            set => SetField(ref _selectedRule, value);
+            set
+            {
+                var previous = _selectedRule?.RuleId;
+                if (!SetField(ref _selectedRule, value)) return;
+                if (_main.SelectedTabIndex == 8 && previous != _selectedRule?.RuleId)
+                    AnnounceStatus();
+            }
         }
 
         public ICommand AddCommand { get; }
@@ -41,6 +47,9 @@ namespace HemoIQ.ViewModels
             ImportCommand = new RelayCommand(ImportRules, () => SessionAccess.CanRecord);
             Refresh();
         }
+
+        public void AnnounceStatus() =>
+            _main.SetStatus(ScreenStatus.Rules(Rules.Count, SelectedRule?.Name));
 
         public void Refresh()
         {
@@ -84,10 +93,10 @@ namespace HemoIQ.ViewModels
                 MessageBox.Show(ex.Message, "Rule not added", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            _main.SetStatus($"Rule '{dlg.RuleName}' added." + StaleNote);
             _main.WorklistVM.Refresh();
             Refresh();
             SelectedRule = Rules.FirstOrDefault(r => r.RuleId == id);
+            _main.SetStatus($"Rule '{dlg.RuleName}' added." + StaleNote);
         }
 
         private void EditRule()
@@ -106,9 +115,9 @@ namespace HemoIQ.ViewModels
                 MessageBox.Show(ex.Message, "Rule not saved", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            _main.SetStatus($"Rule '{dlg.RuleName}' updated." + StaleNote);
             _main.WorklistVM.Refresh();
             Refresh();
+            _main.SetStatus($"Rule '{dlg.RuleName}' updated." + StaleNote);
         }
 
         private void DeleteRule()
@@ -117,9 +126,9 @@ namespace HemoIQ.ViewModels
             if (MessageBox.Show($"Delete rule '{SelectedRule.Name}'?",
                 "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
             _db.DeleteRule(SelectedRule.RuleId);
-            _main.SetStatus("Rule deleted. Its settings are kept in the audit log." + StaleNote);
             _main.WorklistVM.Refresh();
             Refresh();
+            _main.SetStatus("Rule deleted. Its settings are kept in the audit log." + StaleNote);
         }
 
         private void ExportRules()

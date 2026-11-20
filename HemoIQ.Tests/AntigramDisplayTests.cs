@@ -16,6 +16,15 @@ public class AntigramDisplayTests
     }
 
     [Fact]
+    public void ExplicitDoublePlus_StaysVisibleWhenDosageIsOff()
+    {
+        var antigens = new Dictionary<string, string> { ["Jka"] = "++", ["Jkb"] = "-" };
+        Assert.Equal("++", AntigramDisplay.Format(antigens, "Jka", showDosage: false));
+        Assert.Equal("-", AntigramDisplay.Format(antigens, "Jkb", showDosage: false));
+        Assert.Equal("++", AntigramDisplay.Format(antigens, "Jka", showDosage: true));
+    }
+
+    [Fact]
     public void HeterozygousE_StaysSinglePlus()
     {
         var antigens = new Dictionary<string, string> { ["E"] = "+", ["e"] = "+" };

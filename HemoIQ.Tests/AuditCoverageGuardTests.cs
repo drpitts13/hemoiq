@@ -30,6 +30,7 @@ public class AuditCoverageGuardTests
         ("CopyPanelAntigenOrder", "used when copying a panel; the new panel's add is audited"),
         ("UpsertExtraCellAntigen", "called by audited extra-antigen changes"),
         ("FillRestoreSkipTable", "temporary table used during restore"),
+        ("FillRestoreSkipPanels", "temporary table used during restore"),
         ("BumpSequence", "SQLite sequence plumbing during restore"),
     };
 

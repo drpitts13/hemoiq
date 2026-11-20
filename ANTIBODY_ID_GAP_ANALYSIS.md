@@ -3645,6 +3645,44 @@ warehouse-antigen table behaved the same way.
 
 All 1187 tests pass.
 
+## Merge of main (commit 4cdb7a1) into HemoIQ
+
+Main had one commit (4cdb7a1) that HemoIQ lacked, made on the
+`AntibodyPanels/` layout before the HemoIQ rename. It was merged into
+HemoIQ and adapted to the HemoIQ names. What it brought:
+- **Check cell in rule-out evidence.** A counted rule-out cell whose check
+  cell is 0 is named in the explanation. Conflicting reactive cells carry
+  their run, strongest phase and CC (`ReactiveConflictCell`).
+- **Per-screen status.** `ScreenStatus` and `AnnounceStatus` on each view
+  model: the status line names what the open screen shows. This sits
+  alongside HemoIQ's signed-in session label on the status bar.
+- **User manual.** `UserManual` writes `docs/USER_MANUAL.md` and a PDF from
+  the help topics when the shortcut is built.
+- **Workflow seeder.** `E2EWorkflowSeeder`, with tests.
+- **Search.** Panel search results gain Open and frozen columns.
+- **Panels.** Antigen columns that are NT on every cell are hidden outside
+  Edit, and printed antigrams leave them out.
+- **Settings-drift staleness.** Each analysis snapshot keeps its clinical
+  Preferences; a differing current setting marks an unconfirmed analysis
+  stale.
+
+How the overlaps were resolved:
+- **Staleness: both rules kept.** An analysis is stale when grades changed,
+  when audited rules or Preferences changed after it (HemoIQ), or when this
+  workstation's clinical Preferences differ from those saved with it
+  (main). `DatabaseService.AnalysisStaleText` gives the reason;
+  `GetAnalysisStaleReason` gives the category. Unconfirmed analyses saved
+  before Iteration 130 (which added the ACS list to the snapshot) show as
+  stale once and need re-analysis.
+- **Heterozygous rule permission: main's fix taken.** An exception antigen
+  now widens heterozygous use only for the rule's own antibody. Before,
+  HemoIQ applied any rule's exception antigen to every antibody.
+- **Case-sensitive antibody keys: HemoIQ kept.** Main's conflicting-cell map
+  was case-insensitive, which would merge anti-K with anti-k.
+- **All Panels report.** Main's sized columns, with HemoIQ's Typing column.
+- **Gap analysis.** HemoIQ's iteration log is kept. Main's separate log
+  (its own iteration numbering) remains in main's git history.
+
 ## Likely next tick
 
 A product review is due at Iteration 148. Before then: the archive restore
