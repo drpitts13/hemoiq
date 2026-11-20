@@ -4403,9 +4403,31 @@ technique does not read; 37°C and AHG are interpreted.
 
 All 1289 tests pass.
 
+## Iteration 170 (clean pass): eluate and DAT after transfusion
+
+**Reviewed (`EluateEvidence`):**
+- An eluate with a specificity after a recent transfusion notes antibody
+  coating transfused donor cells (possible delayed hemolytic or serologic
+  transfusion reaction). Recent transfusion uses the same assessment as
+  Iteration 169.
+- A panreactive eluate supports IgG autoantibody and warns that a recently
+  transfused patient may also have an alloantibody; adsorb before ruling one
+  out.
+- A nonreactive eluate with a positive DAT lists drug-related antibody,
+  antibody to an antigen not on the panel (such as ABO from incompatible
+  plasma), and complement-only coating. C3-only coating is called out as
+  expected to give a nonreactive eluate.
+- A specificity in the eluate but not suspected in the serum is flagged
+  before serum rule-outs are relied on.
+- DAT-positive pattern guidance comes from `ReactionPatternClassifier`, and
+  every statement ends "Not a diagnosis".
+
+No new issue or gap worth fixing. All 1289 tests pass.
+
 ## Likely next tick
 
-Review eluate interpretation after recent transfusion (the DAT and eluate
-reflect donor cells) and the DAT-positive workup suggestions.
+Continue clean-pass reviews: HPC transplant handling (donor genotype, ABO
+change) and pregnancy-related passive antibodies (RhIG, already covered by
+`SpecimenDating.PassiveAntiD`).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
