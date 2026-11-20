@@ -64,16 +64,19 @@ namespace HemoIQ.Services
                 }
             }
 
+            // Age runs from receipt, as the Worklist's overdue item and time-to-confirm above do; the created date
+            // is used only when no receipt time is recorded.
             var overdue = inRange
-                .Where(s => s.IsActive && !s.HasFinalCall)
-                .Select(s => { TryDate(s.CreatedDate, out var r); return (s, age: (int)(now.Date - r.Date).TotalDays); })
+                .Where(s => s.IsActive && !s.HasFinalCall && ReceivedTime(s) != DateTime.MinValue)
+                .Select(s => (s, received: ReceivedTime(s)))
+                .Select(x => (x.s, x.received, age: (int)(now.Date - x.received.Date).TotalDays))
                 .Where(x => x.age > thresholdDays)
                 .OrderByDescending(x => x.age)
                 .ThenBy(x => x.s.AccessionNumber, StringComparer.OrdinalIgnoreCase)
                 .Select(x => new OverdueInvestigation
                 {
                     Accession = x.s.AccessionNumber,
-                    Received = x.s.CreatedDate.Length >= 10 ? x.s.CreatedDate[..10] : x.s.CreatedDate,
+                    Received = x.received.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                     AgeDays = x.age,
                     Status = statusOf?.Invoke(x.s) ?? string.Empty,
                 })

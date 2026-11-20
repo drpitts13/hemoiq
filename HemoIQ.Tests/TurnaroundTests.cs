@@ -123,4 +123,20 @@ public class TurnaroundTests
             AppSettings.Current.TurnaroundThresholdDays = previous;
         }
     }
+
+    [Fact]
+    public void OverdueAge_RunsFromReceipt_NotFromTheDateTheSpecimenWasEntered()
+    {
+        // Received 12 days before Now but entered 5 days before: past a 7-day threshold, as the Worklist says.
+        var receivedEarly = new Specimen { AccessionNumber = "T-REC", CreatedDate = "2026-11-05", ReceivedAt = "2026-10-29 08:00" };
+        // Entered 12 days before but received 5 days before: not yet overdue.
+        var receivedLate = new Specimen { AccessionNumber = "T-LATE", CreatedDate = "2026-10-29", ReceivedAt = "2026-11-05 08:00" };
+
+        var t = TurnaroundService.Compute(new[] { receivedEarly, receivedLate }, null, null, 7, Now);
+
+        var row = Assert.Single(t.Overdue);
+        Assert.Equal("T-REC", row.Accession);
+        Assert.Equal("2026-10-29", row.Received);
+        Assert.Equal(12, row.AgeDays);
+    }
 }

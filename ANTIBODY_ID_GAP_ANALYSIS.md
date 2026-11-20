@@ -4777,9 +4777,38 @@ No new issue or gap worth fixing. All 1322 tests pass.
 
 No new issue or gap worth fixing. All 1322 tests pass.
 
+## Iteration 184: overdue age runs from receipt in Analytics too
+
+**Reviewed, no gap:**
+- The Worklist's `OverdueTesting` item skips confirmed, cancelled and
+  inactive investigations. It measures from receipt, lists only those
+  awaiting additional testing, and names what the last analysis left open.
+- Analytics turnaround leaves cancelled investigations out of every figure.
+
+**Deficiency found (consistency):**
+- `TurnaroundService.Compute` measured an open investigation's age from
+  `CreatedDate`, the date it was entered.
+- The Worklist's overdue item, and Analytics' own time-to-confirm, measure
+  from `ReceivedTime`, the recorded receipt time.
+- When receipt and entry differ, the same investigation could be overdue on
+  the Worklist and not in Analytics, or the reverse. The overdue list also
+  showed the entry date labelled as "Received".
+
+**Bounded improvement:**
+- Overdue age and the Received column come from `ReceivedTime`, which
+  falls back to the entry date only when no receipt time is recorded.
+- Help (Analytics) says so.
+
+**Tests:** `TurnaroundTests.OverdueAge_RunsFromReceipt_NotFromTheDateTheSpecimenWasEntered`.
+A specimen received 12 days before and entered 5 days before is overdue at
+7 days; one entered 12 days before but received 5 days before is not. The
+previous code reported the second instead.
+
+All 1323 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Worklist's overdue-testing item and the
-turnaround threshold, and the Analytics turnaround figures.
+Continue clean-pass reviews: the remaining Analytics figures (workload by
+technologist, override counts, location workload) for the same date basis.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5

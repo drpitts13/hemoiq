@@ -40,7 +40,7 @@ The purple and red cards measure workflow time for investigations **received** i
 
 - **Received → confirmed** is the median time from the received date to the confirmed identification, in days, with the 90th percentile and the number of investigations. When a received time is recorded on the specimen it is used exactly; otherwise the received date is counted from midnight and the figure is an upper bound.
 - **Confirmed → reviewed** is the median time from confirmation to supervisor review, in hours, for investigations that have a review.
-- **Overdue open investigations** counts active investigations with no confirmed identification that are older than the Preferences **Turnaround threshold (days)**, default 3.
+- **Overdue open investigations** counts active investigations with no confirmed identification that are older than the Preferences **Turnaround threshold (days)**, default 3. Age runs from the recorded receipt time (the date the specimen was entered when no receipt time is recorded), the same as the Worklist's overdue-testing item.
 - **Warnings overridden** counts warnings a user chose to continue past in the range:
   - an identification confirmed with the analysis missing or out of date, testing still open, or the multiple-antibody separation criterion not met;
   - a specimen saved with an encounter number already on another patient's specimen, or a pregnancy recorded for a patient recorded as male.
