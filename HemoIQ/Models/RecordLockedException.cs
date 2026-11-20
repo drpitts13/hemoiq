@@ -17,5 +17,11 @@ namespace HemoIQ.Models
             AccessionNumber = accessionNumber;
             Cancelled = cancelled;
         }
+
+        /// <summary>A locked record with a message specific to the refused action.</summary>
+        public RecordLockedException(string accessionNumber, string message) : base(message)
+        {
+            AccessionNumber = accessionNumber;
+        }
     }
 }

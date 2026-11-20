@@ -628,6 +628,16 @@ namespace HemoIQ.ViewModels
         private void ConfirmId()
         {
             if (SelectedSpecimen == null) return;
+            if (_db.GetSpecimen(SelectedSpecimen.AccessionNumber) is { HasFinalCall: true } confirmed)
+            {
+                MessageBox.Show(
+                    $"{confirmed.AccessionNumber} already has a confirmed identification ({confirmed.FinalAntibodies}).\n\n" +
+                    "To change it, click Clear and give a reason, then confirm the new identification. " +
+                    "The earlier identification stays in the amendment history.",
+                    "Confirm identification", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadFinalCall(confirmed);
+                return;
+            }
             var antibodies = FinalAntibodiesText.Trim();
             var initials = IdentifiedBy.Trim();
             if (string.IsNullOrWhiteSpace(antibodies))

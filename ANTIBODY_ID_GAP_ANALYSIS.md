@@ -3979,10 +3979,51 @@ No new issue or gap worth fixing. All 1247 tests pass.
 
 No new issue or gap worth fixing. All 1247 tests pass.
 
+## Iteration 156: a confirmed identification is never replaced in place
+
+**Reviewed, no gap:** the audit log is append-only; no code updates or
+deletes `audit_events`.
+
+**Deficiency found (patient safety, auditability):**
+- On a confirmed specimen, Final ID stayed editable and Confirm ID stayed
+  enabled. Typing a new identification and clicking Confirm ID again
+  overwrote it.
+- That overwrite asked for no reason and silently removed the supervisor
+  review. It left no `clear_final_call` entry, so the amendment history on
+  the clinical report did not show the change.
+- At the database layer, `SetSpecimenFinalCall` also cleared a confirmed
+  identification when given null antibodies. That path had no reason, no
+  audit entry and no Clear Identification permission check.
+
+**Bounded improvement:**
+- `SetSpecimenFinalCall` refuses a specimen that already has a confirmed
+  identification (`RecordLockedException`, naming the current call and
+  what to do), and refuses null antibodies (`ArgumentException`).
+- Clearing goes only through `ClearSpecimenFinalCall`, which demands Clear
+  Identification and a reason and records the identification as it stood.
+  Both share a private writer.
+- Confirm ID on the Analysis tab checks the stored specimen first, explains
+  the clear-then-confirm route, and restores the stored Final ID text.
+- `RecordLockedException` gains a constructor with an action-specific
+  message.
+- Help (Suspected Antibodies) explains it.
+
+**Tests:** `FinalCallAmendmentTests` (5 cases):
+- re-confirming is refused, and the call, comment, confirmer and supervisor
+  review are unchanged;
+- clearing through the confirm method is refused;
+- clear with a reason, then confirm, changes the call and records the
+  earlier one in the amendment history;
+- a clear without a reason is refused;
+- a first confirmation still works.
+
+The full suite showed no caller relied on re-confirming.
+
+All 1252 tests pass.
+
 ## Likely next tick
 
 Continue clean-pass reviews: patient records and antigen-negative
-requirements, amendment of a confirmed identification, the audit log
-viewer and its export.
+requirements, the audit log viewer's filters and export.
 
-Loop clean passes: 3/5
+Loop clean passes: 0/5

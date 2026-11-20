@@ -1251,13 +1251,34 @@ namespace HemoIQ.Data
             cmd.ExecuteNonQuery();
         }
 
+        /// <summary>
+        /// Confirms the identification. A confirmed identification is never replaced in place: it is cleared
+        /// first with <see cref="ClearSpecimenFinalCall"/>, which demands the permission, asks for a reason and
+        /// records the identification as it stood, so every change appears in the amendment history.
+        /// </summary>
         public void SetSpecimenFinalCall(string accessionNumber,
             string? antibodies, string? comment, string? identifiedBy,
             DateTime? identifiedAt = null, IReadOnlyList<string>? overrides = null)
         {
+            if (antibodies == null)
+                throw new ArgumentException(
+                    "Clearing a confirmed identification needs a reason; use ClearSpecimenFinalCall.", nameof(antibodies));
             EnsureCanRecord();
-            if (antibodies != null && GetSpecimen(accessionNumber)?.IsCancelled == true)
+            var current = GetSpecimen(accessionNumber);
+            if (current?.IsCancelled == true)
                 throw new RecordLockedException(accessionNumber, cancelled: true);
+            if (current?.HasFinalCall == true)
+                throw new RecordLockedException(accessionNumber,
+                    $"Specimen {accessionNumber} already has a confirmed identification ({current.FinalAntibodies}). " +
+                    "To change it, click Clear on the Analysis tab and give a reason, then confirm the new identification. " +
+                    "The earlier identification stays in the amendment history.");
+            WriteFinalCall(accessionNumber, antibodies, comment, identifiedBy, identifiedAt, overrides);
+        }
+
+        private void WriteFinalCall(string accessionNumber,
+            string? antibodies, string? comment, string? identifiedBy,
+            DateTime? identifiedAt, IReadOnlyList<string>? overrides)
+        {
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
                 UPDATE specimens SET
@@ -1384,8 +1405,9 @@ namespace HemoIQ.Data
                 throw new ArgumentException("A reason is required to clear a confirmed identification.", nameof(reason));
             Services.AccessControl.Demand(this, Services.Permission.ClearIdentification);
 
+            EnsureCanRecord();
             var before = GetSpecimen(accessionNumber);
-            SetSpecimenFinalCall(accessionNumber, null, null, null);
+            WriteFinalCall(accessionNumber, null, null, null, null, null);
             AppendAudit("clear_final_call", "specimen", accessionNumber, reason.Trim(),
                 beforeJson: before == null ? null : JsonSerializer.Serialize(new
                 {
