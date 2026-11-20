@@ -4739,10 +4739,25 @@ shared stale rule, and carries the letterhead.
 
 All 1322 tests pass.
 
+## Iteration 182 (clean pass): Analysis Summary tab against the reports
+
+**Reviewed:**
+- The Analysis tab's Summary text (`AnalysisViewModel.SummaryText`) is an
+  on-screen working view, not an issued report. It lists the same sections
+  the printed reports carry, including the gated rule-outs with the same
+  reasons.
+- It lists each gated entry, where the reports merge identical antibody and
+  reason pairs. That suits a working screen and changes no conclusion.
+- Issued output (print, PDF, CSV) all goes through `ReportService`, which
+  Iterations 177–181 aligned: letterhead, lot and record status, and
+  rule-outs not counted.
+
+No new issue or gap worth fixing. All 1322 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the remaining Analysis-tab copy and export
-paths against the printed reports (the copied text includes gated
-rule-outs; check it matches).
+Continue clean-pass reviews: the Timeline entries for the newer audit
+actions (report output with letterhead, configuration import) and the
+Audit Log filters.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
