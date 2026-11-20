@@ -3913,9 +3913,28 @@ Help (Rules) notes it.
 
 All 1247 tests pass.
 
+## Iteration 153 (clean pass): panel import, rule governance, Analytics
+
+**Reviewed:**
+- **Panel import (lab CSV and vendor).**
+  - New lots are stored inactive with a review that covers schema changes,
+    typing issues and coverage against the prior lot.
+  - Re-importing an existing lot requires the replace choice and refuses a
+    lot that holds test history. The stored panel is left unchanged, and the
+    replacement runs in one transaction.
+  - `DeletePanel` itself refuses panels with history.
+- **Rules.** Add, update and delete demand Configure Rules, and each is
+  audited with before and after values. Since Iteration 152 a change marks
+  open analyses stale by audit order.
+- **Analytics.** Specificities are grouped with ordinal comparers, so anti-K
+  and anti-k stay separate. The one case-insensitive comparer only sorts the
+  display. Override analytics also key ordinally.
+
+No new issue or gap worth fixing. All 1247 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Panels import review, Rules editing and audit,
-Analytics.
+Continue clean-pass reviews: Reactions entry (grade validation and
+unsaved-work guard), Specimens editing and locks, Users and roles.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
