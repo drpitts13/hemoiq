@@ -4496,9 +4496,34 @@ No new issue or gap worth fixing. All 1291 tests pass.
 
 No new issue or gap worth fixing. All 1291 tests pass.
 
+## Iteration 174 (clean pass): antithetical pairs, dosage and heterozygous rules
+
+**Reviewed:**
+- **`AntigenConstants.AntitheticalPairs`** matches the genetic pairs:
+  - Rh: C/c, E/e;
+  - Kell: K/k, Kpa/Kpb, Jsa/Jsb;
+  - Kidd, Duffy, MNS (M/N, S/s) and Lutheran.
+
+  D, Cw, P1 and Xga have no pair, so the Panels editor offers no ++ for
+  them.
+- **Lewis.** Lea/Leb is also listed as a pair, although Lewis phenotype
+  follows secretor status rather than zygosity. The effect is conservative
+  and matches practice:
+  - anti-Lea is ruled out on Le(a+b−) cells and anti-Leb on Le(a−b+) cells;
+  - the rare Le(a+b+) cell counts as single-dose and does not rule out
+    where heterozygous cells are not allowed.
+
+  No false rule-out results, so this is left as is.
+- **Heterozygous exceptions.** `RuleoutPolicy.HeterozygousAllowed` widens
+  only the rule's own antibody (taken from main in the merge), and the
+  matching is case-sensitive. Dosage-excluded cells are listed separately
+  (`DosageExcludedCells`).
+
+No new issue or gap worth fixing. All 1291 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: dosage-effect detection for the Kidd, Duffy,
-Rh and MNS pairs, and the heterozygous rule exceptions.
+Continue clean-pass reviews: the ACS (antibody combination screen)
+eligibility rule and its exception path, and panel cell-count limits.
 
-Loop clean passes: 2/5
+Loop clean passes: 3/5
