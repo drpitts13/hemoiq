@@ -1032,7 +1032,7 @@ The purple and red cards measure workflow time for investigations **received** i
   - A confirmation that was later cleared still counts, because the override happened; its detail starts "No longer the current identification."
   - **Export CSV** adds the list at the end.
 
-The overdue list at the bottom shows each case, oldest first, with its current status. Select one and choose **Open** to go to it. **Export CSV** adds the turnaround figures and the overdue list after the antibody counts. The 90th percentile uses the nearest-rank method.
+The overdue list at the bottom shows each case, oldest first, with its current status. Select one and choose **Open** to go to it. **Export CSV** adds the turnaround figures and the overdue list after the antibody counts. The file contains accession numbers, so each export is written to the audit log with the file name and a SHA-256 fingerprint of the file. The 90th percentile uses the nearest-rank method.
 
 ## Workload by technologist
 
@@ -1336,7 +1336,7 @@ Columns:
 - **Entity** — which record the event refers to.
 - **Reason** — the text entered when a reason was required, including the reason from **Clear** on a confirmed ID.
 
-**Find** narrows the newest 5,000 events by accession, action, Windows login, record type, or reason. **Export CSV…** saves those visible rows as a spreadsheet. A text value that a spreadsheet would run as a formula (one starting with =, +, -, @ or a tab) is written with a leading apostrophe, so opening the file cannot run it. Panel typing (+, ++, -) and numbers are written unchanged. **Close** returns to the main window. **Help** opens this chapter.
+**Find** narrows the newest 5,000 events by accession, action, Windows login, record type, or reason. **Export CSV…** saves those visible rows as a spreadsheet, and the export itself is written to the audit log (action **export_data**) with the file name and a SHA-256 fingerprint of the file. A text value that a spreadsheet would run as a formula (one starting with =, +, -, @ or a tab) is written with a leading apostrophe, so opening the file cannot run it. Panel typing (+, ++, -) and numbers are written unchanged. **Close** returns to the main window. **Help** opens this chapter.
 
 The log is a history of actions taken in the application. It is not the clinical report. Use **Reports** for the identification document, and use this dialog when you need to see who confirmed or cleared an ID and why.
 
