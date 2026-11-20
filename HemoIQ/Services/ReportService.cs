@@ -515,6 +515,7 @@ namespace HemoIQ.Services
                 return;
             }
             AppendSuspectedAndRuleouts(sb, result);
+            AppendGatedRuleouts(sb, result);
         }
 
         private static void AppendSuspectedAndRuleouts(StringBuilder sb, AnalysisResult result)
@@ -573,6 +574,26 @@ namespace HemoIQ.Services
                 csv.WriteField(r.Antibody);
                 csv.WriteField(r.RuleoutCount);
                 csv.WriteField(r.Note);
+                csv.NextRecord();
+            }
+            // Cells that did not count, with the reason (the same list as the printed reports). A failed check
+            // cell is listed here: since it no longer counts, the CheckCell column above stays blank.
+            var gated = (result?.GatedRuleouts ?? new List<GatedRuleout>())
+                .Select(g => (g.Antibody, g.Reason))
+                .Distinct()
+                .OrderBy(g => g.Antibody, StringComparer.Ordinal)
+                .ThenBy(g => g.Reason, StringComparer.Ordinal)
+                .ToList();
+            if (gated.Count == 0) return;
+            csv.WriteField("RuleoutsNotCounted");
+            csv.NextRecord();
+            csv.WriteField("Antibody");
+            csv.WriteField("Reason");
+            csv.NextRecord();
+            foreach (var (antibody, reason) in gated)
+            {
+                csv.WriteField(antibody);
+                csv.WriteField(reason);
                 csv.NextRecord();
             }
         }

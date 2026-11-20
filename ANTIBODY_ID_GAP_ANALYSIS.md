@@ -4654,9 +4654,35 @@ information, set in Preferences. Anything not set is left off.
 - normalization;
 - the Preferences file carries the fields and refuses an overlong name.
 
+## Iteration 179: Specimen Summary carries rule-outs not counted
+
+**Deficiency found (reporting consistency):**
+- Iteration 177 added "Rule-outs not counted" to the Analysis Results and
+  Clinical Identification reports. The Specimen Summary text and its CSV
+  still listed only the counted rule-outs.
+- Since Iteration 175, a cell whose check cell did not react is never
+  counted, so the CSV's CheckCell column is always blank. The failed check
+  cell then appeared nowhere in the Specimen Summary.
+
+**Bounded improvement:**
+- The Specimen Summary text lists "Rule-outs not counted (n):" after its
+  rule-outs, using the shared `AppendGatedRuleouts`.
+- The Specimen Summary CSV adds a "RuleoutsNotCounted" section
+  (Antibody, Reason), sorted and de-duplicated, and omitted when empty.
+- The CheckCell column is kept so existing readers of the file do not
+  break.
+- Help (Reports) describes both.
+
+**Tests:** `GatedRuleoutReportTests` now covers the Specimen Summary (8
+cases in all):
+- the failed check cell is listed in all three text reports and the CSV;
+- there is no section in any of them when nothing is gated.
+
+All 1311 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Specimen Summary report and its CSV,
-alongside the newly reported sections, for consistency.
+Continue clean-pass reviews: the Panel Summary and Panel Antigram reports
+(typing display, NT columns hidden, letterhead).
 
 Loop clean passes: 0/5

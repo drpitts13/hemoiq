@@ -26,6 +26,7 @@ public class GatedRuleoutReportTests
     [Theory]
     [InlineData(ReportType.AnalysisResults)]
     [InlineData(ReportType.ClinicalIdentification)]
+    [InlineData(ReportType.SpecimenSummary)]
     public void FailedCheckCell_IsListedUnderRuleoutsNotCounted(ReportType type)
     {
         using var iso = TwoCells("GR-1", "0");
@@ -40,6 +41,7 @@ public class GatedRuleoutReportTests
     [Theory]
     [InlineData(ReportType.AnalysisResults)]
     [InlineData(ReportType.ClinicalIdentification)]
+    [InlineData(ReportType.SpecimenSummary)]
     public void NoGatedCells_NoSection(ReportType type)
     {
         using var iso = TwoCells("GR-2", "2+");
@@ -47,5 +49,36 @@ public class GatedRuleoutReportTests
         var text = iso.Reports.GeneratePreviewText(type, "GR-2");
 
         Assert.DoesNotContain("Rule-outs not counted", text);
+    }
+
+    [Fact]
+    public void SpecimenSummaryCsv_ListsRuleoutsNotCounted_WithTheReason()
+    {
+        using var iso = TwoCells("GR-3", "0");
+        var path = Path.Combine(Path.GetTempPath(), $"hemoiq_gated_{Guid.NewGuid():N}.csv");
+        try
+        {
+            iso.Reports.ExportToCsv(ReportType.SpecimenSummary, path, "GR-3");
+            var lines = File.ReadAllLines(path);
+            var section = Array.IndexOf(lines, "RuleoutsNotCounted");
+            Assert.True(section > 0, string.Join(Environment.NewLine, lines));
+            Assert.Equal("Antibody,Reason", lines[section + 1]);
+            // The reason contains commas, so CSV quoting wraps it.
+            Assert.StartsWith("anti-K,\"Cell 1 is AHG 0 but its check cell did not react", lines[section + 2]);
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
+    public void SpecimenSummaryCsv_NoGatedCells_NoSection()
+    {
+        using var iso = TwoCells("GR-4", "2+");
+        var path = Path.Combine(Path.GetTempPath(), $"hemoiq_gated_{Guid.NewGuid():N}.csv");
+        try
+        {
+            iso.Reports.ExportToCsv(ReportType.SpecimenSummary, path, "GR-4");
+            Assert.DoesNotContain("RuleoutsNotCounted", File.ReadAllLines(path));
+        }
+        finally { File.Delete(path); }
     }
 }
