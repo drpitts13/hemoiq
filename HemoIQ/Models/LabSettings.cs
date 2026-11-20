@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.Json;
 
 namespace HemoIQ.Models
@@ -7,6 +8,37 @@ namespace HemoIQ.Models
     {
         public string LabName { get; set; } = "Immunohematology Laboratory";
         public string Department { get; set; } = "";
+
+        // Report letterhead. Each is optional; a blank value leaves its part of the letterhead out.
+        public const int FacilityNameMaxLength = 120;
+        public const int FacilityAddressMaxLength = 400;
+        public const int FacilityContactMaxLength = 200;
+        /// <summary>Facility name printed at the top of every report. Blank: not printed.</summary>
+        public string FacilityName { get; set; } = "";
+        /// <summary>Facility address, one line per address line. Blank: not printed.</summary>
+        public string FacilityAddress { get; set; } = "";
+        /// <summary>Contact information (phone, fax, email), one line per entry. Blank: not printed.</summary>
+        public string FacilityContact { get; set; } = "";
+
+        /// <summary>
+        /// The report letterhead: facility name, address lines and contact lines, each trimmed, with blank lines
+        /// left out. Empty when none of the three is set.
+        /// </summary>
+        public System.Collections.Generic.IReadOnlyList<string> FacilityHeaderLines()
+        {
+            var lines = new System.Collections.Generic.List<string>();
+            foreach (var text in new[] { FacilityName, FacilityAddress, FacilityContact })
+                lines.AddRange(SplitLines(text));
+            return lines;
+        }
+
+        /// <summary>Trims each line and drops blank ones; joins them with newlines (empty when nothing remains).</summary>
+        public static string NormalizeMultiline(string? text) => string.Join("\n", SplitLines(text));
+
+        private static System.Collections.Generic.IEnumerable<string> SplitLines(string? text) =>
+            (text ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n').Split('\n')
+                .Select(l => l.Trim())
+                .Where(l => l.Length > 0);
         public double ProbabilityThreshold { get; set; } = 0.5;
         public int IdentificationCellCount { get; set; } = 3;
         public int AcsRuleoutCount { get; set; } = 3;

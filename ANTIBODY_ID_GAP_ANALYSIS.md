@@ -4616,6 +4616,44 @@ No new issue or gap worth fixing. All 1291 tests pass.
 
 All 1295 tests pass.
 
+## Iteration 178 (user request): facility letterhead on reports
+
+**Request:** reports should carry the facility name, address and contact
+information, set in Preferences. Anything not set is left off.
+
+**Implemented:**
+- **Preferences fields.** `LabSettings` gains `FacilityName`,
+  `FacilityAddress` and `FacilityContact`, all blank by default.
+  - The address and contact are multi-line, one entry per line.
+  - `NormalizeMultiline` trims each line and drops blank ones.
+  - Limits: 120, 400 and 200 characters.
+- **Letterhead.** `FacilityHeaderLines` gives the printed lines;
+  `ReportService.FacilityHeader` writes them, wrapped to the report width,
+  plus a blank line.
+- **Reports.** `GeneratePreviewText` puts the letterhead above the product
+  and intended-use preamble, so preview, print and PDF of all eight report
+  types carry it. With nothing set, it is empty and reports start with the
+  product line as before.
+- **Preferences dialog.** Facility name, Facility address (multi-line) and
+  Contact information (multi-line) sit after Department, with length
+  checks.
+  - The dialog still scrolls with Save docked;
+    `SettingsDialogLayoutTests` and `DialogHeightGuardTests` pass.
+- **Preferences export and import.** Both carry the three fields, and
+  overlong values are refused.
+- **Not clinical settings.** They are not in `ClinicalSnapshot`, so a change
+  does not mark analyses stale. Each issued report's SHA-256 fingerprint
+  still covers the letterhead as printed.
+- **Help.** The Preferences and Reports topics describe it.
+
+**Tests:** `FacilityLetterheadTests` (12 cases):
+- every report type starts with the trimmed name, address and contact lines
+  in order, then a blank line and the product line;
+- nothing set: no letterhead;
+- only contact set: only contact printed;
+- normalization;
+- the Preferences file carries the fields and refuses an overlong name.
+
 ## Likely next tick
 
 Continue clean-pass reviews: the Specimen Summary report and its CSV,

@@ -49,7 +49,22 @@ namespace HemoIQ.Services
                 ReportType.PendingWork => PendingWorkText(),
                 _ => string.Empty
             };
-            return SoftwareIdentity.ReportPreamble() + body;
+            return FacilityHeader(AppSettings.Current) + SoftwareIdentity.ReportPreamble() + body;
+        }
+
+        /// <summary>
+        /// The facility letterhead from Preferences (name, address, contact), one item per line, followed by a
+        /// blank line. Empty when none is set, so the report starts with the product line as before.
+        /// </summary>
+        public static string FacilityHeader(LabSettings settings)
+        {
+            var lines = settings.FacilityHeaderLines();
+            if (lines.Count == 0) return string.Empty;
+            var sb = new StringBuilder();
+            foreach (var line in lines)
+                sb.AppendLine(SoftwareIdentity.Wrap(line, SoftwareIdentity.ReportLineWidth));
+            sb.AppendLine();
+            return sb.ToString();
         }
 
         private void AppendPatientRecord(StringBuilder sb, Specimen s)

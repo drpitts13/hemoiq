@@ -20,6 +20,9 @@ namespace HemoIQ.Views.Dialogs
             var s = AppSettings.Current;
             LabNameBox.Text = s.LabName;
             DepartmentBox.Text = s.Department;
+            FacilityNameBox.Text = s.FacilityName;
+            FacilityAddressBox.Text = s.FacilityAddress.Replace("\n", Environment.NewLine);
+            FacilityContactBox.Text = s.FacilityContact.Replace("\n", Environment.NewLine);
             ThresholdBox.Text = s.ProbabilityThreshold.ToString("0.00", CultureInfo.InvariantCulture);
             IdRuleBox.ItemsSource = new[] { "1 + 1", "2 + 2", "3 + 3" };
             var idCount = s.IdentificationCellCount;
@@ -148,6 +151,23 @@ namespace HemoIQ.Views.Dialogs
                     return;
                 }
             }
+            var facilityName = FacilityNameBox.Text.Trim();
+            var facilityAddress = LabSettings.NormalizeMultiline(FacilityAddressBox.Text);
+            var facilityContact = LabSettings.NormalizeMultiline(FacilityContactBox.Text);
+            foreach (var (value, max, label, box) in new[]
+                     {
+                         (facilityName, LabSettings.FacilityNameMaxLength, "Facility name", (System.Windows.Controls.TextBox)FacilityNameBox),
+                         (facilityAddress, LabSettings.FacilityAddressMaxLength, "Facility address", FacilityAddressBox),
+                         (facilityContact, LabSettings.FacilityContactMaxLength, "Contact information", FacilityContactBox),
+                     })
+            {
+                if (value.Length <= max) continue;
+                MessageBox.Show($"{label} is longer than {max} characters.", "Validation",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                box.Focus();
+                return;
+            }
+
             if (!LabSettings.TryParseDecimal(ThresholdBox.Text, out var threshold) ||
                 threshold < 0.3 || threshold > 0.95)
             {
@@ -240,6 +260,9 @@ namespace HemoIQ.Views.Dialogs
             var before = JsonSerializer.Serialize(AppSettings.Current.ClinicalSnapshot());
             AppSettings.Current.LabName = LabNameBox.Text.Trim();
             AppSettings.Current.Department = DepartmentBox.Text.Trim();
+            AppSettings.Current.FacilityName = facilityName;
+            AppSettings.Current.FacilityAddress = facilityAddress;
+            AppSettings.Current.FacilityContact = facilityContact;
             AppSettings.Current.ProbabilityThreshold = threshold;
             var idRule = IdRuleBox.SelectedItem?.ToString() ?? "3 + 3";
             AppSettings.Current.IdentificationCellCount =

@@ -1,6 +1,6 @@
 # Reports
 
-The Reports tab previews a text report and can copy, print, or export it. Every report begins with the product name, version, and intended-use statement. That statement stays on the preview.
+The Reports tab previews a text report and can copy, print, or export it. Every report begins with the facility letterhead set in **Preferences** (facility name, address and contact information), then the product name, version, and intended-use statement. Any part of the letterhead that is not set is left off; with none set, the report starts with the product name. The intended-use statement stays on the preview.
 
 ## Choose a report
 

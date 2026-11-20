@@ -74,6 +74,11 @@ namespace HemoIQ.Services
         {
             Text("labName", 120, s => s.LabName, (s, v) => s.LabName = v, v => v.Length == 0 ? "cannot be blank" : null),
             Text("department", 120, s => s.Department, (s, v) => s.Department = v),
+            Text("facilityName", LabSettings.FacilityNameMaxLength, s => s.FacilityName, (s, v) => s.FacilityName = v),
+            Text("facilityAddress", LabSettings.FacilityAddressMaxLength, s => s.FacilityAddress,
+                (s, v) => s.FacilityAddress = LabSettings.NormalizeMultiline(v)),
+            Text("facilityContact", LabSettings.FacilityContactMaxLength, s => s.FacilityContact,
+                (s, v) => s.FacilityContact = LabSettings.NormalizeMultiline(v)),
             new("probabilityThreshold", s => s.ProbabilityThreshold, (node, s) =>
             {
                 if (node is not JsonValue v || !v.TryGetValue<double>(out var d)) return "must be a number";
