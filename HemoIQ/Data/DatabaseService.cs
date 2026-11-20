@@ -4200,8 +4200,10 @@ namespace HemoIQ.Data
                 skip.Add(s.AccessionNumber);
 
             var panelsBefore = CountRows("panels");
+            var panelIdsBefore = GetAllPanels().Select(p => p.PanelId).ToHashSet();
             var archiveSpecimenCount = 0;
             var restored = 0;
+            var restoredAccessions = new HashSet<string>(StringComparer.Ordinal);
 
             try
             {
@@ -4212,6 +4214,13 @@ namespace HemoIQ.Data
                 {
                     cmd.CommandText = "SELECT COUNT(*) FROM archive.specimens";
                     archiveSpecimenCount = Convert.ToInt32(cmd.ExecuteScalar());
+                }
+                using (var cmd = _conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT accession_number FROM archive.specimens
+                                        WHERE accession_number NOT IN (SELECT accession_number FROM restore_skip)";
+                    using var r = cmd.ExecuteReader();
+                    while (r.Read()) restoredAccessions.Add(r.GetString(0));
                 }
 
                 FillRestoreSkipPanels();
@@ -4265,16 +4274,79 @@ namespace HemoIQ.Data
             BumpSequence("reactions", "reaction_id");
             BumpSequence("analysis_snapshots", "id");
 
+            var findings = RestoreReviewFindings(restoredAccessions, panelIdsBefore);
             AppendAudit("restore", "archive", path, null,
-                afterJson: JsonSerializer.Serialize(new { restored, skipped = archiveSpecimenCount - restored }));
+                afterJson: JsonSerializer.Serialize(new { restored, skipped = archiveSpecimenCount - restored, reviewFindings = findings }));
 
             return new RestoreResult
             {
                 SpecimensRestored = restored,
                 SpecimensSkipped = Math.Max(0, archiveSpecimenCount - restored),
                 PanelsRestored = Math.Max(0, CountRows("panels") - panelsBefore),
-                FileSizeBytesAfter = GetFileSizeBytes()
+                FileSizeBytesAfter = GetFileSizeBytes(),
+                ReviewFindings = findings,
             };
+        }
+
+        /// <summary>
+        /// Stored typing values that are not +, -, ++ or NT, read from the raw columns: the normal cell reader
+        /// drops them, so they would otherwise look untyped. "cell 2 Jka \"0\"" per value.
+        /// </summary>
+        private List<string> UnreadableTyping(int panelId)
+        {
+            static bool Readable(string? v) =>
+                string.IsNullOrWhiteSpace(v) || AntigenConstants.IsTypedAntigenValue(v) || v == AntigenConstants.AntigenNotTested;
+            var bad = new List<string>();
+            using (var cmd = _conn.CreateCommand())
+            {
+                cmd.CommandText = "SELECT * FROM panel_cells WHERE panel_id = $pid ORDER BY id";
+                cmd.Parameters.AddWithValue("$pid", panelId);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                {
+                    var cell = r.GetString(r.GetOrdinal("cell_number"));
+                    foreach (var ag in AntigenConstants.Antigens)
+                    {
+                        var ordinal = r.GetOrdinal(AntigenMapper.GetColumn(ag));
+                        var v = r.IsDBNull(ordinal) ? null : r.GetString(ordinal);
+                        if (!Readable(v)) bad.Add($"cell {cell} {ag} \"{v}\"");
+                    }
+                }
+            }
+            using (var cmd = _conn.CreateCommand())
+            {
+                cmd.CommandText = @"SELECT pc.cell_number, x.antigen_name, x.value FROM panel_cell_extra_antigens x
+                                    JOIN panel_cells pc ON pc.id = x.cell_id WHERE pc.panel_id = $pid ORDER BY pc.id";
+                cmd.Parameters.AddWithValue("$pid", panelId);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                {
+                    var v = r.IsDBNull(2) ? null : r.GetString(2);
+                    if (!Readable(v)) bad.Add($"cell {r.GetString(0)} {r.GetString(1)} \"{v}\"");
+                }
+            }
+            return bad;
+        }
+
+        /// <summary>
+        /// Restore copies archived rows as stored, so it can bring back values that the save checks now refuse.
+        /// Lists them for the restored specimens and newly restored panels; nothing is changed.
+        /// </summary>
+        private List<string> RestoreReviewFindings(ISet<string> restoredAccessions, ISet<int> panelIdsBefore)
+        {
+            var findings = Services.DataConsistencyCheck.Find(
+                    GetReactionRecords().Where(r => restoredAccessions.Contains(r.SpecimenId)))
+                .Select(f => $"{f.Title}: {f.Detail} {f.Action}")
+                .ToList();
+            foreach (var panel in GetAllPanels().Where(p => !panelIdsBefore.Contains(p.PanelId)))
+            {
+                var bad = UnreadableTyping(panel.PanelId);
+                if (bad.Count == 0) continue;
+                findings.Add($"{PanelAuditName(panel.PanelId) ?? panel.Name}: unreadable typing {string.Join("; ", bad.Take(5))}" +
+                             (bad.Count > 5 ? $"; and {bad.Count - 5} more" : "") +
+                             ". Analysis reads these as not typed. Correct them with Edit on the Panels tab.");
+            }
+            return findings;
         }
 
         private string ResolveArchivePath(string archivePath)

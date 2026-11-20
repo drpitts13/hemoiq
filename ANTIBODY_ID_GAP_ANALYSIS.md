@@ -3683,8 +3683,41 @@ How the overlaps were resolved:
 - **Gap analysis.** HemoIQ's iteration log is kept. Main's separate log
   (its own iteration numbering) remains in main's git history.
 
+## Iteration 146 (this change)
+
+**Deficiency:** Restore from an archive copies grades and panel typing as
+stored. Since Iterations 144–145 the save paths refuse unrecognized grades,
+grades for cells a panel lacks and typing other than +, -, ++ or NT, but an
+older archive can still hold them. Restore brought them back silently:
+analysis then read the typing as untyped and the grade as missing, with no
+prompt to review.
+
+**Bounded improvement:**
+- `RestoreArchive` lists review findings after the copy. Nothing is changed
+  or refused, so archived history is kept as it was:
+  - `DataConsistencyCheck` findings for the restored specimens only
+    (unrecognized grades, cells missing from the panel, detached panels);
+  - unreadable typing on panel lots that the restore added, read from the
+    raw columns (standard and warehouse antigens), because the normal cell
+    reader drops such values and they would look untyped.
+- `RestoreResult.ReviewFindings` carries them. The restore audit entry's
+  after-JSON stores the full list.
+- The completion message lists up to eight under "Review before use" with a
+  warning icon; the remainder is referred to the audit entry.
+- Help: the Open Archive topic explains the review list.
+
+**Tests:** `RestoreReviewTests` (3 cases):
+- a clean archive restores with no findings;
+- an archived AHG grade "pos" is restored unchanged, reported, and recorded
+  in the audit entry;
+- typing "0" on a restored panel lot is reported with the cell, antigen and
+  value, and points to Edit on the Panels tab.
+
+All 1230 tests pass.
+
 ## Likely next tick
 
-A product review is due at Iteration 148. Before then: the archive restore
-path copies grades and typing as stored. Check that it reports values the
-new save checks would refuse, without blocking the restore.
+A product review is due at Iteration 148. Before then: look for other paths
+that bring stored data in without the current save checks.
+
+Loop clean passes: 0/5

@@ -12,4 +12,12 @@
 
 The completion message reports how many specimens were restored, how many were skipped because they were already present, and how many panels were restored. Every tab reloads after a successful restore. **Help** opens this chapter.
 
+Restore copies archived rows exactly as stored. An older archive can hold values that HemoIQ now refuses to save. The completion message then shows a warning and lists them under **Review before use**:
+
+- grades HemoIQ does not recognize, such as "pos";
+- grades for cells the panel does not have, or for a panel that is no longer linked to the specimen;
+- panel typing other than +, −, ++ or NT on a restored panel lot. Analysis reads such a value as not typed. Correct it with **Edit** on the Panels tab.
+
+Nothing is changed or blocked; each line says what to review. The message shows up to eight lines. The full list is kept in the audit log entry for the restore.
+
 Store archive files with the same care as the live database. They contain specimen records.

@@ -119,12 +119,16 @@ namespace HemoIQ
                 ".";
             ViewModel.SetStatus(status);
             ViewModel.NotifyCapacityIfNeeded();
+            var review = result.ReviewFindings.Count == 0 ? "" :
+                $"\n\nReview before use ({result.ReviewFindings.Count}); restored as archived, nothing was changed:\n• " +
+                string.Join("\n• ", result.ReviewFindings.Take(8)) +
+                (result.ReviewFindings.Count > 8 ? $"\n• … and {result.ReviewFindings.Count - 8} more in the audit log entry for this restore." : "");
             MessageBox.Show(
                 status +
-                (result.PanelsRestored > 0 ? $"\nAlso restored {result.PanelsRestored} panel(s)." : ""),
+                (result.PanelsRestored > 0 ? $"\nAlso restored {result.PanelsRestored} panel(s)." : "") + review,
                 "Restore complete",
                 MessageBoxButton.OK,
-                MessageBoxImage.Information);
+                result.ReviewFindings.Count == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
         }
 
         private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)

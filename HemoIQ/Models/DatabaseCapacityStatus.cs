@@ -86,5 +86,11 @@ namespace HemoIQ.Models
         public int SpecimensSkipped { get; init; }
         public int PanelsRestored { get; init; }
         public long FileSizeBytesAfter { get; init; }
+        /// <summary>
+        /// Restored values today's save checks would refuse (unrecognized grades, grades for cells the panel
+        /// lacks, reactions on detached panels, unreadable panel typing). Restore keeps them as archived; each
+        /// line says what to review.
+        /// </summary>
+        public System.Collections.Generic.IReadOnlyList<string> ReviewFindings { get; init; } = System.Array.Empty<string>();
     }
 }
