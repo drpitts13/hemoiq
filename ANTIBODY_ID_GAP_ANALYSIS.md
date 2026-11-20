@@ -4363,9 +4363,49 @@ All 1283 tests pass.
 The existing residual-cell test passes through the implied-f rule. All 1286
 tests pass.
 
+## Iteration 169: no rule-outs from autoadsorption after a recent transfusion
+
+**Reviewed, no gap:** prewarm excludes only the IS phase, which the prewarm
+technique does not read; 37°C and AHG are interpreted.
+
+**Deficiency found (patient safety):**
+- An autoadsorbed aliquot is used as ordinary evidence for alloantibodies,
+  by design (`Autoadsorption_DoesNotExcludeAlloSpecificitiesFromOrdinaryScores`).
+- Autoadsorption is not reliable within about three months of a red-cell
+  transfusion: transfused donor cells in the autologous sample can adsorb
+  alloantibodies along with the autoantibody.
+- HemoIQ never connected the two. A nonreactive cell on an autoadsorbed
+  aliquot ruled out, for example, anti-K for a patient transfused ten days
+  earlier, although donor K+ cells could have removed it. Nothing warned
+  the user.
+
+**Bounded improvement:**
+- When a specimen has an autoadsorbed run and `TransfusionContext` marks
+  the patient's typing unreliable, `BuildContexts` sets
+  `RunContext.AutoAdsorptionCaution` on that run.
+  - Unreliable means a red-cell transfusion within the recent-transfusion
+    window, or transfusion noted while the status is Unknown.
+  - A platelet-only transfusion does not set it.
+- `SerumRemovesAntibody` then treats that aliquot as unable to rule out any
+  specificity. Its negatives become gated rule-outs on Special Panels, with
+  a reason naming the transfusion and suggesting allogeneic (differential)
+  adsorption. Ordinary scores carry the same exclusion note.
+- The guidance on a panreactive untreated run paired with that
+  autoadsorption no longer says to use the autoadsorbed aliquot.
+- Outside the window, or without transfusion, nothing changes.
+- Help (Panel run) explains it.
+
+**Tests:** `AutoadsorptionTransfusionTests` (3 cases):
+- transfused 10 days ago: anti-K is not ruled out and is gated with the
+  reason;
+- not transfused: ruled out;
+- transfused 200 days ago: ruled out.
+
+All 1289 tests pass.
+
 ## Likely next tick
 
-Review prewarm interpretation (which phases are ignored, and what the
-analysis states), and autoadsorption with a recent transfusion.
+Review eluate interpretation after recent transfusion (the DAT and eluate
+reflect donor cells) and the DAT-positive workup suggestions.
 
 Loop clean passes: 0/5

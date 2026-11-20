@@ -130,6 +130,13 @@ namespace HemoIQ.Services
         public bool IsAutoAdsorbed =>
             Run.SerumTreatment == SerumTreatment.AutoAdsorption;
 
+        /// <summary>
+        /// Set on an autoadsorbed run when the patient was recently transfused with red cells: donor cells in the
+        /// autologous sample may have adsorbed alloantibodies, so the aliquot cannot rule out any specificity.
+        /// Null otherwise.
+        /// </summary>
+        public string? AutoAdsorptionCaution { get; set; }
+
         // ── Evidence weighting ────────────────────────────────────────────────
 
         /// <summary>

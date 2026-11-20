@@ -30,7 +30,7 @@ namespace HemoIQ.Services
             if (reactions.Count == 0) return empty;
 
             var runs = _db.GetAllSpecimenRuns(specimenId);
-            var contexts = BuildContexts(runs);
+            var contexts = BuildContexts(runs, specimenId);
             var antigens = RelevantAntigens(contexts);
             var byRun = GroupByRun(reactions);
 
@@ -145,7 +145,7 @@ namespace HemoIQ.Services
             var reactions = _db.GetAllSpecimenReactions(specimenId);
             if (reactions.Count == 0) return new List<SeparationEvaluation>();
             var runs = _db.GetAllSpecimenRuns(specimenId);
-            var contexts = BuildContexts(runs);
+            var contexts = BuildContexts(runs, specimenId);
             var byRun = GroupByRun(reactions);
             var scoreExclusions = new HashSet<string>(StringComparer.Ordinal);
             MarkPanreactiveUntreatedBesideAdsorption(byRun, contexts, scoreExclusions);
@@ -237,7 +237,7 @@ namespace HemoIQ.Services
 
         // ── Context helpers ───────────────────────────────────────────────────
 
-        private Dictionary<int, RunContext> BuildContexts(List<PanelRun> runs)
+        private Dictionary<int, RunContext> BuildContexts(List<PanelRun> runs, string specimenId)
         {
             var extrasByPanel = new Dictionary<int, List<string>>();
             var typedByPanel = new Dictionary<int, List<string>>();
@@ -250,8 +250,33 @@ namespace HemoIQ.Services
             var dict = new Dictionary<int, RunContext>();
             foreach (var run in runs)
                 dict[run.RunId] = new RunContext(run, extrasByPanel[run.PanelId], typedByPanel[run.PanelId]);
+            MarkAutoAdsorptionAfterTransfusion(dict.Values, specimenId);
             return dict;
         }
+
+        /// <summary>
+        /// Autoadsorption is not reliable within the recent-transfusion window: transfused donor red cells in the
+        /// patient's sample can adsorb alloantibodies along with the autoantibody, so a nonreactive autoadsorbed
+        /// aliquot cannot rule any alloantibody out. Uses the same assessment that marks patient typing unreliable
+        /// (red-cell transfusion within the window, or transfusion noted when the status is unknown).
+        /// </summary>
+        private void MarkAutoAdsorptionAfterTransfusion(IEnumerable<RunContext> contexts, string specimenId)
+        {
+            var auto = contexts.Where(c => c.IsAutoAdsorbed).ToList();
+            if (auto.Count == 0 || _db.GetSpecimen(specimenId) is not Specimen s) return;
+            var transfusion = TransfusionContext.Assess(
+                s.TransfusionStatus, s.LastTransfusionDate, s.CreatedDate,
+                AppSettings.Current.RecentTransfusionWindowDays, s.Phenotype, s.Notes, s.TransfusionProducts);
+            if (!transfusion.PhenotypeUnreliable) return;
+            foreach (var ctx in auto)
+                ctx.AutoAdsorptionCaution =
+                    $"{RunLabel(ctx)} was autoadsorbed, but the patient was recently transfused, so donor red cells in the " +
+                    "autologous sample may have adsorbed alloantibodies. Negative reactions on this aliquot cannot rule out " +
+                    "any alloantibody; consider allogeneic (differential) adsorption. Not a diagnosis.";
+        }
+
+        private static string RunLabel(RunContext ctx) =>
+            string.IsNullOrWhiteSpace(ctx.Run.DisplayLabel) ? ctx.Run.SerumTreatment.ToString() : ctx.Run.DisplayLabel;
 
         private static IReadOnlyList<string> RelevantAntigens(Dictionary<int, RunContext> contexts)
         {
@@ -360,7 +385,7 @@ namespace HemoIQ.Services
                                     Antigen = ag,
                                     CellTreatmentLabel =
                                         AntigenTreatmentEffects.GetDisplayName(ctx.Run.SerumTreatment),
-                                    Reason =
+                                    Reason = ctx.AutoAdsorptionCaution ??
                                         $"{ctx.Run.DisplayLabel} is expected to remove {antibody}; " +
                                         "a negative reaction on this aliquot cannot rule it out.",
                                 });
@@ -462,6 +487,7 @@ namespace HemoIQ.Services
         }
 
         private static bool SerumRemovesAntibody(RunContext ctx, string antibody) =>
+            ctx.AutoAdsorptionCaution != null ||
             ctx.AbsorbedAntibodies.Any(a => RuleoutPolicy.SameAntibody(a, antibody));
 
         /// <summary>
@@ -475,9 +501,12 @@ namespace HemoIQ.Services
             if (_panreactiveUntreatedRunIds.Contains(ctx.Run.RunId))
                 return true;
             if (!SerumRemovesAntibody(ctx, antibody)) return false;
-            var label = string.IsNullOrWhiteSpace(ctx.Run.DisplayLabel)
-                ? ctx.Run.SerumTreatment.ToString()
-                : ctx.Run.DisplayLabel;
+            if (ctx.AutoAdsorptionCaution != null)
+            {
+                exclusions.Add(ctx.AutoAdsorptionCaution);
+                return true;
+            }
+            var label = RunLabel(ctx);
             exclusions.Add(
                 $"{label} is expected to remove {antibody}; reactions on this aliquot were " +
                 "excluded from ordinary probability and pattern scores. Review the absorption " +
@@ -530,7 +559,10 @@ namespace HemoIQ.Services
             if (paired.Count == 0) return;
             var labels = string.Join(", ", paired.Select(a => a.Run.DisplayLabel).Distinct(StringComparer.Ordinal));
             var guidance = auto
-                ? "Use the autoadsorbed aliquot for underlying alloantibody evidence."
+                ? paired.Any(a => a.AutoAdsorptionCaution != null)
+                    ? "The patient was recently transfused, so the autoadsorbed aliquot is not used for alloantibody " +
+                      "evidence either; consider allogeneic (differential) adsorption."
+                    : "Use the autoadsorbed aliquot for underlying alloantibody evidence."
                 : "Use the adsorbed aliquot for specificities it is not expected to remove. " +
                   "Removal or survival of the expected specificities stays on the absorption comparison.";
             exclusions.Add(
