@@ -89,6 +89,14 @@ opened at the end of `OnStartup`, never through `StartupUri`; otherwise shutting
 would show the quit confirmation and the build would wait for a click. Add any new command-line run
 before that line. `HeadlessStartupGuardTests` checks this.
 
+## Startup does not change laboratory data
+
+Whatever runs when the main window loads must work for every role, including Read-only users and
+unregistered logins, and must not change panel typing, grades or identifications. Seeder maintenance
+(such as the E2E blanket-negative repair) runs only from the seeding commands. A startup write that is
+still wanted checks `AccessControl.Can(db, Permission.RecordResults)` first and does nothing otherwise.
+`StartupDataSafetyTests` checks this.
+
 ## Tests
 
 - Use `IsolatedDatabase` for anything that touches the database.

@@ -37,9 +37,12 @@ namespace HemoIQ.Services
         /// <summary>
         /// Records analysis for a DEMO scenario that has a panel and has never been analyzed.
         /// Grades, panel typing, and an analysis that already exists are left alone.
+        /// Runs at every launch, so it does nothing for a session that may not record results
+        /// (a Read-only user or an unregistered login): startup must not fail for them.
         /// </summary>
         public static int AnalyzeIfNeverAnalyzed(DatabaseService db, AntibodyAnalyzer analyzer)
         {
+            if (!AccessControl.Can(db, Permission.RecordResults)) return 0;
             int analyzed = 0;
             foreach (var id in ScenarioIds)
             {

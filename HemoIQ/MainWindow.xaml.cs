@@ -60,7 +60,6 @@ namespace HemoIQ
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            E2EWorkflowSeeder.RepairBlanketNegatives(ViewModel.Database);
             DemoDataSeeder.AnalyzeIfNeverAnalyzed(ViewModel.Database, ViewModel.Analyzer);
             ViewModel.PanelsVM.Refresh();
             ViewModel.WorklistVM.Refresh();

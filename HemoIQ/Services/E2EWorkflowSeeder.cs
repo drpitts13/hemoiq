@@ -61,12 +61,19 @@ namespace HemoIQ.Services
         /// Those cells become NT. A column with any + or ++ is left alone, so a
         /// typed negative on a donor cell stays negative. The seeder does not
         /// type the autocontrol, so a "-" left on AC becomes NT.
+        /// Runs only while seeding, and only on the seeder's own lots (vendor E2E,
+        /// lot number one of <see cref="SpecimenIds"/>): a laboratory panel that
+        /// happens to use the vendor name E2E keeps its typing. A lot used for a
+        /// confirmed identification is left alone; its typing changes only through
+        /// Edit on the Panels tab, which records a reason.
         /// </summary>
         public static void RepairBlanketNegatives(DatabaseService db)
         {
             foreach (var panel in db.GetAllPanels())
             {
                 if (!string.Equals(panel.Vendor, "E2E", StringComparison.Ordinal)) continue;
+                if (Array.IndexOf(SpecimenIds, panel.LotNumber) < 0) continue;
+                if (db.GetPanelUsage(panel.PanelId).ConfirmedSpecimens.Count > 0) continue;
                 var cells = db.GetPanelCells(panel.PanelId);
                 if (cells.Count == 0) continue;
                 foreach (var ag in AntigenConstants.Antigens)

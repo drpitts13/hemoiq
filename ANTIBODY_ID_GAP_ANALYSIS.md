@@ -3740,10 +3740,53 @@ not refreshed and the installer could not be built unattended.
 
 All 1232 tests pass.
 
+## Iteration 148 (this change): product review of Iterations 144–147 and the merge
+
+**Reviewed:**
+- Iterations 144–145 (grade and typing save checks): no new gaps.
+- Iterations 146–147 (restore review list, headless runs): no new gaps.
+- The merged main features: check-cell evidence, per-screen status, manual
+  PDF, Search and Panels changes, the E2E workflow seeder, and its startup
+  hooks. The startup hooks had the defect below.
+
+**Deficiency found (data integrity and access control):** the merge added two
+writes to `MainWindow_Loaded`, which runs at every launch for every user.
+- `E2EWorkflowSeeder.RepairBlanketNegatives` turned an antigen that was "-"
+  on every cell into NT, through the unaudited direct writer, on any panel
+  whose vendor field read "E2E". A laboratory panel with that vendor name and
+  an all-negative low-frequency column (Kpa, Jsa, Lua are typical) would have
+  its typing silently erased at each start.
+- The direct writer demands Record Results and refuses a lot used for a
+  confirmed identification. For a Read-only user, or once an E2E lot was
+  confirmed, it threw partway through `Loaded`. That showed an error box and
+  skipped the rest of startup, including `RefreshSession`, which disables
+  change commands for view-only sessions.
+- `DemoDataSeeder.AnalyzeIfNeverAnalyzed` also writes analyses at startup and
+  had no permission check.
+
+**Bounded improvement:**
+- The blanket-negative repair is no longer called at startup. It runs only
+  from the seeding commands (`--seed-clinical`, Load Demo Data). It touches
+  only the seeder's own lots (vendor E2E and a lot number from `SpecimenIds`)
+  and skips a lot used for a confirmed identification.
+- `AnalyzeIfNeverAnalyzed` does nothing for a session that may not record
+  results.
+- Developer conventions gain "Startup does not change laboratory data".
+
+**Tests:** `StartupDataSafetyTests` (5 cases):
+- Read-only and unregistered sessions: startup demo analysis does nothing and
+  does not throw;
+- a technologist: it analyzes once, then nothing on the next launch;
+- a laboratory panel with vendor E2E keeps an all-negative Kpa column;
+- a seeded lot used for a confirmed identification keeps its typing;
+- `MainWindow.xaml.cs` no longer calls the repair.
+
+All 1237 tests pass.
+
 ## Likely next tick
 
-A product review is due at Iteration 148: review Iterations 144–147, the
-merged main features, and other paths that bring stored data in without the
-current save checks.
+Review the remaining merged main paths for writes made outside the audited,
+permission-checked methods (seeders, PDF and manual export, Search
+actions).
 
 Loop clean passes: 0/5
