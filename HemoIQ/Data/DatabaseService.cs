@@ -4137,6 +4137,7 @@ namespace HemoIQ.Data
                 createdArchive = Path.GetFullPath(archivePath);
                 if (string.Equals(createdArchive, Path.GetFullPath(DbPath), StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException("Archive path cannot be the live database file.");
+                RequireNewArchiveFile(createdArchive);
                 CreateSpecimenArchive(cutoffDate, createdArchive);
             }
 
@@ -4579,13 +4580,24 @@ namespace HemoIQ.Data
             cmd.ExecuteNonQuery();
         }
 
+        /// <summary>
+        /// A purge archive is always a new file. An existing file may be an earlier archive whose specimens are
+        /// no longer in the live database; replacing it would destroy that history.
+        /// </summary>
+        private static void RequireNewArchiveFile(string archivePath)
+        {
+            if (File.Exists(archivePath))
+                throw new InvalidOperationException(
+                    $"The archive file {Path.GetFileName(archivePath)} already exists. Choose a new file name: replacing it " +
+                    "would delete any specimens archived there earlier. Nothing was purged.");
+        }
+
         private void CreateSpecimenArchive(string cutoffDate, string archivePath)
         {
             var dir = Path.GetDirectoryName(archivePath);
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
-            if (File.Exists(archivePath))
-                File.Delete(archivePath);
+            RequireNewArchiveFile(archivePath);
 
             using (new DatabaseService(archivePath))
             {

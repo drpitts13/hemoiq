@@ -4104,9 +4104,43 @@ No new issue or gap worth fixing. All 1271 tests pass.
 
 No new issue or gap worth fixing. All 1271 tests pass.
 
+## Iteration 160: a purge never replaces an existing archive
+
+**Deficiency found (data integrity):**
+- `CreateSpecimenArchive` deleted any existing file at the chosen archive
+  path before writing the new archive.
+- The dialog suggested `hemoiq_archive_yyyyMMdd.db`, so a second purge on
+  the same day offered that name and, after the Save dialog's replace
+  prompt, deleted the first archive.
+- An earlier archive may be the only copy of specimens already removed from
+  the live database, so those records were lost permanently.
+
+**Bounded improvement:**
+- The purge refuses an archive path that already exists before anything is
+  archived or deleted: "Choose a new file name … Nothing was purged."
+  `CreateSpecimenArchive` checks again rather than deleting.
+- The dialog checks straight after the Save dialog, before the purge
+  confirmation. It suggests `hemoiq_archive_yyyyMMdd_HHmm.db` and no longer
+  offers to replace a file.
+- Help (Purge) explains it.
+
+**Reviewed, no gap:**
+- Purge demands Purge Data. It requires an archive when confirmed
+  identifications would be lost, refuses the live database file as the
+  archive, and deletes and audits in one transaction.
+- `--write-manual` writes headlessly (Iteration 147).
+
+**Tests:** `ArchiveOverwriteTests` (3 cases):
+- a second purge to the same archive is refused, keeping both the archive
+  and the live specimen;
+- an unrelated existing file is not replaced;
+- a new archive in a new folder still works.
+
+All 1274 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: database capacity and purge, help and manual
-generation, Preferences dialog validation.
+Continue clean-pass reviews: Preferences dialog validation, Rules dialog
+validation, startup data migration.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using HemoIQ.Data;
@@ -114,11 +115,21 @@ namespace HemoIQ.Views.Dialogs
                     Title = "Save purged-data archive",
                     Filter = "SQLite Database|*.db",
                     DefaultExt = "db",
-                    FileName = $"hemoiq_archive_{DateTime.Today:yyyyMMdd}.db"
+                    FileName = $"hemoiq_archive_{DateTime.Now:yyyyMMdd_HHmm}.db",
+                    // An existing archive is refused, so do not offer to replace one.
+                    OverwritePrompt = false
                 };
                 if (save.ShowDialog(this) != true)
                     return;
                 archivePath = save.FileName;
+                if (File.Exists(archivePath))
+                {
+                    MessageBox.Show(this,
+                        $"{Path.GetFileName(archivePath)} already exists. Choose a new file name: replacing it would delete " +
+                        "any specimens archived there earlier. Nothing was purged.",
+                        "Purge Database", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
             }
 
             var confirm = MessageBox.Show(
