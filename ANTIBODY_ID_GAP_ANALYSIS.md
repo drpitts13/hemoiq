@@ -3955,9 +3955,34 @@ No new issue or gap worth fixing. All 1247 tests pass.
 
 No new issue or gap worth fixing. All 1247 tests pass.
 
+## Iteration 155 (clean pass): configuration transfer, eluates, screening cells
+
+**Reviewed:**
+- **Configuration export and import** (`ConfigurationBundle`).
+  - The file carries rules and clinical Preferences only, so there are no
+    secrets in it. Format and version are checked, and a preview is shown
+    before anything changes.
+  - A file with refused entries cannot be applied.
+  - Rule changes demand Configure Rules and Preferences changes demand
+    Configure Preferences. Everything applies in one transaction, and live
+    settings change only after commit.
+  - Rules go through the audited `AddRule`, `UpdateRule` and `DeleteRule`.
+    Preferences log `update_settings`, so open analyses go stale (ordered
+    by audit id since Iteration 152). The whole import is also audited as
+    `import_configuration`.
+- **Eluates.** `SetEluateSource` demands the permission, refuses a locked
+  record and is audited. Deleting a specimen that is an eluate source is
+  refused.
+- **Screening cells.** These are stored as panels, so the panel import,
+  typing validation and deletion guards reviewed in Iterations 145 and 153
+  apply.
+
+No new issue or gap worth fixing. All 1247 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: configuration export and import (secrets,
-validation, audit), screening cells and selected-cell workflow, eluates.
+Continue clean-pass reviews: patient records and antigen-negative
+requirements, amendment of a confirmed identification, the audit log
+viewer and its export.
 
-Loop clean passes: 2/5
+Loop clean passes: 3/5
