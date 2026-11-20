@@ -102,7 +102,7 @@ namespace HemoIQ.Services
         public static List<LocationWorkload> ComputeByLocation(IEnumerable<Specimen> specimens, DateTime? from, DateTime? to)
         {
             return specimens
-                .Where(s => !s.IsCancelled && InRange(s.CreatedDate, from, to))
+                .Where(s => !s.IsCancelled && ReceivedInRange(s, from, to))
                 .GroupBy(s => string.IsNullOrWhiteSpace(s.OrderingLocation) ? NoLocation : s.OrderingLocation.Trim(),
                     StringComparer.OrdinalIgnoreCase)
                 .Select(g =>
@@ -158,7 +158,7 @@ namespace HemoIQ.Services
             string location)
         {
             return specimens
-                .Where(s => !s.IsCancelled && InRange(s.CreatedDate, from, to))
+                .Where(s => !s.IsCancelled && ReceivedInRange(s, from, to))
                 .Where(s => string.Equals(
                     string.IsNullOrWhiteSpace(s.OrderingLocation) ? NoLocation : s.OrderingLocation.Trim(),
                     location, StringComparison.OrdinalIgnoreCase))
@@ -174,6 +174,18 @@ namespace HemoIQ.Services
         }
 
         public static int AntibodyCount(string? finalAntibodies) => FinalAntibodyParser.Split(finalAntibodies).Count;
+
+        /// <summary>
+        /// Received in the range: the recorded receipt time, or the entry date when no receipt time is recorded.
+        /// Shared with turnaround so every "received in the range" figure counts the same investigations.
+        /// </summary>
+        internal static bool ReceivedInRange(Specimen s, DateTime? from, DateTime? to)
+        {
+            var received = TurnaroundService.ReceivedTime(s);
+            return received != DateTime.MinValue &&
+                   (from == null || received.Date >= from.Value.Date) &&
+                   (to == null || received.Date <= to.Value.Date);
+        }
 
         private static bool InRange(string? text, DateTime? from, DateTime? to) =>
             TryDate(text, out var d) &&

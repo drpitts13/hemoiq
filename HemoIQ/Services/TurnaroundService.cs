@@ -46,9 +46,7 @@ namespace HemoIQ.Services
         public static TurnaroundResult Compute(IEnumerable<Specimen> specimens, DateTime? from, DateTime? to,
             int thresholdDays, DateTime now, Func<Specimen, string>? statusOf = null)
         {
-            var inRange = specimens.Where(s => !s.IsCancelled && TryDate(s.CreatedDate, out var r) &&
-                                               (from == null || r >= from.Value.Date) &&
-                                               (to == null || r <= to.Value.Date))
+            var inRange = specimens.Where(s => !s.IsCancelled && WorkloadService.ReceivedInRange(s, from, to))
                 .ToList();
 
             var toConfirm = new List<double>();

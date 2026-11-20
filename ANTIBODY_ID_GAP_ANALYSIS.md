@@ -4806,9 +4806,38 @@ previous code reported the second instead.
 
 All 1323 tests pass.
 
+## Iteration 185: "received in the range" means received
+
+**Reviewed, no gap:**
+- Workload by technologist counts confirmations by confirmed date and
+  reviews by review date, as its help states.
+- Warnings overridden count by the date of the override.
+
+**Deficiency found (consistency):** Help (Analytics) describes turnaround
+and By ordering location as covering investigations "received" in the date
+range. The code filtered three of them on `CreatedDate`, the entry date:
+- `TurnaroundService.Compute`;
+- `WorkloadService.ComputeByLocation`;
+- `CasesForLocation`, the location drill-down.
+
+Their medians already measured from `ReceivedTime`. A specimen received in
+October but entered in November was counted in November, and the reverse.
+
+**Bounded improvement:**
+- `WorkloadService.ReceivedInRange` uses the recorded receipt time, or the
+  entry date when none is recorded. All three filters use it, so turnaround,
+  the location summary and its drill-down count the same investigations.
+
+**Tests:** `ReceivedRangeTests` (2 cases):
+- location workload and its drill-down count by receipt date, and the entry
+  date when no receipt time is recorded;
+- turnaround counts only the investigation received inside the range.
+
+All 1325 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the remaining Analytics figures (workload by
-technologist, override counts, location workload) for the same date basis.
+Continue clean-pass reviews: the antibody count grid's date basis
+(confirmed date) and the Analytics CSV against the screen.
 
 Loop clean passes: 0/5
