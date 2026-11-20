@@ -191,6 +191,25 @@ namespace HemoIQ.Services
                 sb.AppendLine("Antigens that are NT on every cell are omitted.");
         }
 
+        /// <summary>
+        /// Nonreactive cells that did not count toward a rule-out, with the reason (treatment destroys the antigen,
+        /// the aliquot was absorbed, autoadsorption after transfusion, a failed check cell). The analysis tab shows
+        /// these on Special Panels; the printed record carries them too, so a reader can see why an antibody is not
+        /// ruled out and what to repeat.
+        /// </summary>
+        private static void AppendGatedRuleouts(StringBuilder sb, AnalysisResult result)
+        {
+            var lines = result.GatedRuleouts
+                .Select(g => $"{g.Antibody}: {g.Reason}")
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(l => l, StringComparer.Ordinal)
+                .ToList();
+            if (lines.Count == 0) return;
+            sb.AppendLine($"Rule-outs not counted ({lines.Count}):");
+            foreach (var line in lines)
+                sb.AppendLine("  " + line);
+        }
+
         private string AnalysisResultsText(string? specimenId)
         {
             if (specimenId == null) return "No specimen selected.";
@@ -207,6 +226,7 @@ namespace HemoIQ.Services
             else
             {
                 AppendSuspectedAndRuleouts(sb, result);
+                AppendGatedRuleouts(sb, result);
                 var pattern = SpecimenPatternEvidence.Format(result);
                 if (!string.IsNullOrWhiteSpace(pattern))
                 {
@@ -400,6 +420,7 @@ namespace HemoIQ.Services
                 sb.AppendLine("Ruled out:");
                 sb.AppendLine("  " + string.Join(", ", analysis.RuledOut.Keys.OrderBy(x => x)));
             }
+            AppendGatedRuleouts(sb, analysis);
             // A confirmed call is checked as confirmed; otherwise the antibodies meeting the ID rule.
             var separation = s.HasFinalCall
                 ? analyzer.EvaluateFinalCall(specimenId, s.FinalAntibodies)

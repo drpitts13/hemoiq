@@ -4586,10 +4586,38 @@ All 1291 tests pass.
 
 No new issue or gap worth fixing. All 1291 tests pass.
 
+## Iteration 177: reports list rule-outs not counted
+
+**Deficiency found (reporting, reviewability):**
+- `AnalysisResult.GatedRuleouts` holds every nonreactive cell that did not
+  count toward a rule-out, with the reason:
+  - an enzyme- or DTT-destroyed antigen;
+  - an absorbed aliquot;
+  - autoadsorption after transfusion or transplant;
+  - a failed check cell.
+- The Analysis tab shows them on Special Panels and in its copied text, but
+  neither the Analysis Results nor the Clinical Identification report
+  included them.
+- A reader of the printed record could not tell why an antibody was left
+  out of the rule-outs, or that a test had to be repeated. Iterations
+  166–175 added several of these reasons.
+
+**Bounded improvement:**
+- `ReportService.AppendGatedRuleouts` writes "Rule-outs not counted (n):"
+  after the rule-outs in both reports. It gives one line per distinct
+  antibody and reason, sorted, and adds no section when there are none.
+- The CSV and PDF exports carry the same text through the preview body.
+- Help (Reports) describes the section.
+
+**Tests:** `GatedRuleoutReportTests` (4 cases):
+- a failed check cell is listed with its full reason in both reports;
+- a specimen with no gated cells has no section in either.
+
+All 1295 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: report wording for gated rule-outs (do the
-Clinical Identification and Analysis Results reports list them?) and the
-Special Panels view.
+Continue clean-pass reviews: the Specimen Summary report and its CSV,
+alongside the newly reported sections, for consistency.
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5
