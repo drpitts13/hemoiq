@@ -4680,9 +4680,39 @@ cases in all):
 
 All 1311 tests pass.
 
+## Iteration 180: panel reports state the lot's status
+
+**Reviewed, no gap:**
+- The Panel Antigram omits antigen columns that are NT on every cell
+  (`AntigensTypedOnAnyCell`) and says how many were omitted.
+- The Panel Summary shows the typing summary.
+- Both carry the facility letterhead (Iteration 178).
+
+**Deficiency found (data integrity, imports):**
+- Neither panel report said whether the lot may be used. A lot imported
+  from a vendor or lab file is stored inactive until someone reviews and
+  activates it. An expired lot is deactivated at start-up.
+- A printed antigram of either looked like one for an approved lot in use,
+  so an unreviewed import could be taken as approved on paper.
+
+**Bounded improvement:**
+- `ReportService.PanelStatusLine`, printed on both panel reports:
+  - "Active";
+  - "INACTIVE - imported <date> from <format>; not offered for testing
+    until reviewed and activated on the Panels tab";
+  - "INACTIVE; not offered for new testing";
+  - "EXPIRED <date>; not offered for new testing" (expired takes
+    precedence).
+- Help (Reports) describes it.
+
+**Tests:** `PanelReportStatusTests` (7 cases): active, imported awaiting
+review and expired, each on both reports, and deactivated without an import.
+
+All 1318 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Panel Summary and Panel Antigram reports
-(typing display, NT columns hidden, letterhead).
+Continue clean-pass reviews: the All Panels and All Specimens list reports
+(status columns, letterhead) and the Pending Work report.
 
 Loop clean passes: 0/5

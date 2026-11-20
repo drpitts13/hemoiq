@@ -53,6 +53,23 @@ namespace HemoIQ.Services
         }
 
         /// <summary>
+        /// Whether the lot may be used, so a printed antigram of an imported lot awaiting review, an expired lot or
+        /// a deactivated lot is not mistaken for one in use.
+        /// </summary>
+        public static string PanelStatusLine(Panel p)
+        {
+            if (p.IsExpired)
+                return $"Status:     EXPIRED {p.ExpirationDate}; not offered for new testing.";
+            if (!p.IsActive && !string.IsNullOrWhiteSpace(p.ImportedAt))
+                return $"Status:     INACTIVE - imported {p.ImportedAt}" +
+                       (string.IsNullOrWhiteSpace(p.SourceFormat) ? "" : $" from {p.SourceFormat}") +
+                       "; not offered for testing until reviewed and activated on the Panels tab.";
+            if (!p.IsActive)
+                return "Status:     INACTIVE; not offered for new testing.";
+            return "Status:     Active";
+        }
+
+        /// <summary>
         /// The facility letterhead from Preferences (name, address, contact), one item per line, followed by a
         /// blank line. Empty when none is set, so the report starts with the product line as before.
         /// </summary>
@@ -142,6 +159,7 @@ namespace HemoIQ.Services
             sb.AppendLine($"Vendor:     {p.Vendor ?? "N/A"}");
             sb.AppendLine($"Cells:      {p.NumCells}{(p.IncludeAc ? " + AC" : "")}");
             sb.AppendLine($"Expiration: {p.ExpirationDate ?? "N/A"}");
+            sb.AppendLine(PanelStatusLine(p));
             var cells = _db.GetPanelCells(panelId.Value);
             AppendPanelDataQuality(sb, p, cells);
             sb.AppendLine();
@@ -178,6 +196,7 @@ namespace HemoIQ.Services
             sb.AppendLine(lab.ToUpperInvariant());
             sb.AppendLine("PANEL ANTIGRAM");
             sb.AppendLine($"{p.Name}   Lot: {p.LotNumber ?? "N/A"}   Vendor: {p.Vendor ?? "N/A"}   Exp: {p.ExpirationDate ?? "N/A"}");
+            sb.AppendLine(PanelStatusLine(p));
             sb.AppendLine(new string('=', 78));
             AppendAntigenGrid(sb, panelId.Value, _db.GetPanelCells(panelId.Value));
             return sb.ToString();
