@@ -20,6 +20,17 @@ public class Fda510kControlTests
     }
 
     [Fact]
+    public void AboutText_ShowsTheAuthorUnderTheProduct_AndNoTechnologyLabel()
+    {
+        var lines = SoftwareIdentity.AboutText().Split('\n');
+        Assert.Equal(SoftwareIdentity.ProductName, lines[0]);
+        Assert.Equal("by Darrell Pitts", lines[1]);
+        Assert.Equal("", lines[2]);
+        Assert.Equal(SoftwareIdentity.VersionLabel, lines[3]);
+        Assert.DoesNotContain("C# / WPF", SoftwareIdentity.AboutText());
+    }
+
+    [Fact]
     public void SoftwareIdentity_ExposesAssemblyVersionAndIntendedUse()
     {
         Assert.False(string.IsNullOrWhiteSpace(SoftwareIdentity.Version));

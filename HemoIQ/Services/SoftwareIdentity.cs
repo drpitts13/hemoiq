@@ -62,10 +62,14 @@ namespace HemoIQ.Services
             return sb.ToString();
         }
 
+        /// <summary>Shown under the product name in the About box.</summary>
+        public const string Author = "Darrell Pitts";
+
         public static string AboutText()
         {
-            return $"{ProductName}\n\n" +
-                   $"{VersionLabel} (C# / WPF)\n\n" +
+            return $"{ProductName}\n" +
+                   $"by {Author}\n\n" +
+                   $"{VersionLabel}\n\n" +
                    $"{IntendedUse}\n\n" +
                    "Press F1 for help on the current section.";
         }
