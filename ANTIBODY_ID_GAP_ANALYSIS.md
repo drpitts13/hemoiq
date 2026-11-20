@@ -3831,10 +3831,49 @@ wrong for seven hours of every day.
 
 All 1237 tests pass.
 
+## Iteration 151: staleness keeps the order of events when the clock does not
+
+**Reviewed, no gap:**
+- Tests that build dates from the clock use whole-day offsets on date-only
+  values, so they do not depend on the time of day.
+- Panel and specimen expiry (`ExpirationStatus`, the expired-deactivation
+  query, the dialogs) use the local date consistently, and a lot is usable
+  through its expiry date.
+
+**Deficiency found (patient safety, data integrity):**
+- Staleness compares `reactions_updated_at` with `last_analyzed_at`, both
+  local time to the second, as strings.
+- A grade saved after an analysis in the same second, or after the clock went
+  back, got an equal or earlier time. Clocks go back at the end of daylight
+  saving time (the repeated hour) or with a time correction.
+- The analysis then looked current although the grades had changed.
+
+**Bounded improvement:**
+- `TouchSpecimenReactionsUpdated` stamps a reaction change one second after
+  the last analysis when the clock reads that time or earlier.
+- `SetSpecimenLastAnalyzed` never stamps an analysis before the reactions it
+  read.
+- Both are SQL CASE expressions in the single update, so no extra read is
+  needed. Ordinary operation still records the current time.
+- Help (Analysis) explains it.
+
+**Tests:** `StalenessClockOrderTests` (4 cases):
+- a grade after the clock went back makes the analysis stale, stamped one
+  second after it;
+- a grade in the same second makes it stale;
+- an analysis after the clock went back covers the grades it read;
+- ordinary order uses the current time.
+
+The first three fail on the previous code.
+
+All 1241 tests pass.
+
 ## Likely next tick
 
-Look for other clock-dependent tests (expiry windows at day boundaries,
-"days ago" arithmetic across midnight), then continue clean-pass reviews:
-Panels import review, Rules editing and audit, Analytics.
+The configuration-change comparison (`LastAnalysisConfigurationChange`)
+converts the UTC audit time to local time and has the same repeated-hour
+case for rule and Preferences changes. Review it next, then continue
+clean-pass reviews: Panels import review, Rules editing and audit,
+Analytics.
 
 Loop clean passes: 0/5

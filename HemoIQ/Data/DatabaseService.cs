@@ -1442,11 +1442,23 @@ namespace HemoIQ.Data
             });
         }
 
+        /// <summary>
+        /// Staleness compares reactions_updated_at with last_analyzed_at (local time, to the second). The two
+        /// writers below keep the order of events even when the clock does not: a reaction change is always
+        /// stamped after the last analysis (an edit in the same second, or after the clock went back at the end
+        /// of daylight saving time or by a correction, would otherwise look older and the analysis would look
+        /// current), and an analysis is never stamped before the reactions it read.
+        /// </summary>
         public void TouchSpecimenReactionsUpdated(string specimenId)
         {
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
-                UPDATE specimens SET reactions_updated_at = $now WHERE accession_number = $id";
+                UPDATE specimens SET reactions_updated_at =
+                    CASE WHEN last_analyzed_at IS NOT NULL AND last_analyzed_at >= $now
+                              AND strftime('%Y-%m-%dT%H:%M:%S', last_analyzed_at, '+1 second') IS NOT NULL
+                         THEN strftime('%Y-%m-%dT%H:%M:%S', last_analyzed_at, '+1 second')
+                         ELSE $now END
+                WHERE accession_number = $id";
             cmd.Parameters.AddWithValue("$now", DateTime.Now.ToString("o")[..19]);
             cmd.Parameters.AddWithValue("$id", specimenId);
             cmd.ExecuteNonQuery();
@@ -1456,7 +1468,10 @@ namespace HemoIQ.Data
         {
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
-                UPDATE specimens SET last_analyzed_at = $now WHERE accession_number = $id";
+                UPDATE specimens SET last_analyzed_at =
+                    CASE WHEN reactions_updated_at IS NOT NULL AND reactions_updated_at > $now
+                         THEN reactions_updated_at ELSE $now END
+                WHERE accession_number = $id";
             cmd.Parameters.AddWithValue("$now", DateTime.Now.ToString("o")[..19]);
             cmd.Parameters.AddWithValue("$id", specimenId);
             cmd.ExecuteNonQuery();
