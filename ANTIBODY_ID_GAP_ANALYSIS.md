@@ -4253,10 +4253,47 @@ No new issue or gap worth fixing. All 1281 tests pass.
 
 No new issue or gap worth fixing. All 1281 tests pass.
 
+## Iteration 166: Lewis antigens are enzyme-enhanced, not destroyed
+
+**Reviewed, no gap:**
+- Rule-out, ID-rule, dosage, separation and pattern loops skip an antigen
+  that the run's cell treatment destroys. A nonreactive ficin-treated cell
+  cannot rule out anti-Fya, and a DTT-treated cell cannot rule out anti-K.
+  Those cells are listed as gated rule-outs on Special Panels.
+- The ACS suggestion uses the same per-run evidence.
+
+**Deficiency found (analytical correctness):**
+- `AntigenTreatmentEffects` listed Lea and Leb as destroyed by ficin and
+  papain. The comment said "variable; treat as destroyed for rule-out
+  gating".
+- Standard references (AABB Technical Manual; Blood Group Antigen
+  FactsBook) give Lewis antigens as resistant to proteolytic enzymes, with
+  anti-Lea and anti-Leb reacting more strongly with treated cells.
+- The same table drives `EnzymeTreatmentPatternClassifier`. A reactivity
+  pattern that disappeared on ficin-treated cells was therefore offered as
+  consistent with Lewis, the opposite of what enzyme testing indicates.
+- A nonreactive enzyme-treated Le(a+) or Le(b+) cell was also refused as a
+  rule-out, contrary to normal practice.
+
+**Bounded improvement:**
+- Lea and Leb are Enhanced under ficin and papain, with the source in the
+  code comment.
+- DTT is unchanged: Lewis is unaffected by DTT.
+- The treatment test now expects ficin to destroy M, N, S, s, Fya, Fyb and
+  Xga only.
+- Help (Special Panels) states the Lewis behavior.
+- This changes clinical logic; the laboratory should confirm it against its
+  own procedure manual before relying on enzyme-panel Lewis rule-outs.
+
+**Tests:**
+- `ScenarioTests.TreatmentModel_FicinAndPapainEnhanceLewis` (new);
+- `TreatmentModel_FicinDestroysExpectedAntigens` (updated).
+
+All 1282 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the analysis engine's rule-out with enzyme
-and DTT-treated runs, and the ACS (antibody combination screen)
-suggestion path.
+Review the enzyme pattern explanations for other antigens listed as
+"variable" (Mia, Vw, Mur, Ch, Rg, Ge2) against the same references.
 
-Loop clean passes: 4/5
+Loop clean passes: 0/5

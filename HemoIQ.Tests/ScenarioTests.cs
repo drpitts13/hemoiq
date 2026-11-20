@@ -339,12 +339,21 @@ namespace HemoIQ.Tests
         [Fact]
         public void TreatmentModel_FicinDestroysExpectedAntigens()
         {
-            var destroyed = new[] { "M", "N", "S", "s", "Fya", "Fyb", "Xga", "Lea", "Leb" };
+            var destroyed = new[] { "M", "N", "S", "s", "Fya", "Fyb", "Xga" };
             foreach (var ag in destroyed)
             {
                 var effect = AntigenTreatmentEffects.GetCellEffect(CellTreatment.Ficin, ag);
                 Assert.True(effect == AntigenEffect.Destroyed, $"Expected {ag} to be Destroyed by ficin, got {effect}");
             }
+        }
+
+        [Fact]
+        public void TreatmentModel_FicinAndPapainEnhanceLewis()
+        {
+            // Lewis antigens resist proteolytic enzymes; anti-Lea and anti-Leb react more strongly with treated cells.
+            foreach (var treatment in new[] { CellTreatment.Ficin, CellTreatment.Papain })
+            foreach (var ag in new[] { "Lea", "Leb" })
+                Assert.Equal(AntigenEffect.Enhanced, AntigenTreatmentEffects.GetCellEffect(treatment, ag));
         }
 
         [Fact]

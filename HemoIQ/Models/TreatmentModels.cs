@@ -55,8 +55,6 @@ namespace HemoIQ.Models
             { "Fya", AntigenEffect.Destroyed },
             { "Fyb", AntigenEffect.Destroyed },
             { "Xga", AntigenEffect.Destroyed },
-            { "Lea", AntigenEffect.Destroyed },   // variable; treat as destroyed for rule-out gating
-            { "Leb", AntigenEffect.Destroyed },   // variable; treat as destroyed for rule-out gating
             { "Mia", AntigenEffect.Destroyed },
             { "Vw",  AntigenEffect.Destroyed },
             { "Mur", AntigenEffect.Destroyed },
@@ -76,6 +74,11 @@ namespace HemoIQ.Models
             { "Jka", AntigenEffect.Enhanced },
             { "Jkb", AntigenEffect.Enhanced },
             { "P1",  AntigenEffect.Enhanced },
+            // Lewis antigens resist ficin/papain and anti-Lea/-Leb react more strongly with treated cells
+            // (AABB Technical Manual; FactsBook). Listing them as destroyed made a ficin-sensitive pattern
+            // look consistent with Lewis, the opposite of what enzyme testing shows.
+            { "Lea", AntigenEffect.Enhanced },
+            { "Leb", AntigenEffect.Enhanced },
             { "Vel", AntigenEffect.Enhanced },
             { "VS",  AntigenEffect.Enhanced },
             { "Goa", AntigenEffect.Enhanced },
