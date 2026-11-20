@@ -4606,7 +4606,8 @@ No new issue or gap worth fixing. All 1291 tests pass.
 - `ReportService.AppendGatedRuleouts` writes "Rule-outs not counted (n):"
   after the rule-outs in both reports. It gives one line per distinct
   antibody and reason, sorted, and adds no section when there are none.
-- The CSV and PDF exports carry the same text through the preview body.
+- Print and PDF use the same report text. The CSV exports are structured
+  separately and do not include this section yet.
 - Help (Reports) describes the section.
 
 **Tests:** `GatedRuleoutReportTests` (4 cases):
