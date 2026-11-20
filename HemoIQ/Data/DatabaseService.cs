@@ -201,6 +201,8 @@ namespace HemoIQ.Data
                 ExecNonQuery("ALTER TABLE specimens ADD COLUMN reactions_updated_at TEXT");
             if (!cols.Contains("last_analyzed_at"))
                 ExecNonQuery("ALTER TABLE specimens ADD COLUMN last_analyzed_at TEXT");
+            if (!cols.Contains("analysis_config_seq"))
+                ExecNonQuery("ALTER TABLE specimens ADD COLUMN analysis_config_seq INTEGER");
         }
 
         private void MigratePanelStartCell()
@@ -1470,7 +1472,8 @@ namespace HemoIQ.Data
             cmd.CommandText = @"
                 UPDATE specimens SET last_analyzed_at =
                     CASE WHEN reactions_updated_at IS NOT NULL AND reactions_updated_at > $now
-                         THEN reactions_updated_at ELSE $now END
+                         THEN reactions_updated_at ELSE $now END,
+                    analysis_config_seq = (SELECT COALESCE(MAX(id), 0) FROM audit_events WHERE action IN " + ConfigActionsSql + @")
                 WHERE accession_number = $id";
             cmd.Parameters.AddWithValue("$now", DateTime.Now.ToString("o")[..19]);
             cmd.Parameters.AddWithValue("$id", specimenId);
@@ -1518,12 +1521,11 @@ namespace HemoIQ.Data
             }
             var reactionsChanged = ReactionsChangedSinceAnalysis(ru, la);
             var preferencesChanged = false;
-            if (string.IsNullOrWhiteSpace(finalId) && la != null)
+            if (string.IsNullOrWhiteSpace(finalId) && la != null && GetSpecimen(specimenId) is Specimen spec)
             {
                 var saved = GetLatestAnalysisSnapshot(specimenId)?.SettingsJson;
-                var configChanged = LastAnalysisConfigurationChange();
                 preferencesChanged = LabSettings.ClinicalSettingsDiffer(saved, AppSettings.Current.ClinicalSettingsJson()) ||
-                    (configChanged != null && string.Compare(configChanged, la, StringComparison.Ordinal) > 0);
+                    Services.AnalysisCurrency.ConfigChangedAfter(spec, LastAnalysisConfigurationChange());
             }
             return AnalysisFreshness.Combine(reactionsChanged, preferencesChanged);
         }
@@ -3617,21 +3619,28 @@ namespace HemoIQ.Data
             separationExemptFrom = r.SeparationExemptFrom,
         });
 
+        /// <summary>Audit actions that change how an analysis is computed.</summary>
+        private const string ConfigActionsSql = "('add_rule', 'update_rule', 'delete_rule', 'update_settings')";
+
         /// <summary>
-        /// Local time ("yyyy-MM-ddTHH:mm:ss", like last_analyzed_at) of the latest audited change
-        /// to analysis rules or clinical Preferences, or null when there has been none.
+        /// The latest audited change to analysis rules or clinical Preferences: its audit id, which orders it
+        /// against analyses whatever the clock did, and its local time ("yyyy-MM-ddTHH:mm:ss") for display.
+        /// Null when there has been none.
         /// </summary>
-        public string? LastAnalysisConfigurationChange()
+        public Services.AnalysisConfigurationChange? LastAnalysisConfigurationChange()
         {
             using var cmd = _conn.CreateCommand();
-            cmd.CommandText = @"
-                SELECT MAX(occurred_at_utc) FROM audit_events
-                WHERE action IN ('add_rule', 'update_rule', 'delete_rule', 'update_settings')";
-            var v = cmd.ExecuteScalar() as string;
-            if (string.IsNullOrEmpty(v) ||
-                !DateTime.TryParse(v, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var utc))
-                return null;
-            return utc.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+            cmd.CommandText = "SELECT id, occurred_at_utc FROM audit_events WHERE action IN " + ConfigActionsSql +
+                              " ORDER BY id DESC LIMIT 1";
+            using var r = cmd.ExecuteReader();
+            if (!r.Read()) return null;
+            var id = r.GetInt64(0);
+            var v = r.IsDBNull(1) ? null : r.GetString(1);
+            var local = !string.IsNullOrEmpty(v) &&
+                        DateTime.TryParse(v, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var utc)
+                ? utc.ToLocalTime().ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture)
+                : "";
+            return new Services.AnalysisConfigurationChange(id, local);
         }
 
         private static string? NormalizeSeparationList(bool exempt, string? list)
@@ -3826,6 +3835,7 @@ namespace HemoIQ.Data
             CreatedDate = r.GetString(r.GetOrdinal("created_date")),
             ReactionsUpdatedAt = SafeGetString(r, "reactions_updated_at"),
             LastAnalyzedAt = SafeGetString(r, "last_analyzed_at"),
+            AnalysisConfigSeq = SafeGetNullableLong(r, "analysis_config_seq"),
             IsActive = SafeGetInt(r, "is_active", 1) != 0,
             Notes = SafeGetString(r, "notes"),
             Phenotype = SafeGetString(r, "phenotype"),
@@ -3985,6 +3995,16 @@ namespace HemoIQ.Data
             {
                 var ord = r.GetOrdinal(col);
                 return r.IsDBNull(ord) ? null : r.GetString(ord);
+            }
+            catch { return null; }
+        }
+
+        private static long? SafeGetNullableLong(SqliteDataReader r, string col)
+        {
+            try
+            {
+                var ord = r.GetOrdinal(col);
+                return r.IsDBNull(ord) ? null : r.GetInt64(ord);
             }
             catch { return null; }
         }

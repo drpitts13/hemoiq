@@ -3868,12 +3868,54 @@ The first three fail on the previous code.
 
 All 1241 tests pass.
 
+## Iteration 152: rule and Preferences changes ordered by audit id
+
+**Deficiency (patient safety):** an unconfirmed analysis is stale when an
+audited rule or Preferences change came after it.
+- The check converted the latest change's UTC audit time to local time and
+  compared it with `last_analyzed_at` as text.
+- During the repeated hour at the end of daylight saving time, or after a
+  clock correction, a change made after an analysis could show an earlier
+  local time.
+- Iteration 151 can move `last_analyzed_at` up to an hour forward to keep
+  grade order, which made the same miss possible.
+- A change in the same second as the analysis was also missed. The existing
+  test slept 1.1 s to avoid it.
+- In each case the Worklist, the Analysis banner and Confirm ID treated an
+  analysis computed under the old rules as current.
+
+**Bounded improvement:**
+- `specimens.analysis_config_seq` (new, nullable INTEGER) records, at each
+  analysis, the id of the latest rule or Preferences audit event (0 when
+  none).
+- `LastAnalysisConfigurationChange` returns `AnalysisConfigurationChange`:
+  the audit id, plus the local time for the message.
+- `AnalysisCurrency.ConfigChangedAfter` compares ids when the analysis has
+  one. Audit ids only increase, so the clock cannot reorder them. Analyses
+  saved before this change (NULL) compare times as before.
+- One rule serves `StaleReason` (Worklist, banner, status strip, Pending
+  Work, Confirm ID) and `GetAnalysisStaleReason`.
+- Restore copies only shared columns, so an archive made before this change
+  restores with NULL and uses the time comparison.
+
+**Data/schema:** `specimens.analysis_config_seq INTEGER NULL`, added by
+`MigrateSpecimenTimestamps`. Nothing is backfilled.
+
+**Tests:** `ConfigurationChangeOrderTests` (6 cases):
+- a rule change in the same second is stale;
+- a change whose clock time looks earlier is still stale;
+- an analysis after the change is current even when its time looks earlier;
+- a pre-migration analysis compares times;
+- a confirmed identification is not reopened;
+- a bare local time from older callers compares by time.
+
+Help (Rules) notes it.
+
+All 1247 tests pass.
+
 ## Likely next tick
 
-The configuration-change comparison (`LastAnalysisConfigurationChange`)
-converts the UTC audit time to local time and has the same repeated-hour
-case for rule and Preferences changes. Review it next, then continue
-clean-pass reviews: Panels import review, Rules editing and audit,
+Continue clean-pass reviews: Panels import review, Rules editing and audit,
 Analytics.
 
 Loop clean passes: 0/5

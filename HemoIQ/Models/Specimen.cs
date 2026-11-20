@@ -61,6 +61,11 @@ namespace HemoIQ.Models
         public string CreatedDate { get; set; } = string.Empty;
         public string? ReactionsUpdatedAt { get; set; }
         public string? LastAnalyzedAt { get; set; }
+        /// <summary>
+        /// Id of the latest rule or Preferences audit event when the last analysis ran (0 when there was
+        /// none); null for analyses saved before Iteration 152, which fall back to comparing times.
+        /// </summary>
+        public long? AnalysisConfigSeq { get; set; }
         public bool IsActive { get; set; } = true;
 
         public string? Notes { get; set; }
