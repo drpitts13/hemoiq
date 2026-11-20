@@ -932,7 +932,7 @@ Clearing an identification does not delete the reaction grades or the analysis. 
 
 # Reports
 
-The Reports tab previews a text report and can copy, print, or export it. Every report begins with the product name, version, and intended-use statement. That statement stays on the preview.
+The Reports tab previews a text report and can copy, print, or export it. Every report begins with the facility letterhead set in **Preferences** (facility name, address and contact information), then the product name, version, and intended-use statement. Any part of the letterhead that is not set is left off; with none set, the report starts with the product name. The intended-use statement stays on the preview.
 
 ## Choose a report
 
@@ -1185,6 +1185,7 @@ On a small screen the settings scroll; **Save**, **Cancel** and the other button
 ## Identity and thresholds
 
 - **Lab name** and **Department** identify the laboratory on this workstation.
+- **Facility name**, **Facility address** and **Contact information** form the letterhead printed at the top of every report (preview, print and PDF). Type the address one line per line, and phone, fax or email one per line. Blank lines and extra spaces are dropped. Each is optional: anything left blank is left off the report, and with all three blank, reports start with the product line as before. Limits: name 120 characters, address 400, contact information 200.
 - **Score threshold** is the minimum combined score for the suspected list. The allowed range is 0.30 to 0.95. Type it with a decimal point or a decimal comma (0.70 or 0,70).
 - **ID cell rule** is how many antigen-positive reactive cells and antigen-negative nonreactive cells are required before a row is marked as meeting the identification rule. AABB 3 + 3 is the usual standard. The Suspected Antibodies tab turns those rows green.
 - **Multiple-Ab separation** applies when two or more antibodies are called together. It is the number of reactive cells each antibody needs that carry its antigen and are negative for every other called antigen. For anti-e, anti-f, and anti-Lea, that means reactive e+ f- Lea- cells, reactive e- f+ Lea- cells, and reactive e- f- Lea+ cells. The range is 0 to 5; 0 turns the check off, and the default is 1. An antibody known from patient history needs no cells of its own, and a rule on the Rules tab can exempt an antibody. This is a suggested criterion: HemoIQ warns but does not block.
@@ -1217,7 +1218,7 @@ On a small screen the settings scroll; **Save**, **Cancel** and the other button
 - **RT**, **PEG**, **Gel**, and **Solid** are suggested columns. Gel, Solid, and PEG count as IAT-like evidence. You can also type custom names.
 - **Titer grid (Dil1–Dil128)** adds serial-dilution columns. The last reactive tube is the titer endpoint. Dilution grades are not IAT, and they do not rule out or identify an antibody.
 
-Changes apply to the next analysis and to new specimens. They do not rewrite identifications you have already confirmed. Saving a new score threshold, ID cell rule, ACS rule-out count, default rule-out count, or extra-phase list marks each unconfirmed analysis stale until you run analysis again. The lab name, department, and specimen defaults do not.
+Changes apply to the next analysis and to new specimens. They do not rewrite identifications you have already confirmed. Saving a new score threshold, ID cell rule, ACS rule-out count, default rule-out count, or extra-phase list marks each unconfirmed analysis stale until you run analysis again. The lab name, department, facility letterhead, and specimen defaults do not.
 
 ## Users and roles
 
@@ -1240,6 +1241,7 @@ When users are registered, the initials entered for a supervisor review must be 
 
 **Export…** saves the laboratory-wide Preferences, as last saved, to a JSON file. Use it to set up a second workstation the same way, or to keep a copy with your procedure documents. The file covers:
 - lab name and department;
+- facility name, address and contact information;
 - probability threshold;
 - identification, ACS, separation and default rule-out counts, and the ACS antigens added;
 - default specimen type;
