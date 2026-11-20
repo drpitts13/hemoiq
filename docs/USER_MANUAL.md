@@ -825,7 +825,7 @@ Enzyme and DTT runs are compared only with an untreated run on the same panel. T
 
 ## Gated rule-outs
 
-These rule-outs were suppressed because the antigen is destroyed by the cell treatment on that run. A ficin-treated or papain-treated panel cannot rule out an antibody to an enzyme-destroyed antigen. A DTT-treated panel cannot rule out an antibody to a DTT-destroyed antigen, including Kell-system antigens that DTT denatures.
+These rule-outs were suppressed because the antigen is destroyed by the cell treatment on that run. A ficin-treated or papain-treated panel cannot rule out an antibody to an enzyme-destroyed antigen. A DTT-treated panel cannot rule out an antibody to a DTT-destroyed antigen, including Kell-system antigens that DTT denatures. Lewis antigens (Lea, Leb) are not destroyed by ficin or papain; anti-Lea and anti-Leb usually react more strongly with enzyme-treated cells, so those cells can rule them out and a pattern that disappears on enzyme-treated cells does not point to Lewis.
 
 **Antibody**, **Treatment**, and **Reason** name what was withheld and why. Those cells still appear on the reaction grid with a strikethrough antigen header. They do not add to the rule-out count on the Ruled Out tab.
 
