@@ -956,7 +956,7 @@ Panel Summary, Panel Antigram, and the antigen grid on Clinical Identification l
 
 - **Copy** puts the full preview on the clipboard.
 - **Print** prints the preview. Ctrl+P does the same while this tab is open.
-- **Export CSV** saves a spreadsheet. Availability depends on the report type. Specimen and panel lists, and the single-specimen and single-panel summaries, export as CSV. Specimen Summary CSV uses the same current ruled-out list as the preview. When a counted cell's check cell is 0, the CheckCell column names that cell. A counted cell at CC 2+ leaves that column blank.
+- **Export CSV** saves a spreadsheet. Availability depends on the report type. Specimen and panel lists, and the single-specimen and single-panel summaries, export as CSV. Specimen Summary CSV uses the same current ruled-out list as the preview. When a counted cell's check cell is 0, the CheckCell column names that cell. A counted cell at CC 2+ leaves that column blank. A text value that a spreadsheet would run as a formula (one starting with =, +, -, @ or a tab) is written with a leading apostrophe, so opening the file cannot run it. Panel typing (+, ++, -) and numbers are written unchanged.
 - **Export PDF** saves a PDF. Clinical Identification and Panel Antigram use a landscape page.
 
 The preview is read-only. To change what it says, update the specimen, the panel, the grades, or the confirmed ID, then return to this tab. The preview refreshes when you change the report type or the selected specimen or panel. Changing the report updates the status line to name that report.
@@ -1332,7 +1332,7 @@ Columns:
 - **Entity** — which record the event refers to.
 - **Reason** — the text entered when a reason was required, including the reason from **Clear** on a confirmed ID.
 
-**Find** narrows the newest 5,000 events by accession, action, Windows login, record type, or reason. **Export CSV…** saves those visible rows as a spreadsheet. **Close** returns to the main window. **Help** opens this chapter.
+**Find** narrows the newest 5,000 events by accession, action, Windows login, record type, or reason. **Export CSV…** saves those visible rows as a spreadsheet. A text value that a spreadsheet would run as a formula (one starting with =, +, -, @ or a tab) is written with a leading apostrophe, so opening the file cannot run it. Panel typing (+, ++, -) and numbers are written unchanged. **Close** returns to the main window. **Help** opens this chapter.
 
 The log is a history of actions taken in the application. It is not the clinical report. Use **Reports** for the identification document, and use this dialog when you need to see who confirmed or cleared an ID and why.
 
