@@ -4567,9 +4567,29 @@ Two tests' filler data was corrected.
 
 All 1291 tests pass.
 
+## Iteration 176 (clean pass): reaction validity on rule-out cells
+
+**Reviewed (`RunContext`, `ReactionGrade`):**
+- A cell counts as negative evidence only when:
+  - AHG is explicitly 0 (NT is not negative);
+  - every other interpretable phase is 0 or NT;
+  - since Iteration 175, the check cell is not recorded as 0.
+- w+, mixed field (MF) and hemolysis (H) are reactive (`IsPositive` is
+  anything other than 0 or NT), so they never support a rule-out and are
+  read as reactive evidence.
+- Phases the serum treatment makes uninterpretable (IS after prewarm) are
+  left out of both tests.
+- A positive autocontrol does not invalidate nonreactive panel cells. The
+  warm-auto, absorption and DAT classifiers handle its interpretation, and
+  a panreactive untreated run beside an adsorption is excluded from ordinary
+  scores (`MarkPanreactiveUntreatedBesideAdsorption`).
+
+No new issue or gap worth fixing. All 1291 tests pass.
+
 ## Likely next tick
 
-Review the other reaction-validity rules: the IS/37°C reading with a
-positive autocontrol, mixed-field, and hemolysis on rule-out cells.
+Continue clean-pass reviews: report wording for gated rule-outs (do the
+Clinical Identification and Analysis Results reports list them?) and the
+Special Panels view.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
