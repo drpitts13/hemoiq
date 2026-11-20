@@ -4476,9 +4476,29 @@ All 1291 tests pass.
 
 No new issue or gap worth fixing. All 1291 tests pass.
 
+## Iteration 173 (clean pass): neutralization, HTLA titration, cold patterns
+
+**Reviewed:**
+- **Neutralization** (`NeutralizationParser`, `NeutralizationNotes`). The
+  substances map to the expected specificities:
+  - plasma / C4 → Ch, Rg;
+  - urine (including Cad) → Sd(a);
+  - saliva → Lea, Leb;
+  - hydatid or pigeon P1 substance → P1.
+
+  The notes say whether neutralization favors or argues against a readily
+  neutralized HTLA-like specificity. Each ends "Not a diagnosis".
+- **HTLA titration** (`HtlaTitrationNotes`). It reads the highest recorded
+  titer from the notes and extra phases, and states the pattern as evidence
+  only.
+- **Cold patterns.** IS-only reactivity and the prewarm suggestion are
+  covered by existing tests. Prewarm excludes only IS (Iteration 169).
+
+No new issue or gap worth fixing. All 1291 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the HTLA titration and neutralization notes,
-and the cold-pattern suggestions (prewarm, IS-only reactivity).
+Continue clean-pass reviews: dosage-effect detection for the Kidd, Duffy,
+Rh and MNS pairs, and the heterozygous rule exceptions.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
