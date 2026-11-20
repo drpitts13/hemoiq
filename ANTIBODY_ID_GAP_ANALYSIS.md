@@ -4754,10 +4754,32 @@ All 1322 tests pass.
 
 No new issue or gap worth fixing. All 1322 tests pass.
 
+## Iteration 183 (clean pass): Timeline coverage and Audit Log filters
+
+**Reviewed:**
+- **Timeline coverage.** Every specimen audit action written by
+  `DatabaseService` has an entry in `InvestigationTimeline`:
+  - confirm and clear (with the identification as it stood and the reason);
+  - supervisor review, cancel and reinstate;
+  - overrides, eluate links, runs and every field update;
+  - report output (print, PDF, CSV with fingerprint);
+  - reaction saves, grouped into summary entries;
+  - receipt, which comes from the specimen record.
+
+  An action without an entry is left off rather than shown raw, and a
+  deleted specimen has no timeline.
+- **Configuration import.** It is a laboratory-level event and is not on a
+  specimen timeline. It is in the Audit Log as `import_configuration`, and
+  its rule and Preferences changes are audited individually.
+- **Audit Log.** Find narrows by accession, action, Windows login, record
+  type and reason over the newest 5,000 events. Export uses the
+  formula-safe CSV (Iteration 157).
+
+No new issue or gap worth fixing. All 1322 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Timeline entries for the newer audit
-actions (report output with letterhead, configuration import) and the
-Audit Log filters.
+Continue clean-pass reviews: the Worklist's overdue-testing item and the
+turnaround threshold, and the Analytics turnaround figures.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
