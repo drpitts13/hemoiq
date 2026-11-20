@@ -3783,10 +3783,28 @@ writes to `MainWindow_Loaded`, which runs at every launch for every user.
 
 All 1237 tests pass.
 
+## Iteration 149 (clean pass): merged main paths, writes outside the guarded methods
+
+**Reviewed:** every line the merge added under ViewModels, Views,
+`DemoDataSeeder`, `ReportService` and `Data`, searched for database writes
+and file writes.
+- Search (Open and frozen columns), Panels (all-NT columns hidden outside
+  Edit and on printed antigrams), Reactions (frozen phase columns, compare
+  headers) and Analysis: display only, no writes.
+- Staleness (`SettingsDrifted`, `LastAnalysisConfigurationChange`): reads.
+- Help, Save manual: a Save dialog with an overwrite prompt; writes only the
+  file the user picked. An error such as a locked file reaches the
+  application error handler, which logs it and shows the message.
+- Load Demo Data: asks first, runs inside try/catch, and every seeder write
+  goes through the permission-checked database methods. After Iteration 148
+  the blanket-negative repair touches only unconfirmed seeder lots.
+
+No new issue or gap worth fixing. All 1237 tests pass.
+
 ## Likely next tick
 
-Review the remaining merged main paths for writes made outside the audited,
-permission-checked methods (seeders, PDF and manual export, Search
-actions).
+Continue clean-pass reviews across areas not reviewed since the merge:
+reports (clinical report content against the analysis), Worklist staleness
+with settings drift, and Search results against the database.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
