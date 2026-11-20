@@ -4195,9 +4195,31 @@ All 1281 tests pass.
 
 No new issue or gap worth fixing. All 1281 tests pass.
 
+## Iteration 163 (clean pass): vendor sources, artifact store, panel edit audit
+
+**Reviewed:**
+- **Vendor sources.**
+  - Only public product and antigram pages are read, with a named user
+    agent and a 45-second timeout.
+  - No credentials, tokens or sign-in exist anywhere in the vendor code.
+  - A source whose antigrams are not publicly readable (Ortho Quick
+    Antigram) says so and directs the user to import the e-Antigram file.
+  - Downloaded lots are stored inactive for review (Iteration 153).
+- **Import artifact store.**
+  - Files are named vendor_lot_SHA-256-prefix. The same bytes always map to
+    the same name, and different content does not collide in practice.
+  - Names are sanitized to letters, digits, dot, dash and underscore, so a
+    vendor or lot cannot escape the folder.
+  - The panel records the full hash for verification.
+- **Panels editor.** Typing edits on a panel with history go through the
+  audited, reason-required path. Typing values are validated (Iteration
+  145).
+
+No new issue or gap worth fixing. All 1281 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: vendor panel import (download sources and
-terms), the import artifact store, and the Panels editor audit.
+Continue clean-pass reviews: report fingerprints against issued content,
+specimen dialog validation (dates, accession format), and the help window.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
