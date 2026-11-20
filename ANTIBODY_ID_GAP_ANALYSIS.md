@@ -3715,9 +3715,35 @@ prompt to review.
 
 All 1230 tests pass.
 
+## Iteration 147 (this change)
+
+**Deficiency:** Found while rebuilding the shortcut after Iteration 146. The
+merge of main added a `--write-manual` step to `CreateShortcut.ps1`. App.xaml
+still opened the main window through `StartupUri`, so the command-line runs
+(`--write-manual`, `--seed-clinical`, `--import-vendor-samples`) created it
+even though `OnStartup` returned early. `Shutdown()` then closed it, its
+Closing handler asked "Quit the application?", and the build waited for a
+click that never came. The manual had been written, but the shortcut was
+not refreshed and the installer could not be built unattended.
+
+**Bounded improvement:**
+- `StartupUri` is removed. `OnStartup` opens `MainWindow` itself, after every
+  command-line branch has shut down and returned.
+- Developer conventions gain "Command-line runs open no window".
+- Checked by hand: `HemoIQ.exe --write-manual <path>` exits 0 at once with
+  the manual written; a normal launch still opens the HemoIQ window.
+
+**Tests:** `HeadlessStartupGuardTests` (2 cases):
+- App.xaml has no `StartupUri`;
+- `new MainWindow()` appears once in App.xaml.cs, after each command-line
+  handler's `Shutdown(` and `return;`.
+
+All 1232 tests pass.
+
 ## Likely next tick
 
-A product review is due at Iteration 148. Before then: look for other paths
-that bring stored data in without the current save checks.
+A product review is due at Iteration 148: review Iterations 144–147, the
+merged main features, and other paths that bring stored data in without the
+current save checks.
 
 Loop clean passes: 0/5

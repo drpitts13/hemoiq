@@ -69,6 +69,9 @@ namespace HemoIQ
             }
 
             base.OnStartup(e);
+            // Opened here rather than through StartupUri: the headless runs above return before any window
+            // exists, so shutting them down cannot raise the quit confirmation and wait for a click.
+            new MainWindow().Show();
         }
 
         private static void OnPreviewKeyDown(object sender, KeyEventArgs e)

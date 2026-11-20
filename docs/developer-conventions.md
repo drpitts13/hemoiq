@@ -81,6 +81,14 @@ comparisons, the import schema check, and Final ID entries.
   728 px, the work area of a 1366×768 screen, unless the dialog scrolls and caps itself. When
   adding a dialog, add it to that test.
 
+## Command-line runs open no window
+
+`App.OnStartup` handles `--write-manual`, `--seed-clinical` and `--import-vendor-samples`, then shuts down
+and returns. The shortcut and installer builds run these with nobody at the screen. The main window is
+opened at the end of `OnStartup`, never through `StartupUri`; otherwise shutting down a command-line run
+would show the quit confirmation and the build would wait for a click. Add any new command-line run
+before that line. `HeadlessStartupGuardTests` checks this.
+
 ## Tests
 
 - Use `IsolatedDatabase` for anything that touches the database.
