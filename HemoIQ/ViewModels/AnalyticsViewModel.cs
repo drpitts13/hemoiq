@@ -290,7 +290,7 @@ namespace HemoIQ.ViewModels
             yield return $"Open investigations older than {t.ThresholdDays} days";
             yield return "Accession,Received,Age (days),Status";
             foreach (var o in t.Overdue)
-                yield return $"{o.Accession},{o.Received},{o.AgeDays},{o.Status}";
+                yield return $"{CsvText.Minimal(o.Accession)},{CsvText.Minimal(o.Received)},{o.AgeDays},{CsvText.Minimal(o.Status)}";
         }
 
         public static IEnumerable<string> WorkloadCsvLines(IEnumerable<TechnologistWorkload> rows)
@@ -366,6 +366,7 @@ namespace HemoIQ.ViewModels
                 File.AppendAllLines(dlg.FileName, LocationCsvLines(LocationWorkload));
                 File.AppendAllLines(dlg.FileName, UserActivityCsvLines(UserActivity));
                 File.AppendAllLines(dlg.FileName, OverrideCsvLines(_overrideCases));
+                ExportAudit.Record(_db, "analytics", dlg.FileName);
                 _main?.SetStatus($"CSV exported: {dlg.FileName}");
                 MessageBox.Show("CSV exported successfully.", "Export",
                     MessageBoxButton.OK, MessageBoxImage.Information);

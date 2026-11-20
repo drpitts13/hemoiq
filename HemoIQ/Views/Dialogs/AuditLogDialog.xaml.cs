@@ -56,6 +56,7 @@ namespace HemoIQ.Views.Dialogs
                     Csv(ev.BeforeJson), Csv(ev.AfterJson)));
             }
             File.WriteAllText(dlg.FileName, sb.ToString(), new UTF8Encoding(true));
+            Services.ExportAudit.Record(_db, "audit_log", dlg.FileName);
         }
 
         private static string Csv(string? value) => Services.CsvText.Field(value);

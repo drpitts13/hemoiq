@@ -49,7 +49,7 @@ The purple and red cards measure workflow time for investigations **received** i
   - A confirmation that was later cleared still counts, because the override happened; its detail starts "No longer the current identification."
   - **Export CSV** adds the list at the end.
 
-The overdue list at the bottom shows each case, oldest first, with its current status. Select one and choose **Open** to go to it. **Export CSV** adds the turnaround figures and the overdue list after the antibody counts. The 90th percentile uses the nearest-rank method.
+The overdue list at the bottom shows each case, oldest first, with its current status. Select one and choose **Open** to go to it. **Export CSV** adds the turnaround figures and the overdue list after the antibody counts. The file contains accession numbers, so each export is written to the audit log with the file name and a SHA-256 fingerprint of the file. The 90th percentile uses the nearest-rank method.
 
 ## Workload by technologist
 

@@ -4835,9 +4835,43 @@ October but entered in November was counted in November, and the reverse.
 
 All 1325 tests pass.
 
+## Iteration 186: Analytics overdue CSV is formula-safe; data exports are audited
+
+**Reviewed, no gap:**
+- Antibody counts use the confirmed date (`IdentifiedAt`).
+- The Analytics CSV carries every section shown on screen: antibody counts,
+  trend, turnaround, overdue list, workload, location, user activity and
+  overrides.
+
+**Deficiencies found (security, auditability):**
+- **Formula safety.** `AnalyticsViewModel.TurnaroundCsvLines` built the
+  overdue lines (accession, received, age, status) without `CsvText`. An
+  accession starting with = or @ exported as a live spreadsheet formula.
+  Iteration 157's guard covers `new CsvWriter(` only, so it missed this
+  hand-built line.
+- **Auditing.** The Analytics and Audit Log CSV exports were not recorded in
+  the audit log, although both contain accession numbers. Report exports
+  have been audited with a fingerprint since earlier iterations.
+
+**Bounded improvement:**
+- The overdue lines use `CsvText.Minimal` for every text value.
+- `ExportAudit.Record` writes an `export_data` audit entry (entity
+  "export", id "analytics" or "audit_log") with the file name, software
+  version and the SHA-256 of the file written. Both exports call it after
+  writing.
+- Help (Analytics, Audit Log) says so.
+
+**Tests:** `DataExportAuditTests` (3 cases):
+- formula values in the accession and status are neutralized;
+- plain values are unchanged;
+- `Record` writes the entry with the file name and its fingerprint.
+
+All 1328 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the antibody count grid's date basis
-(confirmed date) and the Analytics CSV against the screen.
+Look for any other hand-built CSV or text exports that bypass `CsvText`
+(search for `yield return $"` and `AppendLine` building comma-separated
+lines) and extend the CSV guard if needed.
 
 Loop clean passes: 0/5
