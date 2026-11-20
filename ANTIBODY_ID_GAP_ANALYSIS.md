@@ -3801,10 +3801,40 @@ and file writes.
 
 No new issue or gap worth fixing. All 1237 tests pass.
 
+## Iteration 150: review of staleness, reports and Search; time-of-day test fix
+
+**Reviewed, no gap:**
+- **Settings-drift staleness.** The snapshot stores
+  `JsonSerializer.Serialize(ClinicalSnapshot())`. Drift compares the same
+  serialization of the current settings and applies only to unconfirmed
+  analyses. Worklist, Pending Work report and `GetAnalysisStaleReason` agree.
+- **Specimen reports** (Analysis Results, Clinical Identification).
+  - They recompute the analysis from current data (`updateDb: false`), so
+    they cannot print a stale stored result.
+  - The clinical report prints the confirmed final call, any warnings
+    overridden at confirmation, the amendment banner and the rule trace.
+- **Search.** Cell results show the typed value or NT, and the antigen
+  filter matches only typed values.
+
+**Deficiency found (test reliability):** the full suite failed 3
+`ReceiptChecklistTests` when run just after midnight. The tests recorded a
+collection time of "today 07:00", which the app correctly refuses as a future
+time between 00:00 and 07:00. The product behavior is right; the tests were
+wrong for seven hours of every day.
+
+**Bounded improvement:**
+- The tests use 00:00 for today's collection time.
+- The developer conventions' Tests section now says how to build times from
+  today's date.
+- Other tests were checked: they use fixed past dates or `DateTime.Now`
+  minus an interval.
+
+All 1237 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews across areas not reviewed since the merge:
-reports (clinical report content against the analysis), Worklist staleness
-with settings drift, and Search results against the database.
+Look for other clock-dependent tests (expiry windows at day boundaries,
+"days ago" arithmetic across midnight), then continue clean-pass reviews:
+Panels import review, Rules editing and audit, Analytics.
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5

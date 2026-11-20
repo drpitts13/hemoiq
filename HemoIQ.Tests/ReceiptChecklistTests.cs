@@ -78,7 +78,8 @@ public class ReceiptChecklistTests
             st.NextAction);
 
         iso.Db.UpdateSpecimenMrn("RC-3", "M-3");
-        iso.Db.UpdateSpecimenCollection("RC-3", DateTime.Today.ToString("yyyy-MM-dd") + " 07:00", null);
+        // 00:00 today is never in the future, whatever time the suite runs.
+        iso.Db.UpdateSpecimenCollection("RC-3", DateTime.Today.ToString("yyyy-MM-dd") + " 00:00", null);
         iso.Db.UpdateSpecimenTransfusion("RC-3", TransfusionStatus.NotTransfused, null);
         st = InvestigationStatusService.Compute(iso.Db, iso.Db.GetSpecimen("RC-3")!, requireReview: false);
         Assert.True(st.Steps[0].Done);
@@ -100,7 +101,7 @@ public class ReceiptChecklistTests
     {
         iso.Db.AddSpecimen(acc, "serum", null, createdDate: Day(collectedDaysAgo));
         iso.Db.UpdateSpecimenMrn(acc, "MRN-RC");
-        iso.Db.UpdateSpecimenCollection(acc, Day(collectedDaysAgo) + " 07:00", null);
+        iso.Db.UpdateSpecimenCollection(acc, Day(collectedDaysAgo) + " 00:00", null);
         iso.Db.UpdateSpecimenTransfusion(acc, status, lastTransfusion);
     }
 

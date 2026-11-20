@@ -102,5 +102,8 @@ still wanted checks `AccessControl.Can(db, Permission.RecordResults)` first and 
 - Use `IsolatedDatabase` for anything that touches the database.
 - A test class that changes `AppSettings.Current` must be in `[Collection("PersistentDatabase")]`.
   Otherwise it runs in parallel with tests that read the settings.
+- A test that builds a time from today's date uses 00:00 (or `DateTime.Now` minus an interval),
+  never a fixed hour: collection and receipt times in the future are refused, so "today 07:00"
+  fails whenever the suite runs between midnight and 07:00.
 - Test the intermediate analysis (rule-out evaluations, conflicting cells, suggestions), not
   only the final answer.
