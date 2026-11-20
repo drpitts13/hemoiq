@@ -4082,9 +4082,31 @@ Analytics keeps its quote-when-needed format through `CsvText.Minimal`. All 1271
 
 No new issue or gap worth fixing. All 1271 tests pass.
 
+## Iteration 159 (clean pass): DAT, phenotype and genotype, selected cells
+
+**Reviewed:**
+- **DAT.** `UpdateSpecimenDatSplit` demands the permission and accepts
+  only recognized grades for each reagent. It refuses a locked record and
+  audits before and after values.
+- **Phenotype and genotype.** Both are stored as typed, and
+  `PatientTypingParser` reads them into evidence:
+  - Weiner codes, system pairs such as Fy(a−b+), and single antigen tokens;
+  - E/e, C/c, K/k and S/s kept case-sensitive;
+  - allele tokens for predicted typing and variant notes.
+
+  The evidence is advisory: it never adds or removes a suspected or
+  ruled-out antibody. Each antigen it read is listed on the Analysis tab.
+  Text it does not recognize adds no evidence, never wrong evidence.
+  Recent transfusion and HPC transplant mark the typing unreliable.
+- **Selected cells.** Recommendations come from the analysis; nothing is
+  ordered or recorded automatically. Reviewed with the analysis engine in
+  earlier iterations.
+
+No new issue or gap worth fixing. All 1271 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: DAT and autocontrol entry, phenotype and
-genotype entry, selected-cell recommendations.
+Continue clean-pass reviews: database capacity and purge, help and manual
+generation, Preferences dialog validation.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
