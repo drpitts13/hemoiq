@@ -1285,7 +1285,7 @@ The preview line states how many specimens match before you commit.
 
 ## Archive
 
-**Create an archive of the purged data** is checked by default. Leave it checked unless you have another copy of the records. The archive holds specimen records and should be stored securely. The completion message includes the archive path. Open that file later with **Tools → Open Archive**.
+**Create an archive of the purged data** is checked by default. Leave it checked unless you have another copy of the records. The archive holds specimen records and should be stored securely. The completion message includes the archive path. Open that file later with **Tools → Open Archive**. Each purge writes a new archive file; the suggested name includes the date and time. HemoIQ will not replace an existing file, because an earlier archive may be the only copy of specimens already purged. If you pick a file that exists, HemoIQ asks for a new name and nothing is purged.
 
 **Purge** deletes the matching specimens after you confirm. Once users are registered, only an Administrator can purge. If any matching specimen has a confirmed identification, an archive is required: without one, the purge is refused and nothing is deleted. The deletion and its audit entry are saved together. Panels that are still needed by remaining specimens stay. **Cancel** closes the dialog without deleting anything.
 
