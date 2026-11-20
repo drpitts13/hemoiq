@@ -135,8 +135,9 @@ public class RuleoutEvaluationTests
     }
 
     [Fact]
-    public void FailedCheckCell_IsNamedBesideTheControlledCell()
+    public void FailedCheckCell_IsNotCountedAndIsGated_TheControlledCellStillRulesOut()
     {
+        // A nonreactive AHG result whose check cell did not react is invalid and must be repeated.
         using var iso = new IsolatedDatabase();
         iso.Db.AddSpecimen("RO-CC-FAIL", "serum", null);
         var panelId = iso.Db.AddPanel("P", "L", "V", 3, null, false);
@@ -152,51 +153,21 @@ public class RuleoutEvaluationTests
         var result = iso.Analyzer.AnalyzeSpecimen("RO-CC-FAIL", updateDb: false);
         var ev = RequireEvaluation(result, "anti-K");
 
-        Assert.True(ev.MeetsCriteria);
-        Assert.Equal(2, ev.ObservedCount);
-        Assert.Contains("cells 1, 2", ev.Explanation);
-        Assert.Contains("cell 1 check cell did not react", ev.Explanation);
-        Assert.DoesNotContain("cell 2 check cell did not react", ev.Explanation);
+        Assert.Equal(1, ev.ObservedCount);
+        Assert.Contains("cell 2", ev.Explanation);
+        Assert.DoesNotContain("cell 1", ev.Explanation);
+        Assert.DoesNotContain("check cell did not react", ev.Explanation);
+        Assert.DoesNotContain(result.DetailedRuleouts["anti-K"], c => c.CellNumber == "1");
+        var gate = Assert.Single(result.GatedRuleouts, g => g.Antibody == "anti-K");
+        Assert.Equal("Cell 1 is AHG 0 but its check cell did not react, so the result is invalid and cannot rule this " +
+                     "antibody out. Repeat the test.", gate.Reason);
 
         var rows = SpecimenPatternEvidence.RuleoutRows(result);
-        var antiK = Assert.Single(rows, r => r.Antibody == "anti-K");
-        var antiLittleK = Assert.Single(rows, r => r.Antibody == "anti-k");
-        Assert.Equal(2, antiK.RuleoutCount);
-        Assert.Equal("cell 1 check cell did not react", antiK.Note);
-        Assert.Equal(1, antiLittleK.RuleoutCount);
-        Assert.Equal(string.Empty, antiLittleK.Note);
+        Assert.Equal(1, Assert.Single(rows, r => r.Antibody == "anti-K").RuleoutCount);
+        Assert.Equal(1, Assert.Single(rows, r => r.Antibody == "anti-k").RuleoutCount);
 
-        var summary = iso.Reports.GeneratePreviewText(ReportType.SpecimenSummary, "RO-CC-FAIL");
         var analysis = iso.Reports.GeneratePreviewText(ReportType.AnalysisResults, "RO-CC-FAIL");
-        foreach (var text in new[] { summary, analysis })
-        {
-            Assert.Contains("anti-K  (x2)  cell 1 check cell did not react", text);
-            var littleK = text.Split('\n').Single(line => line.Contains("anti-k", StringComparison.Ordinal));
-            Assert.Contains("(x1)", littleK);
-            Assert.DoesNotContain("did not react", littleK);
-        }
-
-        var clinical = iso.Reports.GeneratePreviewText(ReportType.ClinicalIdentification, "RO-CC-FAIL");
-        Assert.Contains("cell 1 check cell did not react", clinical);
-        Assert.DoesNotContain("anti-K  (x2)", clinical);
-
-        var csvPath = Path.Combine(Path.GetTempPath(), $"ruleout_{Guid.NewGuid():N}.csv");
-        try
-        {
-            iso.Reports.ExportToCsv(ReportType.SpecimenSummary, csvPath, "RO-CC-FAIL");
-            var lines = File.ReadAllLines(csvPath);
-            Assert.Contains("Antibody,RuleoutCount,CheckCell", lines);
-            var antiKLine = Assert.Single(lines, line => line.StartsWith("anti-K,", StringComparison.Ordinal));
-            Assert.Contains("cell 1 check cell did not react", antiKLine);
-            Assert.Contains(",2,", antiKLine);
-            var littleKLine = Assert.Single(lines, line => line.StartsWith("anti-k,", StringComparison.Ordinal));
-            Assert.StartsWith("anti-k,1", littleKLine);
-            Assert.DoesNotContain("did not react", littleKLine);
-        }
-        finally
-        {
-            if (File.Exists(csvPath)) File.Delete(csvPath);
-        }
+        Assert.Contains("anti-K  (x1)", analysis);
     }
 
     [Fact]

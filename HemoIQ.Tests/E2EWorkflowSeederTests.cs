@@ -255,21 +255,20 @@ public class E2EWorkflowSeederTests
     }
 
     [Fact]
-    public void InvalidCheckCell_RulesOutOnTheCellAndFlagsTheGrade()
+    public void InvalidCheckCell_IsNotARuleout_TheControlledCellIs_AndTheGradeIsFlagged()
     {
         using var iso = new IsolatedDatabase();
         E2EWorkflowSeeder.SeedIfNeeded(iso.Db, iso.Analyzer);
 
         var result = iso.Analyzer.AnalyzeSpecimen(E2EWorkflowSeeder.InvalidCc, updateDb: false);
         Assert.True(result.DetailedRuleouts.TryGetValue("anti-K", out var cells));
-        var failed = Assert.Single(cells, c => c.CellNumber == "1");
+        Assert.DoesNotContain(cells, c => c.CellNumber == "1");
+        Assert.Contains(result.GatedRuleouts, g => g.Antibody == "anti-K" && g.Reason.StartsWith("Cell 1 is AHG 0"));
         var controlled = Assert.Single(cells, c => c.CellNumber == "3");
-        Assert.Equal("0", failed.AHG);
-        Assert.Equal("0", failed.CC);
         Assert.Equal("0", controlled.AHG);
         Assert.Equal("2+", controlled.CC);
         Assert.DoesNotContain(cells, c => c.CellNumber == "AC");
-        Assert.True(new RuleoutDetailRow { AHG = failed.AHG, CC = failed.CC }.IsCcInvalid);
+        Assert.True(new RuleoutDetailRow { AHG = "0", CC = "0" }.IsCcInvalid);
         Assert.False(new RuleoutDetailRow { AHG = controlled.AHG, CC = controlled.CC }.IsCcInvalid);
         Assert.True(new RuleoutDetailRow { AHG = "0", CC = "NT" }.IsCcInvalid);
         Assert.False(new RuleoutDetailRow { AHG = "2+", CC = "0" }.IsCcInvalid);

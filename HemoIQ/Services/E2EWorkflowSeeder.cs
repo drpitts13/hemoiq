@@ -312,7 +312,7 @@ namespace HemoIQ.Services
             var panel = Panel(db, "E2E invalid check cell", InvalidCc, 3, true);
             Type(db, panel, "1 K+ k-", "2 K- k+", "3 K+ k-");
             var run = Open(db, InvalidCc, "serum", panel, dat: "Negative",
-                notes: "Cell 1 is a nonreactive K+ cell whose check cell did not react.");
+                notes: "Cell 1 is a nonreactive K+ cell whose check cell did not react, so it is not a rule-out.");
             foreach (var cell in db.GetPanelCells(panel))
             {
                 if (cell.CellNumber == "AC")

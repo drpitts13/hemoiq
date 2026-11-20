@@ -68,8 +68,8 @@ public class AntigenCaseRegressionTests
         iso.Db.UpdatePanelCellAntigen(cells[2].Id, "k", "+");          // nonreactive, K-k+
         iso.Db.LinkSpecimenPanel("AC-1", panel);
         iso.Db.SaveReaction("AC-1", panel, "1", "0", "0", "0", "3+");
-        iso.Db.SaveReaction("AC-1", panel, "2", "0", "0", "0", "0");
-        iso.Db.SaveReaction("AC-1", panel, "3", "0", "0", "0", "0");
+        iso.Db.SaveReaction("AC-1", panel, "2", "0", "0", "0", "2+");
+        iso.Db.SaveReaction("AC-1", panel, "3", "0", "0", "0", "2+");
 
         var result = iso.Analyzer.AnalyzeSpecimen("AC-1", updateDb: false);
         var antik = Assert.Single(result.RuleoutEvaluations, e => e.Antibody == "anti-k");

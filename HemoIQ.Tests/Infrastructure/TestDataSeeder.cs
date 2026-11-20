@@ -11,6 +11,12 @@ public static class TestDataSeeder
 {
     public const string SeedMarkerFile = ".seed_complete";
 
+    /// <summary>
+    /// Raise when the seeded data changes. The fixture database is kept between runs and is rebuilt only when the
+    /// marker's version differs, so a changed seed would otherwise never reach it.
+    /// </summary>
+    public const string SeedVersion = "2: negative cells record a reacting check cell (2+)";
+
     // Test classes in different collections seed the same file in parallel.
     private static readonly object SeedLock = new();
 
@@ -23,7 +29,8 @@ public static class TestDataSeeder
     private static void Seed(string dbPath, bool forceReseed)
     {
         var markerPath = dbPath + SeedMarkerFile;
-        if (!forceReseed && File.Exists(dbPath) && File.Exists(markerPath))
+        if (!forceReseed && File.Exists(dbPath) && File.Exists(markerPath) &&
+            File.ReadAllText(markerPath).StartsWith(SeedVersion + "|", StringComparison.Ordinal))
             return;
 
         if (File.Exists(dbPath))
@@ -37,7 +44,7 @@ public static class TestDataSeeder
         SeedRules(db);
         SeedAdditionalAnalysisScenarios(db, panelIds);
 
-        File.WriteAllText(markerPath, DateTime.UtcNow.ToString("o"));
+        File.WriteAllText(markerPath, SeedVersion + "|" + DateTime.UtcNow.ToString("o"));
     }
 
     public static IReadOnlyList<int> SeedPanels(DatabaseService db)
@@ -132,7 +139,7 @@ public static class TestDataSeeder
             if (ePos || kPos)
                 db.SaveReaction("TEST-MULTI-AB", panelId, cell.CellNumber, "0", "0", "2+", "2+");
             else
-                db.SaveReaction("TEST-MULTI-AB", panelId, cell.CellNumber, "0", "0", "0", "0");
+                db.SaveReaction("TEST-MULTI-AB", panelId, cell.CellNumber, "0", "0", "0", "2+");
         }
     }
 
@@ -190,7 +197,7 @@ public static class TestDataSeeder
             }
             else
             {
-                db.SaveReaction(specimenId, panelId, cell.CellNumber, "0", "0", "0", "0");
+                db.SaveReaction(specimenId, panelId, cell.CellNumber, "0", "0", "0", "2+");
             }
         }
     }
@@ -202,7 +209,7 @@ public static class TestDataSeeder
             if (cell.CellNumber == "AC")
                 db.SaveReaction(specimenId, panelId, cell.CellNumber, "NT", "NT", "0", "0");
             else
-                db.SaveReaction(specimenId, panelId, cell.CellNumber, "0", "0", "0", "0");
+                db.SaveReaction(specimenId, panelId, cell.CellNumber, "0", "0", "0", "2+");
         }
     }
 

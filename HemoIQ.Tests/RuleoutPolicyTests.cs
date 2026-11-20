@@ -83,8 +83,8 @@ public class RuleoutPolicyTests
         iso.Db.UpdatePanelCellAntigen(cells[0].Id, "k", "+");
         iso.Db.UpdatePanelCellAntigen(cells[1].Id, "K", "+");
         iso.Db.LinkSpecimenPanel("RP-1", panel);
-        iso.Db.SaveReaction("RP-1", panel, "1", "0", "0", "0", "0");
-        iso.Db.SaveReaction("RP-1", panel, "2", "0", "0", "0", "0");
+        iso.Db.SaveReaction("RP-1", panel, "1", "0", "0", "0", "2+");
+        iso.Db.SaveReaction("RP-1", panel, "2", "0", "0", "0", "2+");
 
         var result = iso.Analyzer.AnalyzeSpecimen("RP-1", updateDb: false);
         var antiK = Assert.Single(result.RuleoutEvaluations, e => e.Antibody == "anti-K");

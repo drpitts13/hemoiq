@@ -163,10 +163,18 @@ namespace HemoIQ.Services
         {
             if (!ReactionGrade.IsNegative(GetInterpretedPhaseValue(rxn, "AHG")))
                 return false;
+            // A nonreactive AHG result whose check cell did not react is invalid: the antiglobulin phase was not
+            // shown to work, so the cell is not negative evidence for anything. CC not recorded (NT) still counts.
+            if (CheckCellFailed(rxn))
+                return false;
             return InterpretablePhaseNames(rxn)
                 .Where(ph => ph != "AHG")
                 .All(ph => ReactionGrade.IsAbsent(GetInterpretedPhaseValue(rxn, ph)));
         }
+
+        /// <summary>AHG is 0 and the check cell was recorded as 0 (did not react).</summary>
+        public bool CheckCellFailed(Reaction rxn) =>
+            ReactionGrade.IsNegative(GetInterpretedPhaseValue(rxn, "AHG")) && ReactionGrade.IsNegative(rxn.CC);
 
         /// <summary>
         /// Checks whether a reaction is positive under this run's interpretable phases.

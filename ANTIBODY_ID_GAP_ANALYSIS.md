@@ -4521,9 +4521,55 @@ No new issue or gap worth fixing. All 1291 tests pass.
 
 No new issue or gap worth fixing. All 1291 tests pass.
 
+## Iteration 175: an AHG-negative cell with a failed check cell is not a rule-out
+
+**Reviewed, no gap:**
+- **ACS eligibility.** It uses the same gated rule-out counts as the rest
+  of the analysis, and an exception is named in the suggested result.
+- **Panel cell counts.** The Panel dialog limits panels to 1–100 cells,
+  starting at cell 1 or later. Imports take the count from the file.
+
+**Deficiency found (patient safety):**
+- Merged from main, a nonreactive AHG cell whose check cell was recorded as
+  0 still counted toward rule-outs. It was only named in the explanation
+  and shown pink.
+- `E2EWorkflowSeederTests.InvalidCheckCell_RulesOutOnTheCellAndFlagsTheGrade`
+  asserted that.
+- A negative antiglobulin result whose check cell (IgG-coated cells) does
+  not react is invalid: it does not show that the AHG phase worked, and the
+  test must be repeated. Counting it relied on the user noticing a colour
+  and discounting the cell by hand, so an antibody could be ruled out on an
+  invalid test.
+
+**Bounded improvement:**
+- `RunContext.IsNegative` is false when `CheckCellFailed` (AHG 0 and CC 0),
+  so the cell is no evidence in any rule-out, score, pattern, dosage,
+  separation or ACS loop.
+- `CalculateRuleouts` lists a gated rule-out for each antigen on that cell:
+  "Cell N is AHG 0 but its check cell did not react, so the result is
+  invalid and cannot rule this antibody out. Repeat the test."
+- A check cell not recorded (NT) still counts, as before; the Reactions grid
+  keeps flagging it.
+- Test data that recorded CC 0 on negatives as filler now records 2+.
+- `TestDataSeeder.SeedVersion` makes the kept fixture database rebuild when
+  seed data changes. Before this, the change would never have reached the
+  fixture.
+- Help (Ruled out) and developer conventions explain it.
+- This changes clinical logic; the laboratory should confirm it against its
+  procedure manual.
+
+**Tests:** three rewritten for the new rule:
+- `RuleoutEvaluationTests.FailedCheckCell_IsNotCountedAndIsGated_TheControlledCellStillRulesOut`;
+- `CandidateExplanationTests.RuleoutCell_FailedCheckCell_IsNotListedAsARuleoutCell`;
+- `E2EWorkflowSeederTests.InvalidCheckCell_IsNotARuleout_TheControlledCellIs_AndTheGradeIsFlagged`.
+
+Two tests' filler data was corrected.
+
+All 1291 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the ACS (antibody combination screen)
-eligibility rule and its exception path, and panel cell-count limits.
+Review the other reaction-validity rules: the IS/37°C reading with a
+positive autocontrol, mixed-field, and hemolysis on rule-out cells.
 
-Loop clean passes: 3/5
+Loop clean passes: 0/5

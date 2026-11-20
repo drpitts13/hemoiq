@@ -90,7 +90,7 @@ public class CandidateExplanationTests
     }
 
     [Fact]
-    public void RuleoutCell_FailedCheckCell_SaysTheCheckCellDidNotReact()
+    public void RuleoutCell_FailedCheckCell_IsNotListedAsARuleoutCell()
     {
         using var iso = new IsolatedDatabase();
         iso.Db.AddSpecimen("EX-CC-FAIL", "serum", null);
@@ -106,13 +106,11 @@ public class CandidateExplanationTests
 
         var result = iso.Analyzer.AnalyzeSpecimen("EX-CC-FAIL", updateDb: false);
         var exp = RequireExplanation(result, "anti-K");
-        var failed = Assert.Single(exp.RuleoutCells, c => c.Contains("cell 1", StringComparison.Ordinal));
-        var controlled = Assert.Single(exp.RuleoutCells, c => c.Contains("cell 2", StringComparison.Ordinal));
 
-        Assert.Contains("IS 0, 37°C 0, AHG 0, CC 0, check cell did not react", failed);
+        Assert.DoesNotContain(exp.RuleoutCells, c => c.Contains("cell 1", StringComparison.Ordinal));
+        var controlled = Assert.Single(exp.RuleoutCells, c => c.Contains("cell 2", StringComparison.Ordinal));
         Assert.Contains("IS 0, 37°C 0, AHG 0, CC 2+", controlled);
-        Assert.DoesNotContain("check cell did not react", controlled);
-        Assert.Contains("check cell did not react", exp.Narrative);
+        Assert.Contains(result.GatedRuleouts, g => g.Antibody == "anti-K" && g.Reason.StartsWith("Cell 1 is AHG 0"));
     }
 
     [Fact]

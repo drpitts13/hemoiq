@@ -113,5 +113,9 @@ leaves typing made only of + and - and plain numbers unchanged, so exported anti
 - A test that builds a time from today's date uses 00:00 (or `DateTime.Now` minus an interval),
   never a fixed hour: collection and receipt times in the future are refused, so "today 07:00"
   fails whenever the suite runs between midnight and 07:00.
+- The shared fixture database (`PersistentDatabaseFixture`) is kept between runs. When you change
+  `TestDataSeeder`'s data, raise `TestDataSeeder.SeedVersion` so the fixture is rebuilt.
+- Record a reacting check cell (for example 2+) on nonreactive AHG cells in test data. AHG 0 with
+  CC 0 is an invalid test and does not count toward rule-outs.
 - Test the intermediate analysis (rule-out evaluations, conflicting cells, suggestions), not
   only the final answer.

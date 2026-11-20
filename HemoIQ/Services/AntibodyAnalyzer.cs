@@ -376,8 +376,27 @@ namespace HemoIQ.Services
                 foreach (var rxn in runReactions)
                 {
                     if (rxn.CellNumber == "AC") continue;
+                    if (!cellDict.TryGetValue(rxn.CellNumber, out var failedCcCell)) continue;
+                    if (ctx.CheckCellFailed(rxn))
+                    {
+                        foreach (var ag in antigens)
+                        {
+                            if (!ctx.TypesAntigen(ag) || failedCcCell.GetAntigen(ag) != "+") continue;
+                            var gated = $"anti-{ag}";
+                            if (gatedSeen.Add($"{gated}|cc|{runId}|{rxn.CellNumber}"))
+                                gatedRuleouts.Add(new GatedRuleout
+                                {
+                                    Antibody = gated,
+                                    Antigen = ag,
+                                    CellTreatmentLabel = ctx.Run.DisplayLabel,
+                                    Reason = $"Cell {rxn.CellNumber} is AHG 0 but its check cell did not react, so the " +
+                                             "result is invalid and cannot rule this antibody out. Repeat the test.",
+                                });
+                        }
+                        continue;
+                    }
                     if (!ctx.IsNegative(rxn)) continue;
-                    if (!cellDict.TryGetValue(rxn.CellNumber, out var cell)) continue;
+                    var cell = failedCcCell;
 
                     foreach (var ag in antigens)
                     {
