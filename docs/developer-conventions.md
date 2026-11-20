@@ -103,7 +103,9 @@ Write every CSV through `CsvText.Writer(CsvText.File(path))`, or `CsvText.Field(
 lines. Spreadsheets run a cell starting with =, +, -, @, tab or CR as a formula, and reasons, notes,
 names and final calls are typed by users. `CsvText.Safe` adds a leading apostrophe to such values and
 leaves typing made only of + and - and plain numbers unchanged, so exported antigrams re-import.
-`CsvInjectionTests` fails if a `new CsvWriter(` appears anywhere else.
+`CsvInjectionTests` fails if a `new CsvWriter(` appears anywhere else. Hand-built lines (the Analytics
+CSV) cannot be seen by that source check: add each new line builder to `AnalyticsCsvGuardTests`, which
+feeds a formula into every text field and fails on any live formula in the output.
 
 ## Tests
 

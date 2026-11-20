@@ -4868,10 +4868,36 @@ All 1325 tests pass.
 
 All 1328 tests pass.
 
+## Iteration 187: a guard for hand-built CSV lines
+
+**Reviewed, no further defect:**
+- Every file HemoIQ writes was checked:
+  - Reports and panel CSV use `CsvText.Writer`;
+  - the Audit Log uses `CsvText.Field`;
+  - all five Analytics line builders use `CsvText` since Iteration 186;
+  - configuration, rules and Preferences are JSON, the manual is Markdown,
+    and the reaction draft is JSON.
+
+**Deficiency found (automated testing):** the CSV guard in
+`CsvInjectionTests` checks only that `new CsvWriter(` appears nowhere but
+`CsvText`. Hand-built lines are invisible to it, which is how the Analytics
+overdue line escaped Iteration 157. Nothing would stop the next one.
+
+**Bounded improvement:**
+- `AnalyticsCsvGuardTests` puts a formula in every text field of every
+  Analytics line builder and fails if any output field starts a cell with
+  =, +, @ or tab, quoted or not.
+- A second case proves the check catches the Iteration 186 line and passes
+  neutralized values and numbers.
+- Developer conventions say to add new line builders to it.
+
+**Tests:** `AnalyticsCsvGuardTests` (2 cases).
+
+All 1330 tests pass.
+
 ## Likely next tick
 
-Look for any other hand-built CSV or text exports that bypass `CsvText`
-(search for `yield return $"` and `AppendLine` building comma-separated
-lines) and extend the CSV guard if needed.
+Continue clean-pass reviews: the Search tab's results export and copy (if
+any), and the Panels tab's compare view.
 
 Loop clean passes: 0/5
