@@ -4329,10 +4329,43 @@ All 1282 tests pass.
 
 All 1283 tests pass.
 
+## Iteration 168: rr absorption removes anti-f (a false rule-out removed)
+
+**Reviewed, no gap:**
+- Only ficin, papain and DTT are modelled as cell treatments, and
+  Iterations 166–167 reviewed them.
+- The R1R1 (anti-D, -C, -e) and R2R2 (anti-D, -c, -E) lists match the
+  absorbing cells. Those cells lack f, and HemoIQ does not model G.
+
+**Deficiency found (patient safety):**
+- rr (ce/ce) absorbing cells carry the compound antigen f (c and e in cis),
+  so rr absorption removes anti-f.
+- `RrAbsorbedAntibodies` listed only anti-c and anti-e, and
+  `SerumRemovesAntibody` excludes only the listed specificities from the
+  absorbed aliquot's ordinary evidence.
+- So nonreactive f+ cells on an rr-absorbed aliquot ruled anti-f out,
+  although the absorption had removed it. The new test reproduced that on
+  the previous code.
+
+**Bounded improvement:**
+- The rr list includes anti-f, and the serum-treatment note says so.
+- `AbsorptionPatternClassifier`'s residual check treats f as negative on a
+  cell typed c− or e−, since f cannot be present without both. A cell
+  reactive after rr absorption that lacks c and e is still reported as
+  residual, unexplained reactivity when f was not typed.
+- Help (Panel run) lists what each absorbing cell is expected to remove.
+
+**Tests:** `AbsorptionCompoundAntigenTests` (3 cases):
+- only rr removes anti-f;
+- nonreactive f+ cells on the rr aliquot do not rule out anti-f;
+- an untreated run still rules anti-f out.
+
+The existing residual-cell test passes through the implied-f rule. All 1286
+tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the remaining treatment tables (trypsin and
-chymotrypsin, if modelled), absorption specificity lists, and prewarm
-interpretation.
+Review prewarm interpretation (which phases are ignored, and what the
+analysis states), and autoadsorption with a recent transfusion.
 
 Loop clean passes: 0/5

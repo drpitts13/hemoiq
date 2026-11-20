@@ -22,7 +22,7 @@ namespace HemoIQ.Models
         Prewarmed,           // serum pre-incubated at 37°C; suppresses cold/IgM reactors, IS phase unreliable
         AlloAdsorptionR1R1,  // absorbed with R1R1 (DCe/DCe) cells; removes anti-D, anti-C, anti-e
         AlloAdsorptionR2R2,  // absorbed with R2R2 (DcE/DcE) cells; removes anti-D, anti-c, anti-E
-        AlloAdsorptionRr,    // absorbed with rr (ce/ce) cells; removes anti-c, anti-e
+        AlloAdsorptionRr,    // absorbed with rr (ce/ce) cells; removes anti-c, anti-e, anti-f
         AutoAdsorption,      // absorbed with patient's own phenotype-matched cells; removes autoantibody
     }
 
@@ -139,10 +139,12 @@ namespace HemoIQ.Models
 
         /// <summary>
         /// Antibody specificities removed when serum is absorbed with rr (ce/ce) cells.
-        /// rr cells express: c, e.
+        /// rr cells express: c, e, and the compound antigen f (ce, cis), so anti-f is removed too.
+        /// R1R1 and R2R2 cells lack f. Leaving anti-f out let a nonreactive f+ cell on the rr-absorbed
+        /// aliquot count as ruling anti-f out, although the absorption had removed it.
         /// </summary>
         public static readonly IReadOnlyList<string> RrAbsorbedAntibodies =
-            new[] { "anti-c", "anti-e" };
+            new[] { "anti-c", "anti-e", "anti-f" };
 
         // ── Public API ────────────────────────────────────────────────────────
 

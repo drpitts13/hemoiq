@@ -253,13 +253,24 @@ namespace HemoIQ.Services
         {
             if (antibodies.Count == 0) return false;
             foreach (var antibody in antibodies)
-            {
-                var antigen = AntigenOf(antibody);
-                if (!cell.HasTypedAntigen(antigen)) return false;
-                if (cell.IsAntigenPositive(antigen)) return false;
-            }
+                if (!TypedOrImpliedNegative(cell, AntigenOf(antibody))) return false;
             return true;
         }
+
+        /// <summary>
+        /// Typed negative, or for the compound antigen f (c and e in cis) implied negative by a typed c- or e- cell,
+        /// since f cannot be present without both.
+        /// </summary>
+        private static bool TypedOrImpliedNegative(PanelCell cell, string antigen)
+        {
+            if (cell.HasTypedAntigen(antigen)) return !cell.IsAntigenPositive(antigen);
+            if (antigen == "f")
+                return TypedNegative(cell, "c") || TypedNegative(cell, "e");
+            return false;
+        }
+
+        private static bool TypedNegative(PanelCell cell, string antigen) =>
+            cell.HasTypedAntigen(antigen) && !cell.IsAntigenPositive(antigen);
 
         private static void Add(AnalysisResult result, AbsorptionConclusion conclusion) =>
             result.AbsorptionConclusions.Add(conclusion);
