@@ -730,13 +730,13 @@ This tab shows the rule-out count for each antibody and the cells that produced 
 - **Count** is how many qualifying cells ruled it out.
 - **Needed** is the minimum required. That number comes from a rule on the Rules tab when one exists for the antibody, and otherwise from **Default rule-outs** in Preferences.
 - **Status** says whether the needed count was met.
-- **Explanation** states why the row passed or failed, including zygosity limits. When a counted cell's check cell is 0, the sentence names that cell and says the check cell did not react. A counted cell at CC 2+ is listed without that phrase.
+- **Explanation** states why the row passed or failed, including zygosity limits.
 
 Green rows met the required count. Yellow rows did not. Hover a row to read the same explanation.
 
 ## Cells that counted
 
-Select a row. The lower grid lists the cells that counted toward that rule-out, with the panel, the run, and the grades. The check-cell grade sits beside AHG, so a rule-out cell shows whether the antiglobulin phase was controlled. When AHG is 0 and the check cell did not react, that CC cell is pink and the tooltip says check cells should react when AHG is 0. A reacting check cell, such as 2+, stays ordinary text. A cell counts when it is antigen-positive, nonreactive in the phases that count, and allowed by the zygosity rule. Homozygous cells are the usual standard. **Heterozygous OK** on a custom rule allows a heterozygous cell to count for that antibody.
+Select a row. The lower grid lists the cells that counted toward that rule-out, with the panel, the run, and the grades. The check-cell grade sits beside AHG, so a rule-out cell shows that the antiglobulin phase was controlled. A cell with AHG 0 whose check cell was recorded as 0 did not show that the antiglobulin phase worked: the result is invalid, it does not count toward any rule-out, and **Special Panels** lists it with "Repeat the test". A check cell that was not recorded (NT) still counts; the Reactions grid shows that CC cell pink as a reminder. A cell counts when it is antigen-positive, nonreactive in the phases that count, and allowed by the zygosity rule. Homozygous cells are the usual standard. **Heterozygous OK** on a custom rule allows a heterozygous cell to count for that antibody.
 
 **Cells not counted for dosage.** For antigens with an antithetical partner (for example Jka/Jkb), a nonreactive cell counts only when it is homozygous, unless heterozygous cells are allowed. A cell is treated as heterozygous when the partner is typed +, and as of **unknown zygosity** when the partner is not typed. It never counts as homozygous. These cells are now named rather than silently skipped:
 - When no cell counts, the antibody still gets a row. Its explanation reads, for example, "Anti-Jka cannot currently be ruled out because the only nonreactive Jka-positive cells are heterozygous (cells 1, 2), and heterozygous cells are not allowed for this antibody (dosage)", and says what to test next.
