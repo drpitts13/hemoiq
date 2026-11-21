@@ -382,7 +382,7 @@ The Panels tab stores panel lots and the antigen profile of each cell. Analysis 
 
 ## Bring a lot in
 
-- **Import** creates a panel from a CSV lot sheet. The file uses a header row such as Cell, D, C, c, and the rest of the antigens.
+- **Import** creates a panel from a CSV lot sheet. The file uses a header row such as Cell, D, C, c, and the rest of the antigens. An antigen with no column is stored as NT. In a complete row, a blank value reads as negative (−), as on most lab sheets. A row with fewer columns than the header is refused, and so is the whole file, because a cut-off file must not leave its missing values typed negative. Re-export the sheet and import it again.
 - **Download…** opens the vendor catalog, or lets you import a vendor PDF or CSV you already have.
 - After an import, the review dialog lets you **Activate now** or **Keep inactive**. You can also select an inactive lot later and click **Activate**.
 - **Antigen coverage at activation:** activating a lot compares it with the previous lot from the same vendor and product line. The prompt lists antigens the previous lot typed on every cell but this lot types on fewer cells, or none, for example "Fya (2 of 3 cells)". Antigens on the ACS list are named, because fewer cells will be available to rule them out. Untyped cells stay NT and are never used as antigen-negative. If you activate anyway, from the Panels tab or **Activate now** after an import, the audit log records the gaps and the previous lot.
