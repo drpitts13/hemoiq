@@ -5658,10 +5658,45 @@ No new issue or gap worth fixing. All 1385 tests pass.
 
 All 1393 tests pass.
 
+## Iteration 214: investigation search dates by received time
+
+**Reviewed, no gap:**
+- Investigation search covers active and inactive specimens: `GetAllSpecimens`
+  reads every row.
+- Open goes to the Specimens tab and makes the row visible by turning on
+  Show inactive and clearing the list filter.
+- Every word must match some field, ignoring case. A From date after the
+  To date, or an empty search, is refused with a message.
+
+**Deficiency found (workflow, reporting consistency):**
+- The help says From and To limit results to specimens *received* in the
+  range, but `InvestigationSearch` compared the entry date
+  (`created_date`).
+- A specimen received in May but entered in November (from a downtime log,
+  or a correction) appeared in a November search and not in May.
+- That disagreed with Analytics, which counts by the received time since
+  Iteration 184. The Date column showed the entry date too.
+
+**Bounded improvement:** the range uses `WorkloadService.ReceivedInRange`:
+the received time when recorded, otherwise the entry date. The Date
+column and the newest-first order use the same date.
+
+**Data/schema:** none.
+
+**Tests:** `InvestigationSearchTests` gains one case. A specimen entered
+in November but received in May is found by a May range, shows
+2026-05-02, and is not found by a November range. The existing inclusive
+range test still passes.
+
+**Docs:** the Search help topic defines the received date and the Date
+column.
+
+All 1394 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: investigation search on the Search tab
-(the filters it honours, inactive specimens, and that Open goes to the
-right specimen).
+Continue clean-pass reviews: the other date filters (Reports specimen
+list date range, the audit log range, Worklist age) for the same received
+versus entered consistency.
 
 Loop clean passes: 0/5

@@ -6,7 +6,7 @@ The Search tab has two sections: **Investigations** and **Reagent cells by antig
 
 Type into the search box and press Enter or select **Search**. It matches accession, MRN, patient name, date of birth, final antibody, previous antibodies, final comment, the initials of whoever confirmed the identification, collector, locations, ordering provider, encounter number, and the name, manufacturer or lot number of any panel the specimen was tested on. To find every investigation tested on a lot (for example after a reagent recall or a lot problem), search for the lot number. Matching ignores case and finds partial text, so `mrn-12` finds MRN-1234. Every word must match, so `doe jka` finds Doe's anti-Jka investigation and nothing else.
 
-**From** and **To** limit results to specimens received in that range, including both end dates. A date range can be used without search text. An empty search is refused.
+**From** and **To** limit results to specimens received in that range, including both end dates. The received date is the received time recorded on the specimen, or the date it was entered when none is recorded, the same date Analytics counts by. The **Date** column shows it. A date range can be used without search text. An empty search is refused.
 
 Results are newest first and show the encounter, the derived investigation status, and the panels tested (name, manufacturer and lot). Double-click a row or select **Open** to go to that specimen on the Specimens tab.
 

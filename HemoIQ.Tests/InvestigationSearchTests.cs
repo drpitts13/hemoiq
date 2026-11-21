@@ -78,6 +78,19 @@ public class InvestigationSearchTests
     }
 
     [Fact]
+    public void DateRange_UsesTheReceivedTime_WhenOneIsRecorded()
+    {
+        using var iso = Seed();
+        // Entered in November, but received in May (for example entered late from a downtime log).
+        iso.Db.AddSpecimen("ACC-500", "serum", null, createdDate: "2026-11-05");
+        iso.Db.UpdateSpecimenCollection("ACC-500", "2026-05-02 08:00", "2026-05-02 09:30");
+
+        var may = InvestigationSearch.Search(iso.Db, "ACC-500", new DateTime(2026, 5, 1), new DateTime(2026, 5, 31));
+        Assert.Equal("2026-05-02", Assert.Single(may).Date);
+        Assert.Empty(InvestigationSearch.Search(iso.Db, "ACC-500", new DateTime(2026, 11, 1), new DateTime(2026, 11, 30)));
+    }
+
+    [Fact]
     public void NoMatch_ReturnsEmpty_AndSpecimenWithoutPatientRecordStillFound()
     {
         using var iso = Seed();
