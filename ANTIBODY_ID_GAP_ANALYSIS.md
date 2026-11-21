@@ -5319,10 +5319,46 @@ list on a non-exempt rule is not stored.
 
 All 1365 tests pass.
 
+## Iteration 204: cut-off rows in a lab panel CSV are refused
+
+**Reviewed, no gap:**
+- Lab and vendor lot imports store the new lot inactive, inside one
+  transaction.
+- A file with errors is refused before anything is written.
+- A stored lot that holds test history cannot be replaced.
+
+**Deficiency found (patient safety, data integrity):**
+- The CSV reader tolerates missing fields, so a row shorter than the
+  header (a truncated file, or a lost line end) read its missing fields as
+  blank.
+- In a lab CSV a blank reads as negative, so every antigen after the cut
+  was stored as typed negative.
+- Missing typing turned into false negative typing, which the importer
+  otherwise avoids (an antigen with no column is NT).
+
+**Bounded improvement:**
+- `PanelCsvService.Import` refuses a row with fewer fields than the header,
+  with the message "Row N cell X: has A of B columns; the file may be cut
+  off. Missing values are not read as negative. Re-export the file."
+- The whole import is then refused, so no lot is stored.
+- A blank value inside a complete row still reads as negative. That is the
+  long-standing lab-sheet convention, now stated in the help.
+
+**Data/schema:** none.
+
+**Tests:** `LabCsvImportTests` gains 2 cases:
+- a cut-off row is refused with the column counts, and no panel is stored;
+- a blank field in a complete row still reads as negative.
+
+**Docs:** the Panels help topic explains NT for a missing column, the
+blank-means-negative convention and the refusal of short rows.
+
+All 1367 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: panel lot imports (CSV and vendor files)
-against truncated or malformed files, confirming lots stay inactive and
-nothing is partly applied.
+Continue clean-pass reviews: structured vendor files (JSON, XML, XLSX)
+that are truncated or malformed. A parse failure should be refused with a
+reason rather than an unhandled error, and nothing stored.
 
 Loop clean passes: 0/5

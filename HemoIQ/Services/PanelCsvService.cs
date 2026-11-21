@@ -152,6 +152,14 @@ namespace HemoIQ.Services
                     result.Errors.Add($"Row {rowNum}: duplicate cell '{cellNumber}'.");
                     continue;
                 }
+                // A row with fewer fields than the header is cut off (truncated file or lost line end). Its
+                // missing fields would read as blank, which types antigen-negative, so refuse instead.
+                if (csv.Parser.Count < csv.HeaderRecord.Length)
+                {
+                    result.Errors.Add($"Row {rowNum} cell {cellNumber}: has {csv.Parser.Count} of {csv.HeaderRecord.Length} columns; " +
+                        "the file may be cut off. Missing values are not read as negative. Re-export the file.");
+                    continue;
+                }
 
                 var imported = new ImportedPanelCell { CellNumber = cellNumber };
                 foreach (var ag in AntigenConstants.Antigens)

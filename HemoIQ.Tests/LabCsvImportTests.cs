@@ -33,6 +33,45 @@ public class LabCsvImportTests
     }
 
     [Fact]
+    public void TruncatedRow_IsRefused_NotTypedNegative_AndNothingIsStored()
+    {
+        using var iso = new IsolatedDatabase();
+        var path = WriteCsv("""
+            Cell,D,C,c,E,e,K
+            1,+,-,-,-,+,+
+            2,-,+,+
+            """);
+        try
+        {
+            var parsed = PanelCsvService.Import(path);
+            Assert.False(parsed.Success);
+            var error = Assert.Single(parsed.Errors);
+            Assert.Contains("Row 3 cell 2: has 4 of 7 columns", error);
+            Assert.Contains("cut off", error);
+            Assert.Throws<InvalidOperationException>(() =>
+                new LabPanelImportService(iso.Db).Import(parsed, Request("LOT-CUT", "Lab")));
+            Assert.Null(iso.Db.FindPanelByVendorLot("Lab", "LOT-CUT"));
+        }
+        finally { TryDelete(path); }
+    }
+
+    [Fact]
+    public void BlankFieldInAFullRow_StillReadsAsNegative()
+    {
+        var path = WriteCsv("""
+            Cell,D,K
+            1,+,
+            """);
+        try
+        {
+            var parsed = PanelCsvService.Import(path);
+            Assert.True(parsed.Success, string.Join("; ", parsed.Errors));
+            Assert.Equal("-", parsed.Cells[0].Antigens["K"]);
+        }
+        finally { TryDelete(path); }
+    }
+
+    [Fact]
     public void Import_StoresInactiveArtifact_AndExplainsMissingPriorLot()
     {
         using var iso = new IsolatedDatabase();
