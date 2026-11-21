@@ -5134,10 +5134,23 @@ Neither marked the open specimen's analysis out of date.
 
 All 1358 tests pass.
 
+## Iteration 196 (clean pass): one stale item per specimen
+
+**Reviewed:**
+- Staleness is a state of the specimen (`reactions_updated_at` after
+  `last_analyzed_at`, a later configuration change, or settings drift), not
+  a queue of events. However many edits mark a specimen, it is stale once.
+- `GetWorklistItems` makes one pass over active, uncancelled specimens and
+  adds at most one Stale analysis item each, with the combined reason
+  (`AnalysisCurrency.StaleReason`).
+- Pending Work filters the same specimen list once.
+- Running analysis clears the state.
+
+No new issue or gap worth fixing. All 1358 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Worklist's stale item count after these
-triggers (a burst of edits should list each specimen once), and the
-Pending Work report.
+Continue clean-pass reviews: the Analysis banner and Confirm ID prompt
+wording with the broadened stale reason, and the Specimens status strip.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
