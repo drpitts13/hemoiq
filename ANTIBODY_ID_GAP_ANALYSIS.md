@@ -5860,10 +5860,30 @@ No new issue or gap worth fixing. All 1395 tests pass.
 
 All 1397 tests pass.
 
+## Iteration 221 (clean pass): other cross-specimen links and the same-patient rule
+
+**Reviewed:**
+- **Transfusion history.** `TransfusionHistoryCheck` reads only
+  `PatientHistory.OtherSpecimens`, the same MRN, so another patient's
+  transfusion can never make this patient's typing unreliable. The receipt
+  checklist uses that finding.
+- **Prior antibodies and history lines.** These are MRN-keyed too
+  (Iteration 216).
+- **Encounter number.** It is used only by `EncounterCheck`, which warns
+  at save when the encounter is already recorded on a specimen with a
+  different MRN. It never pulls evidence across. A warning rather than a
+  refusal is right, because either label may be the wrong one and the
+  user must check it.
+- **Eluate link.** This was the one link that fed another specimen's
+  evidence into an analysis without a patient check. Fixed in Iteration
+  220.
+
+No new issue or gap worth fixing. All 1397 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other cross-specimen links for the same
-same-patient rule: the encounter list, and the transfusion history the
-receipt checklist reads from other specimens.
+Continue clean-pass reviews: the reaction grid's keyboard entry and paste
+(invalid grades refused, the CC column only where AHG is 0, and paste
+across a run with fewer cells).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
