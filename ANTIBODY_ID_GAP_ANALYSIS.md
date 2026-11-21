@@ -5166,10 +5166,48 @@ does not count as a finding.
 
 No new issue or gap worth fixing. All 1358 tests pass.
 
+## Iteration 198: indexes for per-specimen and per-panel lookups
+
+**Reviewed, no gap:**
+- `GetWorklistItems` reads the configuration change once, and every
+  snapshot's settings in one query (`GetLatestSnapshotSettingsBySpecimen`).
+- Reactions, runs and specimen-panel links are indexed through their
+  composite UNIQUE keys.
+
+**Deficiency found (performance, scaling):** four child-table foreign keys
+had no index:
+- `analysis_snapshots.specimen_id`;
+- `panel_cells.panel_id`;
+- `specimen_antibodies.specimen_id`;
+- `specimen_ruleouts.specimen_id`.
+
+`analysis_snapshots` gains a row with every analysis and is never trimmed.
+`GetLatestAnalysisSnapshot` is called once per specimen by `SettingsDrifted`,
+`GetAnalysisStaleReason`, the All Specimens report and the status strip, so
+each call scanned every snapshot. A report over thousands of specimens did
+quadratic work, and panel loads scanned all cells. Cascading deletes scanned
+these tables too.
+
+**Bounded improvement:** `CreateForeignKeyIndexes` adds the four indexes:
+- `ix_snapshots_specimen` on (specimen_id, id), which also serves "latest";
+- `ix_panel_cells_panel`;
+- `ix_specimen_antibodies_specimen`;
+- `ix_specimen_ruleouts_specimen`.
+
+They are created with IF NOT EXISTS at start-up, so existing databases and
+archives gain them on the next open.
+
+**Data/schema:** four new indexes; no table or column changes.
+
+**Tests:** `ForeignKeyIndexTests` (4 cases): SQLite's `EXPLAIN QUERY PLAN`
+for each lookup uses its index and does not scan the table.
+
+All 1362 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: performance of the Worklist and staleness
-checks with many specimens (`SettingsDrifted` and stale reasons per
-specimen).
+Continue clean-pass reviews: other hot queries (audit events by entity
+and action, specimens by MRN) against their indexes, and the Search
+query.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5

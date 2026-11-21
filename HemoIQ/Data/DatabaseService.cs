@@ -53,8 +53,23 @@ namespace HemoIQ.Data
                 )");
             MigrateUserRoles();
             ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_audit_entity ON audit_events(entity_type, entity_id)");
+            CreateForeignKeyIndexes();
             DeactivateExpiredSpecimens();
             DeactivateExpiredPanels();
+        }
+
+        /// <summary>
+        /// Indexes on child-table foreign keys that no UNIQUE constraint already covers. The latest analysis
+        /// snapshot, a panel's cells and a specimen's stored antibodies and rule-outs are read once per specimen
+        /// or panel (staleness, reports, status strip); without an index each read scans the whole table, which
+        /// grows with every analysis. Cascading deletes use them too.
+        /// </summary>
+        private void CreateForeignKeyIndexes()
+        {
+            ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_snapshots_specimen ON analysis_snapshots(specimen_id, id)");
+            ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_panel_cells_panel ON panel_cells(panel_id)");
+            ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_specimen_antibodies_specimen ON specimen_antibodies(specimen_id)");
+            ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_specimen_ruleouts_specimen ON specimen_ruleouts(specimen_id)");
         }
 
         private static string DefaultDbPath()
