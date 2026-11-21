@@ -1334,7 +1334,8 @@ namespace HemoIQ.Services
             {
                 var names = string.Join(", ", result.Acs.Exceptions.Select(e => e.Antibody));
                 important.Add(
-                    $"{names} ≥95% probability. You may result ACS and {names} " +
+                    $"{names}: {AntigenConstants.AcsExceptionCriterion} (from the Fisher test and the reaction pattern; " +
+                    $"a score, not a probability). You may result ACS and {names} " +
                     $"({result.Acs.SuggestedComment}).");
             }
             else if (result.Acs.Shortfalls.Count > 0)

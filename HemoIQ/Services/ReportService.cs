@@ -419,7 +419,8 @@ namespace HemoIQ.Services
                 }
                 else if (analysis.Acs.IsEligibleWithException)
                 {
-                    sb.AppendLine("All clinically significant antibodies are ruled out, with ≥95% exception.");
+                    sb.AppendLine("All clinically significant antibodies are ruled out, except antibodies with a " +
+                                  AntigenConstants.AcsExceptionCriterion + " (named in the result below).");
                     sb.AppendLine($"Suggested result: {analysis.Acs.SuggestedCombinedResult}");
                     if (!string.IsNullOrWhiteSpace(analysis.Acs.SuggestedComment))
                         sb.AppendLine($"Comment: {analysis.Acs.SuggestedComment}");

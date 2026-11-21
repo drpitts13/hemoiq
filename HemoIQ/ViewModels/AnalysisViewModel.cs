@@ -579,7 +579,7 @@ namespace HemoIQ.ViewModels
             if (acs?.IsEligibleWithException == true)
             {
                 var names = string.Join(", ", acs.Exceptions.Select(e => e.Antibody));
-                return $"Final identification: not confirmed. ACS is available with exception: {names} ≥95%.";
+                return $"Final identification: not confirmed. ACS is available with exception: {names} ({AntigenConstants.AcsExceptionCriterion}).";
             }
             return rows.Any(r => r.MeetsIdentificationRule)
                 ? "Final identification: not confirmed. Green rows meet the ID rule — add or edit, then confirm."
@@ -595,7 +595,8 @@ namespace HemoIQ.ViewModels
 
             var names = string.Join(", ", result.Acs.Exceptions.Select(e => e.Antibody));
             var verb = result.Acs.Exceptions.Count == 1 ? "has" : "have";
-            var message = $"{names} {verb} ≥95% probability. Result ACS and {names} with a comment listing rule-out counts?";
+            var message = $"{names} {verb} a {AntigenConstants.AcsExceptionCriterion} (a score from the Fisher test and the reaction pattern, " +
+                          $"not a probability). Result ACS and {names} with a comment listing rule-out counts?";
             if (MessageBox.Show(message, "ACS with exception",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;

@@ -41,6 +41,21 @@ public class AcsEvaluationTests
     }
 
     [Fact]
+    public void ExceptionWording_NamesTheCombinedScore_NeverAProbability()
+    {
+        Assert.Equal("combined score ≥ 0.95", AntigenConstants.AcsExceptionCriterion);
+
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "HemoIQ", "HemoIQ.csproj"))) dir = dir.Parent;
+        foreach (var file in new[] { "Services/AntibodyAnalyzer.cs", "Services/ReportService.cs", "ViewModels/AnalysisViewModel.cs" })
+        {
+            var src = File.ReadAllText(Path.Combine(dir!.FullName, "HemoIQ", file));
+            Assert.DoesNotContain("95% probability", src);
+            Assert.DoesNotContain("≥95%", src);
+        }
+    }
+
+    [Fact]
     public void EvaluateAcs_Shortfall_IsNotEligible()
     {
         var ruledOut = AllCsRuledOut(3);

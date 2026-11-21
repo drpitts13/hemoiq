@@ -84,6 +84,14 @@ namespace HemoIQ.Models
         public const double AcsProbabilityCutoff = 0.95;
 
         /// <summary>
+        /// How the ACS exception cutoff is worded everywhere it is shown. The value compared is the combined score
+        /// (the mean of 1 - Fisher p and the share of reactive cells carrying the antigen), a heuristic score and
+        /// not a probability, so the wording never calls it one.
+        /// </summary>
+        public static string AcsExceptionCriterion =>
+            "combined score ≥ " + AcsProbabilityCutoff.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+
+        /// <summary>
         /// Low-frequency / non-standard antigens that are added to panels only as needed.
         /// </summary>
         public static readonly IReadOnlyList<WarehouseAntigenDefinition> WarehouseCatalog =

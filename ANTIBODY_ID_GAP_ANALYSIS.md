@@ -5992,10 +5992,50 @@ S, s, Fya, Fyb and so on; the enhanced list adds Rh, Kidd, P1 and Lewis.
 
 All 1406 tests pass.
 
+## Iteration 225: the ACS exception is worded as a score, not a probability
+
+**Reviewed, no gap:**
+- **ID cell rule.** The help describes the 3 + 3 rule as the count of
+  antigen-positive reactive and antigen-negative nonreactive cells, and
+  the engine checks exactly that (`MeetsIdentificationRule`).
+- **Score grid.** The Suspected grid shows Score, Fisher p-value and
+  Pattern Score as separate columns.
+
+**Deficiency found (explainability, report accuracy):**
+- An antibody becomes an ACS exception when its combined score is at
+  least `AcsProbabilityCutoff` (0.95). The combined score is the mean of
+  (1 − Fisher p) and the share of reactive cells carrying the antigen, a
+  ranking heuristic and not a probability.
+- Four places said otherwise:
+  - the Analysis suggestion: "anti-X ≥95% probability";
+  - the ACS-with-exception prompt: "has ≥95% probability";
+  - the status line: "≥95%";
+  - the printed report: "ruled out, with ≥95% exception".
+- A reader of the record could take it as a 95% statistical certainty.
+
+**Bounded improvement:**
+- `AntigenConstants.AcsExceptionCriterion` ("combined score ≥ 0.95", built
+  from the cutoff) is the one wording used by all four.
+- The suggestion and the prompt add "from the Fisher test and the reaction
+  pattern; a score, not a probability".
+- The report reads "ruled out, except antibodies with a combined score ≥
+  0.95 (named in the result below)".
+
+**Data/schema:** none. The cutoff and the logic are unchanged.
+
+**Tests:** `AcsEvaluationTests` gains one case: the criterion text, and a
+source guard that "≥95%" and "95% probability" no longer appear in the
+analyzer, report service or Analysis view model.
+
+**Docs:** the Preferences help explains the exception and the combined
+score.
+
+All 1407 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: hand-written clinical wording in reports and
-the analysis explainer (phase meanings, the 3+3 rule wording, and the
-Fisher probability statement) against what the engine computes.
+Continue clean-pass reviews: the remaining report sections for wording
+that claims more than the engine computes (suspected-antibody lines,
+"likely" or "confirmed" language before a final call, dosage notes).
 
 Loop clean passes: 0/5
