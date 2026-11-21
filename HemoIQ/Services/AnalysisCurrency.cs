@@ -40,7 +40,7 @@ namespace HemoIQ.Services
             if (s.LastAnalyzedAt == null) return null;
             var reasons = new List<string>();
             if (s.IsAnalysisStale)
-                reasons.Add("Reactions changed since last analysis.");
+                reasons.Add("Reactions or panel typing changed since last analysis.");
             if (!s.HasFinalCall && ConfigChangedAfter(s, configChangedLocal))
                 reasons.Add($"Analysis rules or Preferences changed {configChangedLocal!.Local.Replace('T', ' ')}, after the last analysis.");
             else if (!s.HasFinalCall && settingsDrifted)

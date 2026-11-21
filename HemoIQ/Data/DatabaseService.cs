@@ -2129,9 +2129,22 @@ namespace HemoIQ.Data
                     string.IsNullOrWhiteSpace(reason) ? null : reason.Trim(),
                     usage.LinkedSpecimens.Count == 0 ? null : JsonSerializer.Serialize(new { linkedSpecimens = usage.LinkedSpecimens }),
                     JsonSerializer.Serialize(new { changes }));
+                // Analyses of open investigations on this panel were computed from the old typing: mark them out of
+                // date, as a grade change would. Confirmed and cancelled investigations are locked and not reopened;
+                // the audit entry above names every linked specimen.
+                foreach (var accession in OpenInvestigationsOnPanel(panelId))
+                    TouchSpecimenReactionsUpdated(accession);
             });
             return changes;
         }
+
+        /// <summary>Linked specimens on the panel with no confirmed identification that are not cancelled.</summary>
+        public List<string> OpenInvestigationsOnPanel(int panelId) =>
+            GetPanelUsage(panelId).LinkedSpecimens
+                .Select(GetSpecimen)
+                .Where(s => s != null && !s.HasFinalCall && !s.IsCancelled)
+                .Select(s => s!.AccessionNumber)
+                .ToList();
 
         /// <summary>
         /// Writes one cell's typing directly, without an audit entry. Refused when the panel was used

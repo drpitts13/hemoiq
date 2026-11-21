@@ -769,6 +769,7 @@ namespace HemoIQ.ViewModels
                 }
                 reason = dlg.Reason;
             }
+            var reanalyze = changes.Count == 0 ? new List<string>() : _db.OpenInvestigationsOnPanel(SelectedPanel.PanelId);
             try
             {
                 _db.SavePanelCellEdits(SelectedPanel.PanelId, cells, reason);
@@ -784,7 +785,10 @@ namespace HemoIQ.ViewModels
             NotifyPanelsChanged();
             _main.SetStatus(changes.Count == 0
                 ? $"Panel '{SelectedPanel.Name}': no typing changes."
-                : $"Panel '{SelectedPanel.Name}': {changes.Count} typing change(s) saved and audited.");
+                : $"Panel '{SelectedPanel.Name}': {changes.Count} typing change(s) saved and audited." +
+                  (reanalyze.Count == 0 ? "" :
+                      $" Analysis is now out of date for {reanalyze.Count} open investigation(s): {string.Join(", ", reanalyze.Take(5))}" +
+                      (reanalyze.Count > 5 ? ", …" : "") + ". Run analysis again before confirming."));
         }
 
         /// <summary>

@@ -4967,9 +4967,51 @@ All 1340 tests pass.
 
 No new issue or gap worth fixing. All 1340 tests pass.
 
+## Iteration 192: correcting a panel's typing makes open analyses stale
+
+**Reviewed, no gap:**
+- The editor cycles NT → + → ++ → − → NT, and offers ++ only for antigens
+  with a pair (`NextEditorAntigenValue`).
+- `SavePanelCellEdits` demands Record Results and requires a reason when
+  the lot holds test history. It saves in one transaction and audits
+  `edit_panel_typing` with the linked specimens.
+
+**Deficiency found (patient safety):**
+- Correcting a lot's typing changes the evidence behind every analysis that
+  used it, for example from a vendor's corrected antigram. Staleness tracked
+  only grade saves (`reactions_updated_at`) and rule or Preferences changes,
+  and the snapshot fingerprint covers reactions only.
+- After a typing correction, an open investigation kept showing rule-outs
+  and suspected antibodies from the old typing as current. Worklist, the
+  Analysis banner and Confirm ID gave no warning.
+
+**Bounded improvement:**
+- After a typing edit, `SavePanelCellEdits` marks each open investigation
+  linked to the lot (no confirmed call, not cancelled) as changed since its
+  last analysis. `OpenInvestigationsOnPanel` finds them, and
+  `TouchSpecimenReactionsUpdated` stamps them, keeping event order
+  (Iteration 151).
+- Confirmed and cancelled investigations are not reopened; the audit entry
+  names every linked specimen.
+- The stale reason now reads "Reactions or panel typing changed since last
+  analysis."
+- The Panels status line says how many open investigations need
+  re-analysis and names up to five.
+- Help (Panels, Analysis, Worklist) explains it.
+
+**Tests:** `PanelTypingStalenessTests` (3 cases):
+- an open investigation becomes stale with the new reason;
+- confirmed and cancelled ones are untouched;
+- a save with no changes marks nothing.
+
+Three tests were updated for the new wording.
+
+All 1343 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Panels tab's antigram editor (typing cycle,
-++ only for paired antigens, edit reason prompt for panels in use).
+Continue clean-pass reviews: other edits that change analysis inputs
+without a grade save (extra antigen columns added to a lot, antigen display
+order, run treatment edits, if any).
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5
