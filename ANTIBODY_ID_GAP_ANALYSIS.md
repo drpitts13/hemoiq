@@ -5235,10 +5235,31 @@ and do not scan the audit log.
 
 All 1364 tests pass.
 
+## Iteration 200 (clean pass): start-up work and the reaction save path
+
+**Reviewed:**
+- **Start-up.**
+  - Every migration checks its column or table first and returns
+    immediately once applied (for example `MigrateReactionsToRuns` stops
+    when `reactions.run_id` exists).
+  - Index creation is IF NOT EXISTS.
+  - Expiry deactivation is two UPDATEs over active rows.
+
+  An existing database therefore opens with a handful of cheap statements.
+- **Reaction saves.** Each cell does a few indexed lookups: the run, the
+  specimen lock, the cell on the panel (`ix_panel_cells_panel` since
+  Iteration 198), and the before value via the reactions UNIQUE key. Batch
+  saves run in one transaction, and unchanged saves write nothing.
+- **Performance tests.** `PerformanceTests` time specimen and panel listing,
+  single and bulk analysis, every report type and Search on the seeded
+  database. Reaction saving has no dedicated timing test; its cost is the
+  indexed per-cell work above.
+
+No new issue or gap worth fixing. All 1364 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: start-up time with a large database (the
-expiry deactivation and migrations) and the reaction save path's per-cell
-queries.
+Continue clean-pass reviews: memory and handle use (database connections
+disposed, HelpWindow and dialogs released) during a long session.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
