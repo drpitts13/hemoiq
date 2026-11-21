@@ -21,6 +21,33 @@ public class InvestigationTimelineTests
     }
 
     [Fact]
+    public void RecordedReceiptTime_IsTheReceivedEvent_AndALateEntryIsShownSeparately()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("TL-LATE", "serum", null, createdDate: "2026-11-05");
+        iso.Db.UpdateSpecimenCollection("TL-LATE", "2026-05-02 08:00", "2026-05-02 09:30");
+
+        var events = TimelineOf(iso, "TL-LATE");
+        var received = Assert.Single(events, e => e.What == "Specimen received");
+        Assert.Equal(new DateTime(2026, 5, 2, 9, 30, 0), received.When);
+        var entered = Assert.Single(events, e => e.What == "Specimen entered in HemoIQ");
+        Assert.Equal(new DateTime(2026, 11, 5), entered.When.Date);
+        Assert.True(events.IndexOf(received) < events.IndexOf(entered));
+    }
+
+    [Fact]
+    public void ReceivedTheSameDayItWasEntered_ShowsOneReceivedEvent()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("TL-SAME", "serum", null, createdDate: "2026-11-05");
+        iso.Db.UpdateSpecimenCollection("TL-SAME", "2026-11-05 07:00", "2026-11-05 07:40");
+
+        var events = TimelineOf(iso, "TL-SAME");
+        Assert.Equal(new DateTime(2026, 11, 5, 7, 40, 0), Assert.Single(events, e => e.What == "Specimen received").When);
+        Assert.DoesNotContain(events, e => e.What == "Specimen entered in HemoIQ");
+    }
+
+    [Fact]
     public void FullWorkup_IsChronological_AndNamesEachStep()
     {
         using var iso = new IsolatedDatabase();

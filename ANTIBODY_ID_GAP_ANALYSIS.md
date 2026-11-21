@@ -6183,10 +6183,53 @@ No new issue or gap worth fixing. All 1412 tests pass.
 
 No new issue or gap worth fixing. All 1412 tests pass.
 
+## Iteration 231: the timeline dates receipt from the recorded received time
+
+**Reviewed, no gap:**
+- **Coverage.** Every specimen audit action that can appear on a live
+  specimen has a timeline line, including cancellation, reinstatement,
+  clear and reconfirm with reasons, supervisor review, reports, runs and
+  eluate links.
+- **Exceptions.** Only add_specimen (represented by the received line) and
+  delete_specimen (no timeline remains) have none.
+- **Order.** Events sort by date, then date-only events first, then time,
+  then insertion order.
+
+**Deficiency found (timeline accuracy, consistency):**
+- The first event, "Specimen received", was always dated by
+  `created_date`, the day the specimen was entered.
+- When a received time was recorded, for example received in May but
+  entered in November from a downtime log, the timeline showed receipt in
+  November. That contradicted the collection/receipt line further down,
+  Analytics and investigation search (Iterations 184 and 214).
+- The "open period" used to show configuration changes during the
+  investigation also started at entry.
+
+**Bounded improvement:**
+- "Specimen received" uses the recorded received time, with its time of
+  day.
+- If entry was on another day, a separate date-only "Specimen entered in
+  HemoIQ" line is added.
+- Without a received time the line keeps the entry date.
+- The open period starts at `TurnaroundService.ReceivedTime`.
+
+**Data/schema:** none.
+
+**Tests:** `InvestigationTimelineTests` gains 2 cases:
+- received in May and entered in November shows both lines, in order;
+- received the same day it was entered shows one timed received line.
+
+The existing received-only test is unchanged.
+
+**Docs:** the Specimens help topic's timeline section describes both
+lines.
+
+All 1414 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the timeline (InvestigationTimeline) for
-events in order, cancellation and reinstatement entries, and amendment
-history matching the audit log.
+Continue clean-pass reviews: other places that show a specimen's "date"
+(the Specimens list Date column, the specimen detail header, report
+headers) for the received versus entered distinction.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5

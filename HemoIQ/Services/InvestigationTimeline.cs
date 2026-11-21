@@ -34,8 +34,17 @@ namespace HemoIQ.Services
         public static List<TimelineEvent> Build(DatabaseService db, Specimen s)
         {
             var events = new List<TimelineEvent>();
-            if (TryDate(s.CreatedDate, out var received))
-                events.Add(new TimelineEvent { When = received, DateOnly = true, What = "Specimen received" });
+            // Receipt is the recorded received time when there is one (as Analytics and investigation search use it);
+            // otherwise the entry date. A specimen entered on another day (a downtime log, a late entry) shows both.
+            var hasEntered = TryDate(s.CreatedDate, out var entered);
+            if (TryDate(s.ReceivedAt, out var receivedAt))
+            {
+                events.Add(new TimelineEvent { When = receivedAt, What = "Specimen received" });
+                if (hasEntered && entered.Date != receivedAt.Date)
+                    events.Add(new TimelineEvent { When = entered, DateOnly = true, What = "Specimen entered in HemoIQ" });
+            }
+            else if (hasEntered)
+                events.Add(new TimelineEvent { When = entered, DateOnly = true, What = "Specimen received" });
 
             var runs = db.GetAllSpecimenRuns(s.AccessionNumber);
             var runNames = runs.ToDictionary(r => r.RunId, r => $"{r.PanelName}, {r.DisplayLabel}");
@@ -91,7 +100,8 @@ namespace HemoIQ.Services
             foreach (var a in audit.Where(a => a.Action != "save_reaction"))
                 if (Describe(a) is TimelineEvent e) events.Add(e);
 
-            if (TryDate(s.CreatedDate, out var openedOn))
+            var openedOn = TurnaroundService.ReceivedTime(s);
+            if (openedOn != DateTime.MinValue)
             {
                 var open = OpenPeriods(openedOn, audit);
                 foreach (var a in db.GetAnalysisConfigurationEvents())

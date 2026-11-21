@@ -121,7 +121,7 @@ Each review is written to the audit log with the confirmed antibodies and who co
 
 Expand **Timeline** to see the investigation in time order, with who did each step where it is known:
 
-- Specimen received, panel attached or removed, panel run started, and additional testing (ficin, papain, DTT, adsorption runs) started.
+- Specimen received, panel attached or removed, panel run started, and additional testing (ficin, papain, DTT, adsorption runs) started. **Specimen received** uses the received time recorded on the specimen, or the date it was entered when none is recorded. When the specimen was entered on a different day (for example from a downtime log), a separate **Specimen entered in HemoIQ** line shows that date.
 - Reactions entered. Saves on the same run less than 15 minutes apart are combined, for example *3 save(s), 2 cell(s) on Panel A, Untreated*.
 - Each analysis run, with the rule-engine version.
 - Identification confirmed, cleared (with the reason), and supervisor review.
