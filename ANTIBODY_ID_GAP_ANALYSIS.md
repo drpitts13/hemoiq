@@ -6147,10 +6147,26 @@ section.
 
 All 1412 tests pass.
 
+## Iteration 229 (clean pass): status in the list reports
+
+**Reviewed:**
+- **All Specimens.** The report and its CSV share `GetSpecimenStatus`:
+  Cancelled first, then Confirmed, Not analyzed, Stale and Analyzed, so a
+  cancelled investigation is never shown as pending or analyzed.
+  "Confirmed" stays accurate for a call still awaiting supervisor review.
+  Review-pending work is listed where work is tracked: the Worklist and,
+  since Iteration 228, Pending Work.
+- **All Panels.** The report and its CSV use `PanelStatusShort` (Active,
+  Inactive or Expired, Iteration 180).
+- **No summary counts.** Neither list report prints counts that could
+  include cancelled work.
+
+No new issue or gap worth fixing. All 1412 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the other list reports (All Specimens, All
-Panels) for the same cancelled and review-pending distinctions in their
-counts and status columns.
+Continue clean-pass reviews: the Specimens tab detail pane (status line,
+investigation checklist and next step) for the same cancelled and
+review-pending cases.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
