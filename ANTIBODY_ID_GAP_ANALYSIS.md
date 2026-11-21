@@ -5148,9 +5148,28 @@ All 1358 tests pass.
 
 No new issue or gap worth fixing. All 1358 tests pass.
 
+## Iteration 197 (clean pass): stale wording on screen
+
+**Reviewed:**
+- The Analysis banner, the Confirm ID out-of-date prompt, the investigation
+  status strip and the Worklist detail take their text from one place:
+  `AnalysisCurrency.StaleReason`, and `AnalysisFreshness` for the category.
+  The broadened reason ("Reactions, panel typing or specimen details
+  changed since last analysis.") therefore reads the same everywhere, and
+  no screen hard-codes older wording.
+- Help (Analysis, Worklist, Panels) lists the triggers.
+
+**Housekeeping:** the `AnalysisCurrency` class comment still described only
+grade saves. It now names every trigger and points to
+`MarkAnalysisInputChanged`. Comment only; behavior is unchanged, so this
+does not count as a finding.
+
+No new issue or gap worth fixing. All 1358 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Analysis banner and Confirm ID prompt
-wording with the broadened stale reason, and the Specimens status strip.
+Continue clean-pass reviews: performance of the Worklist and staleness
+checks with many specimens (`SettingsDrifted` and stale reasons per
+specimen).
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5

@@ -18,7 +18,9 @@ namespace HemoIQ.Services
     /// <summary>
     /// The one rule for whether a specimen's last analysis is out of date, shared by the
     /// Analysis banner, Confirm ID, the investigation status strip, the Worklist and the
-    /// Pending Work report. An analysis is stale when grades were saved after it, or, for an
+    /// Pending Work report. An analysis is stale when an input changed after it (grades, the typing of a
+    /// panel it used, a specimen or patient detail it reads, a linked eluate, or the patient's other
+    /// identifications; see <c>DatabaseService.MarkAnalysisInputChanged</c>), or, for an
     /// investigation without a confirmed identification, when analysis rules or clinical
     /// Preferences changed after it, or when this workstation's clinical Preferences differ from
     /// those saved with the analysis. A confirmed identification is not reopened by a later
