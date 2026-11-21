@@ -6032,10 +6032,51 @@ score.
 
 All 1407 tests pass.
 
+## Iteration 226: reports label suspected-antibody percentages as scores
+
+**Reviewed, no gap:**
+- **Before a final call.** Reports never say "confirmed" or
+  "identification" before one. Unconfirmed lists are headed "Suspected
+  antibodies (unconfirmed)".
+- **After a final call.** The analyzer's list is "Analyzer suspected (for
+  reference)".
+- **Evidence sections.** Pattern, absorption and Explain Analysis sections
+  each say "not a diagnosis".
+- **Dosage and high-support notes.** These already say "support score".
+
+**Deficiency found (report accuracy, explainability):**
+- Every suspected-antibody line on the Specimen Summary, Analysis Results
+  and Clinical Identification reports printed the combined score as a
+  bare percentage ("anti-E  85.0%"), with no label.
+- The All Specimens list printed "anti-E (85%)", and the adsorption note
+  said "Ordinary probability and pattern scores".
+- On screen the column is headed Score, but on paper the bare percentage
+  reads as a probability of the antibody being present, which the engine
+  does not compute. This is the same issue as the ACS wording in
+  Iteration 225.
+
+**Bounded improvement:**
+- `ReportService.ScoreLabel` prints "score 85.0%" on every suspected line.
+- The All Specimens list reads "(score 85%)".
+- The adsorption note reads "Ordinary Fisher and pattern scores".
+- The CSV column was already headed Score.
+
+**Data/schema:** none.
+
+**Tests:** `AcsEvaluationTests` gains one case. It checks the label, and
+builds a specimen with a real suspected anti-E: the three report types
+print "anti-E  score N.N%", never a bare percentage, and no anti-E line
+says "probability".
+
+**Docs:** the Reports help topic explains the score.
+
+All 1408 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the remaining report sections for wording
-that claims more than the engine computes (suspected-antibody lines,
-"likely" or "confirmed" language before a final call, dosage notes).
+Continue clean-pass reviews: the Analysis tab's own score wording (the
+Pattern Evidence and Combinations grids print percentages headed
+Confidence and Score) for the same distinction, without changing the
+convention.
 
 Loop clean passes: 0/5

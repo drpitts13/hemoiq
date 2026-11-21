@@ -487,7 +487,7 @@ namespace HemoIQ.Services
             if (analysis.AdsorptionScoreExclusions.Count > 0)
             {
                 sb.AppendLine();
-                sb.AppendLine("Ordinary probability and pattern scores excluded these reactions:");
+                sb.AppendLine("Ordinary Fisher and pattern scores excluded these reactions:");
                 foreach (var exclusion in analysis.AdsorptionScoreExclusions)
                     sb.AppendLine("  " + exclusion);
             }
@@ -550,7 +550,7 @@ namespace HemoIQ.Services
             var suspected = SpecimenPatternEvidence.SuspectedRows(result);
             sb.AppendLine($"SUSPECTED ANTIBODIES ({suspected.Count}):");
             foreach (var a in suspected)
-                sb.AppendLine($"  {a.Antibody}  {a.Probability * 100:F1}%");
+                sb.AppendLine($"  {a.Antibody}  {ScoreLabel(a.Probability)}");
             sb.AppendLine();
             var ruleouts = SpecimenPatternEvidence.RuleoutRows(result);
             sb.AppendLine($"RULED-OUT ANTIBODIES ({ruleouts.Count}):");
@@ -569,7 +569,7 @@ namespace HemoIQ.Services
             var antibodies = _db.GetSpecimenAntibodies(specimenId);
             sb.AppendLine($"SUSPECTED ANTIBODIES ({antibodies.Count}):");
             foreach (var a in antibodies)
-                sb.AppendLine($"  {a.Antibody}  {a.Probability * 100:F1}%");
+                sb.AppendLine($"  {a.Antibody}  {ScoreLabel(a.Probability)}");
             sb.AppendLine();
             var ruleouts = _db.GetSpecimenRuleouts(specimenId);
             sb.AppendLine($"RULED-OUT ANTIBODIES ({ruleouts.Count}):");
@@ -657,12 +657,19 @@ namespace HemoIQ.Services
             return $"Software {version}{rules}{who}{absorption}  Settings: {settingsText}  Input fingerprint: {fingerprint}";
         }
 
+        /// <summary>
+        /// A suspected antibody's combined score as printed: labelled "score" so a percentage is never read as a
+        /// probability (it is the mean of 1 - Fisher p and the pattern share; see AntigenConstants.AcsExceptionCriterion).
+        /// </summary>
+        public static string ScoreLabel(double combinedScore) =>
+            $"score {combinedScore * 100:F1}%";
+
         private static string FormatSuspectedAntibodyLine(string antibody, double probability,
             AnalysisResult analysis)
         {
             analysis.SuspectedStatistics.TryGetValue(antibody, out var stats);
             var id = stats != null ? $"  {stats.IdentificationDetail}" : "";
-            return $"  {antibody}  {probability * 100:F1}%{id}";
+            return $"  {antibody}  {ScoreLabel(probability)}{id}";
         }
 
         private string AllSpecimensText()
@@ -745,7 +752,7 @@ namespace HemoIQ.Services
                     var top = _db.GetSpecimenAntibodies(s.AccessionNumber)
                         .OrderByDescending(a => a.Probability)
                         .FirstOrDefault();
-                    var topLabel = top != null ? $"{top.Antibody} ({top.Probability * 100:F0}%)" : "None suspected";
+                    var topLabel = top != null ? $"{top.Antibody} (score {top.Probability * 100:F0}%)" : "None suspected";
                     sb.AppendLine($"  {s.AccessionNumber,-20} {s.Type,-8} {s.ExpirationDate ?? "N/A",-12} {topLabel}");
                 }
                 sb.AppendLine();

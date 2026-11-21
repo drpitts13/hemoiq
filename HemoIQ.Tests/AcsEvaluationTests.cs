@@ -56,6 +56,38 @@ public class AcsEvaluationTests
     }
 
     [Fact]
+    public void Reports_LabelTheSuspectedPercentage_AsAScore()
+    {
+        Assert.Equal("score 85.3%", ReportService.ScoreLabel(0.853));
+
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("SCORE-1", "serum", null);
+        var panelId = iso.Db.AddPanel("Score panel", "LOT-SC", "V", 6, null, false);
+        iso.Db.LinkSpecimenPanel("SCORE-1", panelId);
+        var cells = iso.Db.GetPanelCells(panelId);
+        for (var i = 0; i < 6; i++)
+        {
+            foreach (var ag in AntigenConstants.Antigens) cells[i].SetAntigen(ag, "-");
+            cells[i].SetAntigen("E", i < 3 ? "+" : "-");
+            cells[i].SetAntigen("e", "+");
+        }
+        iso.Db.ReplacePanelCells(panelId, cells);
+        for (var i = 0; i < 6; i++)
+            iso.Db.SaveReaction("SCORE-1", panelId, (i + 1).ToString(), "0", "0", i < 3 ? "2+" : "0", i < 3 ? "NT" : "2+");
+        iso.Analyzer.AnalyzeSpecimen("SCORE-1");
+        Assert.Contains("anti-E", iso.Analyzer.AnalyzeSpecimen("SCORE-1", updateDb: false).Suspected.Keys);
+
+        foreach (var type in new[] { ReportType.AnalysisResults, ReportType.ClinicalIdentification, ReportType.SpecimenSummary })
+        {
+            var text = iso.Reports.GeneratePreviewText(type, "SCORE-1");
+            Assert.Matches(@"anti-E  score \d+\.\d%", text);
+            Assert.DoesNotMatch(@"anti-E  \d+\.\d%", text);
+        }
+        Assert.DoesNotContain(iso.Reports.GeneratePreviewText(ReportType.AnalysisResults, "SCORE-1").Split('\n'),
+            line => line.Contains("anti-E") && line.Contains("probability", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void EvaluateAcs_Shortfall_IsNotEligible()
     {
         var ruledOut = AllCsRuledOut(3);
