@@ -25,7 +25,6 @@ public class AuditCoverageGuardTests
         ("UpdatePanelCellMetadataCore", "core of audited panel edits; the public wrapper refuses panels behind a confirmed identification"),
         ("DeletePanelCellsCore", "core of audited panel replacement; the public wrapper refuses panels behind a confirmed identification"),
         ("ReplacePanelCellsCore", "core of an audited replacement"),
-        ("CopyPanelCells", "used when copying a panel; the new panel's add is audited"),
         ("SetPanelAntigenOrderCore", "core of the audited antigen-order change"),
         ("CopyPanelAntigenOrder", "used when copying a panel; the new panel's add is audited"),
         ("UpsertExtraCellAntigen", "called by audited extra-antigen changes"),

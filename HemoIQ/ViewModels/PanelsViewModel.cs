@@ -533,6 +533,8 @@ namespace HemoIQ.ViewModels
                 CatalogNumber = SelectedPanel.CatalogNumber,
                 ProductLine = SelectedPanel.ProductLine,
                 EnzymeTreated = SelectedPanel.EnzymeTreated,
+                // A copy carries another lot's antigram; it starts inactive like an import.
+                IsActive = false,
             });
             dlg.Title = "Copy Panel — Edit Details";
             if (dlg.ShowDialog() != true) return;
@@ -541,15 +543,21 @@ namespace HemoIQ.ViewModels
             var sourceId = SelectedPanel.PanelId;
             var newId = _db.RunInTransaction(() =>
             {
+                // Saved inactive whatever the Active box says; activation goes through the Activate review below.
                 var id = _db.AddPanel(dlg.PanelName, dlg.LotNumber, dlg.Vendor,
-                    dlg.NumCells, dlg.ExpirationDate, dlg.IncludeAc, dlg.StartCell, dlg.ItemIsActive,
+                    dlg.NumCells, dlg.ExpirationDate, dlg.IncludeAc, dlg.StartCell,
+                    Services.PanelEditActivation.ActiveToSave(storedActive: false, dlg.ItemIsActive),
                     dlg.CatalogNumber, dlg.ProductLine, dlg.EnzymeTreated);
                 _db.CopyPanelCells(sourceId, id);
                 return id;
             });
-            _main.SetStatus($"Panel copied as '{dlg.PanelName}'.");
+            _main.SetStatus($"Panel copied as '{dlg.PanelName}' (inactive). Check the copied antigram against the new lot's sheet, then Activate.");
+            ShowInactive = true;
             NotifyPanelsChanged();
-            SelectedPanel = Panels.FirstOrDefault(p => p.PanelId == newId);
+            SelectedPanel = Panels.FirstOrDefault(p => p.PanelId == newId)
+                            ?? _allPanels.FirstOrDefault(p => p.PanelId == newId);
+            if (SelectedPanel != null && Services.PanelEditActivation.NeedsActivationReview(false, dlg.ItemIsActive))
+                ActivatePanel();
         }
 
         private void DownloadFromVendor()

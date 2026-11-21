@@ -73,6 +73,56 @@ public class PanelEditAuditTests
     }
 
     [Fact]
+    public void CopyPanelCells_RecordsTheSourceLot()
+    {
+        using var iso = new IsolatedDatabase();
+        var source = iso.Db.AddPanel("Src", "LOT-S", "Vendor", 3, null, false);
+        var target = iso.Db.AddPanel("Copy", "LOT-T", "Vendor", 3, null, false, isActive: false);
+
+        iso.Db.CopyPanelCells(source, target);
+
+        var audit = iso.Db.GetAuditEventsForEntity("panel", target.ToString()).Single(e => e.Action == "copy_panel_typing");
+        var after = Read(audit.AfterJson);
+        Assert.Equal(source, after["sourcePanelId"].GetInt32());
+        Assert.Equal("LOT-S", after["sourceLot"].GetString());
+        Assert.Equal(3, after["cells"].GetInt32());
+        Assert.False(iso.Db.GetPanel(target)!.IsActive);
+    }
+
+    [Fact]
+    public void CopyPanelCells_IntoALotWithHistory_IsRefused_AndWritesNoCopyAudit()
+    {
+        using var iso = new IsolatedDatabase();
+        var source = iso.Db.AddPanel("Src", "LOT-S", "V", 2, null, false);
+        var target = iso.Db.AddPanel("Used", "LOT-U", "V", 2, null, false);
+        iso.Db.AddSpecimen("CP-1", "serum", null);
+        iso.Db.LinkSpecimenPanel("CP-1", target);
+        iso.Db.SaveReaction("CP-1", target, "1", "0", "0", "2+", "NT");
+
+        Assert.ThrowsAny<InvalidOperationException>(() => iso.Db.CopyPanelCells(source, target));
+        Assert.DoesNotContain(iso.Db.GetAuditEventsForEntity("panel", target.ToString()), e => e.Action == "copy_panel_typing");
+    }
+
+    [Fact]
+    public void PanelsCopy_StartsInactive_AndActivatesOnlyThroughReview()
+    {
+        var copy = ViewModelMethod("private void CopyPanel()", "private void DownloadFromVendor()");
+        Assert.Contains("IsActive = false,", copy);
+        Assert.Contains("PanelEditActivation.ActiveToSave(storedActive: false, dlg.ItemIsActive)", copy);
+        Assert.Contains("ActivatePanel();", copy);
+        Assert.DoesNotContain("dlg.StartCell, dlg.ItemIsActive,", copy);
+    }
+
+    private static string ViewModelMethod(string start, string end)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "HemoIQ", "HemoIQ.csproj"))) dir = dir.Parent;
+        var src = File.ReadAllText(Path.Combine(dir!.FullName, "HemoIQ", "ViewModels", "PanelsViewModel.cs"));
+        var body = src[src.IndexOf(start, StringComparison.Ordinal)..];
+        return body[..body.IndexOf(end, StringComparison.Ordinal)];
+    }
+
+    [Fact]
     public void PanelsEdit_SavesThroughTheActivationGuard()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

@@ -5488,10 +5488,56 @@ prompt on Details.
 
 All 1379 tests pass.
 
+## Iteration 209: copied lots start inactive and record where their antigram came from
+
+**Reviewed, no gap:**
+- Rules have no enable/disable switch. A rule applies once saved, and
+  every save is audited.
+- Specimen deactivation (`set_specimen_active`) records its before value.
+
+**Deficiency found (patient safety, auditability):** Copy panel had three
+problems:
+- **Active by default.** Copy creates a new lot carrying another lot's
+  antigram, and the Copy dialog started with Active ticked. A new lot
+  could be offered for testing with typing nobody had checked against its
+  own sheet, skipping the activation review.
+- **No provenance.** `CopyPanelCells` wrote no audit entry, so the log
+  showed only `add_panel`, not where the typing came from.
+- **Overwrite of tested lots.** As a public writer it would overwrite the
+  antigram of a lot with recorded reactions. Only lots behind a confirmed
+  identification were refused, although its one caller copies into a
+  brand-new lot.
+
+**Bounded improvement:**
+- The Copy dialog starts with Active unticked, and the copy is saved
+  inactive whatever the box says.
+- Ticking Active runs the normal Activate review after the copy. The
+  status line asks the user to check the copied antigram against the new
+  lot's sheet.
+- `CopyPanelCells` writes `copy_panel_typing`: source panel, name, lot,
+  vendor and cell count. It is removed from the unaudited list in
+  `AuditCoverageGuardTests`.
+- `CopyPanelCells` refuses a target that holds test history (reactions or
+  a confirmed identification), naming the usage.
+
+**Data/schema:** none; a new audit action `copy_panel_typing`.
+
+**Tests:** `PanelEditAuditTests` gains 3 cases (11 in all):
+- the copy audit names the source lot, and the target stays inactive;
+- copying over a lot with recorded reactions is refused and writes no copy
+  audit;
+- a source guard that Copy starts inactive and activates only through
+  `ActivatePanel`.
+
+**Docs:** the Panels help topic describes Copy's inactive start, the
+review and the audit.
+
+All 1382 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other places that switch a lot or rule on
-without its review step (Copy panel creates a lot that is active by
-default, rule enable and disable), and specimen deactivation's audit.
+Continue clean-pass reviews: screening cell sets (their own lots,
+activation and expiry), checking they follow the same inactive-until-reviewed
+and audit rules as panels.
 
 Loop clean passes: 0/5

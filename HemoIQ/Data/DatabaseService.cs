@@ -2440,6 +2440,11 @@ namespace HemoIQ.Data
         {
             EnsureCanRecord();
             EnsurePanelEditableWithoutAudit(targetPanelId);
+            // Copying replaces the whole antigram, so it is for a new lot only; a lot with recorded reactions keeps
+            // the typing its results were read against (correct it cell by cell with an audited edit instead).
+            if (GetPanelUsage(targetPanelId) is { ProtectsHistory: true } used)
+                throw new InvalidOperationException(
+                    $"Panel #{targetPanelId} holds test history ({used.Describe()}), so another lot's antigram cannot be copied over it.");
             DeletePanelCellsCore(targetPanelId);
             var agCols = string.Join(", ", AntigenMapper.AllColumns);
             using (var cmd = _conn.CreateCommand())
@@ -2477,6 +2482,19 @@ namespace HemoIQ.Data
             }
 
             CopyPanelAntigenOrder(sourcePanelId, targetPanelId);
+
+            // The typing now on the target came from another lot. Record which one, so the antigram's origin is
+            // traceable and a reviewer knows to check it against the new lot's own sheet.
+            var source = GetPanel(sourcePanelId);
+            AppendAudit("copy_panel_typing", "panel", targetPanelId.ToString(), null,
+                afterJson: JsonSerializer.Serialize(new
+                {
+                    sourcePanelId,
+                    sourceName = source?.Name,
+                    sourceLot = source?.LotNumber,
+                    sourceVendor = source?.Vendor,
+                    cells = GetPanelCells(targetPanelId).Count,
+                }));
         }
 
         // ── Panel antigen display order ───────────────────────────────────────
