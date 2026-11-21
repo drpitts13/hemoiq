@@ -5773,11 +5773,30 @@ notes, for E and for e.
 
 All 1395 tests pass.
 
+## Iteration 218 (clean pass): clinical-significance list and antibody guidance
+
+**Reviewed:**
+- **No guidance catalog.** HemoIQ has no per-antibody guidance catalog, so
+  no clinical significance, phase or dosage text is generated for an
+  antibody it does not know. Guidance comes from the evidence: dosage
+  notes, phase-specific reactivity notes, untypeable-specificity
+  classification and additional-testing needs.
+- **Core list.** The "All clinically significant antibodies ruled out"
+  (ACS) statement uses the lab's configured list. Its fixed core of Rh
+  (D, C, c, E, e), Kell (K, k), Duffy, Kidd and Ss cannot be removed.
+- **Lab additions.** Lea, Leb, M and N are a lab-editable default
+  addition, matching the common practice of ruling out the usual
+  antibodies while leaving their significance to the lab.
+- **Gaps in the list.** An ACS antigen that is NT on the panel is listed
+  as not evaluated rather than counted as ruled out. The report states
+  which list was used ("lab-configured").
+
+No new issue or gap worth fixing. All 1395 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the antibody-specific guidance shown after
-identification (clinical significance, phase, dosage notes) for every
-antibody the rules know, and that unknown antibodies get no invented
-guidance.
+Continue clean-pass reviews: the Analytics tab (each figure is reproducible
+from the listed cases, cancelled investigations are excluded consistently,
+and the CSV matches the screen).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
