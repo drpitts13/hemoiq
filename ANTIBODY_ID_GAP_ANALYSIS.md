@@ -4953,9 +4953,23 @@ No new issue or gap worth fixing. All 1330 tests pass.
 
 All 1340 tests pass.
 
+## Iteration 191 (clean pass): compare view headers and treatment notes
+
+**Reviewed:**
+- **Reactions compare view.** Headers and difference notes take each run's
+  name from `PanelRun.DisplayLabel` (`CompareReactionRow.GradeHeader`,
+  `RunName`), so since Iteration 190 they carry the treatment. Column width
+  is sized to the header text.
+- **Status line and "Added run" message.** These use `DisplayLabel` too.
+- **Treatment inference notes.** They name treatments through
+  `AntigenTreatmentEffects.GetDisplayName`, the same names the label
+  appends.
+
+No new issue or gap worth fixing. All 1340 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reactions tab's compare view headers
-(they use the run labels) and the treatment inference notes.
+Continue clean-pass reviews: the Panels tab's antigram editor (typing cycle,
+++ only for paired antigens, edit reason prompt for panels in use).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
