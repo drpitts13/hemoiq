@@ -417,10 +417,15 @@ namespace HemoIQ.ViewModels
             var dlg = new Views.Dialogs.PanelDialog(SelectedPanel);
             if (dlg.ShowDialog() != true) return;
             if (!ConfirmLotNotDuplicate(dlg.Vendor, dlg.LotNumber, SelectedPanel.PanelId)) return;
+            var panelId = SelectedPanel.PanelId;
+            // Ticking Active on an inactive lot goes through Activate (antigram review prompt, coverage check
+            // against the prior lot, activate_panel audit) instead of switching it on with the other details.
+            var activationRequested = Services.PanelEditActivation.NeedsActivationReview(SelectedPanel.IsActive, dlg.ItemIsActive);
             try
             {
-                _db.UpdatePanel(SelectedPanel.PanelId, dlg.PanelName, dlg.LotNumber,
-                    dlg.Vendor, dlg.NumCells, dlg.ExpirationDate, dlg.IncludeAc, dlg.StartCell, dlg.ItemIsActive,
+                _db.UpdatePanel(panelId, dlg.PanelName, dlg.LotNumber,
+                    dlg.Vendor, dlg.NumCells, dlg.ExpirationDate, dlg.IncludeAc, dlg.StartCell,
+                    Services.PanelEditActivation.ActiveToSave(SelectedPanel.IsActive, dlg.ItemIsActive),
                     dlg.CatalogNumber, dlg.ProductLine, dlg.EnzymeTreated, SelectedPanel.SpecialNotes);
             }
             catch (System.InvalidOperationException ex)
@@ -430,6 +435,12 @@ namespace HemoIQ.ViewModels
             }
             _main.SetStatus($"Panel '{dlg.PanelName}' updated.");
             NotifyPanelsChanged();
+            if (!activationRequested) return;
+            SelectedPanel = Panels.FirstOrDefault(p => p.PanelId == panelId)
+                            ?? _allPanels.FirstOrDefault(p => p.PanelId == panelId);
+            if (SelectedPanel != null) ActivatePanel();
+            if (_db.GetPanel(panelId) is { IsActive: false })
+                _main.SetStatus($"Panel '{dlg.PanelName}' updated; it stays inactive until you activate it.");
         }
 
         private void DeletePanel()

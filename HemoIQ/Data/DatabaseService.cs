@@ -1845,6 +1845,8 @@ namespace HemoIQ.Data
             string? specialNotes = null)
         {
             EnsureCanRecord();
+            var before = GetPanel(panelId)
+                ?? throw new InvalidOperationException($"Panel #{panelId} was not found.");
             // Keep the cells that stay in range, with their typing; add only new cells and
             // remove only cells that fall out of range. Removing a cell with recorded
             // reactions is refused so test history keeps its antigram.
@@ -1865,7 +1867,7 @@ namespace HemoIQ.Data
                     $"Cell(s) {string.Join(", ", blocked)} have recorded reactions and cannot be removed from this panel. " +
                     "Keep the cell range, or copy the panel to a new lot.");
 
-            RunInTransaction(() => UpdatePanelCore(panelId, name, lotNumber, vendor, numCells, expirationDate,
+            RunInTransaction(() => UpdatePanelCore(before, panelId, name, lotNumber, vendor, numCells, expirationDate,
                 includeAc, startCell, isActive, catalogNumber, productLine, enzymeTreated, specialNotes, removed, added));
         }
 
@@ -1884,7 +1886,7 @@ namespace HemoIQ.Data
             return set;
         }
 
-        private void UpdatePanelCore(int panelId, string name, string? lotNumber, string? vendor,
+        private void UpdatePanelCore(Panel before, int panelId, string name, string? lotNumber, string? vendor,
             int numCells, string? expirationDate, bool includeAc, int startCell, bool isActive,
             string? catalogNumber, string? productLine, bool enzymeTreated, string? specialNotes,
             List<string> removed, List<string> added)
@@ -1920,8 +1922,41 @@ namespace HemoIQ.Data
             }
             foreach (var cellNumber in added)
                 AddPanelCell(panelId, cellNumber);
+            // Record each changed field with its old and new value, so a lot number, expiry or treatment edit
+            // on a lot that holds test history can always be traced back.
+            var (beforeFields, afterFields) = PanelEditDiff(before, name, lotNumber, vendor, numCells, expirationDate,
+                includeAc, startCell, isActive, catalogNumber, productLine, enzymeTreated, specialNotes);
+            afterFields["cellsAdded"] = added;
+            afterFields["cellsRemoved"] = removed;
             AppendAudit("update_panel", "panel", panelId.ToString(), null,
-                afterJson: JsonSerializer.Serialize(new { name, lotNumber, vendor, cellsAdded = added, cellsRemoved = removed }));
+                JsonSerializer.Serialize(beforeFields), JsonSerializer.Serialize(afterFields));
+        }
+
+        private static (Dictionary<string, object?> Before, Dictionary<string, object?> After) PanelEditDiff(Panel before,
+            string name, string? lotNumber, string? vendor, int numCells, string? expirationDate, bool includeAc,
+            int startCell, bool isActive, string? catalogNumber, string? productLine, bool enzymeTreated, string? specialNotes)
+        {
+            var b = new Dictionary<string, object?>();
+            var a = new Dictionary<string, object?>();
+            void Field(string key, object? old, object? now)
+            {
+                if (Equals(old, now) || (old is null or "" && now is null or "")) return;
+                b[key] = old;
+                a[key] = now;
+            }
+            Field("name", before.Name, name);
+            Field("lotNumber", before.LotNumber, lotNumber);
+            Field("vendor", before.Vendor, vendor);
+            Field("numCells", before.NumCells, numCells);
+            Field("startCell", before.StartCell, startCell);
+            Field("includeAc", before.IncludeAc, includeAc);
+            Field("expirationDate", before.ExpirationDate, expirationDate);
+            Field("active", before.IsActive, isActive);
+            Field("catalogNumber", before.CatalogNumber, catalogNumber);
+            Field("productLine", before.ProductLine, productLine);
+            Field("enzymeTreated", before.EnzymeTreated, enzymeTreated);
+            Field("specialNotes", before.SpecialNotes, specialNotes);
+            return (b, a);
         }
 
         public Panel? FindPanelByVendorLot(string? vendor, string? lotNumber)

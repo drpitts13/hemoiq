@@ -5438,11 +5438,60 @@ No new issue or gap worth fixing. All 1371 tests pass.
 
 No new issue or gap worth fixing. All 1371 tests pass.
 
+## Iteration 208: panel detail edits keep old values and cannot skip activation review
+
+**Reviewed, no gap:** these writers already record before and after
+values:
+- specimen details, transfusion, products, DAT, hemolysis, origin,
+  encounter, collection, pregnancy and MRN;
+- final call confirm and clear;
+- panel typing edits.
+
+**Deficiency found (auditability, patient safety):**
+- **Audit.** `update_panel` recorded only the new name, lot and vendor and
+  the cells added or removed. It kept no old values and left out
+  expiration, cell range, enzyme treatment, catalog number, product line
+  and the active flag. Correcting the lot number or expiry of a lot that
+  holds test history overwrote it with no trace of what it had been.
+- **Activation.** The Details dialog's Active box could switch an inactive
+  (for example imported) lot on directly. That skipped the antigram review
+  prompt, the antigen-coverage check against the prior lot and the
+  `activate_panel` audit entry, which the Activate button and the import
+  review always go through.
+
+**Bounded improvement:**
+- `UpdatePanel` reads the stored panel first and refuses a missing one.
+  The audit entry lists each changed field in BeforeJson and AfterJson,
+  with `cellsAdded` and `cellsRemoved` kept. Unchanged fields are left out,
+  and blank equals null.
+- `PanelEditActivation` decides the active flag the edit may save: never
+  inactive to active.
+- `PanelsViewModel.EditPanel` saves the details with the lot still inactive.
+  When Active was ticked, it then runs the normal Activate prompt. Answering
+  No leaves the lot inactive and says so on the status line.
+
+**Data/schema:** none. Older `update_panel` entries keep their after-only
+form.
+
+**Tests:** `PanelEditAuditTests` (8 cases):
+- old and new values for lot, expiry and enzyme treatment, with unchanged
+  fields left out;
+- an edit that changes nothing records an empty before, with blank treated
+  as null;
+- a missing panel is refused with no audit entry;
+- the four stored/requested combinations of the active-flag decision;
+- a source guard that the Details edit saves through the guard and calls
+  `ActivatePanel`.
+
+**Docs:** the Panels help topic describes the audit and the activation
+prompt on Details.
+
+All 1379 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the audit trail for edits that change
-clinically important history (final call amendment, specimen detail
-edits, panel typing edits), confirming each records the before and after
-values.
+Continue clean-pass reviews: other places that switch a lot or rule on
+without its review step (Copy panel creates a lot that is active by
+default, rule enable and disable), and specimen deactivation's audit.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5
