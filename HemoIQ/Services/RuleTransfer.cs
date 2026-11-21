@@ -108,6 +108,14 @@ namespace HemoIQ.Services
                         throw new ArgumentException($"Min rule-out count {n} is outside {RuleoutPolicy.MinAllowedCount}–{RuleoutPolicy.MaxAllowedCount}.");
                     if (!string.IsNullOrWhiteSpace(e.ExceptionAntigen) && !known.Contains(e.ExceptionAntigen.Trim(), StringComparer.Ordinal))
                         throw new ArgumentException($"Exception antigen {e.ExceptionAntigen.Trim()} is not a known antigen.");
+                    // Same check as the Rule dialog: an unknown partner name would make the exemption silently match nothing.
+                    var unknownPartners = e.SeparationExempt
+                        ? MultipleAntibodySeparation.ParseAntigenList(e.SeparationExemptFrom)
+                            .Where(a => !known.Contains(a, StringComparer.Ordinal)).ToList()
+                        : new List<string>();
+                    if (unknownPartners.Count > 0)
+                        throw new ArgumentException($"Separation exemption lists unknown antigen(s) {string.Join(", ", unknownPartners)}. " +
+                            "Antigen names are case-sensitive (E and e differ).");
                 }
                 catch (ArgumentException ex)
                 {

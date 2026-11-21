@@ -5290,10 +5290,39 @@ No new issue or gap worth fixing. All 1364 tests pass (this run took
 
 No new issue or gap worth fixing. All 1364 tests pass.
 
+## Iteration 203: rule import checks separation exemption antigens
+
+**Reviewed, no gap:**
+- Rule, preference and configuration-bundle imports parse the whole file
+  and show a preview before anything is written.
+- Malformed JSON, a wrong format or a newer version is refused with a
+  reason. Applying is one transaction, so a failed write changes nothing.
+
+**Deficiency found (data integrity, configuration):** the Rule dialog
+refuses unknown antigens in "Separation not required from". Rule import
+did not check them, so a file listing for example `Le(a)` stored an
+exemption that matched no partner and never applied, with no warning.
+The configuration bundle import shares this path.
+
+**Bounded improvement:** `RuleTransfer.Preview` refuses such an entry with
+"Separation exemption lists unknown antigen(s) …; antigen names are
+case-sensitive". The rest of the file still imports. The list is ignored
+when the entry is not exempt, as before.
+
+**Data/schema:** none.
+
+**Tests:** `RuleTransferTests` gains one case. An unknown partner is
+refused, while known partners (including the `anti-` prefix) import. A
+list on a non-exempt rule is not stored.
+
+**Docs:** the Rules help topic lists the new refusal.
+
+All 1365 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: import paths (rules, preferences, panel
-lots) against malformed or truncated files, confirming nothing is
-activated or partly applied.
+Continue clean-pass reviews: panel lot imports (CSV and vendor files)
+against truncated or malformed files, confirming lots stay inactive and
+nothing is partly applied.
 
-Loop clean passes: 3/5
+Loop clean passes: 0/5

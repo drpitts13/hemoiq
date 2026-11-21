@@ -85,6 +85,34 @@ public class RuleTransferTests
         Assert.Single(iso.Db.GetAllRules());
     }
 
+    [Fact]
+    public void Preview_RefusesUnknownSeparationPartners_ButAcceptsKnownOnes()
+    {
+        using var iso = new IsolatedDatabase();
+        var json = """
+        { "format": "hemoiq-rules", "version": 1, "rules": [
+            { "name": "bad", "antibody": "anti-f", "separationExempt": true, "separationExemptFrom": "e, Le(a)" },
+            { "name": "good", "antibody": "anti-K", "separationExempt": true, "separationExemptFrom": "anti-E, c" },
+            { "name": "off", "antibody": "anti-S", "separationExempt": false, "separationExemptFrom": "Zz" }
+        ] }
+        """;
+        var preview = RuleTransfer.Preview(json, iso.Db.GetAllRules(), iso.Db.GetKnownAntigens());
+
+        var bad = preview.Single(l => l.Name == "bad");
+        Assert.Equal(RuleImportAction.Error, bad.Action);
+        Assert.Contains("unknown antigen(s) Le(a)", bad.Detail);
+        Assert.DoesNotContain(" e,", bad.Detail);
+        Assert.Equal(RuleImportAction.Add, preview.Single(l => l.Name == "good").Action);
+        // Not exempt: the list is ignored and not stored.
+        Assert.Equal(RuleImportAction.Add, preview.Single(l => l.Name == "off").Action);
+
+        Assert.Equal((2, 0), RuleTransfer.Apply(iso.Db, preview));
+        var rules = iso.Db.GetAllRules();
+        Assert.DoesNotContain(rules, r => r.Name == "bad");
+        Assert.Equal("E, c", rules.Single(r => r.Name == "good").SeparationExemptFrom);
+        Assert.Null(rules.Single(r => r.Name == "off").SeparationExemptFrom);
+    }
+
     [Theory]
     [InlineData("not json")]
     [InlineData("""{ "format": "something-else", "rules": [] }""")]
