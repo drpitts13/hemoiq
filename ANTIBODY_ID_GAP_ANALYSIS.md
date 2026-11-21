@@ -5416,11 +5416,33 @@ All 1371 tests pass.
 
 No new issue or gap worth fixing. All 1371 tests pass.
 
+## Iteration 207 (clean pass): roles and permissions on write paths
+
+**Reviewed:**
+- **Database writers.** Every SQL write is in `DatabaseService`.
+  `RecordResultsPermissionTests.EveryPublicDatabaseWriter_ChecksAPermission_OrIsListed`
+  finds every public writer, directly or through another writer, and
+  requires `EnsureCanRecord()` or a stricter `AccessControl.Demand` unless
+  the method is listed with a reason. The listed ones are:
+  - the audit log, schema creation and migrations;
+  - derived analysis output and its timestamps;
+  - helpers called only by guarded panel creation or import;
+  - the empty default run a viewer needs to open the grid.
+
+  An independent scan this pass found the same set, and the test rejects
+  stale entries in the list.
+- **Commands.** Commands created without a permission gate are read-only:
+  Refresh, Search, Clear, report and analytics export, and Worklist
+  filters. Write commands are gated through `SessionAccess`, so their
+  buttons are disabled for read-only roles, and the writer checks again.
+
+No new issue or gap worth fixing. All 1371 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: roles and permissions across the tabs that
-write (Specimens, Reactions, Panels, Rules, Preferences), confirming every
-write button is disabled for read-only roles and every writer checks
-again.
+Continue clean-pass reviews: the audit trail for edits that change
+clinically important history (final call amendment, specimen detail
+edits, panel typing edits), confirming each records the before and after
+values.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
