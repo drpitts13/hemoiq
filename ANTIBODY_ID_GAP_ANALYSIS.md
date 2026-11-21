@@ -5596,10 +5596,30 @@ All 1385 tests pass.
 
 No new issue or gap worth fixing. All 1385 tests pass.
 
+## Iteration 212 (clean pass): the Worklist as a whole
+
+**Reviewed:**
+- **Item kinds.** All 15 `WorklistKind` values have a producer in
+  `GetWorklistItems` (expiring and expired come from one shared
+  expiration helper) and at least one test file.
+- **Open.** `NavigateToWorklistItem` routes the Reactions, Analysis,
+  Panels, Rules and Specimens targets to tab indices that match
+  MainWindow's tab order (Worklist 0 through Rules 8).
+- **Hidden targets.** Opening an inactive or filtered-out lot turns on
+  Show inactive and clears the list filter, so the item's target is
+  always selected. Specimens are made visible the same way.
+- **Counts.** The tab and the status strip both read one
+  `GetWorklistItems` result, so their counts cannot differ.
+- **Clearing.** Items are recomputed from current data on every refresh,
+  so a resolved condition (reviewed, reanalysed, retyped, deactivated)
+  drops off with nothing stored to go stale.
+
+No new issue or gap worth fixing. All 1385 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Worklist as a whole (every item kind has
-an Open target, clears when resolved, and is counted the same on the
-status strip and the tab).
+Continue clean-pass reviews: the Search tab (antigen criteria are
+case-sensitive, NT is never treated as negative, and investigation search
+honours the same filters as the Specimens list).
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
