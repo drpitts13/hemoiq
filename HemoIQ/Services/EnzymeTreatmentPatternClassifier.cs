@@ -108,7 +108,7 @@ namespace HemoIQ.Services
                 {
                     var antigens = destroyedOnLost.Count > 0
                         ? string.Join(", ", destroyedOnLost.OrderBy(a => a, StringComparer.Ordinal).Take(8))
-                        : "ficin-destroyed antigens (Fya/Fyb, M/N, S/s, Lewis, Xg)";
+                        : "enzyme-destroyed antigens (" + PanelExamples(AntigenEffect.Destroyed) + ")";
                     var note = MakeNote(
                         DestroyedKind, lost, persisted.Concat(gained).ToList(), paired,
                         WithOneSided(
@@ -142,7 +142,7 @@ namespace HemoIQ.Services
                 {
                     var antigens = enhancedOnGained.Count > 0
                         ? string.Join(", ", enhancedOnGained.OrderBy(a => a, StringComparer.Ordinal).Take(8))
-                        : "enzyme-enhanced antigens (Rh, Kidd, P1)";
+                        : "enzyme-enhanced antigens (" + PanelExamples(AntigenEffect.Enhanced) + ")";
                     var note = MakeNote(
                         EnhancedKind, gained, lost, paired,
                         WithOneSided(
@@ -322,6 +322,13 @@ namespace HemoIQ.Services
             }
             return list;
         }
+
+        /// <summary>
+        /// The standard panel antigens ficin and papain affect in the given way, from the table analysis uses, for
+        /// notes where no lost or gained antigen could be named. Lewis antigens are enhanced, not destroyed.
+        /// </summary>
+        public static string PanelExamples(AntigenEffect effect) =>
+            string.Join(", ", AntigenTreatmentEffects.AntigensWithEffect(CellTreatment.Ficin, effect).Where(AntigenConstants.IsStandard));
 
         private static ReactionPatternNote MakeNote(
             string kind, IReadOnlyList<string> supporting, IReadOnlyList<string> conflicting,

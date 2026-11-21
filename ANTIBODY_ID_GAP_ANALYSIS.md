@@ -5956,10 +5956,46 @@ and that the treatment note comes from the analysis tables.
 
 All 1404 tests pass.
 
+## Iteration 224: enzyme pattern notes take their antigen examples from the engine
+
+**Reviewed, no gap:**
+- **Help topics.** Special Panels, Ruled-out, Reactions and Add run agree
+  with `AntigenTreatmentEffects`: Lewis is enhanced by enzymes, Inb is
+  destroyed by ficin, papain and DTT, Kell is destroyed by DTT, and rr
+  adsorption removes anti-f.
+- **Adsorption explanations.** These read
+  `AntigenTreatmentEffects.GetAbsorbedAntibodies`.
+- **Dosage.** Dosage uses the single `AntigenConstants.AntitheticalPairs`.
+- **DTT classifier.** It names antigens only from the run's cells.
+
+**Deficiency found (explainability, clinical accuracy):**
+- When an enzyme-destroyed pattern could not name a specific lost
+  antigen, `EnzymeTreatmentPatternClassifier` fell back to hand-written
+  text: "consistent with antibodies to enzyme-destroyed antigens (Fya/Fyb,
+  M/N, S/s, **Lewis**, Xg)".
+- Lewis antigens are enhanced by ficin and papain (Iteration 166), and the
+  help says a pattern that disappears on enzyme cells does not point to
+  Lewis, so the note pointed the reader the wrong way.
+- The enhanced fallback ("Rh, Kidd, P1") left Lewis out.
+
+**Bounded improvement:** both fallbacks now come from
+`EnzymeTreatmentPatternClassifier.PanelExamples`: the standard panel
+antigens in the ficin table with that effect. The destroyed list is M, N,
+S, s, Fya, Fyb and so on; the enhanced list adds Rh, Kidd, P1 and Lewis.
+
+**Data/schema:** none.
+
+**Tests:** `EnzymePatternExampleTests` (2 cases):
+- the destroyed examples include Fya and S and not Lea or Leb, the
+  enhanced examples include Lea and Jka, and all are standard antigens;
+- a source guard against the old hand-written lists.
+
+All 1406 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other hand-written clinical text that could
-drift from the engine tables (treatment notes in help topics and reports,
-dosage pairs, absorbed-antibody lists in explanations).
+Continue clean-pass reviews: hand-written clinical wording in reports and
+the analysis explainer (phase meanings, the 3+3 rule wording, and the
+Fisher probability statement) against what the engine computes.
 
 Loop clean passes: 0/5

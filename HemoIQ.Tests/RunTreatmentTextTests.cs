@@ -63,3 +63,32 @@ public class RunTreatmentTextTests
         Assert.Matches("x:Name=\"CopyGradesCheck\"[^>]*IsChecked=\"False\"", xaml);
     }
 }
+
+/// <summary>Enzyme pattern notes that cannot name a specific antigen list the engine's own examples.</summary>
+public class EnzymePatternExampleTests
+{
+    [Fact]
+    public void FallbackExamples_ComeFromTheEngineTable_LewisIsEnhancedNotDestroyed()
+    {
+        var destroyed = EnzymeTreatmentPatternClassifier.PanelExamples(AntigenEffect.Destroyed).Split(", ");
+        var enhanced = EnzymeTreatmentPatternClassifier.PanelExamples(AntigenEffect.Enhanced).Split(", ");
+
+        Assert.Contains("Fya", destroyed);
+        Assert.Contains("S", destroyed);
+        Assert.DoesNotContain("Lea", destroyed);
+        Assert.DoesNotContain("Leb", destroyed);
+        Assert.Contains("Lea", enhanced);
+        Assert.Contains("Jka", enhanced);
+        Assert.All(destroyed.Concat(enhanced), a => Assert.True(AntigenConstants.IsStandard(a), a));
+    }
+
+    [Fact]
+    public void ClassifierSource_HasNoHandWrittenEnzymeAntigenList()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "HemoIQ", "HemoIQ.csproj"))) dir = dir.Parent;
+        var src = File.ReadAllText(Path.Combine(dir!.FullName, "HemoIQ", "Services", "EnzymeTreatmentPatternClassifier.cs"));
+        Assert.DoesNotContain("Lewis, Xg", src);
+        Assert.DoesNotContain("(Rh, Kidd, P1)", src);
+    }
+}
