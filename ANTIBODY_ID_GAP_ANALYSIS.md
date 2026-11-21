@@ -5710,10 +5710,34 @@ All 1394 tests pass.
 
 No new issue or gap worth fixing. All 1394 tests pass.
 
+## Iteration 216 (clean pass): patient history across specimens
+
+**Reviewed:**
+- **MRN matching.** `GetSpecimensByMrn` compares exactly, so every MRN
+  write must be normalized (trimmed, upper-case). Every write is: the
+  specimen MRN, the patient record and its lookup all call
+  `PatientHistory.NormalizeMrn`, and have done since the MRN column was
+  added. Specimens are created without an MRN, and archive restore copies
+  rows this app wrote. No stored MRN can miss the lookup on case.
+- **Carried forward.** Only confirmed final calls on other specimens are
+  carried forward, never suspected lists. Each antibody cites its earliest
+  confirmation, and the explanation says it is historical evidence, not a
+  current identification. Keys keep antigen case (anti-E and anti-e
+  differ). A cancelled investigation cannot carry one: cancelling is
+  refused once a final call exists.
+- **MRN correction.** Since Iteration 195, an MRN change marks both the
+  old and new patients' open investigations for re-analysis. The same-MRN
+  list follows the stored value.
+- **Reports.** `PatientHistory.Describe` gives one line per other specimen
+  with its accession, date, encounter, confirmed identification, DAT,
+  transfusion and any recorded phenotype or genotype.
+
+No new issue or gap worth fixing. All 1394 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: patient history across specimens (prior
-antibodies carried forward, the same-MRN list after an MRN correction,
-and the history shown on reports).
+Continue clean-pass reviews: antigen-negative transfusion requirements
+(the check against the patient record for every confirmed and historical
+antibody, and its wording on reports).
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
