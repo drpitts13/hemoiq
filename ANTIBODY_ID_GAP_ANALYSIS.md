@@ -5880,10 +5880,32 @@ All 1397 tests pass.
 
 No new issue or gap worth fixing. All 1397 tests pass.
 
+## Iteration 222 (clean pass): reaction grid entry and paste
+
+**Reviewed:**
+- **Paste parsing.** `GradePaste.ParseBlock` checks every value strictly.
+  One unrecognized value refuses the whole paste, naming the line and
+  column. A blank inside the block is NT, and trailing blank lines are
+  dropped.
+- **Paste size.** A block with more rows than the cells from the selected
+  one down, or more columns than the phases from the selected one right,
+  is refused ("only N cell(s) remain…"), so a run with fewer cells cannot
+  be overfilled.
+- **Overwrites.** Pasting over a different entered grade lists the changes
+  and asks first. A pasted grid is unsaved until Save, which runs the
+  usual checks (expired lot, reason after analysis).
+- **Read-only sessions.** A view-only session gets no grade keys and no
+  paste.
+- **Tests.** `GradePasteTests` covers these cases.
+- **Check cell.** It counts only where AHG is negative
+  (`RunContext.CheckCellFailed`). A CC grade beside a positive AHG is
+  ignored by analysis, so it cannot change a rule-out.
+
+No new issue or gap worth fixing. All 1397 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the reaction grid's keyboard entry and paste
-(invalid grades refused, the CC column only where AHG is 0, and paste
-across a run with fewer cells).
+Continue clean-pass reviews: run management (adding a treated run,
+deleting a run with grades, and the labels shown for runs on reports).
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
