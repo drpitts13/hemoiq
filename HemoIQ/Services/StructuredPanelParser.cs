@@ -24,6 +24,8 @@ namespace HemoIQ.Services
                 var root = doc.RootElement;
                 if (root.ValueKind == JsonValueKind.Array)
                     return Fail(vendor, listing, fileName, "JSON root must be a panel object, not an array.");
+                if (root.ValueKind != JsonValueKind.Object)
+                    return Fail(vendor, listing, fileName, $"JSON root must be a panel object, not a {root.ValueKind.ToString().ToLowerInvariant()}.");
                 return FromDocument(ReadJsonPanel(root), vendor, fileName, listing);
             }
             catch (JsonException ex)
@@ -306,6 +308,13 @@ namespace HemoIQ.Services
 
         private static bool TryGetProperty(JsonElement el, out JsonElement value, params string[] names)
         {
+            // A cell or section that is a number, string or array has no properties; reading one
+            // would throw past the parser, so treat it as missing and let validation report it.
+            if (el.ValueKind != JsonValueKind.Object)
+            {
+                value = default;
+                return false;
+            }
             foreach (var name in names)
             {
                 if (el.TryGetProperty(name, out value)) return true;

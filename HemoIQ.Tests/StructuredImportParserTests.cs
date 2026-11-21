@@ -68,6 +68,36 @@ public class StructuredImportParserTests
         Assert.False(r.Success);
     }
 
+    [Theory]
+    [InlineData("\"just text\"", "not a string")]
+    [InlineData("42", "not a number")]
+    [InlineData("null", "not a null")]
+    public void Json_NonObjectRoot_IsRefusedWithAReason_NotThrown(string json, string expected)
+    {
+        var r = StructuredPanelParser.ParseJson(Utf8(json), "V", "x.json", null);
+        Assert.Contains(expected, r.Errors.Single());
+        Assert.False(r.Success);
+    }
+
+    [Fact]
+    public void Json_NonObjectCellsAndSections_AreReportedNotThrown()
+    {
+        var json = """
+        { "cells": [
+            { "cellNumber": "1", "antigens": { "D": "+" } },
+            7,
+            "cell two",
+            { "cellNumber": "3", "antigens": [ "D" ] }
+        ] }
+        """;
+        var r = StructuredPanelParser.ParseJson(Utf8(json), "V", "x.json", null);
+        Assert.Contains("A cell is missing cellNumber.", r.Errors);
+        Assert.False(r.Success);
+        // Through the lab import path the same file is refused, not an unhandled error.
+        var lab = PanelCsvService.ImportBytes(Utf8(json), "x.json");
+        Assert.False(lab.Success);
+    }
+
     [Fact]
     public void Json_EmptyCells_IsAnError_AndUtf8BomIsAccepted()
     {

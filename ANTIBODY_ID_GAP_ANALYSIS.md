@@ -5355,10 +5355,45 @@ blank-means-negative convention and the refusal of short rows.
 
 All 1367 tests pass.
 
+## Iteration 205: JSON panel files with the wrong shape are refused, not thrown
+
+**Reviewed, no gap:**
+- Malformed JSON, XML and XLSX files are caught by their parsers and
+  refused with "Invalid JSON", "Invalid XML" or "Could not read XLSX".
+- Vendor CSV and XLSX grids read a blank or missing field as NT, so a
+  short row cannot type negative there. The import review then flags the
+  partly typed antigens.
+
+**Deficiency found (reliability, import):**
+- A JSON file that parses but has the wrong shape got past the parser's
+  error handling: a root that is a string, number or null, or a cell that
+  is a number or string.
+- `JsonElement.TryGetProperty` throws `InvalidOperationException` on a
+  non-object, and the parser caught only `JsonException`.
+- Such a file reached the application's unhandled-exception handler
+  instead of the import's "Could not import panel" list. Nothing was
+  stored, but the user saw a raw .NET message.
+
+**Bounded improvement:**
+- `StructuredPanelParser.ParseJson` refuses a non-object root with "JSON
+  root must be a panel object, not a string/number/null".
+- The property lookup treats a non-object as having no properties.
+- A malformed cell is then reported by the existing validation ("A cell
+  is missing cellNumber."), and the file is refused as a whole.
+
+**Data/schema:** none.
+
+**Tests:** `StructuredImportParserTests` gains 4 cases:
+- three non-object roots;
+- non-object cells and an array where the antigens object belongs,
+  through both the vendor parser and the lab import path.
+
+All 1371 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: structured vendor files (JSON, XML, XLSX)
-that are truncated or malformed. A parse failure should be refused with a
-reason rather than an unhandled error, and nothing stored.
+Continue clean-pass reviews: the vendor download flow (`DownloadFromVendorDialog`,
+`VendorLiveImport`) for network failures and partial downloads: refused
+with a reason, nothing stored, and no vendor terms bypassed.
 
 Loop clean passes: 0/5
