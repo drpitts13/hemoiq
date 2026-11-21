@@ -6072,11 +6072,41 @@ says "probability".
 
 All 1408 tests pass.
 
+## Iteration 227: the Analysis Summary labels suspected percentages as scores
+
+**Reviewed, no gap:**
+- **Grids.** The Suspected, Explain and Combinations grids head their
+  percentages "Score".
+- **Pattern Evidence.** It heads its ratio "Confidence", which the help
+  defines as matches divided by matches plus mismatches. Both are labelled
+  on screen, so the percentage convention stays.
+
+**Deficiency found (explainability):**
+- The Analysis tab's Summary is a read-only text digest that users select
+  and copy into notes and messages.
+- It printed suspected antibodies as "anti-E  (85.0%)" with no label: the
+  same unlabelled percentage Iteration 226 removed from the printed
+  reports.
+
+**Bounded improvement:** the Summary uses `ReportService.ScoreLabel`
+("anti-E  (score 85.0%)").
+
+**Data/schema:** none.
+
+**Tests:**
+- The `AcsEvaluationTests` source guard now also checks that the
+  Analysis view model uses the score label and no bare `({prob *
+  100:F1}%)`.
+- `DashboardAccuracyTests`' mirror of the summary is updated.
+
+**Docs:** the Summary help topic explains the score.
+
+All 1408 tests pass (this run took 11 minutes from machine load).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Analysis tab's own score wording (the
-Pattern Evidence and Combinations grids print percentages headed
-Confidence and Score) for the same distinction, without changing the
-convention.
+Continue clean-pass reviews: Worklist and status-strip wording for claims
+stronger than the data (for example "ready to confirm", "complete", or
+counts that include cancelled investigations).
 
 Loop clean passes: 0/5

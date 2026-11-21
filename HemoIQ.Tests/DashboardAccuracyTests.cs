@@ -197,7 +197,7 @@ public class DashboardAccuracyTests
             {
                 r.SuspectedStatistics.TryGetValue(ab, out var stats);
                 var id = stats != null ? $"  {stats.IdentificationDetail}" : "";
-                sb.AppendLine($"  {ab}  ({prob * 100:F1}%){id}");
+                sb.AppendLine($"  {ab}  ({HemoIQ.Services.ReportService.ScoreLabel(prob)}){id}");
             }
         }
         if (r.RuledOut.Count > 0)

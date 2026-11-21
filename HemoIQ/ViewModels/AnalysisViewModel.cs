@@ -887,7 +887,7 @@ namespace HemoIQ.ViewModels
                 {
                     r.SuspectedStatistics.TryGetValue(ab, out var stats);
                     var id = stats != null ? $"  {stats.IdentificationDetail}" : "";
-                    sb.AppendLine($"  {ab}  ({prob * 100:F1}%){id}");
+                    sb.AppendLine($"  {ab}  ({ReportService.ScoreLabel(prob)}){id}");
                 }
                 sb.AppendLine();
             }

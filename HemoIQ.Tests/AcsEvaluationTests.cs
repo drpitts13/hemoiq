@@ -53,6 +53,10 @@ public class AcsEvaluationTests
             Assert.DoesNotContain("95% probability", src);
             Assert.DoesNotContain("≥95%", src);
         }
+        // The Analysis tab's copyable Summary labels the suspected percentage as a score, like the reports.
+        var vm = File.ReadAllText(Path.Combine(dir!.FullName, "HemoIQ", "ViewModels", "AnalysisViewModel.cs"));
+        Assert.Contains("ReportService.ScoreLabel(prob)", vm);
+        Assert.DoesNotContain("({prob * 100:F1}%)", vm);
     }
 
     [Fact]
