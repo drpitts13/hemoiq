@@ -16,7 +16,7 @@ The **Report** list has eight types:
 Panel Summary, Panel Antigram, and the antigen grid on Clinical Identification leave out an antigen that is NT on every cell. A cell that is NT in a column typed on another cell prints NT. A typed minus stays a minus. The stored panel order is unchanged, and Edit on the Panels tab still shows the full order.
 7. **Panel Antigram** — the bench antigram for one lot. Requires a panel.
 
-8. **Pending Work** — specimens and panels that still need attention. It does not ask for a specimen or a panel.
+8. **Pending Work** — specimens and panels that still need attention. It does not ask for a specimen or a panel. A cancelled investigation is counted on its own line and is not listed as pending. When Preferences require supervisor review, confirmed identifications not yet reviewed are listed under **Confirmed — awaiting supervisor review**, and "No pending work" appears only when none remain.
 
 **Find** filters the specimen list by accession, type, phenotype, notes, or final ID. **Specimen** or **Panel** appears only for the report types that need one.
 

@@ -702,7 +702,13 @@ namespace HemoIQ.Services
         private string PendingWorkText()
         {
             var allSpecimens = _db.GetAllSpecimens().Where(s => s.IsActive).ToList();
-            var pending = allSpecimens.Where(s => !s.HasFinalCall).ToList();
+            // A cancelled investigation is closed without a call: it is neither pending nor confirmed.
+            var cancelled = allSpecimens.Where(s => s.IsCancelled && !s.HasFinalCall).ToList();
+            var pending = allSpecimens.Where(s => !s.HasFinalCall && !s.IsCancelled).ToList();
+            // With supervisor review required, a confirmed call is not finished until it is reviewed (as on the Worklist).
+            var awaitingReview = AppSettings.Current.RequireSupervisorReview
+                ? allSpecimens.Where(s => s.HasFinalCall && !s.IsReviewed).ToList()
+                : new List<Specimen>();
             var sb = new StringBuilder();
             var settings = AppSettings.Current;
             sb.AppendLine(settings.LabName.ToUpperInvariant());
@@ -712,6 +718,10 @@ namespace HemoIQ.Services
             sb.AppendLine($"Active specimens:  {allSpecimens.Count}");
             sb.AppendLine($"Confirmed:         {allSpecimens.Count(s => s.HasFinalCall)}");
             sb.AppendLine($"Pending:           {pending.Count}");
+            if (awaitingReview.Count > 0)
+                sb.AppendLine($"Awaiting review:   {awaitingReview.Count}");
+            if (cancelled.Count > 0)
+                sb.AppendLine($"Cancelled:         {cancelled.Count} (closed without a call; not pending)");
             sb.AppendLine();
 
             var notAnalyzed = pending.Where(s => s.LastAnalyzedAt == null).ToList();
@@ -758,8 +768,20 @@ namespace HemoIQ.Services
                 sb.AppendLine();
             }
 
-            if (pending.Count == 0)
-                sb.AppendLine("All active specimens have a confirmed antibody identification. No pending work.");
+            if (awaitingReview.Count > 0)
+            {
+                sb.AppendLine($"CONFIRMED — AWAITING SUPERVISOR REVIEW ({awaitingReview.Count}):");
+                sb.AppendLine($"  {"Accession",-20} {"Final ID",-30} {"Confirmed by"}");
+                sb.AppendLine("  " + new string('-', 64));
+                foreach (var s in awaitingReview)
+                    sb.AppendLine($"  {s.AccessionNumber,-20} {s.FinalAntibodies ?? "",-30} {s.IdentifiedBy ?? "—"} {s.IdentifiedAt ?? ""}".TrimEnd());
+                sb.AppendLine();
+            }
+
+            if (pending.Count == 0 && awaitingReview.Count == 0)
+                sb.AppendLine(cancelled.Count == 0
+                    ? "All active specimens have a confirmed antibody identification. No pending work."
+                    : "Every active specimen has a confirmed identification or a cancelled investigation. No pending work.");
 
             return sb.ToString();
         }

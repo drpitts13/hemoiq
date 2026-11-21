@@ -637,7 +637,9 @@ public class LabUxFeatureTests
         Assert.Contains("PENDING WORK SUMMARY", text);
         Assert.Contains("NOT YET ANALYZED", text);
         Assert.Contains("PW-001", text);
-        Assert.DoesNotContain("PW-002", text); // confirmed, not pending
+        // Confirmed, so not pending. It may appear only under "awaiting supervisor review" when review is required.
+        var reviewAt = text.IndexOf("AWAITING SUPERVISOR REVIEW", StringComparison.Ordinal);
+        Assert.DoesNotContain("PW-002", reviewAt < 0 ? text : text[..reviewAt]);
         Assert.Contains("Confirmed:         1", text);
         Assert.Contains("Pending:           1", text);
     }

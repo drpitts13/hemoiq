@@ -6103,10 +6103,54 @@ All 1408 tests pass.
 
 All 1408 tests pass (this run took 11 minutes from machine load).
 
+## Iteration 228: the Pending Work report counts cancelled and unreviewed work correctly
+
+**Reviewed, no gap:**
+- **"Analysis complete".** This status refers to the analysis run, not the
+  investigation.
+- **Worklist.** It excludes cancelled investigations and lists unreviewed
+  confirmations as Awaiting supervisor review when review is required.
+
+**Deficiency found (reporting accuracy, workflow):**
+- `PendingWorkText` treated every active specimen without a final call as
+  pending. A cancelled investigation, which is closed without a call, was
+  counted as Pending and listed under "Not yet analyzed" or "Analyzed —
+  awaiting confirmation".
+- The report printed "All active specimens have a confirmed antibody
+  identification. No pending work." even when required supervisor reviews
+  were outstanding, which the Worklist shows as work.
+
+**Bounded improvement:**
+- Cancelled investigations are excluded from Pending and counted on their
+  own line ("Cancelled: N (closed without a call; not pending)").
+- With supervisor review required, unreviewed confirmations get an
+  "Awaiting review" count and a "CONFIRMED — AWAITING SUPERVISOR REVIEW"
+  section (accession, final ID, confirmer).
+- "No pending work" appears only when nothing is pending or awaiting
+  review. When cancelled investigations remain it says "Every active
+  specimen has a confirmed identification or a cancelled investigation".
+
+**Data/schema:** none.
+
+**Tests:**
+- `PendingWorkReportTests` (4 cases):
+  - a cancelled specimen is counted separately and not listed;
+  - only-cancelled wording;
+  - an outstanding required review is listed and blocks "No pending
+    work", then clears after review;
+  - with review not required, a confirmed call is finished.
+- `LabUxFeatureTests.PendingWorkReport_SeparatesSections` now allows the
+  confirmed specimen only in the review section.
+
+**Docs:** the Reports help topic describes the counts and the review
+section.
+
+All 1412 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Worklist and status-strip wording for claims
-stronger than the data (for example "ready to confirm", "complete", or
-counts that include cancelled investigations).
+Continue clean-pass reviews: the other list reports (All Specimens, All
+Panels) for the same cancelled and review-pending distinctions in their
+counts and status columns.
 
 Loop clean passes: 0/5
