@@ -1561,6 +1561,8 @@ namespace HemoIQ.Services
                 result.TransfusionRequirementNotes.Insert(0, historyFinding.Note);
             foreach (var expired in ExpiredReagentCheck.Check(_db, specimen.AccessionNumber))
                 result.TransfusionRequirementNotes.Insert(0, expired.Note);
+            foreach (var expired in ExpiredReagentCheck.CheckSpecimen(_db, specimen))
+                result.TransfusionRequirementNotes.Insert(0, expired.Note);
             foreach (var panel in _db.GetSpecimenPanels(specimen.AccessionNumber))
             {
                 var cells = _db.GetPanelCells(panel.PanelId);

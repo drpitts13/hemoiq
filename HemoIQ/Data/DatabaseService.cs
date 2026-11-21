@@ -3487,6 +3487,26 @@ namespace HemoIQ.Data
                     });
                 }
 
+                // A specimen that expired while the application was open is still active (and listed) until the next
+                // start-up; grades saved on it after expiry are shown like expired-reagent results.
+                if ((!s.HasFinalCall || !s.IsReviewed) && s.IsExpired &&
+                    Services.ExpiredReagentCheck.CheckSpecimen(this, s) is { Count: > 0 } afterExpiry)
+                {
+                    items.Add(new WorklistItem
+                    {
+                        Kind = WorklistKind.ExpiredReagentUse,
+                        KindLabel = "Graded after specimen expiry",
+                        Title = s.AccessionNumber,
+                        Detail = string.Join(" ", afterExpiry.Select(e =>
+                            $"{e.Run.PanelName} ({e.Run.DisplayLabel}) recorded {e.RecordedOn}, specimen expired {e.Expiration}.")) +
+                                 " Review before relying on these results, or test a new specimen.",
+                        UrgencyLabel = "Review",
+                        SortOrder = 1,
+                        AccessionNumber = s.AccessionNumber,
+                        TargetTab = "Analysis",
+                    });
+                }
+
                 if (s.HasFinalCall && !s.IsReviewed && Services.AppSettings.Current.RequireSupervisorReview)
                 {
                     items.Add(new WorklistItem

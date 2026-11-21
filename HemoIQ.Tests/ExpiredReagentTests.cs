@@ -78,4 +78,49 @@ public class ExpiredReagentTests
         iso.Db.SetSpecimenSupervisorReview("EXR-6", "SU");
         Assert.DoesNotContain(iso.Db.GetWorklistItems(), i => i.Kind == WorklistKind.ExpiredReagentUse);
     }
+
+    /// <summary>A specimen whose own expiration has passed, tested on an in-date lot (the specimen expired mid-session).</summary>
+    private static void TestedOnExpiredSpecimen(IsolatedDatabase iso, string acc, string? specimenExpiration)
+    {
+        iso.Db.AddSpecimen(acc, "serum", specimenExpiration, isActive: true); // still active, as until the next start-up
+        var panelId = iso.Db.AddPanel("Lot " + acc, "L-" + acc, "V", 3, NextMonth, false);
+        iso.Db.LinkSpecimenPanel(acc, panelId);
+        iso.Db.SaveReactions(iso.Db.GetOrCreateDefaultRun(acc, panelId), new[]
+        {
+            new ReactionInput("1", "0", "0", "2+", "NT"),
+            new ReactionInput("2", "0", "0", "0", "2+"),
+        });
+    }
+
+    [Fact]
+    public void GradesRecordedAfterTheSpecimenExpired_AreFound_NotedInAnalysis_AndListed()
+    {
+        using var iso = new IsolatedDatabase();
+        TestedOnExpiredSpecimen(iso, "EXS-1", Yesterday);
+
+        var finding = Assert.Single(ExpiredReagentCheck.CheckSpecimen(iso.Db, iso.Db.GetSpecimen("EXS-1")!));
+        Assert.Equal(Yesterday, finding.Expiration);
+        Assert.Equal(DateTime.Today.ToString("yyyy-MM-dd"), finding.RecordedOn);
+        Assert.Empty(ExpiredReagentCheck.Check(iso.Db, "EXS-1")); // the lot is in date
+
+        var result = iso.Analyzer.AnalyzeSpecimen("EXS-1", updateDb: false);
+        Assert.Contains(result.Suggestions, s => s.StartsWith("REVIEW:") && s.Contains($"after the specimen expired {Yesterday}"));
+
+        var item = Assert.Single(iso.Db.GetWorklistItems(), i => i.KindLabel == "Graded after specimen expiry");
+        Assert.Equal("EXS-1", item.AccessionNumber);
+        Assert.Contains("specimen expired", item.Detail);
+    }
+
+    [Fact]
+    public void InDateSpecimen_OrSpecimenExpiringToday_OrUndated_IsNotFound()
+    {
+        using var iso = new IsolatedDatabase();
+        TestedOnExpiredSpecimen(iso, "EXS-2", NextMonth);
+        TestedOnExpiredSpecimen(iso, "EXS-3", DateTime.Today.ToString("yyyy-MM-dd"));
+        TestedOnExpiredSpecimen(iso, "EXS-4", null);
+
+        foreach (var acc in new[] { "EXS-2", "EXS-3", "EXS-4" })
+            Assert.Empty(ExpiredReagentCheck.CheckSpecimen(iso.Db, iso.Db.GetSpecimen(acc)!));
+        Assert.DoesNotContain(iso.Db.GetWorklistItems(), i => i.KindLabel == "Graded after specimen expiry");
+    }
 }

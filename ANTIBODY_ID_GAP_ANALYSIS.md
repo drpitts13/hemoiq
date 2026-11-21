@@ -6290,10 +6290,49 @@ No new issue or gap worth fixing. All 1414 tests pass.
 
 All 1420 tests pass.
 
+## Iteration 234: grades recorded after the specimen expired stay on the record
+
+**Reviewed, no gap:**
+- **Analysis.** Running analysis reads saved grades only, and creates no
+  new results, so it needs no expiry prompt of its own.
+- **Confirmation.** Confirmation happens on the Analysis tab, where the
+  REVIEW note below is shown among the critical suggestions.
+
+**Deficiency found (auditability, patient safety):**
+- Iteration 233 made saving grades on an expired specimen ask first, but
+  answering Yes left no lasting trace.
+- An expired panel lot is recorded by `ExpiredReagentCheck`: a REVIEW note
+  on the Analysis tab and reports, and an "Expired reagent" Worklist item.
+- Grades saved after the specimen's own expiry left nothing for a reviewer
+  or a later reader to see.
+
+**Bounded improvement:**
+- `ExpiredReagentCheck.CheckSpecimen` finds each graded run recorded after
+  the specimen's expiration date. It uses the same recording-date rule as
+  the lot check: the last `save_reaction` for the run, else the run's
+  created date. The rule is now shared in `GradedRunsWithRecordedDate`.
+- Analysis adds a critical "REVIEW: Reactions on … were recorded …, after
+  the specimen expired …" note, printed on the reports.
+- While the specimen is still active, the Worklist lists it as "Graded
+  after specimen expiry", until a reviewed final call clears it. This is
+  separate from the existing "Expired specimen" expiration item.
+
+**Data/schema:** none.
+
+**Tests:** `ExpiredReagentTests` gains 2 cases:
+- grades recorded after the specimen expired give a finding (but no lot
+  finding), an analysis REVIEW note and the Worklist item;
+- an in-date specimen, one expiring today, and an undated one give none.
+
+**Docs:** the Reactions help topic describes the note and the Worklist
+item.
+
+All 1422 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other actions on a specimen that expired
-while the application is open (running analysis, confirming an
-identification) for the same warning.
+Continue clean-pass reviews: reports for a specimen that is inactive or
+expired (the header states it, so a printed report from an expired
+specimen is not mistaken for a current one).
 
 Loop clean passes: 0/5
