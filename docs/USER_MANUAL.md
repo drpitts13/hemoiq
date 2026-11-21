@@ -904,7 +904,7 @@ A suggestion does not add a grade and does not change the final ID. If you test 
 
 # Summary
 
-Summary is a single read-only text review of the current analysis. It gathers the specimen, the panels and runs, the suspected antibodies, the rule-outs, and the final ID when one has been confirmed.
+Summary is a single read-only text review of the current analysis. It gathers the specimen, the panels and runs, the suspected antibodies, the rule-outs, and the final ID when one has been confirmed. Each suspected antibody shows its combined score, for example *anti-E (score 85.0%)*, labelled as on the reports because it ranks the evidence and is not a probability.
 
 Use it when you want the whole workup on one page before you open **Reports**. The clinical identification report is the formatted report for the record. Summary is the on-screen digest and is not a separate saved document.
 
