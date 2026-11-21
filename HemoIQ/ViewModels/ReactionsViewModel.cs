@@ -861,6 +861,14 @@ namespace HemoIQ.ViewModels
             _main.WorklistVM.Refresh();
         }
 
+        /// <summary>The save prompt for a specimen past its expiration date, or null when it is in date.</summary>
+        public static string? ExpiredSpecimenPrompt(Specimen? specimen, DateTime today) =>
+            specimen != null && ExpirationStatus.IsExpired(specimen.ExpirationDate, today)
+                ? $"Specimen {specimen.AccessionNumber} expired {specimen.ExpirationDate}. Results on an expired specimen may not " +
+                  "represent the patient's current antibodies (for example after a recent transfusion or pregnancy). " +
+                  "Collect a new specimen if testing must continue.\n\nRecord these reactions anyway?"
+                : null;
+
         private bool TrySaveGrades(out int entered)
         {
             entered = 0;
@@ -873,6 +881,17 @@ namespace HemoIQ.ViewModels
                     $"Cannot save reactions: the selected {inactiveItem} is inactive. " +
                     "Reactivate it first if you need to work with its reactions.",
                     "Inactive Item", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            // A specimen that expired while the application was open is still active until the next start-up
+            // deactivates it; warn the same way as for an expired lot rather than saving silently.
+            if (Rows.Any(r => r.HasEnteredGrade) && ExpiredSpecimenPrompt(SelectedSpecimen, DateTime.Today) is string specimenPrompt &&
+                MessageBox.Show(specimenPrompt, "Expired specimen", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            {
+                const string notSaved = "Not saved: the specimen has expired.";
+                _main.SetStatus(notSaved);
+                SetSaveStatus(false, notSaved);
                 return false;
             }
 

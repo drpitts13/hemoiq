@@ -8,6 +8,8 @@ namespace HemoIQ.Tests;
 /// Staleness compares local timestamps to the second. A grade changed after an analysis must make it stale
 /// even within the same second or after the clock went back (end of daylight saving time, a correction).
 /// </summary>
+// Staleness compares each analysis with the global settings, so run apart from tests that change them.
+[Collection("PersistentDatabase")]
 public class StalenessClockOrderTests
 {
     private static void Raw(string dbPath, string sql)

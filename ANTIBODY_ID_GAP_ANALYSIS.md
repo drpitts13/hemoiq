@@ -6240,10 +6240,60 @@ All 1414 tests pass.
 
 No new issue or gap worth fixing. All 1414 tests pass.
 
+## Iteration 233: saving grades on an expired specimen asks first
+
+**Reviewed, no gap:**
+- **Dating.** Default specimen dating comes from Preferences.
+  `SpecimenDating.Check` warns when a recent transfusion or pregnancy
+  shortens the allowed dating.
+- **Start-up.** Expired specimens are deactivated at start-up (audited as
+  `auto_deactivate_expired`).
+- **Inactive specimens.** These cannot take reactions.
+- **Worklist.** It lists expiring and expired specimens.
+
+**Deficiency found (patient safety, compliance):**
+- `TrySaveGrades` checked expiry for the panel lot only. A specimen that
+  expired while the application was open stayed active until the next
+  start-up, for example across midnight on a long shift.
+- Grades could then be saved on it with no warning. Unlike an expired lot,
+  nothing asked the technologist to collect a new specimen.
+
+**Bounded improvement:**
+- `ReactionsViewModel.ExpiredSpecimenPrompt` builds the warning: "Specimen
+  … expired …; results may not represent the patient's current antibodies
+  …; collect a new specimen …; record anyway?".
+- It is shown before the panel-lot check. No leaves the grades unsaved,
+  with the save status "Not saved: the specimen has expired".
+- A specimen that expires today is still in date.
+
+**Data/schema:** none.
+
+**Tests:** `ExpiredSpecimenEntryTests` (6 cases):
+- the prompt names the specimen and its date;
+- an in-date, same-day or undated specimen, or no specimen, gets no
+  prompt;
+- a source guard that the save checks the specimen before the panel.
+
+**Docs:** the Reactions help topic describes the prompt.
+
+**Test isolation (found while verifying):**
+- `PatientContextStalenessTests` failed once in a full run and passed
+  alone. The cause is in the tests, not the product: staleness compares
+  each analysis snapshot with the global `AppSettings.Current`.
+- Six staleness test classes were outside the `PersistentDatabase`
+  collection, so a parallel test changing a clinical setting between
+  analysis and check made the specimen read stale: `EluateSourceStaleness`,
+  `LabUxFeature`, `PanelTypingStaleness`, `PatientContextStaleness`,
+  `SpecimenInputStaleness` and `StalenessClockOrder`.
+- They now join the collection and no longer run alongside tests that
+  change settings.
+
+All 1420 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: specimen expiration (default dating from
-Preferences, the transfusion-based dating check, and that an expired
-specimen blocks or warns on reaction entry the way an expired lot does).
+Continue clean-pass reviews: other actions on a specimen that expired
+while the application is open (running analysis, confirming an
+identification) for the same warning.
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5

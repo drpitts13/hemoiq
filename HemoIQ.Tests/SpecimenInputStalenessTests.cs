@@ -10,6 +10,8 @@ namespace HemoIQ.Tests;
 /// analysis marks it out of date, as a grade change does; untouched details, never-analysed, confirmed and
 /// cancelled investigations are left alone.
 /// </summary>
+// Staleness compares each analysis with the global settings, so run apart from tests that change them.
+[Collection("PersistentDatabase")]
 public class SpecimenInputStalenessTests
 {
     private const string Reason = "Reactions, panel typing or specimen details changed since last analysis.";

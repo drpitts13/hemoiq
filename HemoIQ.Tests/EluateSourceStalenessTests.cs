@@ -6,6 +6,8 @@ namespace HemoIQ.Tests;
 /// The source specimen's analysis lists its eluates' findings, so linking, unlinking, analysing or confirming an
 /// eluate marks an analysed, open source out of date. A confirmed source is not reopened.
 /// </summary>
+// Staleness compares each analysis with the global settings, so run apart from tests that change them.
+[Collection("PersistentDatabase")]
 public class EluateSourceStalenessTests
 {
     private static int Analyzed(IsolatedDatabase iso, string acc, string type)

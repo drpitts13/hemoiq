@@ -5,6 +5,8 @@ using HemoIQ.ViewModels;
 
 namespace HemoIQ.Tests;
 
+// Staleness compares each analysis with the global settings, so run apart from tests that change them.
+[Collection("PersistentDatabase")]
 public class LabUxFeatureTests
 {
     [Fact]

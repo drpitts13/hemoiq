@@ -7,6 +7,8 @@ namespace HemoIQ.Tests;
 /// specimen to another MRN, or confirming or clearing an identification on another specimen of the same patient,
 /// marks an analysed, open specimen out of date.
 /// </summary>
+// Staleness compares each analysis with the global settings, so run apart from tests that change them.
+[Collection("PersistentDatabase")]
 public class PatientContextStalenessTests
 {
     private static void Analyzed(IsolatedDatabase iso, string acc, string mrn)

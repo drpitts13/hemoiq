@@ -7,6 +7,8 @@ namespace HemoIQ.Tests;
 /// Correcting a panel's typing changes the evidence behind every analysis that used it, so open investigations on
 /// that panel become out of date, as after a grade change. Confirmed and cancelled investigations are not reopened.
 /// </summary>
+// Staleness compares each analysis with the global settings, so run apart from tests that change them.
+[Collection("PersistentDatabase")]
 public class PanelTypingStalenessTests
 {
     private static (IsolatedDatabase Iso, int Panel) PanelWith(params string[] accessions)
