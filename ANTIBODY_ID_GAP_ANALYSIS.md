@@ -5257,9 +5257,26 @@ All 1364 tests pass.
 
 No new issue or gap worth fixing. All 1364 tests pass.
 
+## Iteration 201 (clean pass): resources over a long session
+
+**Reviewed:**
+- Every `CreateCommand()` and `ExecuteReader()` in HemoIQ is wrapped in
+  `using`.
+- Short-lived `DatabaseService` instances (headless runs, archive creation)
+  are in `using` blocks.
+- The one long-lived connection, `MainViewModel.Database`, is disposed in
+  `MainViewModel.Dispose`, which also unsubscribes the static
+  `AppSettings.Changed` handler. That runs when the main window closes,
+  which also closes the help window (`HelpService.Close`).
+- Dialogs are modal and released on close.
+
+No new issue or gap worth fixing. All 1364 tests pass (this run took
+11 minutes against the usual 2–3, from machine load; no code had changed).
+
 ## Likely next tick
 
-Continue clean-pass reviews: memory and handle use (database connections
-disposed, HelpWindow and dialogs released) during a long session.
+Continue clean-pass reviews: error handling on file operations that can
+fail at the user's machine (locked export files, read-only folders) across
+the export paths.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
