@@ -5390,10 +5390,37 @@ All 1367 tests pass.
 
 All 1371 tests pass.
 
+## Iteration 206 (clean pass): vendor download failures
+
+**Reviewed:**
+- **Outbound requests.** `VendorHttpClient` sends GET requests only, over
+  HTTPS, to an allow-list of vendor document hosts. It uses a 45-second
+  timeout and sends no specimen or patient fields. It never signs in,
+  stores credentials or works around a vendor page: a listing without a
+  public download URL is refused with "Import a vendor file instead".
+- **Failures.** A non-success status throws. Listing, downloading and file
+  import in `DownloadFromVendorDialog` each catch the failure and show its
+  message. A cut-off or partial download fails parsing and is refused with
+  the parser's reasons.
+- **Storage.** Downloaded lots go through `VendorPanelImportService`: stored
+  inactive in one transaction, with no replacement of a lot that holds test
+  history.
+- **Headless test.** `VendorLiveImport`, used only by the headless
+  live-import test switch, uses the same import.
+
+**Noted, not a gap:**
+- Redirects are followed without re-checking the final host. An HTTPS
+  vendor site redirecting to its own CDN would otherwise break.
+- Requests carry no patient data, and whatever comes back is parsed,
+  reviewed and stored inactive before anyone can use it.
+
+No new issue or gap worth fixing. All 1371 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the vendor download flow (`DownloadFromVendorDialog`,
-`VendorLiveImport`) for network failures and partial downloads: refused
-with a reason, nothing stored, and no vendor terms bypassed.
+Continue clean-pass reviews: roles and permissions across the tabs that
+write (Specimens, Reactions, Panels, Rules, Preferences), confirming every
+write button is disabled for read-only roles and every writer checks
+again.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
