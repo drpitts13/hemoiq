@@ -5793,10 +5793,31 @@ All 1395 tests pass.
 
 No new issue or gap worth fixing. All 1395 tests pass.
 
+## Iteration 219 (clean pass): Analytics figures, drill-downs and CSV
+
+**Reviewed:**
+- **Cancelled investigations.** Every figure leaves them out: antibody
+  frequency, technologist workload, location workload and turnaround. The
+  drill-down lists (`CasesForAntibody`, `CasesForTechnologist`,
+  `CasesForLocation`) use the same filters as the counts beside them.
+- **Confirmations and reviews.** Both are counted by their own timestamp
+  in range, and the case list shows the same rows.
+- **Antibody frequency.** It shares `ConfirmedInRange` between the summary
+  and its cases. Each specimen counts once per specificity, with prefix
+  case ignored and antigen case kept.
+- **Location and turnaround.** These use the received time (Iteration
+  184).
+- **CSV export.** It writes the on-screen collections (the antibody rows,
+  turnaround, technologist and location workload) instead of recomputing,
+  so it matches the screen. It records an `export_data` audit entry and
+  guards against spreadsheet formulas (Iterations 186–187).
+
+No new issue or gap worth fixing. All 1395 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Analytics tab (each figure is reproducible
-from the listed cases, cancelled investigations are excluded consistently,
-and the CSV matches the screen).
+Continue clean-pass reviews: the eluate workflow end to end (linking an
+eluate to its source, eluate evidence on the source's analysis, and what
+happens when either side is confirmed, cancelled or edited).
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
