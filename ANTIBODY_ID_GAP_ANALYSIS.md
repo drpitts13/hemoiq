@@ -4910,10 +4910,24 @@ All 1330 tests pass.
 
 No new issue or gap worth fixing. All 1330 tests pass.
 
+## Iteration 189 (clean pass): patient history on screen and on the report
+
+**Reviewed:**
+- `SpecimensViewModel.FormatPatient` and `ReportService.AppendPatientRecord`
+  print the same patient fields with the same display helpers:
+  - antigen-negative units (`AntigenNegativeRequirement.Display`);
+  - transfusion requirements;
+  - HPC transplant (`TransplantDisplay.Text`);
+  - blood bank comments.
+- Both list the patient's other specimens through
+  `PatientHistory.Describe(PatientHistory.OtherSpecimens(...))`, so earlier
+  antibodies read the same on screen and in print.
+
+No new issue or gap worth fixing. All 1330 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Specimens tab's patient history panel
-(earlier antibodies, antigen-negative requirement) against the clinical
-report.
+Continue clean-pass reviews: the Reactions tab's run selector and the
+treatment labels against the run dialog and the reports.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
