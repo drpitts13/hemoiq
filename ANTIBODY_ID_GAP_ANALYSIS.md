@@ -5204,10 +5204,41 @@ for each lookup uses its index and does not scan the table.
 
 All 1362 tests pass.
 
+## Iteration 199: audit log indexes for action lookups
+
+**Reviewed, no gap:**
+- Specimens by MRN use `ix_specimens_mrn`.
+- Search reads every panel cell by design: it is a search across all lots.
+
+**Deficiency found (performance, scaling):** the audit log is the largest
+table (every reaction save, edit and report). Its only index,
+`ix_audit_entity`, leads with entity_type, so action-only and
+action-plus-entity queries scanned the whole log:
+- `LastAnalysisConfigurationChange`, called once per specimen by the All
+  Specimens report, the status strip and staleness;
+- the analysis-time subquery recording `analysis_config_seq`;
+- `CountAuditEvents(action, entity_id)`, per specimen in investigation
+  status;
+- the override analytics query.
+
+**Bounded improvement:**
+- `ix_audit_action` on (action, id), which also serves the latest event.
+- `ix_audit_action_entity` on (action, entity_id).
+- Both are created with the other indexes at start-up, so existing
+  databases and archives gain them on the next open.
+
+**Data/schema:** two new indexes; no table or column changes.
+
+**Tests:** `ForeignKeyIndexTests` gains 2 cases (6 in all): the latest
+configuration change and the per-specimen action count use their indexes
+and do not scan the audit log.
+
+All 1364 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other hot queries (audit events by entity
-and action, specimens by MRN) against their indexes, and the Search
-query.
+Continue clean-pass reviews: start-up time with a large database (the
+expiry deactivation and migrations) and the reaction save path's per-cell
+queries.
 
 Loop clean passes: 0/5

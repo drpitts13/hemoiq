@@ -26,6 +26,8 @@ public class ForeignKeyIndexTests
     [InlineData("SELECT * FROM panel_cells WHERE panel_id = 1", "ix_panel_cells_panel")]
     [InlineData("SELECT * FROM specimen_antibodies WHERE specimen_id = 'X'", "ix_specimen_antibodies_specimen")]
     [InlineData("SELECT * FROM specimen_ruleouts WHERE specimen_id = 'X'", "ix_specimen_ruleouts_specimen")]
+    [InlineData("SELECT id, occurred_at_utc FROM audit_events WHERE action IN ('add_rule', 'update_rule', 'delete_rule', 'update_settings') ORDER BY id DESC LIMIT 1", "ix_audit_action")]
+    [InlineData("SELECT COUNT(*) FROM audit_events WHERE action = 'clear_final_call' AND entity_id = 'X'", "ix_audit_action_entity")]
     public void PerRecordLookup_UsesAnIndex(string sql, string index)
     {
         using var iso = new IsolatedDatabase();
@@ -35,5 +37,6 @@ public class ForeignKeyIndexTests
         Assert.Contains(index, plan);
         Assert.DoesNotContain("SCAN analysis_snapshots", plan);
         Assert.DoesNotContain("SCAN panel_cells", plan);
+        Assert.DoesNotContain("SCAN audit_events", plan);
     }
 }

@@ -70,6 +70,11 @@ namespace HemoIQ.Data
             ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_panel_cells_panel ON panel_cells(panel_id)");
             ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_specimen_antibodies_specimen ON specimen_antibodies(specimen_id)");
             ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_specimen_ruleouts_specimen ON specimen_ruleouts(specimen_id)");
+            // The audit log is the largest table (every reaction save). The latest rule/Preferences change and
+            // per-specimen action counts are read once per specimen by reports and the status strip; they filter
+            // by action, which ix_audit_entity (entity_type first) cannot serve.
+            ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_audit_action ON audit_events(action, id)");
+            ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_audit_action_entity ON audit_events(action, entity_id)");
         }
 
         private static string DefaultDbPath()
