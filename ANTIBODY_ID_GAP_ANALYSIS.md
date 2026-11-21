@@ -5616,10 +5616,52 @@ No new issue or gap worth fixing. All 1385 tests pass.
 
 No new issue or gap worth fixing. All 1385 tests pass.
 
+## Iteration 213: Search marks cells on inactive or expired lots
+
+**Reviewed, no gap:**
+- Search clauses compare the stored value exactly. SQLite `=` and
+  warehouse `antigen_name` are case-sensitive, so E and e differ.
+- "+" matches + or ++ only, and "−" matches only a cell typed negative,
+  never NT.
+- Zygosity filtering requires typed partners.
+
+**Deficiency found (patient safety, workflow):**
+- Search spans every stored lot and is how selected cells are found
+  (for example K− E+ cells). Each result's panel was built with only its
+  id, name, lot and vendor.
+- A cell on a deactivated lot, or one past its expiration date (expired
+  lots are deactivated at start-up), looked exactly like a cell in
+  current use. Nothing on the row or in the count said otherwise.
+
+**Bounded improvement:**
+- `SearchCellsByProfile` reads each result lot's active flag and
+  expiration date.
+- `SearchResultRow.LotStatus` returns "expired (date)" (which wins, being
+  the reason), "inactive", or null.
+- The Lot column shows `LotDisplay` ("LOT-7 · inactive") in red italics
+  for a lot not in use. The raw `LotNumber` is kept for keys.
+- The result count adds "N are on an inactive or expired lot (marked in
+  the Lot column)", and the selected-row status names the lot status.
+- No column was added, so the frozen panel/lot/cell columns and the
+  antigen column ordering are unchanged.
+
+**Data/schema:** none.
+
+**Tests:** `SearchLotStatusTests` (8 cases):
+- results carry active and expiry for a current, an inactive and an
+  expired lot;
+- the status rules, with expired winning;
+- the count wording for one lot and for several;
+- the selected-row label.
+
+**Docs:** the Search help topic describes the marking.
+
+All 1393 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Search tab (antigen criteria are
-case-sensitive, NT is never treated as negative, and investigation search
-honours the same filters as the Specimens list).
+Continue clean-pass reviews: investigation search on the Search tab
+(the filters it honours, inactive specimens, and that Open goes to the
+right specimen).
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5

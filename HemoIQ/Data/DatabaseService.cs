@@ -3892,6 +3892,10 @@ namespace HemoIQ.Data
                         Name = r.GetString(r.GetOrdinal("name")),
                         LotNumber = r.IsDBNull(r.GetOrdinal("lot_number")) ? null : r.GetString(r.GetOrdinal("lot_number")),
                         Vendor = r.IsDBNull(r.GetOrdinal("vendor")) ? null : r.GetString(r.GetOrdinal("vendor")),
+                        // Search spans every stored lot; carry the lot's status so a result from an inactive or
+                        // expired lot is never mistaken for a cell in current use.
+                        IsActive = r.GetInt32(r.GetOrdinal("is_active")) != 0,
+                        ExpirationDate = r.IsDBNull(r.GetOrdinal("expiration_date")) ? null : r.GetString(r.GetOrdinal("expiration_date")),
                     };
                     var cell = ReadPanelCell(r);
                     results.Add((panel, cell));

@@ -197,7 +197,8 @@ namespace HemoIQ.ViewModels
             }
 
             var matches = _db.SearchCellsByProfile(criteria, SelectedZygosity);
-            _completedStatus = FormatResultStatus(matches.Count, criteria.Count, SelectedZygosity);
+            _completedStatus = FormatResultStatus(matches.Count, criteria.Count, SelectedZygosity,
+                matches.Count(m => SearchResultRow.LotStatus(m.panel, DateTime.Today) != null));
             SelectedResult = null;
             Results.Clear();
             foreach (var (panel, cell) in matches)
@@ -211,10 +212,12 @@ namespace HemoIQ.ViewModels
         /// Status after a search. Homozygous and heterozygous are named so a
         /// smaller count is not read as an ordinary antigen-positive match.
         /// </summary>
-        public static string FormatResultStatus(int cells, int criteria, string? zygosity)
+        public static string FormatResultStatus(int cells, int criteria, string? zygosity, int notInUse = 0)
         {
             var word = criteria == 1 ? "criterion" : "criteria";
             var line = $"Found {cells} matching cells for {criteria} {word}.";
+            if (notInUse > 0)
+                line += $" {notInUse} {(notInUse == 1 ? "is" : "are")} on an inactive or expired lot (marked in the Lot column).";
             if (string.Equals(zygosity, AntigenConstants.ZygosityHomozygous, StringComparison.Ordinal))
                 return line + " Positive cells are homozygous.";
             if (string.Equals(zygosity, AntigenConstants.ZygosityHeterozygous, StringComparison.Ordinal))
@@ -351,7 +354,7 @@ namespace HemoIQ.ViewModels
         {
             if (row == null || string.IsNullOrEmpty(row.PanelName) || string.IsNullOrEmpty(row.CellNumber))
                 return null;
-            var lot = string.IsNullOrEmpty(row.LotNumber) ? "" : $" ({row.LotNumber})";
+            var lot = string.IsNullOrEmpty(row.LotDisplay) ? "" : $" ({row.LotDisplay})";
             return $"{row.PanelName}{lot} cell {row.CellNumber}";
         }
 
@@ -400,6 +403,9 @@ namespace HemoIQ.ViewModels
         public int PanelId { get; }
         public string PanelName { get; }
         public string? LotNumber { get; }
+        /// <summary>The lot as shown: the lot number, then "inactive" or "expired (date)" when it is not in use.</summary>
+        public string? LotDisplay { get; }
+        public bool LotInUse { get; }
         public string CellNumber { get; }
 
         // Antigen values
@@ -433,11 +439,21 @@ namespace HemoIQ.ViewModels
         public string P1 { get; }
         public IReadOnlyDictionary<string, string> Extra { get; }
 
+        /// <summary>Null for a lot in use; otherwise "expired (date)" or "inactive". Expired wins: it is the reason.</summary>
+        public static string? LotStatus(Panel panel, DateTime today) =>
+            ExpirationStatus.IsExpired(panel.ExpirationDate, today) ? $"expired {panel.ExpirationDate}"
+            : !panel.IsActive ? "inactive"
+            : null;
+
         public SearchResultRow(Panel panel, PanelCell cell)
         {
             PanelId = panel.PanelId;
             PanelName = panel.Name;
             LotNumber = panel.LotNumber;
+            var status = LotStatus(panel, DateTime.Today);
+            LotInUse = status == null;
+            LotDisplay = status == null ? panel.LotNumber
+                : string.IsNullOrEmpty(panel.LotNumber) ? status : $"{panel.LotNumber} · {status}";
             CellNumber = cell.CellNumber;
             D = DisplayTyping(cell, "D"); C = DisplayTyping(cell, "C"); c = DisplayTyping(cell, "c");
             E = DisplayTyping(cell, "E"); e = DisplayTyping(cell, "e"); f = DisplayTyping(cell, "f");

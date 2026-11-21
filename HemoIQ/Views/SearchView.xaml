@@ -141,13 +141,19 @@
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
-                    <DataGridTextColumn Header="Lot" Binding="{Binding LotNumber}" Width="200">
+                    <DataGridTextColumn Header="Lot" Binding="{Binding LotDisplay}" Width="200">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextWrapping" Value="NoWrap"/>
                                 <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                                <Setter Property="ToolTip" Value="{Binding LotNumber}"/>
+                                <Setter Property="ToolTip" Value="{Binding LotDisplay}"/>
                                 <Setter Property="Padding" Value="4,0"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding LotInUse}" Value="False">
+                                        <Setter Property="Foreground" Value="#C62828"/>
+                                        <Setter Property="FontStyle" Value="Italic"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
