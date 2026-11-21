@@ -5693,10 +5693,27 @@ column.
 
 All 1394 tests pass.
 
+## Iteration 215 (clean pass): other date filters, received versus entered
+
+**Reviewed:**
+- **Received time.** Analytics (workload, location, turnaround) and the
+  Worklist's overdue-testing age use the received time, with the entry
+  date as fallback (Iteration 184). Investigation search now matches
+  (Iteration 214).
+- **Purge and archive.** These cut by entry date (`created_date <
+  cutoff`). That is deliberate for record retention, and the Purge help
+  says "Delete specimens created before".
+- **No other ranges.** The Reports tab has no specimen date range. The
+  Audit Log has a text filter only, and its CSV writes the UTC event time.
+- **Order only.** Other `created_date` uses only order lists: MRN history,
+  same-encounter specimens and eluate links.
+
+No new issue or gap worth fixing. All 1394 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the other date filters (Reports specimen
-list date range, the audit log range, Worklist age) for the same received
-versus entered consistency.
+Continue clean-pass reviews: patient history across specimens (prior
+antibodies carried forward, the same-MRN list after an MRN correction,
+and the history shown on reports).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
