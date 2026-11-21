@@ -5577,10 +5577,29 @@ All 1382 tests pass.
 
 All 1385 tests pass.
 
+## Iteration 211 (clean pass): results recorded on a lot after it expired
+
+**Reviewed:**
+- **Reaction entry.** Saving grades on an expired lot asks "Panel lot …
+  expired …; results from expired reagent red cells will be flagged for
+  review. Record these reactions anyway?". No keeps them unsaved and says
+  so in the save status.
+- **Analysis.** `ExpiredReagentCheck` finds runs recorded after the lot's
+  expiry. Each finding becomes a critical "REVIEW:" suggestion on the
+  Analysis tab, naming the run, recorded date and expiry, and asking for
+  documented review before interpretation.
+- **Reports.** Report suggestions print the same line.
+- **Worklist.** The "Expired reagent" item lists open investigations with
+  such runs until a reviewed final call clears them.
+- **Tests.** `ExpiredReagentTests` covers the finding, in-date and ungraded
+  cases, the analysis note and the Worklist item.
+
+No new issue or gap worth fixing. All 1385 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: reaction entry on a lot that expired after
-it was linked to a specimen (the grid and the Analysis tab should show it
-plainly), and the expired-reagent Worklist item's wording.
+Continue clean-pass reviews: the Worklist as a whole (every item kind has
+an Open target, clears when resolved, and is counted the same on the
+status strip and the tab).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
