@@ -152,7 +152,8 @@ namespace HemoIQ.Views.Dialogs
             ImportedPanelId = outcome.PanelId;
             ImportedPanelName = parsed.Name;
             var reviewDlg = new ImportReviewDialog(outcome.Review) { Owner = this };
-            if (reviewDlg.ShowDialog() == true && reviewDlg.ActivateRequested)
+            if (reviewDlg.ShowDialog() == true && reviewDlg.ActivateRequested
+                && ViewModels.PanelsViewModel.ConfirmExpiredActivation(_db.GetPanel(outcome.PanelId)?.ExpirationDate))
                 _db.SetPanelActive(outcome.PanelId, true, Services.PanelActivationCoverage.Check(_db, _db.GetPanel(outcome.PanelId)!));
             StatusText.Text = $"Imported '{parsed.Name}' ({parsed.Cells.Count} cells). {outcome.Review.Explanation}";
             DialogResult = true;

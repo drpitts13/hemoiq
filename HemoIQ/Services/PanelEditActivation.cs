@@ -14,5 +14,15 @@ namespace HemoIQ.Services
         /// <summary>The active flag the detail edit itself may save: never turns an inactive lot on.</summary>
         public static bool ActiveToSave(bool storedActive, bool requestedActive) =>
             storedActive && requestedActive;
+
+        /// <summary>
+        /// Warning shown before activating a lot whose expiration date has passed, or null when it has not.
+        /// Activation is still the user's decision (for example a documented extension); the warning makes it
+        /// deliberate, and the activation audit records it.
+        /// </summary>
+        public static string? ExpiryWarning(string? expirationDate, System.DateTime today) =>
+            Models.ExpirationStatus.IsExpired(expirationDate, today)
+                ? $"EXPIRED: this lot expired on {expirationDate}. Reactions recorded on it are flagged as expired-reagent use on the Worklist."
+                : null;
     }
 }

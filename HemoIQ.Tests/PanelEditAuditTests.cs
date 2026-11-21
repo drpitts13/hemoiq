@@ -113,6 +113,46 @@ public class PanelEditAuditTests
         Assert.DoesNotContain("dlg.StartCell, dlg.ItemIsActive,", copy);
     }
 
+    [Fact]
+    public void ExpiryWarning_OnlyForAPassedDate()
+    {
+        var today = new DateTime(2026, 11, 21);
+        Assert.Contains("EXPIRED: this lot expired on 2026-11-20",
+            PanelEditActivation.ExpiryWarning("2026-11-20", today));
+        Assert.Null(PanelEditActivation.ExpiryWarning("2026-11-21", today));
+        Assert.Null(PanelEditActivation.ExpiryWarning("2027-01-01", today));
+        Assert.Null(PanelEditActivation.ExpiryWarning(null, today));
+    }
+
+    [Fact]
+    public void ActivatingAnExpiredLot_IsRecordedInTheAuditReason()
+    {
+        using var iso = new IsolatedDatabase();
+        var expired = DateTime.Today.AddDays(-3).ToString("yyyy-MM-dd");
+        var old = iso.Db.AddPanel("Old", "LOT-X", "V", 2, expired, false, isActive: false);
+        var current = iso.Db.AddPanel("New", "LOT-Y", "V", 2, DateTime.Today.AddDays(30).ToString("yyyy-MM-dd"), false, isActive: false);
+
+        iso.Db.SetPanelActive(old, true);
+        iso.Db.SetPanelActive(current, true);
+
+        Assert.Equal($"Activated after expiry ({expired})",
+            iso.Db.GetAuditEventsForEntity("panel", old.ToString()).Last(e => e.Action == "activate_panel").Reason);
+        Assert.Null(iso.Db.GetAuditEventsForEntity("panel", current.ToString()).Last(e => e.Action == "activate_panel").Reason);
+    }
+
+    [Fact]
+    public void EveryActivationPath_WarnsAboutExpiry()
+    {
+        Assert.Contains("PanelEditActivation.ExpiryWarning(",
+            ViewModelMethod("private void ActivatePanel()", "internal static bool ConfirmExpiredActivation("));
+        Assert.Contains("ConfirmExpiredActivation(",
+            ViewModelMethod("private void ImportCsv()", "private void ExportCsv()"));
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "HemoIQ", "HemoIQ.csproj"))) dir = dir.Parent;
+        var vendor = File.ReadAllText(Path.Combine(dir!.FullName, "HemoIQ", "Views", "Dialogs", "DownloadFromVendorDialog.xaml.cs"));
+        Assert.Contains("PanelsViewModel.ConfirmExpiredActivation(", vendor);
+    }
+
     private static string ViewModelMethod(string start, string end)
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

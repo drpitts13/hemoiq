@@ -5534,10 +5534,53 @@ review and the audit.
 
 All 1382 tests pass.
 
+## Iteration 210: activating an expired lot warns first and is recorded
+
+**Reviewed, no gap:**
+- Screening cells have no separate model. They are panel lots, so the
+  panel rules (inactive until reviewed, audited edits) cover them.
+- Every way a lot is created or switched on was listed: manual Add (cells
+  start NT), Copy and Details (through Activate since Iterations
+  208–209), the lab import review, the vendor download review, and
+  Activate.
+
+**Deficiency found (patient safety, auditability):**
+- Expired lots are deactivated automatically at start-up, but every
+  activation route switched an expired lot back on without mentioning the
+  expiry: Activate, the Details and Copy routes into it, and both import
+  reviews.
+- Reactions recorded afterwards were flagged on the Worklist only later,
+  as expired-reagent use.
+- The `activate_panel` audit entry did not say the lot was past its date.
+
+**Bounded improvement:**
+- `PanelEditActivation.ExpiryWarning` returns "EXPIRED: this lot expired
+  on …; reactions recorded on it are flagged as expired-reagent use on the
+  Worklist", or null.
+- The Activate prompt shows the warning with a warning icon.
+- Both import reviews ask "Activate it anyway? No keeps it inactive"
+  (`PanelsViewModel.ConfirmExpiredActivation`).
+- `SetPanelActive` adds "Activated after expiry (date)" to the audit
+  reason, together with any coverage gaps.
+- Activation stays the user's decision, for example for a documented
+  extension.
+
+**Data/schema:** none.
+
+**Tests:** `PanelEditAuditTests` gains 3 cases (14 in all):
+- the warning appears only for a date that has passed;
+- the audit reason on activating an expired lot, and none on a current
+  lot;
+- a source guard that every activation route warns.
+
+**Docs:** the Panels help topic describes the warning and the audit.
+
+All 1385 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: screening cell sets (their own lots,
-activation and expiry), checking they follow the same inactive-until-reviewed
-and audit rules as panels.
+Continue clean-pass reviews: reaction entry on a lot that expired after
+it was linked to a specimen (the grid and the Analysis tab should show it
+plainly), and the expired-reagent Worklist item's wording.
 
 Loop clean passes: 0/5

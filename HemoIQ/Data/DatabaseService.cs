@@ -2035,8 +2035,12 @@ namespace HemoIQ.Data
             cmd.Parameters.AddWithValue("$id", panelId);
             cmd.ExecuteNonQuery();
             var gaps = active ? acknowledgedCoverage : null;
+            var expiredOn = active && GetPanel(panelId) is { IsExpired: true } p ? p.ExpirationDate : null;
+            var reasons = new List<string>();
+            if (expiredOn != null) reasons.Add($"Activated after expiry ({expiredOn})");
+            if (gaps != null) reasons.Add($"Activated with coverage gaps against {gaps.PriorLabel}");
             AppendAudit(active ? "activate_panel" : "deactivate_panel", "panel", panelId.ToString(),
-                gaps == null ? null : $"Activated with coverage gaps against {gaps.PriorLabel}",
+                reasons.Count == 0 ? null : string.Join("; ", reasons),
                 afterJson: gaps == null
                     ? JsonSerializer.Serialize(new { active })
                     : JsonSerializer.Serialize(new { active, priorPanelId = gaps.Prior.PanelId, coverageGaps = gaps.Gaps }));

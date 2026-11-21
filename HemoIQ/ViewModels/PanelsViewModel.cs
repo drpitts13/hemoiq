@@ -468,18 +468,28 @@ namespace HemoIQ.ViewModels
                 ? "no source hash"
                 : SelectedPanel.SourceSha256;
             var coverage = Services.PanelActivationCoverage.Check(_db, SelectedPanel);
+            var expiry = Services.PanelEditActivation.ExpiryWarning(SelectedPanel.ExpirationDate, System.DateTime.Today);
             if (MessageBox.Show(
                     $"Activate '{SelectedPanel.Name}' (lot {SelectedPanel.LotNumber ?? "—"}) for analysis?\n\n" +
                     $"Source SHA-256: {hash}\n\n" +
+                    (expiry == null ? "" : expiry + "\n\n") +
                     (coverage == null ? "" : "ANTIGEN COVERAGE: " + coverage.Message + "\n\n") +
                     "Activate only after reviewing the antigram. This is decision support, not a diagnosis.",
                     "Activate imported panel",
-                    MessageBoxButton.YesNo, coverage == null ? MessageBoxImage.Question : MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                    MessageBoxButton.YesNo, coverage == null && expiry == null ? MessageBoxImage.Question : MessageBoxImage.Warning) != MessageBoxResult.Yes)
                 return;
             _db.SetPanelActive(SelectedPanel.PanelId, true, coverage);
             _main.SetStatus($"Activated panel '{SelectedPanel.Name}'." +
                             (coverage == null ? "" : $" Coverage gaps against {coverage.PriorLabel} were recorded in the audit log."));
             NotifyPanelsChanged();
+        }
+
+        /// <summary>True to go ahead: the lot is not expired, or the user confirmed activating it anyway.</summary>
+        internal static bool ConfirmExpiredActivation(string? expirationDate)
+        {
+            var expiry = Services.PanelEditActivation.ExpiryWarning(expirationDate, System.DateTime.Today);
+            return expiry == null || MessageBox.Show(expiry + "\n\nActivate it anyway? No keeps it inactive.",
+                "Activate expired lot", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
         }
 
         private void ComparePanels()
@@ -643,7 +653,8 @@ namespace HemoIQ.ViewModels
             {
                 Owner = Application.Current?.MainWindow
             };
-            if (reviewDlg.ShowDialog() == true && reviewDlg.ActivateRequested)
+            if (reviewDlg.ShowDialog() == true && reviewDlg.ActivateRequested
+                && ConfirmExpiredActivation(_db.GetPanel(outcome.PanelId)?.ExpirationDate))
                 _db.SetPanelActive(outcome.PanelId, true, Services.PanelActivationCoverage.Check(_db, _db.GetPanel(outcome.PanelId)!));
 
             ShowInactive = true;
