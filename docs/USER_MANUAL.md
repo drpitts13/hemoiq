@@ -621,7 +621,7 @@ The italic note under the lists explains what the selected combination will mean
 
 ## Label and grades
 
-**Label** is optional. Leave it blank and the application names the run from the treatments you picked.
+**Label** is optional. Leave it blank and the application names the run from the treatments you picked. If you type a label that does not mention the treatment, the treatment is added in parentheses wherever the run is shown, for example **Repeat (Ficin-treated)**, so a report never hides that the run's cells or serum were treated.
 
 **Copy grades from the current run** starts the new run with the IS, 37°C, AHG, and CC grades already entered on the run you were viewing. Uncheck it to start from a blank grid. You can edit every grade after the run is created.
 
