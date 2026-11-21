@@ -6163,10 +6163,30 @@ All 1412 tests pass.
 
 No new issue or gap worth fixing. All 1412 tests pass.
 
+## Iteration 230 (clean pass): investigation status in the Specimens detail pane
+
+**Reviewed:**
+- **Single source.** The detail pane's status line, checklist and next
+  step come from `InvestigationStatusService.Compute`, which investigation
+  search also uses.
+- **Cancelled.** Checked before anything else. It shows "Cancelled", the
+  date and reason, that the record is locked, and that it can be
+  reinstated with a reason.
+- **Review pending.** With review required, an unreviewed call is "Awaiting
+  supervisor review". The next step names a supervisor other than the
+  confirming technologist.
+- **Later states.** Amended (with "reissue the report" when the last report
+  predates the change), Completed, and the open states (Awaiting panel,
+  Testing in progress, Analysis needed, Awaiting additional testing,
+  Awaiting identification) follow in order.
+- **Tests.** `InvestigationStatusTests` covers them.
+
+No new issue or gap worth fixing. All 1412 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Specimens tab detail pane (status line,
-investigation checklist and next step) for the same cancelled and
-review-pending cases.
+Continue clean-pass reviews: the timeline (InvestigationTimeline) for
+events in order, cancellation and reinstatement entries, and amendment
+history matching the audit log.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
