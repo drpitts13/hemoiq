@@ -6226,10 +6226,24 @@ lines.
 
 All 1414 tests pass.
 
+## Iteration 232 (clean pass): specimen date labels
+
+**Reviewed:**
+- **Entry date.** Every place that shows the entry date labels it
+  "Created": the Specimens list column, the Specimen Summary report, the
+  All Specimens report, and the CSV (`CreatedDate`).
+- **Received date.** Every line labelled received uses the recorded
+  received time, falling back to the entry date: the specimen detail pane
+  ("Collected …; received …"), the Clinical Identification header, and
+  since Iteration 231 the timeline.
+- **No mislabeling.** No screen or report calls the entry date "received".
+
+No new issue or gap worth fixing. All 1414 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other places that show a specimen's "date"
-(the Specimens list Date column, the specimen detail header, report
-headers) for the received versus entered distinction.
+Continue clean-pass reviews: specimen expiration (default dating from
+Preferences, the transfusion-based dating check, and that an expired
+specimen blocks or warns on reaction entry the way an expired lot does).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
