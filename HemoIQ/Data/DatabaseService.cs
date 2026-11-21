@@ -3039,16 +3039,6 @@ namespace HemoIQ.Data
             });
         }
 
-        public int CopyReactions(int sourceRunId, int targetRunId)
-        {
-            EnsureCanRecord();
-            var source = GetReactions(sourceRunId);
-            foreach (var rxn in source)
-                SaveReaction(targetRunId, rxn.CellNumber, rxn.IS, rxn.C37, rxn.AHG, rxn.CC,
-                    rxn.ExtraPhases);
-            return source.Count;
-        }
-
         // ── Reactions ─────────────────────────────────────────────────────────
 
         private static bool IsGraded(string? v) =>

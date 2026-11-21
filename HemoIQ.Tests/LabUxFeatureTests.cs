@@ -415,25 +415,6 @@ public class LabUxFeatureTests
     }
 
     [Fact]
-    public void CopyReactions_CopiesGradesToNewRun()
-    {
-        using var iso = new IsolatedDatabase();
-        iso.Db.AddSpecimen("COPY-001", "serum", null);
-        var panelId = iso.Db.AddPanel("P", "L", "V", 2, null, false);
-        iso.Db.LinkSpecimenPanel("COPY-001", panelId);
-        iso.Db.SaveReaction("COPY-001", panelId, "1", "0", "0", "3+", "3+");
-        iso.Db.SaveReaction("COPY-001", panelId, "2", "0", "1+", "2+", "2+");
-        var source = iso.Db.GetPanelRuns("COPY-001", panelId).Single();
-        var destId = iso.Db.AddPanelRun("COPY-001", panelId, CellTreatment.Ficin, SerumTreatment.None, "Ficin");
-        var copied = iso.Db.CopyReactions(source.RunId, destId);
-        Assert.Equal(2, copied);
-        var dest = iso.Db.GetReactions(destId).ToDictionary(r => r.CellNumber);
-        Assert.Equal("3+", dest["1"].AHG);
-        Assert.Equal("2+", dest["2"].AHG);
-        Assert.Equal("1+", dest["2"].C37);
-    }
-
-    [Fact]
     public void PanelAntigram_ContainsGridNotPanelSummaryHeading()
     {
         using var iso = new IsolatedDatabase();

@@ -55,26 +55,15 @@ namespace HemoIQ.Views.Dialogs
         {
             var ct = SelectedCellTreatment;
             var st = SelectedSerumTreatment;
+            InfoText.Text = Services.RunTreatmentText.Describe(ct, st);
 
-            var lines = new List<string>();
-
-            if (ct == CellTreatment.Ficin || ct == CellTreatment.Papain)
-                lines.Add("Cells: destroys M, N, S, s, Fya, Fyb, Xga, Lea, Leb.  Enhances Rh, Kidd, P1.");
-            else if (ct == CellTreatment.DTT)
-                lines.Add("Cells: destroys K, k, Kpa, Kpb, Jsa, Jsb, Lua, Lub.");
-
-            if (st == SerumTreatment.Prewarmed)
-                lines.Add("Serum: IS phase not interpretable (cold/IgM reactors suppressed).");
-            else if (st == SerumTreatment.AlloAdsorptionR1R1)
-                lines.Add("Serum: absorbed with R1R1 — removes anti-D, anti-C, anti-e.");
-            else if (st == SerumTreatment.AlloAdsorptionR2R2)
-                lines.Add("Serum: absorbed with R2R2 — removes anti-D, anti-c, anti-E.");
-            else if (st == SerumTreatment.AlloAdsorptionRr)
-                lines.Add("Serum: absorbed with rr — removes anti-c, anti-e.");
-            else if (st == SerumTreatment.AutoAdsorption)
-                lines.Add("Serum: autoadsorbed — autoantibody removed, alloantibodies retained.");
-
-            InfoText.Text = string.Join("\n", lines);
+            // A treated run's grades must come from the treated test, never from the run being viewed.
+            var canCopy = Services.RunTreatmentText.CanCopyGrades(ct, st);
+            CopyGradesCheck.IsEnabled = canCopy;
+            if (!canCopy) CopyGradesCheck.IsChecked = false;
+            CopyGradesCheck.ToolTip = canCopy
+                ? "Pre-fill this untreated repeat with the grades on the run you are viewing, as unsaved values to check against the test"
+                : "A treated run's grades must be read from the treated test, so they are not copied";
         }
 
         private void SaveClick(object sender, RoutedEventArgs e) => DialogResult = true;

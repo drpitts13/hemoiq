@@ -5903,9 +5903,63 @@ No new issue or gap worth fixing. All 1397 tests pass.
 
 No new issue or gap worth fixing. All 1397 tests pass.
 
+## Iteration 223: a new run is never pre-recorded with another run's grades
+
+**Reviewed, no gap:**
+- **Delete run.** Refused after a confirmed identification, needs a reason
+  for graded cells after analysis, and audited with every deleted grade.
+- **Labels.** Run labels always name the treatment (Iteration 190).
+- **Untreated run.** The untreated run cannot be deleted.
+
+**Deficiency found (patient safety, data integrity):**
+- **Copied grades saved as results.** The Add run dialog's "Copy grades
+  from the current run" was ticked by default. It saved the viewed run's
+  grades at once as recorded results on the new run (`SaveReaction` /
+  `CopyReactions`), for any treatment.
+- **Clinical effect.** A ficin, DTT or adsorbed run created that way
+  claimed the treatment changed nothing. For example, Fya+ cells still
+  reacting after ficin argues against anti-Fya, from results nobody
+  observed. Any cell the user forgot to re-grade fed analysis as a
+  treated result.
+- **Stale treatment text.** The dialog's hand-written lines contradicted
+  the engine. They said ficin destroys Lea and Leb (the engine treats them
+  as enhanced since Iteration 166), left out Inb and others, and left
+  anti-f off the rr adsorption (Iteration 168).
+
+**Bounded improvement:**
+- `RunTreatmentText.CanCopyGrades` allows copying only into an untreated
+  repeat. The dialog disables and clears the option for any cell or serum
+  treatment, with a tooltip explaining why, and it now starts unticked.
+- Copied grades are never saved. `PrefillUnsaved` places them in the new
+  run's grid as unsaved edits, which mark the grid dirty and go to the
+  recovery draft. The status line says "pre-filled …, NOT saved: check
+  each against this test, then Save."
+- `DatabaseService.CopyReactions` is removed.
+- `RunTreatmentText.Describe` builds the dialog text from
+  `AntigenTreatmentEffects` (the new `AntigensWithEffect`,
+  `GetAbsorbedAntibodies`, `GetNonInterpretablePhases`), so it cannot drift
+  from analysis again.
+
+**Data/schema:** none.
+
+**Tests:** `RunTreatmentTextTests` (9 cases) replace the removed
+`CopyReactions` test:
+- ficin text equals the engine's destroyed list (Fya and Inb destroyed;
+  Lea and Leb enhanced, not destroyed), and papain matches ficin;
+- the DTT, rr (with anti-f), R1R1 and prewarmed lines;
+- copying is allowed only with no treatment (5 combinations);
+- a source guard that AddRun never calls `SaveReaction` and the option
+  starts off.
+
+**Docs:** the Add run help explains the untreated-only, unsaved pre-fill
+and that the treatment note comes from the analysis tables.
+
+All 1404 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: run management (adding a treated run,
-deleting a run with grades, and the labels shown for runs on reports).
+Continue clean-pass reviews: other hand-written clinical text that could
+drift from the engine tables (treatment notes in help topics and reports,
+dosage pairs, absorbed-antibody lists in explanations).
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5

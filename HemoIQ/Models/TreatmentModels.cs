@@ -148,6 +148,20 @@ namespace HemoIQ.Models
 
         // ── Public API ────────────────────────────────────────────────────────
 
+        /// <summary>Antigens the treatment affects in the given way, in table order (standard antigens first).</summary>
+        public static IReadOnlyList<string> AntigensWithEffect(CellTreatment treatment, AntigenEffect effect)
+        {
+            var table = treatment switch
+            {
+                CellTreatment.Ficin or CellTreatment.Papain => FicinEffects,
+                CellTreatment.DTT => DttEffects,
+                _ => null,
+            };
+            return table == null
+                ? System.Array.Empty<string>()
+                : table.Where(kv => kv.Value == effect).Select(kv => kv.Key).ToList();
+        }
+
         public static AntigenEffect GetCellEffect(CellTreatment treatment, string antigen)
         {
             if (treatment == CellTreatment.None) return AntigenEffect.Unaffected;

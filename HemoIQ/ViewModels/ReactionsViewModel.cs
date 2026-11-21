@@ -1034,8 +1034,13 @@ namespace HemoIQ.ViewModels
             var dlg = new Views.Dialogs.PanelRunDialog { Owner = Application.Current.MainWindow };
             if (dlg.ShowDialog() != true) return;
 
-            var sourceRun = SelectedRun;
-            var inGridGrades = Rows.Select(r => (r.CellNumber, r.IS, r.C37, r.AHG, r.CC, r.ExtraPhaseValues)).ToList();
+            // Copying is offered only for an untreated repeat (RunTreatmentText.CanCopyGrades), and the copied grades
+            // are never saved as results: they pre-fill the new run's grid as unsaved values to check against the test.
+            var copyGrades = dlg.CopyGradesFromCurrentRun
+                && Services.RunTreatmentText.CanCopyGrades(dlg.SelectedCellTreatment, dlg.SelectedSerumTreatment);
+            var prefill = copyGrades
+                ? Rows.Select(r => (r.CellNumber, r.IS, r.C37, r.AHG, r.CC, Extra: r.ExtraPhaseValues)).ToList()
+                : new List<(string CellNumber, string IS, string C37, string AHG, string CC, IReadOnlyDictionary<string, string> Extra)>();
 
             try
             {
@@ -1044,26 +1049,13 @@ namespace HemoIQ.ViewModels
                     dlg.SelectedCellTreatment, dlg.SelectedSerumTreatment,
                     dlg.RunLabel);
 
-                int copied = 0;
-                if (dlg.CopyGradesFromCurrentRun)
-                {
-                    if (inGridGrades.Count > 0)
-                    {
-                        foreach (var g in inGridGrades)
-                            _db.SaveReaction(runId, g.CellNumber, g.IS, g.C37, g.AHG, g.CC, g.ExtraPhaseValues);
-                        copied = inGridGrades.Count;
-                    }
-                    else if (sourceRun != null)
-                    {
-                        copied = _db.CopyReactions(sourceRun.RunId, runId);
-                    }
-                }
-
                 RefreshRuns();
                 SelectedRun = Runs.FirstOrDefault(r => r.RunId == runId);
                 LoadReactions();
+                var copied = PrefillUnsaved(prefill);
                 _main.SetStatus(copied > 0
-                    ? $"Added run: {SelectedRun?.DisplayLabel} (copied {copied} cell grades)."
+                    ? $"Added run: {SelectedRun?.DisplayLabel}. {copied} cell(s) pre-filled from the previous run, NOT saved: " +
+                      "check each against this test, then Save."
                     : $"Added run: {SelectedRun?.DisplayLabel}");
             }
             catch (Exception ex)
@@ -1071,6 +1063,26 @@ namespace HemoIQ.ViewModels
                 MessageBox.Show($"Could not add run:\n{ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        /// <summary>Puts grades into the grid as unsaved edits (no database write). Returns the cells filled.</summary>
+        private int PrefillUnsaved(
+            IEnumerable<(string CellNumber, string IS, string C37, string AHG, string CC, IReadOnlyDictionary<string, string> Extra)> grades)
+        {
+            var filled = 0;
+            foreach (var g in grades)
+            {
+                var row = Rows.FirstOrDefault(r => string.Equals(r.CellNumber, g.CellNumber, StringComparison.OrdinalIgnoreCase));
+                if (row == null) continue;
+                var any = new[] { g.IS, g.C37, g.AHG, g.CC }.Concat(g.Extra.Values)
+                    .Any(v => ReactionGrade.Normalize(v) != ReactionGrade.NotTested);
+                if (!any) continue;
+                row.IS = g.IS; row.C37 = g.C37; row.AHG = g.AHG; row.CC = g.CC;
+                foreach (var kv in g.Extra)
+                    if (row.Extra.TryGetValue(kv.Key, out var bindable)) bindable.Value = kv.Value;
+                filled++;
+            }
+            return filled;
         }
 
         private void DeleteRun()
