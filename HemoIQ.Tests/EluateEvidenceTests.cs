@@ -62,6 +62,58 @@ public class EluateEvidenceTests
         Assert.Null(iso.Db.GetSpecimen("E1")!.SourceAccession);
     }
 
+    [Fact]
+    public void Link_RefusesAnotherPatientsSource_ButAllowsAMissingMrn()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("SRC-A", "serum", null);
+        iso.Db.UpdateSpecimenMrn("SRC-A", "mrn-a");
+        iso.Db.AddSpecimen("SRC-B", "serum", null);
+        iso.Db.UpdateSpecimenMrn("SRC-B", "MRN-B");
+        iso.Db.AddSpecimen("ELU", "eluate", null);
+        iso.Db.UpdateSpecimenMrn("ELU", "MRN-A");
+
+        var ex = Assert.Throws<ArgumentException>(() => iso.Db.SetEluateSource("ELU", "SRC-B"));
+        Assert.Contains("belong to different patients (MRN MRN-A and MRN-B)", ex.Message);
+        Assert.Null(iso.Db.GetSpecimen("ELU")!.SourceAccession);
+        Assert.DoesNotContain(iso.Db.GetAuditEventsForEntity("specimen", "ELU"), e => e.Action == "link_eluate");
+
+        iso.Db.SetEluateSource("ELU", "SRC-A"); // same patient, MRN case differs on entry
+        Assert.Equal("SRC-A", iso.Db.GetSpecimen("ELU")!.SourceAccession);
+
+        iso.Db.AddSpecimen("ELU-NOMRN", "eluate", null);
+        iso.Db.SetEluateSource("ELU-NOMRN", "SRC-B"); // nothing to compare yet
+    }
+
+    [Fact]
+    public void ChangingEitherMrn_UnderAnExistingLink_IsRefused_AndTheSaveRollsBack()
+    {
+        using var iso = new IsolatedDatabase();
+        iso.Db.AddSpecimen("SRC", "serum", null);
+        iso.Db.UpdateSpecimenMrn("SRC", "MRN-1");
+        iso.Db.AddSpecimen("ELU", "eluate", null);
+        iso.Db.UpdateSpecimenMrn("ELU", "MRN-1");
+        iso.Db.SetEluateSource("ELU", "SRC");
+
+        // The source's MRN cannot move away from its eluate.
+        var ex = Assert.Throws<ArgumentException>(() => iso.Db.UpdateSpecimenMrn("SRC", "MRN-2"));
+        Assert.Contains("Eluate ELU is linked to SRC", ex.Message);
+        Assert.Equal("MRN-1", iso.Db.GetSpecimen("SRC")!.Mrn);
+
+        // Saving the eluate with another MRN but the same link is refused as a whole.
+        Assert.Throws<ArgumentException>(() => SpecimenSaveService.Save(iso.Db,
+            new SpecimenEdit { AccessionNumber = "ELU", Type = "eluate", Mrn = "MRN-2", SourceAccession = "SRC" }, isNew: false));
+        Assert.Equal("MRN-1", iso.Db.GetSpecimen("ELU")!.Mrn);
+
+        // Moving the eluate to the other patient's own source in the same save is allowed.
+        iso.Db.AddSpecimen("SRC-2", "serum", null);
+        iso.Db.UpdateSpecimenMrn("SRC-2", "MRN-2");
+        SpecimenSaveService.Save(iso.Db,
+            new SpecimenEdit { AccessionNumber = "ELU", Type = "eluate", Mrn = "MRN-2", SourceAccession = "SRC-2" }, isNew: false);
+        Assert.Equal("SRC-2", iso.Db.GetSpecimen("ELU")!.SourceAccession);
+        Assert.Equal("MRN-2", iso.Db.GetSpecimen("ELU")!.Mrn);
+    }
+
     // ── Evidence notes ──────────────────────────────────────────────────
 
     [Fact]

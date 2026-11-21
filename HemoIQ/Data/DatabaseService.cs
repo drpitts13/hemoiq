@@ -1017,6 +1017,14 @@ namespace HemoIQ.Data
         }
 
         /// <summary>Eluate specimens linked to <paramref name="sourceAccession"/>, oldest first.</summary>
+        /// <summary>Null when the MRNs agree or either is blank; otherwise "belong to different patients (MRN a and b)".</summary>
+        private static string? EluateMrnConflict(string? eluateMrn, string? sourceMrn)
+        {
+            var a = Services.PatientHistory.NormalizeMrn(eluateMrn);
+            var b = Services.PatientHistory.NormalizeMrn(sourceMrn);
+            return a == null || b == null || a == b ? null : $"belong to different patients (MRN {a} and {b})";
+        }
+
         public List<Specimen> GetEluatesFor(string sourceAccession)
         {
             var list = new List<Specimen>();
@@ -1049,6 +1057,12 @@ namespace HemoIQ.Data
                              ?? throw new ArgumentException($"Source specimen {src} not found.");
                 if (source.IsEluate)
                     throw new ArgumentException("The source must be the patient's serum or plasma specimen, not another eluate.");
+                // The source's analysis reads this eluate's findings, so the two must be the same patient.
+                // Checked even when the link is unchanged: a save sets the MRN first, then calls this.
+                if (EluateMrnConflict(eluate.Mrn, source.Mrn) is string conflict)
+                    throw new ArgumentException(
+                        $"Eluate {eluate.AccessionNumber} and source {source.AccessionNumber} {conflict}. " +
+                        "Correct the MRN, or link the eluate to this patient's own serum or plasma specimen.");
                 src = source.AccessionNumber;
             }
             if (eluate.SourceAccession == src) return;
@@ -1260,6 +1274,13 @@ namespace HemoIQ.Data
                          ?? throw new ArgumentException($"Specimen {accessionNumber} not found.");
             if (before.Mrn == key) return;
             EnsureSpecimenUnlocked(accessionNumber);
+            // A source must stay the same patient as the eluates linked to it (their findings feed its analysis).
+            // An eluate's own MRN is checked against its source by SetEluateSource, which the save calls next.
+            foreach (var linked in GetEluatesFor(before.AccessionNumber))
+                if (EluateMrnConflict(linked.Mrn, key) is string conflict)
+                    throw new ArgumentException(
+                        $"Eluate {linked.AccessionNumber} is linked to {before.AccessionNumber}, and with this change they {conflict.Replace("belong", "would belong")}. " +
+                        "Unlink or correct the eluate first.");
 
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = "UPDATE specimens SET mrn = $mrn WHERE accession_number = $acc";

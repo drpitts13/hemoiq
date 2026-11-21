@@ -5814,10 +5814,56 @@ No new issue or gap worth fixing. All 1395 tests pass.
 
 No new issue or gap worth fixing. All 1395 tests pass.
 
+## Iteration 220: an eluate cannot be linked to another patient's specimen
+
+**Reviewed, no gap:**
+- **Existing rules.** The link refuses non-eluates, the eluate itself, a
+  missing source and an eluate source. It is audited, and it marks both
+  the old and the new source stale (Iteration 194).
+- **Analysis and final call.** Analysing or confirming the eluate marks the
+  source stale.
+- **Evidence.** Eluate evidence is a reviewable note and never changes the
+  source's candidates.
+- **Locking.** A confirmed eluate is locked like any specimen.
+
+**Deficiency found (patient safety):**
+- `SetEluateSource` never compared the two specimens' MRNs. An eluate could
+  be linked to another patient's serum through a mistyped accession, and
+  its findings ("Eluate … contains anti-K", "panreactive…") then appeared
+  as evidence in the wrong patient's analysis and reports.
+- Changing either specimen's MRN under an existing link could separate
+  them the same way.
+
+**Bounded improvement:**
+- `SetEluateSource` refuses a link when both MRNs are recorded and differ,
+  with the message "belong to different patients (MRN a and b)".
+- The check runs even when the link is unchanged, so a save that changes
+  only the eluate's MRN is caught. The save sets the MRN first, then calls
+  this.
+- `UpdateSpecimenMrn` refuses a source MRN that would differ from a linked
+  eluate's.
+- The specimen save is one transaction, so a refusal keeps nothing.
+- Moving an eluate to the other patient's own source in the same save is
+  allowed, and a blank MRN on either side is not refused.
+
+**Data/schema:** none.
+
+**Tests:** `EluateEvidenceTests` gains 2 cases:
+- a link to another patient is refused with no audit entry; the same
+  patient with MRN case differing on entry is linked, and a missing MRN is
+  allowed;
+- a source MRN change under a link is refused; an eluate save with a new
+  MRN but the old link is rolled back; relinking to the new patient's
+  source in the same save succeeds.
+
+**Docs:** the Specimen dialog help topic states the same-patient rule.
+
+All 1397 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the eluate workflow end to end (linking an
-eluate to its source, eluate evidence on the source's analysis, and what
-happens when either side is confirmed, cancelled or edited).
+Continue clean-pass reviews: other cross-specimen links for the same
+same-patient rule: the encounter list, and the transfusion history the
+receipt checklist reads from other specimens.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5
