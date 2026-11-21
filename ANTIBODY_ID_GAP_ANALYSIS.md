@@ -5058,10 +5058,45 @@ Five tests were updated for the wording.
 
 All 1350 tests pass.
 
+## Iteration 194: eluate changes mark the source's analysis stale
+
+**Reviewed, no gap:**
+- `DeletePanelRun` and `DeleteReactions` stamp the specimen as changed, and
+  need a reason after analysis.
+- Unlinking a panel is refused while it has reactions.
+- Adding a run or linking a panel adds no evidence.
+
+**Deficiency found (consistency, patient safety):**
+- The source specimen's analysis lists each linked eluate's findings
+  (`EluateEvidence`), for example "anti-K is in the eluate but not suspected
+  in serum S-1 ... Review before relying on serum rule-outs".
+- Linking or unlinking an eluate, analysing it, or confirming its
+  identification changed those notes without marking the source's analysis
+  out of date.
+
+**Bounded improvement:**
+- `SetEluateSource` marks both the former and the new source.
+- `SetSpecimenLastAnalyzed` marks an eluate's linked source when the eluate
+  is analysed.
+- The final-call writer marks it when an eluate is confirmed or cleared
+  (`MarkEluateSourceChanged`).
+- All go through `MarkAnalysisInputChanged`, so a never-analysed, confirmed
+  or cancelled source is untouched.
+- Help (Analysis) lists the trigger.
+
+**Tests:** `EluateSourceStalenessTests` (4 cases):
+- linking makes the source stale;
+- analysing a linked eluate makes the source stale;
+- unlinking makes the former source stale;
+- a confirmed source is not reopened by the eluate's analysis or
+  confirmation.
+
+All 1354 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: eluate source links (does linking an eluate
-change the source's analysis inputs?) and rule-out counts after a run is
-deleted.
+Product review of Iterations 178–194: the facility letterhead, the report
+status and not-counted sections, the CSV guards, and the staleness
+triggers, looking for overlap or a missed path.
 
 Loop clean passes: 0/5

@@ -1042,6 +1042,9 @@ namespace HemoIQ.Data
             AppendAudit("link_eluate", "specimen", eluateAccession, null,
                 JsonSerializer.Serialize(new { source = eluate.SourceAccession }),
                 JsonSerializer.Serialize(new { source = src }));
+            // The source's analysis lists its eluates' findings, so both the old and the new source change.
+            if (!string.IsNullOrWhiteSpace(eluate.SourceAccession)) MarkAnalysisInputChanged(eluate.SourceAccession);
+            if (src != null) MarkAnalysisInputChanged(src);
         }
 
         /// <summary>
@@ -1291,6 +1294,24 @@ namespace HemoIQ.Data
             string? antibodies, string? comment, string? identifiedBy,
             DateTime? identifiedAt, IReadOnlyList<string>? overrides)
         {
+            WriteFinalCallCore(accessionNumber, antibodies, comment, identifiedBy, identifiedAt, overrides);
+            MarkEluateSourceChanged(accessionNumber);
+        }
+
+        /// <summary>
+        /// When <paramref name="accession"/> is an eluate linked to a source, the source's analysis (which lists
+        /// the eluate's suspected or confirmed specificities) is now out of date.
+        /// </summary>
+        private void MarkEluateSourceChanged(string accession)
+        {
+            if (GetSpecimen(accession) is { IsEluate: true } e && !string.IsNullOrWhiteSpace(e.SourceAccession))
+                MarkAnalysisInputChanged(e.SourceAccession);
+        }
+
+        private void WriteFinalCallCore(string accessionNumber,
+            string? antibodies, string? comment, string? identifiedBy,
+            DateTime? identifiedAt, IReadOnlyList<string>? overrides)
+        {
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
                 UPDATE specimens SET
@@ -1525,6 +1546,7 @@ namespace HemoIQ.Data
             cmd.Parameters.AddWithValue("$now", DateTime.Now.ToString("o")[..19]);
             cmd.Parameters.AddWithValue("$id", specimenId);
             cmd.ExecuteNonQuery();
+            MarkEluateSourceChanged(specimenId);
         }
 
         /// <summary>
