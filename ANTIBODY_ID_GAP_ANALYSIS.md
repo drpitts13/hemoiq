@@ -5093,10 +5093,51 @@ All 1350 tests pass.
 
 All 1354 tests pass.
 
+## Iteration 195: product review of Iterations 178–194
+
+**Reviewed, no gap:**
+- **Letterhead (178).** One `FacilityHeader` above the preamble serves every
+  report. It is not a clinical setting, so it does not affect staleness.
+- **Report sections (177, 179–181).** "Rule-outs not counted" and the lot
+  and record status share their helpers (`AppendGatedRuleouts`,
+  `PanelStatusLine`, `PanelStatusShort`, `GetSpecimenStatus`) across the
+  text, print, PDF and CSV paths.
+- **CSV (186–187).** Every writer goes through `CsvText`. Two guards cover
+  it: the `new CsvWriter(` source check, and `AnalyticsCsvGuardTests` for
+  hand-built lines.
+- **Staleness (192–194).** Grade, panel typing, specimen detail, patient
+  record and eluate changes all reach `MarkAnalysisInputChanged` or the
+  order-safe timestamp writer.
+
+**Deficiency found (patient safety):** checking the triggers against every
+input `ApplyPatientTyping` and `EvaluateSeparation` read found two paths
+Iteration 193 missed:
+- `UpdateSpecimenMrn`. A different MRN brings another patient's transplant,
+  antigen-negative requirement and prior confirmed antibodies.
+- Confirming or clearing an identification on another specimen of the same
+  patient. That changes the prior antibodies used for history and
+  separation exemptions on the patient's open specimens.
+
+Neither marked the open specimen's analysis out of date.
+
+**Bounded improvement:**
+- `UpdateSpecimenMrn` calls `MarkAnalysisInputChanged`.
+- The final-call writer calls `MarkSamePatientSpecimensChanged`, which
+  marks the patient's other analysed, open specimens.
+- Help (Analysis) lists both.
+
+**Tests:** `PatientContextStalenessTests` (4 cases):
+- an MRN change makes the specimen stale;
+- confirming another specimen of the patient makes the open one stale;
+- clearing one makes the open one stale;
+- a different patient's confirmation does not.
+
+All 1358 tests pass.
+
 ## Likely next tick
 
-Product review of Iterations 178–194: the facility letterhead, the report
-status and not-counted sections, the CSV guards, and the staleness
-triggers, looking for overlap or a missed path.
+Continue clean-pass reviews: the Worklist's stale item count after these
+triggers (a burst of edits should list each specimen once), and the
+Pending Work report.
 
 Loop clean passes: 0/5

@@ -1249,6 +1249,9 @@ namespace HemoIQ.Data
             AppendAudit("update_mrn", "specimen", accessionNumber, null,
                 JsonSerializer.Serialize(new { mrn = before.Mrn }),
                 JsonSerializer.Serialize(new { mrn = key }));
+            // A different MRN brings a different patient record (transplant, antigen-negative requirement) and
+            // history (prior confirmed antibodies), all of which the analysis reads.
+            MarkAnalysisInputChanged(accessionNumber);
         }
 
         public void SetSpecimenActive(string accessionNumber, bool active)
@@ -1296,6 +1299,20 @@ namespace HemoIQ.Data
         {
             WriteFinalCallCore(accessionNumber, antibodies, comment, identifiedBy, identifiedAt, overrides);
             MarkEluateSourceChanged(accessionNumber);
+            MarkSamePatientSpecimensChanged(accessionNumber);
+        }
+
+        /// <summary>
+        /// A confirmed identification is patient history for the patient's other specimens (prior antibodies,
+        /// separation exemptions), so confirming or clearing one marks their analyses out of date.
+        /// </summary>
+        private void MarkSamePatientSpecimensChanged(string accession)
+        {
+            var mrn = GetSpecimen(accession)?.Mrn;
+            if (string.IsNullOrWhiteSpace(mrn)) return;
+            foreach (var other in GetSpecimensByMrn(mrn))
+                if (!string.Equals(other.AccessionNumber, accession, StringComparison.Ordinal))
+                    MarkAnalysisInputChanged(other.AccessionNumber);
         }
 
         /// <summary>
