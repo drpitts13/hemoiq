@@ -565,6 +565,7 @@ The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cel
   - Recovered values are checked as grades, so an unrecognized value is not restored. Cells matching what is already saved are left out.
   - If the identification was confirmed in the meantime, the grades are listed but not restored.
 - Saving graded results on a panel lot that has expired asks for confirmation first. If you record them anyway, analysis shows a REVIEW note and the Worklist lists the investigation as **Expired reagent**.
+- Saving graded results on a specimen past its expiration date also asks first, because the results may not represent the patient's current antibodies. **No** leaves the grades unsaved. Expired specimens are made inactive when HemoIQ starts, so this prompt appears for a specimen that expired while HemoIQ was open (for example overnight).
 - The grid is saved as one unit: if any cell cannot be saved, none is. Cells you did not change are not rewritten and add nothing to the audit log.
 - After the specimen has been analyzed, changing a recorded result (anything other than NT) asks for a reason. The prompt lists each change, for example *Cell 3 AHG: 2+ → 0*. Without a reason nothing is saved. The reason and the original value go into the audit log, and the timeline shows the reason on that entry. Entering a result in an empty or NT cell never needs a reason.
 - **Fill 0s** sets remaining NT phases to 0. Check cells become 2+ when AHG is 0. Grades you already entered are left alone.
