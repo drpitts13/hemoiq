@@ -106,7 +106,7 @@ public class RuleGovernanceTests
         var stale = Assert.Single(iso.Db.GetWorklistItems(), i => i.Kind == WorklistKind.StaleAnalysis);
         Assert.Equal("RG-OPEN", stale.Title);
         Assert.Contains("Analysis rules or Preferences changed", stale.Detail);
-        Assert.DoesNotContain("Reactions or panel typing changed", stale.Detail);
+        Assert.DoesNotContain("Reactions, panel typing or specimen details changed", stale.Detail);
 
         Thread.Sleep(1100);
         iso.Analyzer.AnalyzeSpecimen("RG-OPEN", updateDb: true);

@@ -5008,10 +5008,60 @@ Three tests were updated for the new wording.
 
 All 1343 tests pass.
 
+## Iteration 193: specimen and patient details that feed analysis mark it stale
+
+**Reviewed, no gap:**
+- Adding an extra antigen column to a lot creates NT cells, which change no
+  analysis until typed. Typing goes through `SavePanelCellEdits`, which
+  marks analyses stale (Iteration 192).
+- Antigen display order is cosmetic.
+- A run's treatments are set when the run is added; no edit path changes
+  them later.
+
+**Deficiency found (patient safety):** several specimen and patient details
+are analysis inputs, but changing them after an analysis left it current:
+- **Transfusion** status, date and products, and the patient's **HPC
+  transplant**. These decide whether autoadsorbed negatives count as
+  rule-outs (Iterations 169, 171) and whether patient typing is used.
+- **Previous antibodies.** These exempt antibodies from the separation
+  criterion.
+- **Phenotype and genotype.** These drive the typing evidence.
+- **DAT, pregnancy and RhIG, notes and specimen type.** These drive notes
+  and suggestions.
+- The **antigen-negative requirement**, which drives transfusion-requirement
+  notes.
+
+Recording, for example, a recent transfusion after the analysis left rule-outs
+from an autoadsorbed aliquot shown as current.
+
+**Bounded improvement:**
+- `MarkAnalysisInputChanged` marks an analysed, open investigation out of
+  date, as a grade change does. It leaves never-analysed, confirmed and
+  cancelled investigations alone.
+- It is called by the transfusion, products, DAT and pregnancy writers, and
+  by `UpdateSpecimen` when type, notes, phenotype, genotype, previous
+  antibodies or DAT changed (not for expiration or active).
+- `SavePatient` calls it for every specimen on the MRN when the transplant
+  or antigen-negative requirement changed.
+- The stale reason reads "Reactions, panel typing or specimen details
+  changed since last analysis."
+- Help (Analysis, Worklist) lists the triggers.
+
+**Tests:** `SpecimenInputStalenessTests` (7 cases):
+- transfusion, phenotype, DAT, pregnancy and patient transplant changes
+  mark the analysis stale;
+- an expiration-only change does not;
+- a confirmed investigation is not reopened by a patient change;
+- a never-analysed one is not marked.
+
+Five tests were updated for the wording.
+
+All 1350 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other edits that change analysis inputs
-without a grade save (extra antigen columns added to a lot, antigen display
-order, run treatment edits, if any).
+Continue clean-pass reviews: eluate source links (does linking an eluate
+change the source's analysis inputs?) and rule-out counts after a run is
+deleted.
 
 Loop clean passes: 0/5

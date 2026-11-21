@@ -18,12 +18,12 @@ public class AnalysisCurrencyTests
         Assert.Null(AnalysisCurrency.StaleReason(S(null, "2026-11-01T10:00:00"), "2026-11-02T10:00:00"));
         Assert.Null(AnalysisCurrency.StaleReason(S("2026-11-01T10:00:00", "2026-11-01T09:00:00"), "2026-10-01T10:00:00"));
 
-        Assert.Equal("Reactions or panel typing changed since last analysis.",
+        Assert.Equal("Reactions, panel typing or specimen details changed since last analysis.",
             AnalysisCurrency.StaleReason(S("2026-11-01T10:00:00", "2026-11-01T11:00:00"), null));
         Assert.Equal("Analysis rules or Preferences changed 2026-11-02 08:00:00, after the last analysis.",
             AnalysisCurrency.StaleReason(S("2026-11-01T10:00:00"), "2026-11-02T08:00:00"));
         var both = AnalysisCurrency.StaleReason(S("2026-11-01T10:00:00", "2026-11-01T11:00:00"), "2026-11-02T08:00:00")!;
-        Assert.Contains("Reactions or panel typing changed", both);
+        Assert.Contains("Reactions, panel typing or specimen details changed", both);
         Assert.Contains("rules or Preferences", both);
 
         Assert.Null(AnalysisCurrency.StaleReason(S("2026-11-01T10:00:00", final: "anti-K"), "2026-11-02T08:00:00"));
@@ -34,8 +34,8 @@ public class AnalysisCurrencyTests
     {
         Assert.Null(AnalysisViewModel.ConfirmStalePrompt(null, neverAnalyzed: false));
         Assert.Contains("has not been analyzed", AnalysisViewModel.ConfirmStalePrompt(null, neverAnalyzed: true));
-        var stale = AnalysisViewModel.ConfirmStalePrompt("Reactions or panel typing changed since last analysis.", neverAnalyzed: false)!;
-        Assert.Contains("The analysis is out of date: Reactions or panel typing changed since last analysis.", stale);
+        var stale = AnalysisViewModel.ConfirmStalePrompt("Reactions, panel typing or specimen details changed since last analysis.", neverAnalyzed: false)!;
+        Assert.Contains("The analysis is out of date: Reactions, panel typing or specimen details changed since last analysis.", stale);
     }
 
     [Fact]

@@ -22,7 +22,7 @@ namespace HemoIQ.Models
                 "Reactions and Preferences changed since last analysis.",
             AnalysisStaleReason.Preferences =>
                 "Preferences changed since last analysis.",
-            _ => "Reactions or panel typing changed since last analysis."
+            _ => "Reactions, panel typing or specimen details changed since last analysis."
         };
 
         public static string Banner(AnalysisStaleReason reason) => reason switch

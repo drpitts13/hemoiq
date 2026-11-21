@@ -681,6 +681,8 @@ namespace HemoIQ.Data
             AppendAudit("update_specimen", "specimen", accessionNumber, null,
                 JsonSerializer.Serialize(changed.ToDictionary(c => c.Key, c => c.Value.before)),
                 JsonSerializer.Serialize(changed.ToDictionary(c => c.Key, c => c.Value.after)));
+            if (changed.Keys.Any(k => k is "type" or "notes" or "phenotype" or "previousAntibodies" or "datResult" or "genotype"))
+                MarkAnalysisInputChanged(accessionNumber);
         }
 
         /// <summary>
@@ -712,6 +714,7 @@ namespace HemoIQ.Data
             AppendAudit("update_transfusion_products", "specimen", accessionNumber, null,
                 JsonSerializer.Serialize(new { products = before.TransfusionProducts, units = before.TransfusionUnits }),
                 JsonSerializer.Serialize(new { products = codes, units = count }));
+            MarkAnalysisInputChanged(accessionNumber);
         }
 
         public void UpdateSpecimenTransfusion(string accessionNumber, string? status, string? lastTransfusionDate)
@@ -745,6 +748,7 @@ namespace HemoIQ.Data
             AppendAudit("update_transfusion", "specimen", accessionNumber, null,
                 JsonSerializer.Serialize(new { status = before.TransfusionStatus, lastTransfusionDate = before.LastTransfusionDate }),
                 JsonSerializer.Serialize(new { status = code, lastTransfusionDate = date }));
+            MarkAnalysisInputChanged(accessionNumber);
         }
 
         /// <summary>
@@ -779,6 +783,7 @@ namespace HemoIQ.Data
             AppendAudit("update_dat", "specimen", accessionNumber, null,
                 JsonSerializer.Serialize(new { igg = before.DatIgg, c3 = before.DatC3 }),
                 JsonSerializer.Serialize(new { igg = newIgg, c3 = newC3 }));
+            MarkAnalysisInputChanged(accessionNumber);
         }
 
         /// <summary>Records the specimen's visual hemolysis. Audited; locked after a confirmed identification.</summary>
@@ -983,6 +988,12 @@ namespace HemoIQ.Data
             AppendAudit(before == null ? "add_patient" : "update_patient", "patient", key, null,
                 before == null ? null : JsonSerializer.Serialize(Snap(before)),
                 JsonSerializer.Serialize(Snap(after)));
+            // The transplant and antigen-negative requirement feed analysis (typing reliability, autoadsorption,
+            // transfusion-requirement notes) for every open investigation on this MRN.
+            if (before == null || before.HpcTransplant != after.HpcTransplant ||
+                before.HpcTransplantDate != after.HpcTransplantDate || before.AntigenNegative != after.AntigenNegative)
+                foreach (var s in GetSpecimensByMrn(key))
+                    MarkAnalysisInputChanged(s.AccessionNumber);
         }
 
         /// <summary>Eluate specimens linked to <paramref name="sourceAccession"/>, oldest first.</summary>
@@ -1196,6 +1207,7 @@ namespace HemoIQ.Data
             AppendAudit("update_pregnancy", "specimen", accessionNumber, null,
                 JsonSerializer.Serialize(new { status = before.PregnancyStatus, endDate = before.PregnancyEndDate, rhigDate = before.RhigDate }),
                 JsonSerializer.Serialize(new { status = code, endDate = end, rhigDate = rhig }));
+            MarkAnalysisInputChanged(accessionNumber);
         }
 
         public List<Specimen> GetSpecimensByMrn(string mrn)
@@ -1473,6 +1485,19 @@ namespace HemoIQ.Data
         /// of daylight saving time or by a correction, would otherwise look older and the analysis would look
         /// current), and an analysis is never stamped before the reactions it read.
         /// </summary>
+        /// <summary>
+        /// An input to the analysis other than a grade changed (transfusion, DAT, pregnancy, patient typing or
+        /// history, notes, the patient's transplant or antigen-negative requirement, or panel typing). An analysed,
+        /// open investigation is marked out of date, as a grade change would. Never-analysed, confirmed and
+        /// cancelled investigations are left alone.
+        /// </summary>
+        private void MarkAnalysisInputChanged(string accession)
+        {
+            var s = GetSpecimen(accession);
+            if (s == null || s.LastAnalyzedAt == null || s.HasFinalCall || s.IsCancelled) return;
+            TouchSpecimenReactionsUpdated(accession);
+        }
+
         public void TouchSpecimenReactionsUpdated(string specimenId)
         {
             using var cmd = _conn.CreateCommand();

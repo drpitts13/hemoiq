@@ -72,7 +72,7 @@ public class InvestigationStatusTests
         iso.Db.SaveReaction("ST-3", panelId, "2", "0", "0", "1+", "NT");
         var stale = StatusOf(iso, "ST-3");
         Assert.Equal(InvestigationStatusService.AnalysisNeeded, stale.Label);
-        Assert.Contains("Reactions or panel typing changed since last analysis.", stale.NextAction);
+        Assert.Contains("Reactions, panel typing or specimen details changed since last analysis.", stale.NextAction);
     }
 
     [Fact]

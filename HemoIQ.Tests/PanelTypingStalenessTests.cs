@@ -40,7 +40,7 @@ public class PanelTypingStalenessTests
         RetypeK(iso, panel);
 
         Assert.True(iso.Db.IsSpecimenAnalysisStale("TS-OPEN"));
-        Assert.Contains("Reactions or panel typing changed since last analysis.", iso.Db.AnalysisStaleText("TS-OPEN"));
+        Assert.Contains("Reactions, panel typing or specimen details changed since last analysis.", iso.Db.AnalysisStaleText("TS-OPEN"));
     }
 
     [Fact]
