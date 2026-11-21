@@ -6346,10 +6346,28 @@ All 1422 tests pass.
 
 No new issue or gap worth fixing. All 1422 tests pass.
 
+## Iteration 236 (clean pass): Help topics, index and manual
+
+**Reviewed:**
+- **Catalog.** All 37 topic files are in `HelpCatalog`.
+- **Screen links.** The 34 distinct `Help.Topic` values set in XAML each
+  resolve to an existing topic file. Every dialog except the Help window
+  itself sets one. `HelpLocator` picks the deepest selected tab's topic,
+  then the nearest local one, so each screen's Help opens its own chapter.
+- **Tests.** `HelpSystemTests` checks that every topic loads, that the
+  required topics cover every section, and that the generated user manual
+  includes every chapter and the intended use and prints as a multi-page
+  PDF. `CreateShortcut.ps1` regenerates `docs/USER_MANUAL.md` from the
+  topics on each build, and recent iterations committed those
+  regenerations.
+
+No new issue or gap worth fixing. All 1422 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Help window (every topic reachable from
-its screen's Help button, no topic missing from the index, and the
-generated user manual matching the topics).
+Continue clean-pass reviews: keyboard access and focus order in the main
+dialogs (Specimen, Panel, Rule, Preferences): every field reachable by
+Tab, Enter and Escape behave as Save and Cancel, and validation focuses the
+offending field.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
