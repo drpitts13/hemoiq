@@ -4925,9 +4925,37 @@ No new issue or gap worth fixing. All 1330 tests pass.
 
 No new issue or gap worth fixing. All 1330 tests pass.
 
+## Iteration 190: a custom run label never hides the treatment
+
+**Deficiency found (reporting, interpretation):**
+- `PanelRun.DisplayLabel` returned a custom label on its own. A
+  ficin-treated, DTT-treated, absorbed or prewarmed run labelled, say,
+  "Repeat" appeared that way on the Reactions run selector, the Analysis
+  explanations and the printed worksheet ("Run: Repeat").
+- The treatment decides how a run's negatives are read: ficin-treated cells
+  cannot rule out anti-Fya, and an absorbed aliquot has lost the antibodies
+  it removes. A reader could misread the evidence.
+
+**Bounded improvement:**
+- A custom label that does not name each of the run's treatments gets the
+  missing ones appended, for example "Repeat (Ficin-treated)" or "Second
+  look (DTT-treated + Absorbed: rr)".
+- A label counts as naming a treatment when it contains the treatment's
+  keyword as a whole word (ficin, papain, dtt, prewarm, r1r1, r2r2, rr,
+  auto), ignoring case. "Ficin repeat" and "Absorbed: rr (ce/ce)" are
+  unchanged; "rr" inside "Error" does not count.
+- The stored label is unchanged; only the display adds the treatment, so
+  every screen and report that uses `DisplayLabel` carries it.
+- Help (Panel run) explains it.
+
+**Tests:** `RunLabelTreatmentTests` (10 cases): appended, already named
+(5 labels), one of two named, untreated, generated, and the whole-word rule.
+
+All 1340 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reactions tab's run selector and the
-treatment labels against the run dialog and the reports.
+Continue clean-pass reviews: the Reactions tab's compare view headers
+(they use the run labels) and the treatment inference notes.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5
