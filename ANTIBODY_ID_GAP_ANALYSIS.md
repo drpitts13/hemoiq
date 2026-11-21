@@ -6329,10 +6329,27 @@ item.
 
 All 1422 tests pass.
 
+## Iteration 235 (clean pass): specimen state on report headers
+
+**Reviewed:**
+- **Specimen Summary.** The header prints Expiration.
+- **Clinical Identification.** The worksheet header prints Collected,
+  Received and Expires, plus the investigation status from
+  `InvestigationStatusService`: Cancelled, Inactive – not completed,
+  Awaiting supervisor review, Amended and so on.
+- **Clinical evidence.** Grades recorded after the specimen or the lot
+  expired print as REVIEW notes (Iterations 211 and 234).
+- **Conclusion.** A printed report from an expired, inactive or cancelled
+  specimen states that on the page and cannot be mistaken for a current
+  one. A report printed after the specimen expired is still a valid record
+  of testing done while it was in date.
+
+No new issue or gap worth fixing. All 1422 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: reports for a specimen that is inactive or
-expired (the header states it, so a printed report from an expired
-specimen is not mistaken for a current one).
+Continue clean-pass reviews: the Help window (every topic reachable from
+its screen's Help button, no topic missing from the index, and the
+generated user manual matching the topics).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
