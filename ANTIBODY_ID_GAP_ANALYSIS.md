@@ -5273,10 +5273,27 @@ No new issue or gap worth fixing. All 1364 tests pass.
 No new issue or gap worth fixing. All 1364 tests pass (this run took
 11 minutes against the usual 2–3, from machine load; no code had changed).
 
+## Iteration 202 (clean pass): export file errors
+
+**Reviewed:**
+- The report CSV and PDF exports, the Panels CSV export, configuration and
+  preference exports, and the Analytics export catch write failures and
+  show "Export failed" with the reason.
+- The Audit Log CSV, help manual and Rules exports have no local catch. A
+  locked file or read-only folder there reaches the application's
+  unhandled-exception handler, which logs the error and shows its message;
+  the app keeps running and nothing is lost.
+- The Audit Log export records its `export_data` audit entry only after the
+  file is written, so a failed write leaves no false export record.
+- Save dialogs ask before overwriting an existing file, and archives always
+  use a new file (Iteration 160).
+
+No new issue or gap worth fixing. All 1364 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: error handling on file operations that can
-fail at the user's machine (locked export files, read-only folders) across
-the export paths.
+Continue clean-pass reviews: import paths (rules, preferences, panel
+lots) against malformed or truncated files, confirming nothing is
+activated or partly applied.
 
-Loop clean passes: 2/5
+Loop clean passes: 3/5
