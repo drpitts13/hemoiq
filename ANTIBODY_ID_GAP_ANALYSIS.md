@@ -5734,10 +5734,50 @@ No new issue or gap worth fixing. All 1394 tests pass.
 
 No new issue or gap worth fixing. All 1394 tests pass.
 
+## Iteration 217: one antigen-negative review note per antibody
+
+**Reviewed, no gap:**
+- **Sources.** `TransfusionRequirementCheck` checks every known antibody:
+  historical antibodies from the patient's previous-antibody text,
+  antibodies confirmed on the same MRN's other specimens, and the current
+  final call. Suspected antibodies are not checked.
+- **Structured list.** The structured Antigen-negative list satisfies the
+  check case-sensitively, so anti-C is not covered by "c".
+- **Free text.** A requirement written only in the free text prompts the
+  user to add it to the structured list.
+- **No patient record.** Without a patient record the note says so.
+- **Wording.** Every note ends "Not an order" and reaches the Analysis tab
+  and report suggestions as a critical "REVIEW:" line.
+
+**Deficiency found (UX, alert noise):**
+- Historical and earlier-specimen antibodies are normalized to "anti-" +
+  antigen, but the typed final call is not. The check removed duplicates
+  by exact text.
+- A final call typed "Anti-E", for a patient whose history also lists
+  anti-E, produced the same critical REVIEW note twice. Repeated critical
+  lines train readers to skim them.
+
+**Bounded improvement:**
+- The check keys each antibody with `PatientHistory.AntibodyKey`. The
+  prefix is case-insensitive, and the antigen keeps its case and is
+  trimmed.
+- There is one note per antibody, anti-E and anti-e still give two, and
+  text that is not an antibody (for example "warm autoantibody") is
+  skipped as before.
+
+**Data/schema:** none.
+
+**Tests:** `AntigenNegativeRequirementTests` gains one case. "anti-E",
+"Anti-E", "ANTI- E", "anti-e" and "warm autoantibody" give exactly two
+notes, for E and for e.
+
+All 1395 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: antigen-negative transfusion requirements
-(the check against the patient record for every confirmed and historical
-antibody, and its wording on reports).
+Continue clean-pass reviews: the antibody-specific guidance shown after
+identification (clinical significance, phase, dosage notes) for every
+antibody the rules know, and that unknown antibodies get no invented
+guidance.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5

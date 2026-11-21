@@ -22,10 +22,15 @@ namespace HemoIQ.Services
             var requirements = patient?.TransfusionRequirements ?? string.Empty;
             var structured = AntigenNegativeRequirement.Antigens(patient?.AntigenNegative);
 
-            foreach (var ab in knownAntibodies.Distinct(StringComparer.Ordinal))
+            // One note per antibody: history, earlier specimens and the typed final call can spell the prefix
+            // differently ("Anti-E", "anti-E"); the key keeps antigen case, so anti-E and anti-e stay separate.
+            var keys = knownAntibodies
+                .Select(PatientHistory.AntibodyKey)
+                .OfType<string>()
+                .Distinct(StringComparer.Ordinal);
+            foreach (var ab in keys)
             {
-                if (!ab.StartsWith("anti-", StringComparison.OrdinalIgnoreCase)) continue;
-                var antigen = ab[5..].Trim();
+                var antigen = ab[5..];
                 if (!AntigenConstants.IsKnown(antigen)) continue;
                 if (structured.Contains(antigen, StringComparer.Ordinal)) continue;
                 if (MentionsAntigenNegative(requirements, antigen))

@@ -70,6 +70,19 @@ public class AntigenNegativeRequirementTests
     }
 
     [Fact]
+    public void Check_GivesOneNotePerAntibody_WhateverThePrefixCase_ButKeepsAntigenCase()
+    {
+        var patient = new Patient { Mrn = "M" };
+        // History says anti-E, the typed final call says "Anti-E" and "anti-e".
+        var notes = TransfusionRequirementCheck.MissingAntigenNegative(
+            new[] { "anti-E", "Anti-E", "ANTI- E", "anti-e", "warm autoantibody" }, patient, "M");
+
+        Assert.Equal(2, notes.Count);
+        Assert.Contains(notes, n => n.StartsWith("anti-E is known") && n.Contains("E-negative units"));
+        Assert.Contains(notes, n => n.StartsWith("anti-e is known") && n.Contains("e-negative units"));
+    }
+
+    [Fact]
     public void Check_FreeTextOnly_PromptsToAddToStructuredList()
     {
         var patient = new Patient { Mrn = "M", TransfusionRequirements = "K-negative, irradiated" };
