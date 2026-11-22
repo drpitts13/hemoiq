@@ -7521,11 +7521,28 @@ above are not repeated; with an empty Worklist the report still says
 
 **Docs:** the Reports help topic.
 
+## Iteration 273 (clean pass): expired lots and the All Specimens report
+
+**Reviewed:**
+- **The expired lot in the Iteration 272 test.** `AddPanel` stores a
+  lot whose expiration date is already past as inactive (unless told
+  otherwise), as start-up does for lots that expire while stored. The
+  Worklist raises Expiring and Expired items only for lots in use, so
+  an inactive expired lot correctly raises none. Searching marks it as
+  not in use (Iteration 213).
+- **All Specimens report and CSV against the Specimens tab.** The report
+  has the tab's accession, type, final ID, expiration and created
+  columns, plus the investigation status (Cancelled, Confirmed, Not
+  analyzed, Stale or Analyzed), which the tab does not show. The tab's
+  Active check box is the only column not printed. Pending Work counts
+  active specimens only, and status already says whether work remains.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Check why an active lot entered with an expiration date already past
-raised no Worklist item in the Iteration 272 test (ExpiredPanel), then
-continue clean-pass reviews: the All Specimens report and its CSV
-against the Specimens tab columns.
+Continue clean-pass reviews: report and export file names (the default
+names suggested by Save dialogs include the accession or lot, and never
+the patient's name or MRN).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
