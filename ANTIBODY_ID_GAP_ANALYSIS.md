@@ -7290,10 +7290,43 @@ cleanly; the message when no copy could be kept.
 
 **Docs:** the Preferences help topic.
 
+## Iteration 266: analysis settings replaced at load are reported
+
+**Reviewed:** values brought into range. Preferences and configuration
+imports refuse out-of-range values with the reason, and never replace
+them.
+
+**Found:** `SettingsService.Load` ran `LabSettings.Clamp` silently. An
+analysis setting outside its range in settings.json (a hand-edited
+file, or one from another version) was replaced without a word, and
+some are replaced by their default rather than the nearest limit. For
+example, a separation count of 9 became 1 and an ID cell rule of 4
+became 3. The next save then wrote the replacement, losing the stored
+value.
+
+**Implemented:**
+- `LabSettings.DescribeClinicalChanges(before, after)` lists the
+  analysis settings that differ between two snapshots, as "Name:
+  before → after".
+- `Load` compares the analysis settings as stored with the values after
+  `Clamp`. If any changed, it keeps the file as
+  `settings.adjusted-<date-time>.json` and reports each replaced
+  setting through `LastLoadProblem`.
+- The start-up message (now titled "Review Preferences") lists them and
+  asks for review before testing.
+- Display settings, such as a blank lab name, are still normalised
+  without a notice.
+
+**Tests:** `UnreadableSettingsTests` (+3): an out-of-range separation
+count is replaced, reported alone and the file kept; an in-range file
+is not reported; `DescribeClinicalChanges` lists only the changed
+setting.
+
+**Docs:** the Preferences help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: values clamped on load or import
-(out-of-range numbers in settings.json are silently brought into
-range; check whether a clinical value changed that way is reported).
+Continue clean-pass reviews: the audit log viewer and its export with a
+very large log (paging, filtering and the export's completeness).
 
 Loop clean passes: 0/5

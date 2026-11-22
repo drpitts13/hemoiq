@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 
@@ -238,6 +239,26 @@ namespace HemoIQ.Models
         /// Lab name and other display settings are ignored. A blank snapshot
         /// is not treated as a change.
         /// </summary>
+        /// <summary>
+        /// The analysis settings that differ between two <see cref="ClinicalSettingsJson"/> snapshots, as
+        /// "Name: before → after", in snapshot order.
+        /// </summary>
+        public static List<string> DescribeClinicalChanges(string beforeJson, string afterJson)
+        {
+            var changes = new List<string>();
+            using var before = JsonDocument.Parse(beforeJson);
+            using var after = JsonDocument.Parse(afterJson);
+            foreach (var setting in before.RootElement.EnumerateObject())
+            {
+                if (!after.RootElement.TryGetProperty(setting.Name, out var now)) continue;
+                var was = setting.Value.ToString();
+                var isNow = now.ToString();
+                if (was != isNow)
+                    changes.Add($"{setting.Name}: {(was.Length == 0 ? "(blank)" : was)} → {(isNow.Length == 0 ? "(blank)" : isNow)}");
+            }
+            return changes;
+        }
+
         public static bool ClinicalSettingsDiffer(string? savedJson, string currentJson)
         {
             if (string.IsNullOrWhiteSpace(savedJson)) return false;

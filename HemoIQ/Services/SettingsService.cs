@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Text.Json;
 using HemoIQ.Models;
@@ -52,7 +54,17 @@ namespace HemoIQ.Services
                     var loaded = JsonSerializer.Deserialize<LabSettings>(json, JsonOptions);
                     if (loaded != null)
                     {
+                        var asStored = loaded.ClinicalSettingsJson();
                         loaded.Clamp();
+                        // An analysis setting outside its allowed range (a hand-edited file, or one from another
+                        // version) is replaced, sometimes by its default rather than the nearest limit. Say which,
+                        // and keep the file as it was before a save writes the replacement values.
+                        var adjusted = LabSettings.DescribeClinicalChanges(asStored, loaded.ClinicalSettingsJson());
+                        if (adjusted.Count > 0)
+                        {
+                            LastLoadProblem = DescribeAdjusted(path, adjusted, KeepCopy(path, "settings.adjusted"));
+                            AppLog.Info($"Preferences: {adjusted.Count} analysis setting(s) were out of range and replaced; the user was told.");
+                        }
                         AppSettings.Current = loaded;
                         _lastSaved = JsonSerializer.Serialize(loaded, JsonOptions);
                         AppSettings.RaiseChanged();
@@ -64,7 +76,7 @@ namespace HemoIQ.Services
                 {
                     reason = ex is JsonException ? "the file is damaged or not a HemoIQ Preferences file" : ex.Message;
                 }
-                LastLoadProblem = DescribeUnreadable(path, reason!, KeepUnreadableCopy(path));
+                LastLoadProblem = DescribeUnreadable(path, reason!, KeepCopy(path, "settings.unreadable"));
                 AppLog.Info("Preferences could not be read; defaults are in effect and the user was told."); // the message names a path
             }
 
@@ -77,12 +89,12 @@ namespace HemoIQ.Services
         /// Copies an unreadable Preferences file aside before anything can overwrite it, so the lab's settings can be
         /// recovered or re-entered from it. Returns the copy's path, or null when it could not be copied.
         /// </summary>
-        private static string? KeepUnreadableCopy(string path)
+        private static string? KeepCopy(string path, string prefix)
         {
             try
             {
                 var dir = Path.GetDirectoryName(path) ?? ".";
-                var copy = Path.Combine(dir, $"settings.unreadable-{DateTime.Now:yyyyMMdd-HHmmss}.json");
+                var copy = Path.Combine(dir, $"{prefix}-{DateTime.Now:yyyyMMdd-HHmmss}.json");
                 File.Copy(path, copy, overwrite: false);
                 return copy;
             }
@@ -91,6 +103,12 @@ namespace HemoIQ.Services
                 return null;
             }
         }
+
+        public static string DescribeAdjusted(string path, IReadOnlyList<string> adjusted, string? copy) =>
+            $"The Preferences file {path} held analysis settings that were out of range or not in the expected form. HemoIQ replaced them:\n\n" +
+            string.Join("\n", adjusted.Select(a => "• " + a)) + "\n\n" +
+            (copy != null ? $"The file as it was is kept as {copy}. " : "") +
+            "Analysis uses the replacement values. Review them in Preferences before testing.";
 
         public static string DescribeUnreadable(string path, string reason, string? copy) =>
             $"The Preferences file {path} could not be read ({reason}). HemoIQ started with the default Preferences, " +

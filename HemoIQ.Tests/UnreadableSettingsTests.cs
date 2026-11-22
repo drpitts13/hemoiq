@@ -89,6 +89,48 @@ public class UnreadableSettingsTests
     }
 
     [Fact]
+    public void OutOfRangeAnalysisSetting_IsReplaced_Reported_AndTheFileKept()
+    {
+        InTempDir((dir, path) =>
+        {
+            const string content = "{ \"SeparationCellCount\": 9, \"IdentificationCellCount\": 3, \"LabName\": \"\" }";
+            File.WriteAllText(path, content);
+            SettingsService.Load(path);
+
+            Assert.Equal(1, AppSettings.Current.SeparationCellCount);
+            var problem = SettingsService.LastLoadProblem;
+            Assert.NotNull(problem);
+            Assert.Contains("SeparationCellCount: 9 → 1", problem);
+            Assert.DoesNotContain("IdentificationCellCount", problem); // in range, unchanged
+            Assert.DoesNotContain("LabName", problem);                 // not an analysis setting
+            var copy = Assert.Single(Directory.GetFiles(dir, "settings.adjusted-*.json"));
+            Assert.Equal(content, File.ReadAllText(copy));
+        });
+    }
+
+    [Fact]
+    public void InRangeFile_IsNotReportedAsAdjusted()
+    {
+        InTempDir((dir, path) =>
+        {
+            File.WriteAllText(path, "{ \"SeparationCellCount\": 2, \"ProbabilityThreshold\": 0.7 }");
+            SettingsService.Load(path);
+            Assert.Null(SettingsService.LastLoadProblem);
+            Assert.Empty(Directory.GetFiles(dir, "settings.adjusted-*.json"));
+        });
+    }
+
+    [Fact]
+    public void DescribeClinicalChanges_ListsOnlyTheChangedSettings()
+    {
+        var before = new LabSettings { ProbabilityThreshold = 0.1, AcsRuleoutCount = 3 };
+        var beforeJson = before.ClinicalSettingsJson();
+        before.Clamp();
+        var changes = LabSettings.DescribeClinicalChanges(beforeJson, before.ClinicalSettingsJson());
+        Assert.Equal(new[] { "ProbabilityThreshold: 0.1 → 0.3" }, changes);
+    }
+
+    [Fact]
     public void CopyThatCannotBeKept_TellsTheUserNotToSaveYet() =>
         Assert.Contains("do not save Preferences until it has been copied elsewhere",
             SettingsService.DescribeUnreadable("C:\\x\\settings.json", "access denied", null));

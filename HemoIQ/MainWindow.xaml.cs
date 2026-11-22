@@ -336,7 +336,7 @@ namespace HemoIQ
         private void WarnIfPreferencesUnreadable()
         {
             if (SettingsService.LastLoadProblem is not string problem) return;
-            MessageBox.Show(this, problem, "Preferences not loaded", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, problem, "Review Preferences", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private void AcknowledgeIntendedUseIfNeeded()
