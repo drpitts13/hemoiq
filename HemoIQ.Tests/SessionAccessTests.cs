@@ -118,7 +118,7 @@ public class SessionAccessTests
         Assert.StartsWith("private void ReactionsGrid_PreviewKeyDown(object sender, KeyEventArgs e)", handler);
         Assert.Contains("if (_vm?.GradesReadOnly == true) return;", handler.Substring(0, 200));
         var vm = Source("ViewModels", "ReactionsViewModel.cs");
-        Assert.Contains("public bool GradesReadOnly => !SessionAccess.CanRecord;", vm);
+        Assert.Contains("public bool GradesReadOnly => !SessionAccess.CanRecord || LockMessage != null;", vm); // also a locked investigation (Iteration 283)
         Assert.Contains("|| GradesReadOnly) return;", vm.Substring(vm.IndexOf("private void WriteDraft()", StringComparison.Ordinal), 200));
         Assert.Contains("ReactionsVM.NotifySessionChanged();", Source("ViewModels", "MainViewModel.cs"));
     }

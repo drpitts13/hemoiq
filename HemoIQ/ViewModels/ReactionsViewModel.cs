@@ -66,6 +66,7 @@ namespace HemoIQ.ViewModels
                 }
                 if (SetField(ref _selectedSpecimen, value))
                 {
+                    RefreshLockState();
                     RefreshPanels();
                     RefreshRuledOutAntigens();
                 }
@@ -347,7 +348,8 @@ namespace HemoIQ.ViewModels
             get
             {
                 if (Rows.Count == 0) return string.Empty;
-                return (GradesReadOnly ? ViewOnlyNote : "") + FormatEntryProgress(Rows.Count(r => r.HasEnteredGrade), Rows.Count);
+                var note = LockMessage != null ? $"Locked: {LockMessage} " : GradesReadOnly ? ViewOnlyNote : "";
+                return note + FormatEntryProgress(Rows.Count(r => r.HasEnteredGrade), Rows.Count);
             }
         }
 
@@ -357,11 +359,51 @@ namespace HemoIQ.ViewModels
         /// True when the signed-in session may not record results (Read-only role or unregistered login):
         /// the grid is read-only, grade keys and paste do nothing, and no recovery draft is written.
         /// </summary>
-        public bool GradesReadOnly => !SessionAccess.CanRecord;
+        public bool GradesReadOnly => !SessionAccess.CanRecord || LockMessage != null;
+
+        private string? _lockMessage;
+        /// <summary>
+        /// Why the selected investigation cannot take grades (confirmed or cancelled), naming who can unlock it, or
+        /// null. The grid is then read-only and the change buttons disabled, as in a view-only session, so grades are
+        /// never typed only to be refused at Save.
+        /// </summary>
+        public string? LockMessage
+        {
+            get => _lockMessage;
+            private set
+            {
+                if (!SetField(ref _lockMessage, value)) return;
+                OnPropertyChanged(nameof(GradesReadOnly));
+                OnPropertyChanged(nameof(IsLocked));
+                RefreshEntryProgress();
+                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
+        public bool IsLocked => LockMessage != null;
+
+        /// <summary>Re-reads whether the selected investigation is locked (another tab may have confirmed or cancelled it).</summary>
+        public void RefreshLockState() => LockMessage = LockMessageFor(_db, SelectedSpecimen?.AccessionNumber);
+
+        /// <summary>The locked-record message for an investigation (the same one a save would be refused with), or null.</summary>
+        public static string? LockMessageFor(DatabaseService db, string? accessionNumber)
+        {
+            if (string.IsNullOrEmpty(accessionNumber)) return null;
+            try
+            {
+                db.EnsureSpecimenUnlocked(accessionNumber);
+                return null;
+            }
+            catch (RecordLockedException ex)
+            {
+                return ex.Message;
+            }
+        }
 
         /// <summary>Called when the signed-in user or role may have changed.</summary>
         public void NotifySessionChanged()
         {
+            RefreshLockState(); // the lock message names who can unlock, which depends on the role
             OnPropertyChanged(nameof(GradesReadOnly));
             RefreshEntryProgress();
         }
@@ -537,18 +579,19 @@ namespace HemoIQ.ViewModels
 
             LoadCommand = new RelayCommand(LoadReactions,
                 () => SelectedSpecimen != null && SelectedRun != null);
+            // Disabled in a view-only session and on a confirmed or cancelled investigation (the GradesReadOnly cases).
             SaveCommand = new RelayCommand(SaveGradesOnly,
-                () => SessionAccess.CanRecord && (SelectedSpecimen != null && SelectedRun != null && Rows.Count > 0));
+                () => SessionAccess.CanRecord && !IsLocked && (SelectedSpecimen != null && SelectedRun != null && Rows.Count > 0));
             SaveAnalyzeCommand = new RelayCommand(SaveAndAnalyze,
-                () => SessionAccess.CanRecord && (SelectedSpecimen != null && SelectedRun != null && Rows.Count > 0));
+                () => SessionAccess.CanRecord && !IsLocked && (SelectedSpecimen != null && SelectedRun != null && Rows.Count > 0));
             ClearCommand = new RelayCommand(ClearReactions,
-                () => SessionAccess.CanRecord && (SelectedSpecimen != null && SelectedRun != null));
+                () => SessionAccess.CanRecord && !IsLocked && (SelectedSpecimen != null && SelectedRun != null));
             FillNegativesCommand = new RelayCommand(FillRemainingNegatives,
-                () => SessionAccess.CanRecord && (Rows.Count > 0));
+                () => SessionAccess.CanRecord && !IsLocked && (Rows.Count > 0));
             AddRunCommand = new RelayCommand(AddRun,
-                () => SessionAccess.CanRecord && (SelectedSpecimen != null && SelectedPanel != null));
+                () => SessionAccess.CanRecord && !IsLocked && (SelectedSpecimen != null && SelectedPanel != null));
             DeleteRunCommand = new RelayCommand(DeleteRun,
-                () => SessionAccess.CanRecord && (SelectedRun != null && !(SelectedRun?.IsUntreated ?? true)));
+                () => SessionAccess.CanRecord && !IsLocked && (SelectedRun != null && !(SelectedRun?.IsUntreated ?? true)));
 
             RefreshSpecimens();
         }

@@ -118,6 +118,14 @@
                     ToolTip="Open help for this section (F1)"/>
         </Grid>
 
+        <!-- Locked investigation (confirmed or cancelled): grades are shown read-only, with who can unlock it -->
+        <Border DockPanel.Dock="Top"
+                Visibility="{Binding IsLocked, Converter={x:Static views:BoolToVisibilityConverter.Instance}}"
+                Background="#FFF3E0" BorderBrush="#E65100" BorderThickness="0,0,0,2"
+                CornerRadius="3" Padding="10,5" Margin="0,0,0,5">
+            <TextBlock Text="{Binding LockMessage}" Foreground="#BF360C" FontSize="12" TextWrapping="Wrap"/>
+        </Border>
+
         <!-- Treatment banner (visible only for special runs) -->
         <Border DockPanel.Dock="Top"
                 Visibility="{Binding TreatmentBannerVisibility}"

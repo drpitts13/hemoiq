@@ -7791,10 +7791,42 @@ main window has no direct Execute or SaveAllCells call left.
 
 **Docs:** the Getting started help topic (shortcuts).
 
+## Iteration 283: Reactions shows a locked investigation read-only
+
+**Found:** on the Reactions tab, a confirmed or cancelled investigation
+looked exactly like an open one.
+- The grade grid was editable, and Save, Save & Analyze, Clear, Fill
+  negatives, Add run and Delete run were enabled.
+- Only the save was refused, as "Save failed: … locked …" in the
+  status line, after the grades had been typed. A recovery draft of
+  those grades was also written.
+- Confirming on the Analysis tab did not update the Reactions tab.
+
+**Implemented:**
+- `ReactionsViewModel.LockMessage` holds the same locked-record message
+  a save would be refused with. It names the lock and who can lift it
+  (Iteration 260). It is set by `LockMessageFor(db, accession)` when
+  the specimen is selected, when the Reactions tab opens and when the
+  session changes.
+- `GradesReadOnly` is now true for a locked investigation as well as a
+  view-only session. The grid is read-only, grade keys and paste do
+  nothing, and no recovery draft is written.
+- The six change commands require `SessionAccess.CanRecord && !IsLocked`.
+- An orange banner shows the lock, and the entry progress line starts
+  "Locked: …".
+
+**Tests:** `ReactionsLockStateTests` (4 cases): an open investigation
+is not locked; a confirmed one gives exactly the message a save is
+refused with; a cancelled one says cancelled; a source check that the
+six commands check the lock, the tab re-reads the lock and the
+banner is bound.
+
+**Docs:** the Reactions help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: commands that stay enabled while their
-target is locked (a confirmed or cancelled investigation): Reactions
-Save and run buttons, Specimens Attach and Detach, Analysis Run.
+Continue clean-pass reviews: the same lock on the Specimens tab (Attach
+and Detach panel on a confirmed or cancelled investigation) and on
+Analysis (Run Analysis on a locked one).
 
 Loop clean passes: 0/5

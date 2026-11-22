@@ -154,6 +154,8 @@ namespace HemoIQ
                 ViewModel.AnalyticsVM.OnTabSelected();
             else if (header == "Search")
                 ViewModel.SearchVM.OnTabSelected();
+            else if (header == "Reactions")
+                ViewModel.ReactionsVM.RefreshLockState();
             ViewModel.AnnounceScreen(header);
         }
 
