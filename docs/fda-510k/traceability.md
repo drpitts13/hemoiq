@@ -10,7 +10,7 @@
 | SRS-AUD-03 | `AuditLogDialog` | Manual; export uses `GetAuditEvents` |
 | SRS-LOCK-01 | `EnsureSpecimenUnlocked`, analyzer `updateDb` guard | `ConfirmedSpecimen_LocksReactionsAndAnalysisWrites` |
 | SRS-LOCK-02 | `ClearSpecimenFinalCall(reason)` + `ReasonDialog` | `ConfirmAndClear_WriteAuditEvents_AndRequireReason` |
-| SRS-SNAP-01 | `SaveAnalysisSnapshot` / `PersistSnapshot` | `AnalyzeSpecimen_PersistsTraceabilitySnapshot` |
+| SRS-SNAP-01 | `SaveAnalysisSnapshot` / `PersistSnapshot`, `AntibodyAnalyzer.ComputeInputFingerprint` | `AnalyzeSpecimen_PersistsTraceabilitySnapshot`, `InputFingerprintTests` |
 | SRS-SNAP-02 | `ReportService.AnalysisTraceLine` | `Reports_IncludeIntendedUseVersionAndTraceLine` |
 | SRS-LOG-01 | `AppLog`, `App.OnStartup` | `AppLog_WritesVersionedLineWithoutThrowing`, `AppLogPrivacyTests` |
 | SRS-CYB-01 | `Environment.UserName` on audit; `AccessControl.Demand` and `EnsureCanRecord` on every writer; NTFS ACL tests | `HipaaSecurityTests`, `AccessControlTests`, `RecordResultsPermissionTests` |

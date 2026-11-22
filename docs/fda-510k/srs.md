@@ -11,7 +11,7 @@
 | SRS-AUD-03 | Operators shall be able to view and export the audit log. |
 | SRS-LOCK-01 | A specimen with a confirmed identification shall reject reaction, panel-link, run, and analysis-write mutations. |
 | SRS-LOCK-02 | Clearing a confirmed identification shall require a non-empty reason and shall be audited. |
-| SRS-SNAP-01 | Each persisted analysis shall store software version, clinical settings JSON, input fingerprint, rule-out, suspected, and ACS summaries. |
+| SRS-SNAP-01 | Each persisted analysis shall store software version, clinical settings JSON, input fingerprint, rule-out, suspected, and ACS summaries. The input fingerprint shall cover every input the analysis reads: run treatments, every reaction phase including extra phases, the typing of every cell on each panel used, the specimen fields used, and the patient record's transplant and antigen-negative fields. |
 | SRS-SNAP-02 | Analysis and clinical reports shall print version, settings, and input fingerprint. |
 | SRS-LOG-01 | Unhandled exceptions shall be written to `%AppData%\HemoIQ\logs` with software version and without reaction grades or record identifiers: HemoIQ's own exception messages (which name accessions, MRNs and lots) are withheld and replaced by the exception type and throwing method. |
 | SRS-CYB-01 | Operator identity on audit events shall be the Windows user name. Once users are registered, each action shall require its role permission (record results, supervisor review, clear identification, reinstate, configure preferences or rules, manage users, purge) and be refused otherwise; access to the database file relies on the Windows login and NTFS ACLs. |

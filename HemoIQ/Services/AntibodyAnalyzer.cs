@@ -188,7 +188,10 @@ namespace HemoIQ.Services
         {
             var settings = AppSettings.Current;
             var settingsJson = JsonSerializer.Serialize(settings.ClinicalSnapshot());
-            var fingerprint = ComputeInputFingerprint(reactions, runs);
+            var specimen = _db.GetSpecimen(specimenId);
+            var cellsByPanel = runs.Select(r => r.PanelId).Distinct().ToDictionary(id => id, id => _db.GetPanelCells(id));
+            var fingerprint = ComputeInputFingerprint(reactions, runs, cellsByPanel, specimen,
+                specimen?.Mrn == null ? null : _db.GetPatient(specimen.Mrn));
             _db.SaveAnalysisSnapshot(
                 specimenId,
                 SoftwareIdentity.Version,
@@ -214,12 +217,21 @@ namespace HemoIQ.Services
                 JsonSerializer.Serialize(AdditionalTestingNeeds.Compute(result)));
         }
 
-        public static string ComputeInputFingerprint(IEnumerable<Reaction> reactions, IEnumerable<PanelRun> runs)
+        /// <summary>
+        /// SHA-256 over every input the analysis reads, so two analyses with the same fingerprint were computed from
+        /// the same data: run treatments; every reaction phase, including lab-configured extra phases; the typing of
+        /// every cell on each run's panel (standard and extra antigens, case kept); the specimen fields analysis uses;
+        /// and the patient record's transplant and antigen-negative fields. The "fp2" marker keeps these fingerprints
+        /// from ever matching the earlier, reactions-only form.
+        /// </summary>
+        public static string ComputeInputFingerprint(IEnumerable<Reaction> reactions, IEnumerable<PanelRun> runs,
+            IReadOnlyDictionary<int, List<PanelCell>>? cellsByPanel = null, Specimen? specimen = null, Patient? patient = null)
         {
-            var sb = new StringBuilder();
-            foreach (var run in runs.OrderBy(r => r.RunId))
+            var sb = new StringBuilder("fp2;");
+            var runList = runs.OrderBy(r => r.RunId).ToList();
+            foreach (var run in runList)
             {
-                sb.Append(run.RunId).Append('|')
+                sb.Append(run.RunId).Append('|').Append(run.PanelId).Append('|')
                     .Append(run.CellTreatment).Append('|')
                     .Append(run.SerumTreatment).Append(';');
             }
@@ -227,8 +239,42 @@ namespace HemoIQ.Services
             {
                 sb.Append(rx.RunId).Append('|').Append(rx.CellNumber).Append('|')
                     .Append(rx.IS).Append('|').Append(rx.C37).Append('|')
-                    .Append(rx.AHG).Append('|').Append(rx.CC).Append(';');
+                    .Append(rx.AHG).Append('|').Append(rx.CC);
+                foreach (var (phase, grade) in rx.ExtraPhases.OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase))
+                    sb.Append('|').Append(phase).Append('=').Append(grade);
+                sb.Append(';');
             }
+            if (cellsByPanel != null)
+            {
+                foreach (var panelId in runList.Select(r => r.PanelId).Distinct().OrderBy(id => id))
+                {
+                    if (!cellsByPanel.TryGetValue(panelId, out var cells)) continue;
+                    sb.Append("panel ").Append(panelId).Append(';');
+                    foreach (var cell in cells.OrderBy(c => c.CellNumber, StringComparer.Ordinal))
+                    {
+                        sb.Append(cell.CellNumber).Append(':');
+                        foreach (var (antigen, value) in cell.Antigens.OrderBy(kv => kv.Key, StringComparer.Ordinal))
+                            sb.Append(antigen).Append('=').Append(value).Append(',');
+                        sb.Append(';');
+                    }
+                }
+            }
+            if (specimen != null)
+            {
+                foreach (var field in new[]
+                         {
+                             specimen.Type, specimen.Mrn, specimen.SourceAccession, specimen.CollectedAt,
+                             specimen.DatResult, specimen.DatIgg, specimen.DatC3,
+                             specimen.TransfusionStatus, specimen.LastTransfusionDate, specimen.TransfusionProducts,
+                             specimen.PregnancyStatus, specimen.PregnancyEndDate, specimen.RhigDate,
+                             specimen.Phenotype, specimen.Genotype, specimen.PreviousAntibodies, specimen.Notes,
+                         })
+                    sb.Append(field ?? "").Append('|');
+                sb.Append(';');
+            }
+            if (patient != null)
+                sb.Append(patient.HpcTransplant).Append('|').Append(patient.HpcTransplantDate ?? "").Append('|')
+                    .Append(patient.AntigenNegative ?? "").Append('|').Append(patient.TransfusionRequirements ?? "").Append(';');
 
             return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(sb.ToString())));
         }

@@ -6895,10 +6895,50 @@ Iterations 166–168 were made without a version change (still 2.0.0). Bump
 the version at the next release, so snapshots taken before and after the
 corrections can be told apart.
 
+## Iteration 255: the analysis input fingerprint covers every input analysis reads
+
+**Reviewed, no gap:** staleness does not depend on the fingerprint. It uses
+the update timestamps and the configuration sequence (Iterations 151–152).
+The fingerprint is a traceability record, printed on the Analysis and
+Clinical reports as "Input fingerprint".
+
+**Deficiency found (traceability):**
+- `ComputeInputFingerprint` hashed only run treatments and the IS, 37°C,
+  AHG and CC grades.
+- It left out lab-configured extra-phase grades, the antigen typing of the
+  panel cells (which every rule-out depends on), and the specimen fields
+  analysis reads: DAT, transfusion and pregnancy records, phenotype and
+  genotype, previous antibodies, eluate source and notes. It also left out
+  the patient record's transplant and antigen-negative fields.
+- Two reports with the same fingerprint could therefore come from
+  different typing or grades. That defeats R-06 ("reconstruct why a
+  result was produced") and SRS-SNAP-01.
+
+**Bounded improvement:**
+- The fingerprint now covers all of the above, with antigen case kept and
+  every part in a fixed order.
+- An "fp2" marker keeps the new fingerprints from coinciding with the old
+  form.
+- `PersistSnapshot` passes the panels' cells, the specimen and the patient
+  record.
+- Stored fingerprints keep the value recorded at the time.
+- SRS-SNAP-01 states what the fingerprint covers, and the traceability row
+  cites `InputFingerprintTests`.
+
+**Data/schema:** none (same 64-character SHA-256 column).
+
+**Tests:** `InputFingerprintTests` (4 cases):
+- identical inputs give the same fingerprint;
+- each of extra-phase grade, cell typing, antigen key, DAT, transfusion
+  status, patient antigen-negative and a reaction grade changes it;
+- the reactions-only form still works and differs from the full one;
+- editing panel typing changes the next analysis's stored fingerprint.
+
+All 1466 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the analysis input fingerprint (which inputs
-it covers: reactions, panel typing, specimen fields, patient record) and
-whether every staleness trigger has a matching fingerprint input.
+Continue clean-pass reviews: the staleness triggers against the same input
+list (each fingerprint input has a write that marks open analyses stale).
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5
