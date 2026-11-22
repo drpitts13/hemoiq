@@ -7044,8 +7044,9 @@ All 1480 tests pass.
 - **Duplicate lots.** These are listed only while at least one copy is
   active, so deactivating the extra copies clears them even when every
   copy holds test history and cannot be deleted.
-- **Overdue testing.** This clears when the testing is recorded or the
-  investigation is confirmed.
+- **Overdue testing.** This clears when the investigation is confirmed,
+  cancelled or deactivated, or once a re-analysis no longer asks for
+  additional testing.
 
 No new issue or gap worth fixing. All 1480 tests pass.
 
