@@ -6512,10 +6512,34 @@ All 1442 tests pass.
 
 No new issue or gap worth fixing. All 1442 tests pass.
 
+## Iteration 242 (clean pass): the reaction recovery draft
+
+**Reviewed:**
+- **Writing.** The draft is written on every grade edit (including
+  Iteration 223's unsaved pre-fill), but not while a draft is being
+  restored and not in a read-only session.
+- **Offering back.** At start-up the draft is offered only when its run
+  and specimen still exist and its grades differ from the saved ones
+  (`ReactionDraftStore.ChangedRows`).
+- **Confirmed since.** If the identification was confirmed after the
+  draft was written, recovery is refused, and the prompt lists the grades
+  and says to clear the identification first.
+- **Restoring.** Yes puts the grades back as unsaved edits for review and
+  Save. No discards them.
+- **Run unavailable.** If the run cannot be opened, the recovery file is
+  kept and its path is shown.
+- **Deleting.** The draft is deleted on a successful save, on an explicit
+  discard, and when the user agrees to discard unsaved grades while
+  switching specimens or runs.
+- **Tests.** `ReactionDraftStoreTests` covers the store.
+
+No new issue or gap worth fixing. All 1442 tests pass (this run took 7
+minutes from machine load).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the recovery draft (written on every grade
-edit, offered back after a crash, discarded on save or explicit discard)
-across specimen and run switches.
+Continue clean-pass reviews: Search tab performance and correctness with
+many lots (thousands of cells) and with warehouse antigens on only some
+lots.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
