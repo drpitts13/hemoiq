@@ -132,15 +132,12 @@ namespace HemoIQ.Views.Dialogs
                 }
             }
 
-            var confirm = MessageBox.Show(
-                $"Permanently delete {count} specimen(s) created before {cutoff}?\n\n" +
-                (archivePath != null
-                    ? "An archive of the purged data will be created first. Archives contain specimen records and should be stored securely."
-                    : "This cannot be undone. No archive will be created."),
-                "Confirm purge",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-            if (confirm != MessageBoxResult.Yes)
+            if (!ViewModels.DestructiveConfirm.Ask(
+                    $"Permanently delete {count} specimen(s) created before {cutoff}?\n\n" +
+                    (archivePath != null
+                        ? "An archive of the purged data will be created first. Archives contain specimen records and should be stored securely."
+                        : "This cannot be undone. No archive will be created."),
+                    "Confirm purge", this))
                 return;
 
             try

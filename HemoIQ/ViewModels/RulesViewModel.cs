@@ -123,8 +123,7 @@ namespace HemoIQ.ViewModels
         private void DeleteRule()
         {
             if (SelectedRule == null || !CanConfigure()) return;
-            if (MessageBox.Show($"Delete rule '{SelectedRule.Name}'?",
-                "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+            if (!DestructiveConfirm.Ask($"Delete rule '{SelectedRule.Name}'?", "Confirm")) return;
             _db.DeleteRule(SelectedRule.RuleId);
             _main.WorklistVM.Refresh();
             Refresh();

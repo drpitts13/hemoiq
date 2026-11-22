@@ -6363,11 +6363,48 @@ No new issue or gap worth fixing. All 1422 tests pass.
 
 No new issue or gap worth fixing. All 1422 tests pass.
 
+## Iteration 237: confirmations that delete data default to No
+
+**Reviewed, no gap:**
+- **Enter and Escape.** All 18 dialogs have an Enter (IsDefault) and an
+  Escape (IsCancel) button, except the Help window, which has only Escape.
+- **Tab order.** No field is taken out of Tab order.
+- **Existing No defaults.** Confirming an identification against open
+  testing, and importing a configuration, already default to No.
+
+**Deficiency found (patient safety, data integrity):**
+- **Purge.** Purge was the Purge dialog's Enter button, and its "Permanently
+  delete N specimen(s)…" confirmation was a Yes/No box with Yes under the
+  keyboard. Pressing Enter twice deleted specimens. Without an archive the
+  message itself says "This cannot be undone".
+- **Other deletes.** These used the same Yes-default box: delete specimen
+  (with all reactions and results), delete panel, delete rule, remove
+  extra antigens, detach panel, and delete run or clear reactions.
+
+**Bounded improvement:**
+- `DestructiveConfirm.Ask` shows a Yes/No warning with No as the default
+  answer. Every deleting confirmation above now uses it.
+- The Purge button is no longer the dialog's Enter button.
+
+**Data/schema:** none.
+
+**Tests:** `DestructiveConfirmTests` (8 cases):
+- the default answer is No;
+- a source scan finds no Yes/No MessageBox whose message deletes, removes,
+  detaches, purges or clears outside the helper (verified to flag all six
+  old calls);
+- each deleting action asks through the helper;
+- the Purge button is not IsDefault.
+
+**Docs:** the Purge help topic explains Enter and the No default for every
+deleting confirmation.
+
+All 1430 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: keyboard access and focus order in the main
-dialogs (Specimen, Panel, Rule, Preferences): every field reachable by
-Tab, Enter and Escape behave as Save and Cancel, and validation focuses the
-offending field.
+Continue clean-pass reviews: validation focus in the Specimen, Panel, Rule
+and Preferences dialogs (a refused value names the field and puts the
+cursor in it).
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5

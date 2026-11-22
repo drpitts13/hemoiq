@@ -530,8 +530,8 @@ namespace HemoIQ.ViewModels
         {
             if (SelectedSpecimen == null) return;
             var acc = SelectedSpecimen.AccessionNumber;
-            if (MessageBox.Show($"Delete specimen {acc}? This will also delete all reactions and analysis results.",
-                "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+            if (!DestructiveConfirm.Ask($"Delete specimen {acc}? This will also delete all reactions and analysis results.",
+                "Confirm Delete")) return;
             try
             {
                 _db.DeleteSpecimen(acc);
@@ -582,8 +582,7 @@ namespace HemoIQ.ViewModels
         private void DetachPanel()
         {
             if (SelectedSpecimen == null || SelectedLinkedPanel == null) return;
-            if (MessageBox.Show($"Detach panel '{SelectedLinkedPanel.Name}'?",
-                "Confirm", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+            if (!DestructiveConfirm.Ask($"Detach panel '{SelectedLinkedPanel.Name}'?", "Confirm")) return;
             try
             {
                 _db.UnlinkSpecimenPanel(SelectedSpecimen.AccessionNumber, SelectedLinkedPanel.PanelId);

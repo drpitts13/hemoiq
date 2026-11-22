@@ -43,7 +43,7 @@
                     Command="{x:Static help:HelpCommands.ShowContext}"
                     CommandParameter="{Binding RelativeSource={RelativeSource Self}}"
                     ToolTip="Open help for this section (F1)"/>
-            <Button Content="Purge" Width="84" Margin="0,0,8,0" Click="PurgeClick" IsDefault="True"/>
+            <Button Content="Purge" Width="84" Margin="0,0,8,0" Click="PurgeClick"/>
             <Button Content="Cancel" Width="84" IsCancel="True"/>
         </StackPanel>
     </StackPanel>

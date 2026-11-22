@@ -1020,7 +1020,7 @@ namespace HemoIQ.ViewModels
                 reason = dlg.Reason;
                 return true;
             }
-            return MessageBox.Show(question, "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+            return DestructiveConfirm.Ask(question, "Confirm");
         }
 
         private void ClearReactions()

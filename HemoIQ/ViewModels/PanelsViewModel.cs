@@ -446,8 +446,7 @@ namespace HemoIQ.ViewModels
         private void DeletePanel()
         {
             if (SelectedPanel == null) return;
-            if (MessageBox.Show($"Delete panel '{SelectedPanel.Name}'?",
-                "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+            if (!DestructiveConfirm.Ask($"Delete panel '{SelectedPanel.Name}'?", "Confirm")) return;
             try
             {
                 _db.DeletePanel(SelectedPanel.PanelId);
@@ -747,9 +746,8 @@ namespace HemoIQ.ViewModels
                 "Remove antigen",
                 "Remove extra antigens from this panel. Typed values for those columns will be deleted.");
             if (dlg.ShowDialog() != true) return;
-            if (MessageBox.Show(
-                    $"Remove {string.Join(", ", dlg.SelectedAntigens)} from '{SelectedPanel.Name}'?",
-                    "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            if (!DestructiveConfirm.Ask(
+                    $"Remove {string.Join(", ", dlg.SelectedAntigens)} from '{SelectedPanel.Name}'?", "Confirm"))
                 return;
 
             try
