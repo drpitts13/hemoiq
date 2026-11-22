@@ -6654,10 +6654,44 @@ seeders calls `ClinicalDataSeeder.SeedIfNeeded`.
 
 All 1448 tests pass.
 
+## Iteration 247: the FDA risk register covers the recent safety controls, with cited tests guarded
+
+**Reviewed, no gap:** R-01 to R-10 still describe controls that exist,
+and the tests they cite exist.
+
+**Deficiency found (regulatory documentation, traceability):**
+`docs/fda-510k/risk-management.md` listed ten hazards. None covered the
+hazards whose controls were built in the last iterations, so the risk file
+understated what the software controls and how each control is verified:
+- expired reagent or specimen use (Iterations 210, 211, 233 and 234);
+- another patient's evidence in an identification (220);
+- unreviewed antigrams in use (208–210);
+- unobserved results recorded in a treated run (223);
+- truncated lot files typed negative (204 and 205);
+- accidental deletion (237);
+- work recorded on an unwritable database (240);
+- scores read as probabilities (225–227).
+
+**Bounded improvement:**
+- Risk rows R-11 to R-18 give each hazard's sequence, harm, control and
+  verification test classes.
+- `RiskRegisterTraceabilityTests` checks that every test class or method
+  cited in the risk register and the traceability matrix exists. A
+  renamed or removed test can no longer leave a control with no real
+  verification.
+- It also checks that the register cites the recent safety-control tests.
+
+**Data/schema:** none.
+
+**Tests:** `RiskRegisterTraceabilityTests` (3 cases): cited tests exist in
+both documents, and the register covers the recent controls.
+
+All 1451 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the rest of `docs/fda-510k` (risk register,
-SRS and traceability rows) against the code as it now stands, for controls
-added or changed in Iterations 200–246.
+Continue clean-pass reviews: `docs/fda-510k/srs.md` and
+`unresolved-anomalies.md` against current behaviour (requirements for the
+recent controls, and anomalies that have since been fixed).
 
 Loop clean passes: 0/5
