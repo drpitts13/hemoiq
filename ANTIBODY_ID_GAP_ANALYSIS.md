@@ -7212,10 +7212,57 @@ token and checks the gate before storing.
 
 **Docs:** the Download from vendor help topic.
 
+## Iteration 264: Preferences survive a failed save
+
+**Reviewed:** files the application writes when the target is
+read-only, locked or on a full disk.
+- Report exports, archives and the audit-log CSV report the error and
+  write their audit record only after the file is written.
+- The recovery draft is written beside its target and then moved.
+- Lab configuration export now reports a failed write instead of
+  falling through to the generic error box.
+
+**Found:** `SettingsService.Save` wrote settings.json in place, and its
+callers change the settings in effect first.
+- **Read-only or locked file:** the write failed, but the session kept
+  running on the changed clinical settings. They were not audited (the
+  audit is written after the save) and reverted at the next start.
+- **Preferences import:** the audit entries were written before the
+  save, so they recorded a change the file did not hold.
+- **Full disk:** a write cut short left a truncated file. `Load` treats
+  an unreadable file as missing and replaces every Preference with its
+  default at the next start, silently.
+
+**Implemented:**
+- `SettingsService.Persist` writes a temporary file and moves it over
+  the target, so the old file stays whole until the new one is
+  complete. A failure raises `SettingsSaveException`, which names the
+  path and says nothing was changed.
+- `SettingsService.Save` restores the settings in effect to the ones
+  last loaded or saved when the write fails.
+- Preferences import writes its audit entries and the file in one
+  database transaction.
+- Lab configuration import writes the file inside its transaction
+  (`ConfigurationBundle.Apply(..., persist)`), so its rules,
+  Preferences and audit entries roll back together.
+- The Preferences dialog reports a failed save and stays open with the
+  edits.
+
+**Tests:** `SettingsSaveFailureTests` (5 cases):
+- a failed save restores the settings, leaves the file unchanged, leaves
+  no temporary file and says so;
+- a save writes the whole file and reloads;
+- `Persist` leaves the settings in effect alone;
+- a configuration import whose Preferences cannot be saved changes no
+  rules, writes no audit entries and leaves the settings alone;
+- a successful import persists the new Preferences.
+
+**Docs:** the Preferences help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: files written by the application (exports,
-archives, recovery drafts) when the target is read-only, locked by
-another program or on a full disk.
+Continue clean-pass reviews: start-up when settings.json is unreadable
+(it falls back to defaults; check that the user is told, not left on
+defaults silently).
 
 Loop clean passes: 0/5

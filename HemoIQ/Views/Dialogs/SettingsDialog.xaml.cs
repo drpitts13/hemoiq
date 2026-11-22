@@ -123,14 +123,18 @@ namespace HemoIQ.Views.Dialogs
                     "Import Preferences", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             try
             {
-                PreferenceTransfer.Apply(_db, AppSettings.Current, preview, System.IO.Path.GetFileName(dlg.FileName));
+                // The audit entries commit only if the Preferences file is written; a failed save rolls both back.
+                _db.RunInTransaction(() =>
+                {
+                    PreferenceTransfer.Apply(_db, AppSettings.Current, preview, System.IO.Path.GetFileName(dlg.FileName));
+                    SettingsService.Save();
+                });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex) when (ex is UnauthorizedAccessException or SettingsSaveException)
             {
                 MessageBox.Show(ex.Message, "Preferences", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            SettingsService.Save();
             DialogResult = true;
         }
 
@@ -284,7 +288,16 @@ namespace HemoIQ.Views.Dialogs
             AppSettings.Current.DatingTransfusionLookbackDays = lookback;
             AppSettings.Current.RhigPassiveWindowDays = rhigDays;
             AppSettings.Current.ExtraPhases = ExtraPhasesBox.Text;
-            SettingsService.Save();
+            try
+            {
+                SettingsService.Save();
+            }
+            catch (SettingsSaveException ex)
+            {
+                // The settings in effect went back to the saved ones; the dialog stays open with the edits.
+                MessageBox.Show(this, ex.Message, "Preferences not saved", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             var after = JsonSerializer.Serialize(AppSettings.Current.ClinicalSnapshot());
             if (_db != null && before != after)
                 _db.AppendAudit("update_settings", "settings", "lab", null, before, after);

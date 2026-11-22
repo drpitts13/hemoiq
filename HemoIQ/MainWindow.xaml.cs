@@ -260,7 +260,16 @@ namespace HemoIQ
             };
             if (dlg.ShowDialog(this) != true) return;
             var rules = ViewModel.Database.GetAllRules();
-            System.IO.File.WriteAllText(dlg.FileName, ConfigurationBundle.Export(rules, AppSettings.Current, System.DateTime.Now));
+            try
+            {
+                System.IO.File.WriteAllText(dlg.FileName, ConfigurationBundle.Export(rules, AppSettings.Current, System.DateTime.Now));
+            }
+            catch (System.Exception ex) when (ex is System.IO.IOException or System.UnauthorizedAccessException)
+            {
+                MessageBox.Show($"The configuration was not exported: {ex.Message}", "Export Lab Configuration",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             ViewModel.SetStatus($"Lab configuration ({rules.Count} rule(s) and Preferences) exported to {System.IO.Path.GetFileName(dlg.FileName)}.");
         }
 
@@ -306,14 +315,15 @@ namespace HemoIQ
             ConfigurationImportResult result;
             try
             {
-                result = ConfigurationBundle.Apply(db, AppSettings.Current, preview, removeLocalOnly, System.IO.Path.GetFileName(dlg.FileName));
+                result = ConfigurationBundle.Apply(db, AppSettings.Current, preview, removeLocalOnly, System.IO.Path.GetFileName(dlg.FileName),
+                    persist: s => SettingsService.Persist(s));
             }
-            catch (System.Exception ex) when (ex is System.ArgumentException or System.UnauthorizedAccessException)
+            catch (System.Exception ex) when (ex is System.ArgumentException or System.UnauthorizedAccessException or SettingsSaveException)
             {
                 MessageBox.Show("Nothing was changed.\n\n" + ex.Message, "Configuration not imported", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            SettingsService.Save();
+            AppSettings.RaiseChanged();
             ViewModel.RulesVM.Refresh();
             ViewModel.WorklistVM.Refresh();
             ViewModel.SetStatus($"Lab configuration imported: {result.RulesAdded} rule(s) added, {result.RulesUpdated} updated, " +

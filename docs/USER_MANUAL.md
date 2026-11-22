@@ -454,6 +454,8 @@ Open this dialog with **Download…** on the Panels tab. It can refresh a public
 
 The status line under the vendor list tells you whether the catalog loaded. If a vendor has no live catalog, use **Import vendor file…** instead.
 
+While a catalog loads or a lot downloads, the vendor list and the Refresh and Import buttons are disabled, so only one download or import runs at a time. Closing the dialog during a download cancels it, and nothing is stored.
+
 ## File you already have
 
 **Import vendor file…** asks for a vendor PDF or CSV. The same review step follows either path: the new lot stays inactive until you activate it, and the source file is kept so you can open it from **Artifact**.

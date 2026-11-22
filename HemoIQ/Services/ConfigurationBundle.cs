@@ -84,8 +84,13 @@ namespace HemoIQ.Services
         /// only after the database writes commit. With <paramref name="removeLocalOnlyRules"/>, stored
         /// rules missing from the file are deleted (audited), so the rules match the source exactly.
         /// </summary>
+        /// <param name="persist">
+        /// Writes the new Preferences to disk inside the transaction (the application passes
+        /// <see cref="SettingsService.Persist"/>). When it throws, the rules, Preferences and audit entries are all
+        /// rolled back, so the audit never records a configuration the file does not hold.
+        /// </param>
         public static ConfigurationImportResult Apply(DatabaseService db, LabSettings settings, ConfigurationPreview preview,
-            bool removeLocalOnlyRules, string? fileName)
+            bool removeLocalOnlyRules, string? fileName, Action<LabSettings>? persist = null)
         {
             if (preview.HasProblems)
                 throw new ArgumentException("The file has refused entries, so applying it would not reproduce its configuration. " +
@@ -115,6 +120,7 @@ namespace HemoIQ.Services
                     rulesKept = removeLocalOnlyRules ? new List<string>() : preview.LocalOnlyRules.Select(r => r.Antibody).ToList(),
                     preferencesChanged = preview.Preferences.Changes.Select(c => c.Name).ToList(),
                 }));
+                if (preview.Preferences.Changes.Count > 0) persist?.Invoke(trial);
             });
             foreach (var change in preview.Preferences.Changes) change.Set(settings);
             return new ConfigurationImportResult(added, updated, removing.Count, preview.Preferences.Changes.Count);
