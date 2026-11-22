@@ -205,6 +205,7 @@ namespace HemoIQ.Services
             sb.AppendLine($"Cells:      {p.NumCells}{(p.IncludeAc ? " + AC" : "")}");
             sb.AppendLine($"Expiration: {p.ExpirationDate ?? "N/A"}");
             sb.AppendLine(PanelStatusLine(p));
+            foreach (var line in PanelProductLines(p)) sb.AppendLine(line);
             var cells = _db.GetPanelCells(panelId.Value);
             AppendPanelDataQuality(sb, p, cells);
             sb.AppendLine();
@@ -242,6 +243,7 @@ namespace HemoIQ.Services
             sb.AppendLine("PANEL ANTIGRAM");
             sb.AppendLine($"{p.Name}   Lot: {p.LotNumber ?? "N/A"}   Vendor: {p.Vendor ?? "N/A"}   Exp: {p.ExpirationDate ?? "N/A"}");
             sb.AppendLine(PanelStatusLine(p));
+            foreach (var line in PanelProductLines(p)) sb.AppendLine(line);
             sb.AppendLine(new string('=', 78));
             AppendAntigenGrid(sb, panelId.Value, _db.GetPanelCells(panelId.Value));
             return sb.ToString();
@@ -262,6 +264,47 @@ namespace HemoIQ.Services
                 sb.AppendLine();
             }
             AppendOmittedAntigenNote(sb, fullOrder.Count, headerAntigens.Count);
+            foreach (var line in CellNoteLines(cells)) sb.AppendLine(line);
+        }
+
+        /// <summary>
+        /// Lot details from the vendor sheet that the grid cannot show: an enzyme-treated lot, catalog number and
+        /// product line, and the lot's special notes. An antigram of a treated lot that did not say so would be read
+        /// as untreated cells.
+        /// </summary>
+        public static List<string> PanelProductLines(Panel p)
+        {
+            var lines = new List<string>();
+            if (p.EnzymeTreated)
+                lines.Add("Treatment:  ENZYME-TREATED cells (enzyme-sensitive antigens may not be expressed)");
+            var product = string.Join("   ", new[]
+            {
+                string.IsNullOrWhiteSpace(p.ProductLine) ? null : $"Product: {p.ProductLine}",
+                string.IsNullOrWhiteSpace(p.CatalogNumber) ? null : $"Catalog: {p.CatalogNumber}",
+            }.Where(x => x != null));
+            if (product.Length > 0) lines.Add(product);
+            if (!string.IsNullOrWhiteSpace(p.SpecialNotes))
+                lines.Add($"Lot notes:  {p.SpecialNotes}");
+            return lines;
+        }
+
+        /// <summary>
+        /// One line per cell that has a donor ID, Rh phenotype or special types (for example Yt(a-) or Bg), which
+        /// the antigen grid has no column for. Analysis reads the special types, so the printed lot shows them.
+        /// </summary>
+        public static List<string> CellNoteLines(IEnumerable<PanelCell> cells)
+        {
+            var lines = new List<string>();
+            foreach (var c in cells)
+            {
+                var parts = new List<string>();
+                if (!string.IsNullOrWhiteSpace(c.DonorId)) parts.Add($"donor {c.DonorId}");
+                if (!string.IsNullOrWhiteSpace(c.RhPhenotype)) parts.Add($"Rh {c.RhPhenotype}");
+                if (!string.IsNullOrWhiteSpace(c.SpecialTypes)) parts.Add($"special types {c.SpecialTypes}");
+                if (parts.Count > 0) lines.Add($"  Cell {c.CellNumber}: {string.Join("; ", parts)}");
+            }
+            if (lines.Count > 0) lines.Insert(0, "Cell details:");
+            return lines;
         }
 
         private static void AppendOmittedAntigenNote(StringBuilder sb, int fullCount, int printedCount)
@@ -420,6 +463,9 @@ namespace HemoIQ.Services
                     sb.AppendLine();
                 }
                 AppendOmittedAntigenNote(sb, fullOrder.Count, antigens.Count);
+                if (panel != null)
+                    foreach (var line in PanelProductLines(panel)) sb.AppendLine(line);
+                foreach (var line in CellNoteLines(cells)) sb.AppendLine(line);
                 sb.AppendLine();
             }
 

@@ -7454,10 +7454,45 @@ hemolyzed specimen's hemolysis note is printed.
 
 **Docs:** the Reports help topic.
 
+## Iteration 271: printed lots carry treatment and cell details
+
+**Reviewed:** the panel reports against the panel record. The status
+line already gives Active, Imported-inactive with import date and
+format, Inactive or Expired. Extra antigens are printed in the grid
+when any cell types them. Activation history is in the panel's audit
+history.
+
+**Found:** no report printed the lot details from the vendor sheet that
+the antigen grid has no column for:
+- the enzyme-treated flag, so the antigram of a ficin or papain lot read
+  as untreated cells;
+- the product line, catalog number and lot notes;
+- each cell's donor ID, Rh phenotype and special types (for example
+  Yt(a-) or Bg). Analysis reads the special types.
+
+This held for the Panel Summary, the Panel Antigram and each run on the
+Clinical Identification worksheet.
+
+**Implemented:**
+- `ReportService.PanelProductLines` gives ENZYME-TREATED for a treated
+  lot, the product and catalog, and the lot notes.
+- `ReportService.CellNoteLines` gives a "Cell details" list, one line
+  per cell that has a donor, Rh phenotype or special types.
+- Both are printed under the Panel Summary and Panel Antigram headers
+  and grids, and under each run's grid on the worksheet. A lot with
+  none of these prints nothing extra.
+
+**Tests:** `PanelReportCompletenessTests` (4 cases): the Panel Summary
+and the Panel Antigram each print the treatment, product, catalog,
+notes and cell details, and only for the cell that has them; the
+worksheet prints them under the run; a plain lot adds nothing.
+
+**Docs:** the Reports help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Panel Summary, Panel Antigram and All
-Panels reports against the panel record (lot import source,
-activation history and extra antigens).
+Continue clean-pass reviews: the Pending Work and All Specimens reports
+against the Worklist (every item the Worklist raises for an open
+investigation appears on the printed pending list).
 
 Loop clean passes: 0/5
