@@ -1229,7 +1229,7 @@ On a small screen the settings scroll; **Save**, **Cancel** and the other button
 - **RT**, **PEG**, **Gel**, and **Solid** are suggested columns. Gel, Solid, and PEG count as IAT-like evidence. You can also type custom names.
 - **Titer grid (Dil1–Dil128)** adds serial-dilution columns. The last reactive tube is the titer endpoint. Dilution grades are not IAT, and they do not rule out or identify an antibody.
 
-Changes apply to the next analysis and to new specimens. They do not rewrite identifications you have already confirmed. Saving a new score threshold, ID cell rule, ACS rule-out count, default rule-out count, or extra-phase list marks each unconfirmed analysis stale until you run analysis again. The lab name, department, facility letterhead, and specimen defaults do not.
+Changes apply to the next analysis and to new specimens. They do not rewrite identifications you have already confirmed. Saving a new score threshold, ID cell rule, ACS rule-out count or antigens, default rule-out count, separation count, extra-phase list, recent-transfusion window, specimen dating days, dating look-back or RhIG passive window marks each unconfirmed analysis stale until you run analysis again. Each such change is recorded in the audit log with the old and new values, whether made here or by importing Preferences. The lab name, department, facility letterhead, and specimen defaults do not.
 
 ## Users and roles
 
