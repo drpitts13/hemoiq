@@ -20,6 +20,16 @@ namespace HemoIQ.ViewModels
         public ObservableCollection<SpecimenRuleout> Ruleouts { get; } = new();
 
         private Specimen? _selectedSpecimen;
+        /// <summary>
+        /// Why panels cannot be attached to or detached from the selected investigation (it is confirmed or cancelled),
+        /// naming who can unlock it, or null. Attach and Detach are disabled with this as their tooltip, rather than
+        /// refusing after a panel has been chosen.
+        /// </summary>
+        public string? PanelLinkLock =>
+            SelectedSpecimen is { } s && (s.HasFinalCall || s.IsCancelled)
+                ? ReactionsViewModel.LockMessageFor(_db, s.AccessionNumber)
+                : null;
+
         public Specimen? SelectedSpecimen
         {
             get => _selectedSpecimen;
@@ -27,6 +37,7 @@ namespace HemoIQ.ViewModels
             {
                 var previous = _selectedSpecimen?.AccessionNumber;
                 if (!SetField(ref _selectedSpecimen, value)) return;
+                OnPropertyChanged(nameof(PanelLinkLock));
                 var failed = LoadSpecimenDetails();
                 if (!failed
                     && _main.SelectedTabIndex == 1
@@ -106,9 +117,11 @@ namespace HemoIQ.ViewModels
                 () => SessionAccess.CanRecord && (!string.IsNullOrWhiteSpace(SelectedSpecimen?.Mrn)));
             EditCommand = new RelayCommand(EditSpecimen, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
             DeleteCommand = new RelayCommand(DeleteSpecimen, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
-            AttachPanelCommand = new RelayCommand(AttachPanel, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
+            AttachPanelCommand = new RelayCommand(AttachPanel,
+                () => SessionAccess.CanRecord && SelectedSpecimen != null && !(SelectedSpecimen.HasFinalCall || SelectedSpecimen.IsCancelled));
             DetachPanelCommand = new RelayCommand(DetachPanel,
-                () => SessionAccess.CanRecord && (SelectedSpecimen != null && SelectedLinkedPanel != null));
+                () => SessionAccess.CanRecord && (SelectedSpecimen != null && SelectedLinkedPanel != null) &&
+                      !(SelectedSpecimen.HasFinalCall || SelectedSpecimen.IsCancelled));
             RefreshCommand = new RelayCommand(Refresh);
             OpenReactionsCommand = new RelayCommand(OpenReactions, () => SelectedSpecimen != null);
             OpenAnalysisCommand = new RelayCommand(OpenAnalysis, () => SelectedSpecimen != null);

@@ -7823,10 +7823,40 @@ banner is bound.
 
 **Docs:** the Reactions help topic.
 
+## Iteration 284: Attach and Detach panel follow the lock
+
+**Reviewed:** the investigation lock on the Specimens and Analysis tabs.
+Run Analysis on a locked investigation refuses at the click with the
+lock and who can lift it (Iteration 260), and nothing typed is lost, so
+it stays as it is. Confirm ID re-reads the specimen first.
+
+**Found:** Attach Panel and Detach stayed enabled on a confirmed or
+cancelled investigation.
+- **Attach.** It opened the panel picker. After a lot was chosen, the
+  database refused the link, and the refusal reached the generic error
+  box (`AttachPanel` has no handler for it).
+- **Detach.** It asked for confirmation, then reported "Panel not
+  detached" with the lock.
+
+**Implemented:**
+- Both commands now also require the selected investigation to be
+  neither confirmed nor cancelled.
+- `SpecimensViewModel.PanelLinkLock` gives the locked-record message
+  (`ReactionsViewModel.LockMessageFor`, the message the link would be
+  refused with) and is the tooltip on both buttons, shown while
+  disabled.
+
+**Tests:** `PanelLinkLockTests` (4 cases): both commands check the lock
+alongside `SessionAccess.CanRecord`; both buttons bind the lock as
+their tooltip; the tooltip is exactly the message the link is refused
+with.
+
+**Docs:** the Specimens help topic (Linked Panels).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the same lock on the Specimens tab (Attach
-and Detach panel on a confirmed or cancelled investigation) and on
-Analysis (Run Analysis on a locked one).
+Continue clean-pass reviews: Edit specimen and Edit patient on a locked
+investigation (which fields may still change after confirmation, and
+whether the dialog says so).
 
 Loop clean passes: 0/5

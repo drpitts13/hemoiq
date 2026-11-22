@@ -562,6 +562,7 @@ The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cel
   - If any cell already has a different grade, HemoIQ lists the changes and asks before replacing them.
   - Pasted grades are unsaved until **Save**, and the unsaved-grade warnings apply to them.
 - **Save** writes grades without running analysis. Ctrl+S does the same.
+- A confirmed or cancelled investigation is locked. An orange banner gives the reason and who can unlock it (clear the identification, or reinstate the investigation). The grades are shown read-only, and **Save**, **Save & Analyze**, **Clear**, **Fill negatives** and the run buttons are disabled. The lock is checked again whenever you open the Reactions tab, so a confirmation made on the Analysis tab shows here at once.
 - **Save & Analyze** writes grades, runs analysis, and shows a green or red banner with the result.
 - **Unsaved grades** are protected in three places:
   - Changing the specimen, panel or run asks whether to discard them.

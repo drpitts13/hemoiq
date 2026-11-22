@@ -206,8 +206,10 @@
             <GroupBox DockPanel.Dock="Top" Header="Linked Panels" Margin="0,0,0,8" Padding="6">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,4,0,0">
-                        <Button Content="Attach Panel" Command="{Binding AttachPanelCommand}" Margin="0,0,6,0"/>
-                        <Button Content="Detach" Command="{Binding DetachPanelCommand}"/>
+                        <Button Content="Attach Panel" Command="{Binding AttachPanelCommand}" Margin="0,0,6,0"
+                                ToolTip="{Binding PanelLinkLock}" ToolTipService.ShowOnDisabled="True"/>
+                        <Button Content="Detach" Command="{Binding DetachPanelCommand}"
+                                ToolTip="{Binding PanelLinkLock}" ToolTipService.ShowOnDisabled="True"/>
                     </StackPanel>
                     <ListBox ItemsSource="{Binding LinkedPanels}"
                              SelectedItem="{Binding SelectedLinkedPanel}"
