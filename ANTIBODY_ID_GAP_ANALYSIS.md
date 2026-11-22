@@ -7587,10 +7587,32 @@ a valid file name; no lot and very long names are handled.
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 276 (clean pass): numbers and dates under other locales
+
+**Reviewed:**
+- **Stored dates read back.** The dialogs read stored `yyyy-MM-dd` dates
+  into date pickers with `DateTime.TryParse` under the current culture,
+  and the Worklist reads expiration days the same way.
+  `AppCulture.Apply()` runs first at start-up and forces the Gregorian
+  calendar and ":" time separator while keeping the user's language and
+  number format, so a Thai Buddhist or Um al-Qura workstation reads and
+  writes Gregorian years (`AppCultureTests`).
+- **Dates typed in pickers.** Date pickers show and accept dates in the
+  user's own order, for example dd/MM/yyyy, and are stored as
+  `yyyy-MM-dd`.
+- **Typed times.** Collection and receipt times are read with the fixed
+  formats H:mm and HH:mm.
+- **Typed decimals.** These go through `LabSettings.TryParseDecimal`,
+  which accepts "0.70" or "0,70" and refuses thousands separators.
+- **Exports.** These write numbers with the invariant culture
+  (`CommaDecimalCultureTests`).
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: number and date entry under a non-English
-Windows locale (decimal commas in Preferences, dates typed as
-dd/MM/yyyy in date fields) against the Gregorian-dates convention.
+Continue clean-pass reviews: help topics against the screens they
+describe (each button or column a help topic names still exists on that
+screen, and each screen's buttons are described).
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
