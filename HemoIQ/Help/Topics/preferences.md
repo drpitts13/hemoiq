@@ -59,6 +59,8 @@ The right end of the status bar shows who is signed in and their role, for examp
 
 If the Preferences file cannot be written (read-only, locked by another program, or a full disk), **Save** says so and the window stays open with your edits. The Preferences saved before stay in effect, so analysis never runs on settings that were not saved or audited. An import that cannot be saved changes nothing, including its audit entries. The file is replaced only once the new copy is complete, so a full disk never leaves a damaged file that would reset Preferences to their defaults at the next start.
 
+If the Preferences file exists but cannot be read at start-up (damaged, cut short, or locked), HemoIQ starts with the default Preferences and says so before anything else, naming the file. The unreadable file is first copied beside it as *settings.unreadable-<date-time>.json*, so a later save cannot overwrite the lab's settings; re-enter them from that copy, or import a Preferences or configuration export, before testing.
+
 Messages that name a next step follow your role. A Technologist asked to change a confirmed identification, or to edit a cancelled investigation, is told to ask a Supervisor or Administrator to clear or reinstate it, rather than to click a command the role refuses.
 
 When users are registered, the initials entered for a supervisor review must be the signed-in user's own. Every audit entry records the signed-in Windows login, and user changes are audited.

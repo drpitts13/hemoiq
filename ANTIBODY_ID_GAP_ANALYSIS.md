@@ -7259,10 +7259,41 @@ callers change the settings in effect first.
 
 **Docs:** the Preferences help topic.
 
+## Iteration 265: an unreadable Preferences file is reported and kept
+
+**Found:** `SettingsService.Load` caught every error and switched to
+the default Preferences without a word. A damaged, truncated or locked
+settings.json meant the lab tested on the default ID rule, rule-out
+counts, separation cells and dating windows without knowing. The next
+save of any Preference (even a Worklist filter) then overwrote the
+unreadable file, so the lab's settings were lost with no trace.
+
+**Implemented:**
+- When the file exists but cannot be read (I/O error, access denied,
+  JSON that does not parse or has the wrong types, or `null`), `Load`
+  copies it to `settings.unreadable-<date-time>.json` beside it before
+  anything else can write. It then records `LastLoadProblem` and starts
+  on defaults. A missing file is still a quiet first run.
+- At start-up the main window shows the problem first ("Preferences
+  not loaded"). The message names the file and the kept copy, and asks
+  for Preferences to be reviewed or imported before testing. If no copy
+  could be kept, it says not to save Preferences until the file has
+  been copied elsewhere.
+- The application log records that defaults are in effect, without the
+  path.
+
+**Tests:** `UnreadableSettingsTests` (7 cases): a file cut short, one
+with a wrong-type value and one that is not JSON fall back to defaults,
+are reported and are kept, and the copy survives a later save; `null`
+is reported; a missing file is not a problem; a good file loads
+cleanly; the message when no copy could be kept.
+
+**Docs:** the Preferences help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: start-up when settings.json is unreadable
-(it falls back to defaults; check that the user is told, not left on
-defaults silently).
+Continue clean-pass reviews: values clamped on load or import
+(out-of-range numbers in settings.json are silently brought into
+range; check whether a clinical value changed that way is reported).
 
 Loop clean passes: 0/5

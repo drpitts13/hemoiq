@@ -33,12 +33,20 @@ namespace HemoIQ.Services
         public static string DefaultPath =>
             Path.Combine(AppDataPaths.Root, "settings.json");
 
+        /// <summary>
+        /// Why the last <see cref="Load"/> fell back to defaults although a Preferences file existed, or null. Start-up
+        /// shows it, so a lab is never left testing on default ID rules without knowing.
+        /// </summary>
+        public static string? LastLoadProblem { get; private set; }
+
         public static void Load(string? path = null)
         {
             path ??= DefaultPath;
-            try
+            LastLoadProblem = null;
+            if (File.Exists(path))
             {
-                if (File.Exists(path))
+                string? reason = null;
+                try
                 {
                     var json = File.ReadAllText(path);
                     var loaded = JsonSerializer.Deserialize<LabSettings>(json, JsonOptions);
@@ -50,17 +58,47 @@ namespace HemoIQ.Services
                         AppSettings.RaiseChanged();
                         return;
                     }
+                    reason = "the file is empty";
                 }
-            }
-            catch
-            {
-                // Keep defaults if the file is missing or corrupt.
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException)
+                {
+                    reason = ex is JsonException ? "the file is damaged or not a HemoIQ Preferences file" : ex.Message;
+                }
+                LastLoadProblem = DescribeUnreadable(path, reason!, KeepUnreadableCopy(path));
+                AppLog.Info("Preferences could not be read; defaults are in effect and the user was told."); // the message names a path
             }
 
             AppSettings.Current = LabSettings.CreateDefault();
             _lastSaved = JsonSerializer.Serialize(AppSettings.Current, JsonOptions);
             AppSettings.RaiseChanged();
         }
+
+        /// <summary>
+        /// Copies an unreadable Preferences file aside before anything can overwrite it, so the lab's settings can be
+        /// recovered or re-entered from it. Returns the copy's path, or null when it could not be copied.
+        /// </summary>
+        private static string? KeepUnreadableCopy(string path)
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(path) ?? ".";
+                var copy = Path.Combine(dir, $"settings.unreadable-{DateTime.Now:yyyyMMdd-HHmmss}.json");
+                File.Copy(path, copy, overwrite: false);
+                return copy;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return null;
+            }
+        }
+
+        public static string DescribeUnreadable(string path, string reason, string? copy) =>
+            $"The Preferences file {path} could not be read ({reason}). HemoIQ started with the default Preferences, " +
+            "including the default identification and rule-out settings. " +
+            (copy != null
+                ? $"The unreadable file was kept as {copy}. "
+                : "A copy of the unreadable file could not be kept; do not save Preferences until it has been copied elsewhere. ") +
+            "Review Preferences (or import a Preferences or configuration export) before testing.";
 
         /// <summary>
         /// Saves the settings in effect. When the file cannot be written (read-only, locked, disk full) the

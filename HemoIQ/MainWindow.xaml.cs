@@ -63,6 +63,7 @@ namespace HemoIQ
             DemoDataSeeder.AnalyzeIfNeverAnalyzed(ViewModel.Database, ViewModel.Analyzer);
             ViewModel.PanelsVM.Refresh();
             ViewModel.WorklistVM.Refresh();
+            WarnIfPreferencesUnreadable();
             AcknowledgeIntendedUseIfNeeded();
             ViewModel.RefreshSession();
             if (ViewModel.SessionViewOnly)
@@ -329,6 +330,13 @@ namespace HemoIQ
             ViewModel.SetStatus($"Lab configuration imported: {result.RulesAdded} rule(s) added, {result.RulesUpdated} updated, " +
                                 $"{result.RulesRemoved} removed, {result.PreferencesChanged} Preference(s) changed. " +
                                 "Open investigations analyzed before this change are listed on the Worklist as Stale analysis.");
+        }
+
+        /// <summary>Says so when start-up fell back to default Preferences because the file could not be read.</summary>
+        private void WarnIfPreferencesUnreadable()
+        {
+            if (SettingsService.LastLoadProblem is not string problem) return;
+            MessageBox.Show(this, problem, "Preferences not loaded", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         private void AcknowledgeIntendedUseIfNeeded()
