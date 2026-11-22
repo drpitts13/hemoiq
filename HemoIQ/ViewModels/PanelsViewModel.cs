@@ -673,13 +673,22 @@ namespace HemoIQ.ViewModels
             {
                 Filter = "CSV Files|*.csv",
                 DefaultExt = "csv",
-                FileName = $"{SelectedPanel.Name}.csv"
+                FileName = ExportFileName.ForPanel(SelectedPanel, "", "csv")
             };
             if (save.ShowDialog() != true) return;
-            PanelCsvService.Export(
-                _db.GetPanelCells(SelectedPanel.PanelId),
-                save.FileName,
-                _db.GetPanelAntigenOrder(SelectedPanel.PanelId));
+            try
+            {
+                PanelCsvService.Export(
+                    _db.GetPanelCells(SelectedPanel.PanelId),
+                    save.FileName,
+                    _db.GetPanelAntigenOrder(SelectedPanel.PanelId));
+            }
+            catch (System.Exception ex) when (ex is System.IO.IOException or System.UnauthorizedAccessException)
+            {
+                MessageBox.Show($"The panel was not exported: {ex.Message}", "Export",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             _main.SetStatus($"Panel CSV exported: {save.FileName}");
             MessageBox.Show("Panel CSV exported.", "Export", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -691,7 +700,7 @@ namespace HemoIQ.ViewModels
             {
                 Filter = "PDF Files|*.pdf",
                 DefaultExt = "pdf",
-                FileName = $"{SelectedPanel.Name} antigram.pdf"
+                FileName = ExportFileName.ForPanel(SelectedPanel, "antigram", "pdf")
             };
             if (save.ShowDialog() != true) return;
             try

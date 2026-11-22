@@ -7539,10 +7539,38 @@ above are not repeated; with an empty Worklist the report still says
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 274: export file names from panel data are valid and name the lot
+
+**Reviewed:** default file names in Save dialogs. None includes a
+patient's name or MRN. Fixed names (audit-log.csv, the archive, rules,
+Preferences and configuration exports with the date) are safe. The
+report exports suggest no name. Vendor source files are stored under
+sanitized vendor and lot names.
+
+**Found:** Panels **Export** and **Antigram** suggested the panel name
+as typed:
+- a name with / : ? " < > | or * gave Windows an invalid default name;
+- the lot was left out, so two lots of one panel were offered the same
+  file, and the second export could replace the first;
+- a failed CSV write fell through to the generic error box.
+
+**Implemented:**
+- `ExportFileName.ForPanel(panel, suffix, extension)` gives "<name>
+  lot <lot> <suffix>.<ext>". Characters Windows refuses (and control
+  characters) are replaced with _, trailing dots and spaces are
+  trimmed, and the length is capped. Both Panels exports use it.
+- The panel CSV export reports a failed write and saves nothing.
+
+**Tests:** `ExportFileNameTests` (6 cases): the lot is included and
+distinguishes two lots; refused characters are replaced; the result is
+a valid file name; no lot and very long names are handled.
+
+**Docs:** the Panels help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: report and export file names (the default
-names suggested by Save dialogs include the accession or lot, and never
-the patient's name or MRN).
+Continue clean-pass reviews: keyboard access on the main tabs (every
+command reachable without the mouse, a sensible tab order, and Enter
+or Escape doing the expected thing in each dialog).
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5
