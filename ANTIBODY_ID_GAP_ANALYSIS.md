@@ -6986,10 +6986,52 @@ collection time, transfusion requirements and the same-patient changes.
 
 All 1472 tests pass.
 
+## Iteration 257: label-only panel cell edits no longer mark analyses stale
+
+**Reviewed, no gap:** the specimen writers that mark staleness all return
+early when nothing changed, and they mark only on fields analysis reads:
+- type, notes, phenotype, genotype, previous antibodies and DAT;
+- transfusion, products, hemolysis and pregnancy;
+- collection time, but not receipt time.
+
+Reaction saves that change nothing write nothing.
+
+**Deficiency found (UX, alert fatigue):**
+- `SavePanelCellEdits` marked every open investigation on the lot stale
+  for any cell change, including the donor ID and the Rh phenotype label.
+- Analysis reads neither label: the Rh phenotype is used only by the
+  import review, while special types do feed rare-antigen reading and
+  selected-cell recommendations.
+- Correcting a donor number made every open workup on that lot show a
+  "stale" warning that rerunning analysis could not resolve differently.
+  Needless warnings teach users to ignore real ones.
+
+**Bounded improvement:**
+- `DatabaseService.ChangesAnalysisInput` treats donor and Rh phenotype
+  label changes as non-inputs.
+- The save marks open investigations stale only when at least one change
+  is to antigen typing or special types.
+- The Panels status line count uses the same rule.
+- The edit is still saved, audited (`edit_panel_typing`) and needs a
+  reason on a lot with test history.
+
+**Data/schema:** none.
+
+**Tests:** `PanelMetadataStalenessTests` (8 cases):
+- donor-only and Rh-label-only edits are saved and audited but leave the
+  analysis current;
+- special-types and antigen edits still mark it stale;
+- the change classifier separates labels from typing for each kind.
+
+**Docs:** the Panels help topic explains which cell edits mark analyses
+stale.
+
+All 1480 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the reverse direction: writes that mark
-analyses stale but do not change any analysis input (needless "stale"
-warnings train users to ignore them).
+Continue clean-pass reviews: other needless-warning sources: Worklist items
+that cannot be cleared by any action, or review prompts that repeat after
+the user has already acknowledged them.
 
 Loop clean passes: 0/5

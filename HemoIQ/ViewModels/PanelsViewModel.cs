@@ -797,7 +797,9 @@ namespace HemoIQ.ViewModels
                 }
                 reason = dlg.Reason;
             }
-            var reanalyze = changes.Count == 0 ? new List<string>() : _db.OpenInvestigationsOnPanel(SelectedPanel.PanelId);
+            var reanalyze = changes.Any(DatabaseService.ChangesAnalysisInput)
+                ? _db.OpenInvestigationsOnPanel(SelectedPanel.PanelId)
+                : new List<string>();
             try
             {
                 _db.SavePanelCellEdits(SelectedPanel.PanelId, cells, reason);

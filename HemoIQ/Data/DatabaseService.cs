@@ -2307,11 +2307,21 @@ namespace HemoIQ.Data
                 // Analyses of open investigations on this panel were computed from the old typing: mark them out of
                 // date, as a grade change would. Confirmed and cancelled investigations are locked and not reopened;
                 // the audit entry above names every linked specimen.
-                foreach (var accession in OpenInvestigationsOnPanel(panelId))
-                    TouchSpecimenReactionsUpdated(accession);
+                // A donor ID or Rh phenotype label is not read by analysis, so editing only those does not mark
+                // anything stale (a needless stale warning teaches users to ignore real ones).
+                if (changes.Any(ChangesAnalysisInput))
+                    foreach (var accession in OpenInvestigationsOnPanel(panelId))
+                        TouchSpecimenReactionsUpdated(accession);
             });
             return changes;
         }
+
+        /// <summary>
+        /// True for a described cell change analysis reads: antigen typing or special types. False for the donor ID
+        /// and the Rh phenotype label ("Cell 3 donor: …", "Cell 3 Rh phenotype: …").
+        /// </summary>
+        public static bool ChangesAnalysisInput(string change) =>
+            !System.Text.RegularExpressions.Regex.IsMatch(change, @"^Cell \S+ (donor|Rh phenotype): ");
 
         /// <summary>Linked specimens on the panel with no confirmed identification that are not cancelled.</summary>
         public List<string> OpenInvestigationsOnPanel(int panelId) =>
