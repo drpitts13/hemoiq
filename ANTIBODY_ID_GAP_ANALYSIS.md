@@ -6432,10 +6432,27 @@ dialog refusals and to find refusals in every dialog.
 
 All 1435 tests pass.
 
+## Iteration 239 (clean pass): refusals and Cancel in the smaller dialogs
+
+**Reviewed:**
+- **Reason.** Focuses its box when it opens and again on "A reason is
+  required".
+- **Select panel and Select warehouse antigen.** Each has a single list,
+  so "Please select…" can only mean that list.
+- **Panel run.** Has nothing to refuse (Iteration 223 made its copy
+  option safe).
+- **Users.** Writes only through its audited Save user button. It shows
+  the access-control service's message, which names the problem
+  (duplicate initials, last administrator and so on).
+- **Cancel.** Every one of these dialogs closes without writing on
+  Cancel or Escape.
+
+No new issue or gap worth fixing. All 1435 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the remaining dialogs (Users, Reason, Select
-panel, Select warehouse antigen, Panel run) for the same refusal-and-focus
-rule and for an explicit Cancel that changes nothing.
+Continue clean-pass reviews: start-up and shutdown with a locked or
+read-only database file (another copy of HemoIQ open, a read-only share):
+a clear message and no partial writes.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
