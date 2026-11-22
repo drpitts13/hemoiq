@@ -41,6 +41,24 @@ public class RiskRegisterTraceabilityTests
     }
 
     [Fact]
+    public void EveryRequirement_HasATraceabilityRow()
+    {
+        var dir = Path.Combine(Root().FullName, "docs", "fda-510k");
+        var srs = File.ReadAllText(Path.Combine(dir, "srs.md"));
+        var trace = File.ReadAllText(Path.Combine(dir, "traceability.md"));
+        var ids = Regex.Matches(srs, @"^\| (SRS-[A-Z0-9]+-\d+) \|", RegexOptions.Multiline).Select(m => m.Groups[1].Value).ToList();
+        Assert.NotEmpty(ids);
+        // A traceability row may cover several requirements ("SRS-AUD-01 / 02").
+        var untraced = ids.Where(id =>
+        {
+            var prefix = id[..id.LastIndexOf('-')];
+            var number = id[(id.LastIndexOf('-') + 1)..];
+            return !Regex.IsMatch(trace, $@"^\| {Regex.Escape(prefix)}-[0-9 /]*\b{number}\b[^|]*\|", RegexOptions.Multiline);
+        }).ToList();
+        Assert.True(untraced.Count == 0, "Requirements without a traceability row: " + string.Join(", ", untraced));
+    }
+
+    [Fact]
     public void RiskRegister_CoversTheRecentSafetyControls()
     {
         var doc = File.ReadAllText(Path.Combine(Root().FullName, "docs", "fda-510k", "risk-management.md"));

@@ -14,4 +14,12 @@
 | SRS-SNAP-01 | Each persisted analysis shall store software version, clinical settings JSON, input fingerprint, rule-out, suspected, and ACS summaries. |
 | SRS-SNAP-02 | Analysis and clinical reports shall print version, settings, and input fingerprint. |
 | SRS-LOG-01 | Unhandled exceptions shall be written to `%AppData%\HemoIQ\logs` with software version and without reaction grades. |
-| SRS-CYB-01 | Operator identity on audit events shall be the Windows user name. Access control relies on the Windows login and NTFS ACLs. |
+| SRS-CYB-01 | Operator identity on audit events shall be the Windows user name. Once users are registered, each action shall require its role permission (record results, supervisor review, clear identification, reinstate, configure preferences or rules, manage users, purge) and be refused otherwise; access to the database file relies on the Windows login and NTFS ACLs. |
+| SRS-SAFE-01 | Recording results on an expired lot or specimen shall ask first, activating an expired lot shall warn and be audited, and results recorded after expiry shall be reported for review. |
+| SRS-SAFE-02 | Evidence from one specimen shall not enter another patient's analysis: eluate links and MRN changes shall be refused when the MRNs differ. |
+| SRS-SAFE-03 | Imported and copied panel lots shall be stored inactive, and every activation shall go through the antigram review prompt; panel detail edits shall record old and new values. |
+| SRS-SAFE-04 | A new run shall never be saved with another run's grades; pre-fill shall be offered only for an untreated repeat, as unsaved values. |
+| SRS-SAFE-05 | A truncated or malformed lot file shall be refused as a whole; missing typing shall never be read as negative. |
+| SRS-SAFE-06 | Every confirmation that deletes data shall default to No, and Enter shall not trigger Purge. |
+| SRS-SAFE-07 | A database that cannot be written shall be refused at start-up with its path and reason, and the application shall close; a failed save shall roll back and keep the unsaved entries. |
+| SRS-SAFE-08 | Combined scores shall be labelled as scores, never described as probabilities. |

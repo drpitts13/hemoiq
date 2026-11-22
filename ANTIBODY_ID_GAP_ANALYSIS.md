@@ -6688,10 +6688,47 @@ both documents, and the register covers the recent controls.
 
 All 1451 tests pass.
 
+## Iteration 248: the SRS and anomaly list match the software; every requirement is traced
+
+**Reviewed, no gap:**
+- **UA-01.** MathNet is still referenced but unused, as stated.
+- **UA-03.** Confirmation by initials is still a residual of the
+  510(k)-only scope, as stated.
+
+**Deficiency found (regulatory documentation):**
+- **UA-02.** "Duplicate `* 2.cs` files exist in the tree": none remain.
+- **UA-04.** "No in-app user accounts or roles": HemoIQ has registered
+  users with Technologist, Supervisor, Administrator and Read-only roles,
+  every database writer checks a permission, and user management is
+  audited.
+- **SRS-CYB-01.** Said access control relies only on the Windows login and
+  NTFS ACLs.
+- **Missing requirements.** No requirement stated the safety behaviour
+  behind risks R-11 to R-18.
+
+**Bounded improvement:**
+- UA-02 and UA-04 are marked resolved, with UA-04's residual stated: sign-in
+  is the Windows logon.
+- SRS-CYB-01 states the role permissions.
+- SRS-SAFE-01 to SRS-SAFE-08 state the requirements for expiry, the
+  same-patient rule, unreviewed lots, copied run grades, truncated files,
+  deletion defaults, unwritable databases and score wording.
+- `traceability.md` gains matching rows naming the code and tests.
+- `RiskRegisterTraceabilityTests` now also checks that every SRS
+  requirement has a traceability row (a row may cover several, such as
+  "SRS-AUD-01 / 02").
+
+**Data/schema:** none.
+
+**Tests:** `RiskRegisterTraceabilityTests` gains one case (4 in all), and
+the cited-test check now covers the new rows.
+
+All 1452 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: `docs/fda-510k/srs.md` and
-`unresolved-anomalies.md` against current behaviour (requirements for the
-recent controls, and anomalies that have since been fixed).
+Continue clean-pass reviews: `vv-summary.md` and `version-history.md`
+(test counts and notable changes up to date) and `gap-register.md` items
+marked open that have since been closed.
 
 Loop clean passes: 0/5

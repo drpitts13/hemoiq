@@ -13,6 +13,14 @@
 | SRS-SNAP-01 | `SaveAnalysisSnapshot` / `PersistSnapshot` | `AnalyzeSpecimen_PersistsTraceabilitySnapshot` |
 | SRS-SNAP-02 | `ReportService.AnalysisTraceLine` | `Reports_IncludeIntendedUseVersionAndTraceLine` |
 | SRS-LOG-01 | `AppLog`, `App.OnStartup` | `AppLog_WritesVersionedLineWithoutThrowing` |
-| SRS-CYB-01 | `Environment.UserName` on audit; NTFS ACL tests | `HipaaSecurityTests`, confirm audit operator assertion |
+| SRS-CYB-01 | `Environment.UserName` on audit; `AccessControl.Demand` and `EnsureCanRecord` on every writer; NTFS ACL tests | `HipaaSecurityTests`, `AccessControlTests`, `RecordResultsPermissionTests` |
+| SRS-SAFE-01 | `ReactionsViewModel.ExpiredSpecimenPrompt`, `PanelEditActivation.ExpiryWarning`, `ExpiredReagentCheck` | `ExpiredReagentTests`, `ExpiredSpecimenEntryTests`, `PanelEditAuditTests` |
+| SRS-SAFE-02 | `DatabaseService.SetEluateSource`, `UpdateSpecimenMrn` | `EluateEvidenceTests` |
+| SRS-SAFE-03 | `LabPanelImportService`, `VendorPanelImportService`, `PanelEditActivation`, `PanelsViewModel.ActivatePanel` | `PanelEditAuditTests`, `LabCsvImportTests` |
+| SRS-SAFE-04 | `RunTreatmentText`, `ReactionsViewModel.AddRun` | `RunTreatmentTextTests` |
+| SRS-SAFE-05 | `PanelCsvService.Import`, `StructuredPanelParser` | `LabCsvImportTests`, `StructuredImportParserTests` |
+| SRS-SAFE-06 | `DestructiveConfirm` | `DestructiveConfirmTests` |
+| SRS-SAFE-07 | `DatabaseService` constructor, `StartupFailure`, `App.OnStartup`, `RunInTransaction` | `StartupFailureTests` |
+| SRS-SAFE-08 | `ReportService.ScoreLabel`, `AntigenConstants.AcsExceptionCriterion` | `AcsEvaluationTests` |
 
 Algorithm / clinical performance (pre-existing): `AntibodyAnalysisTests`, `AcsEvaluationTests`, `ScenarioTests`, `ValidationStressTests`, `ReportAccuracyTests`.
