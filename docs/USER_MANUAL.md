@@ -77,6 +77,14 @@ The manual stays open while you work. Use **Find** to search titles and chapter 
 
 **Worklist** shows incomplete reactions, stale analyses, and specimens or panels that are expiring or expired. **Analytics** summarizes confirmed identifications. **Search** finds panel cells by antigen profile. **Rules** stores per-antibody rule-out overrides.
 
+## If HemoIQ cannot start
+
+HemoIQ writes to its database file every time it runs, to keep the audit trail. If the file cannot be opened for writing, HemoIQ shows the file's path and the reason, then closes without changing anything:
+
+- **Read-only.** The file or its folder is read-only, for example on a read-only network share. Fix the permission or ask IT to make the share writable.
+- **In use.** Another program holds the file, for example a second copy of HemoIQ, a backup or a sync tool. Close it and start HemoIQ again.
+- **Damaged.** The file is damaged or is not a HemoIQ database. Restore it from your laboratory's backup, and do not delete it.
+
 ## Menus
 
 - **File → Exit** closes the application after you confirm.
