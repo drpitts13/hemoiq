@@ -118,6 +118,21 @@ namespace HemoIQ.Services
             foreach (var line in lines) sb.AppendLine($"  {line}");
         }
 
+        /// <summary>
+        /// The red-cell specimen an eluate was made from, with its MRN when it differs or the source is missing, or
+        /// null for a specimen that is not an eluate of a recorded source. A printed eluate result must say which
+        /// red cells it came from.
+        /// </summary>
+        private string? EluateSourceLine(Specimen s)
+        {
+            if (string.IsNullOrWhiteSpace(s.SourceAccession)) return null;
+            var source = _db.GetSpecimen(s.SourceAccession);
+            if (source == null) return $"{s.SourceAccession} (not found in this database)";
+            return string.Equals(source.Mrn, s.Mrn, StringComparison.OrdinalIgnoreCase)
+                ? source.AccessionNumber
+                : $"{source.AccessionNumber} (MRN {source.Mrn ?? "not recorded"})";
+        }
+
         private string SpecimenSummaryText(string? specimenId)
         {
             if (specimenId == null) return "No specimen selected.";
@@ -128,9 +143,30 @@ namespace HemoIQ.Services
             sb.AppendLine(new string('=', 50));
             sb.AppendLine($"MRN:             {s.Mrn ?? "Not recorded"}");
             sb.AppendLine($"Type:            {s.Type}");
+            if (EluateSourceLine(s) is string source)
+                sb.AppendLine($"Eluate of:       {source}");
+            sb.AppendLine($"Status:          {InvestigationStatusService.Compute(_db, s).Summary}");
+            sb.AppendLine($"Collected:       {s.CollectedAt ?? "Not recorded"}");
+            sb.AppendLine($"Received:        {s.ReceivedAt ?? s.CreatedDate}");
             sb.AppendLine($"Created:         {s.CreatedDate}");
             sb.AppendLine($"Expiration:      {s.ExpirationDate ?? "N/A"}");
+            if (s.OriginDisplay.Length > 0)
+                sb.AppendLine($"Origin:          {s.OriginDisplay}");
             sb.AppendLine($"Last Analyzed:   {s.LastAnalyzedAt ?? "Never"}");
+            if (s.HasFinalCall)
+            {
+                sb.AppendLine($"Final ID:        {s.FinalAntibodies} (confirmed by {s.IdentifiedBy ?? "—"} on {s.IdentifiedAt ?? "—"})");
+                if (s.IsReviewed)
+                    sb.AppendLine($"Reviewed:        {s.ReviewedBy} on {s.ReviewedAt ?? "—"}");
+                else if (AppSettings.Current.RequireSupervisorReview)
+                    sb.AppendLine("Reviewed:        PENDING");
+                if (!string.IsNullOrWhiteSpace(s.FinalComment))
+                    sb.AppendLine($"Final comment:   {s.FinalComment}");
+            }
+            else
+                sb.AppendLine("Final ID:        Not confirmed");
+            if (s.IsCancelled)
+                sb.AppendLine($"Cancelled:       {s.CancelledAt} — {s.CancelReason ?? "no reason recorded"}");
             if (!string.IsNullOrWhiteSpace(s.Phenotype))
                 sb.AppendLine($"Phenotype:       {s.Phenotype}");
             if (!string.IsNullOrWhiteSpace(s.Genotype))
@@ -138,8 +174,10 @@ namespace HemoIQ.Services
             if (!string.IsNullOrWhiteSpace(s.PreviousAntibodies))
                 sb.AppendLine($"Previous Abs:    {s.PreviousAntibodies}");
             sb.AppendLine($"Transfusion:     {s.TransfusionDisplay}");
+            sb.AppendLine($"Pregnancy:       {s.PregnancyDisplay}");
             if (s.Dat.AnyRecorded)
                 sb.AppendLine($"DAT:             {s.DatDisplay}");
+            sb.AppendLine($"Hemolysis:       {SpecimenHemolysis.Label(s.Hemolysis)}");
             if (!string.IsNullOrWhiteSpace(s.Notes))
                 sb.AppendLine($"Notes:           {s.Notes}");
             AppendPatientHistory(sb, s);
@@ -333,6 +371,8 @@ namespace HemoIQ.Services
             sb.AppendLine(AnalysisTraceLine(specimenId));
             sb.AppendLine($"Accession: {s.AccessionNumber,-16} Type: {s.Type,-10} Date: {DateTime.Now:yyyy-MM-dd}");
             sb.AppendLine($"MRN: {s.Mrn ?? "Not recorded"}");
+            if (EluateSourceLine(s) is string eluateOf)
+                sb.AppendLine($"Eluate of: {eluateOf}");
             sb.AppendLine($"Investigation status: {InvestigationStatusService.Compute(_db, s).Summary}");
             sb.AppendLine($"Collected: {s.CollectedAt ?? "not recorded"}   Received: {s.ReceivedAt ?? s.CreatedDate}   Expires: {s.ExpirationDate ?? "N/A"}");
             sb.AppendLine($"Origin: {(s.OriginDisplay.Length == 0 ? "not recorded" : s.OriginDisplay)}");
@@ -588,6 +628,39 @@ namespace HemoIQ.Services
 
         private void WriteSpecimenSummaryCsv(CsvWriter csv, string specimenId)
         {
+            // Which specimen and investigation the rows below belong to: a CSV opened later, away from the
+            // application, must not be a list of antibodies with no accession, MRN or status.
+            if (_db.GetSpecimen(specimenId) is { } s)
+            {
+                csv.WriteField("Specimen");
+                csv.NextRecord();
+                csv.WriteField("Field");
+                csv.WriteField("Value");
+                csv.NextRecord();
+                foreach (var (field, value) in new (string, string?)[]
+                {
+                    ("Accession", s.AccessionNumber),
+                    ("MRN", s.Mrn),
+                    ("Type", s.Type),
+                    ("EluateOf", EluateSourceLine(s)),
+                    ("Status", InvestigationStatusService.Compute(_db, s).Summary),
+                    ("Collected", s.CollectedAt),
+                    ("Received", s.ReceivedAt ?? s.CreatedDate),
+                    ("FinalId", s.FinalAntibodies),
+                    ("IdentifiedBy", s.IdentifiedBy),
+                    ("IdentifiedAt", s.IdentifiedAt),
+                    ("ReviewedBy", s.ReviewedBy),
+                    ("ReviewedAt", s.ReviewedAt),
+                    ("CancelledAt", s.CancelledAt),
+                    ("CancelReason", s.CancelReason),
+                })
+                {
+                    csv.WriteField(field);
+                    csv.WriteField(value ?? "");
+                    csv.NextRecord();
+                }
+            }
+
             var result = TryAnalyze(specimenId);
             var antibodies = result == null
                 ? _db.GetSpecimenAntibodies(specimenId)

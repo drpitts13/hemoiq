@@ -7415,10 +7415,49 @@ hemolyzed specimen's hemolysis note is printed.
 
 **Docs:** the Reports help topic.
 
+## Iteration 270: the Specimen Summary says which investigation and where it stands
+
+**Found:** against the specimen record:
+- **Specimen Summary report:** it printed MRN, type, dates, typing,
+  transfusion, DAT and notes, but not:
+  - the investigation status, or a cancellation and its reason;
+  - the confirmed identification, though the Reports help said it did,
+    with who confirmed it, the supervisor review and the comment;
+  - collection and receipt, and encounter or ordering details;
+  - pregnancy and visual hemolysis.
+- **Specimen Summary CSV:** it began directly with the antibody rows,
+  with no accession, MRN or status, so a saved file could not be tied
+  back to an investigation.
+- **Eluates:** neither the Specimen Summary nor the Clinical
+  Identification worksheet named the red-cell specimen an eluate was
+  made from.
+
+**Implemented:**
+- The Specimen Summary adds the status line used on the worksheet,
+  collection, receipt, origin, final ID (or "Not confirmed") with who
+  confirmed it, review (or PENDING when required) and comment, the
+  cancellation with its reason, pregnancy and hemolysis.
+- `ReportService.EluateSourceLine` gives the source accession, its MRN
+  when it differs from the eluate's, or "not found in this database".
+  Both reports print it as **Eluate of**.
+- The Specimen Summary CSV starts with a **Specimen** section of
+  Field/Value rows: Accession, MRN, Type, EluateOf, Status, Collected,
+  Received, FinalId, IdentifiedBy, IdentifiedAt, ReviewedBy, ReviewedAt,
+  CancelledAt and CancelReason. The existing sections follow unchanged.
+
+**Tests:** `SpecimenSummaryCompletenessTests` (4 cases):
+- a confirmed specimen prints its status, final ID, comment, hemolysis,
+  pregnancy and receipt;
+- a cancelled one prints "Not confirmed" and the cancellation reason;
+- an eluate names its source on both reports, and its source does not;
+- the CSV starts with the specimen it describes.
+
+**Docs:** the Reports help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Specimen Summary report and its CSV
-against the specimen record (fields shown on the Specimens tab that a
-summary leaves out).
+Continue clean-pass reviews: the Panel Summary, Panel Antigram and All
+Panels reports against the panel record (lot import source,
+activation history and extra antigens).
 
 Loop clean passes: 0/5
