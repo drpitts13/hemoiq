@@ -219,6 +219,12 @@ namespace HemoIQ.ViewModels
 
         public void Refresh() => Recompute();
 
+        /// <summary>
+        /// Opening the Analytics tab recomputes it, because cancelling, reinstating, reviewing, editing or deleting an
+        /// investigation on another tab changes the counts and turnaround without refreshing this tab.
+        /// </summary>
+        public void OnTabSelected() => Recompute();
+
         public void AnnounceStatus() =>
             _main?.SetStatus(ScreenStatus.Analytics(RangeLabel, ConfirmedSpecimens));
 

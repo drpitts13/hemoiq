@@ -8,7 +8,7 @@ Analytics counts confirmed antibody identifications over a date range. It uses o
 - **To** includes confirmations on or before that date.
 - **30 days**, **90 days**, and **12 months** set the range through today.
 - **All time** includes every confirmed identification, including any that have no confirmation date.
-- **Refresh** reloads the cards, charts, and grid.
+- **Refresh** reloads the cards, charts, and grid. Opening the Analytics tab does the same, so a cancellation, reinstatement, review, edit or deletion made on another tab is counted.
 - **Export CSV** saves the detail rows.
 - **Help** opens this chapter.
 

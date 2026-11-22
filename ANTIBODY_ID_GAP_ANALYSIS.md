@@ -7149,10 +7149,42 @@ preview; a deleted specimen leaves the list when the tab opens.
 
 **Docs:** the Reports help topic.
 
+## Iteration 262: Search and Analytics recompute when opened
+
+**Reviewed:** screens that keep data computed earlier. The Panels grid
+is edited only on its own tab, and Reactions refuses a save on a record
+locked elsewhere with the reason. Two tabs kept older data:
+- **Search.** Antigen-search results show each lot's status so selected
+  cells are taken from a lot in use (Iteration 213). A lot deactivated
+  or expired on the Panels tab still showed as in use until the search
+  was run again. Investigation results kept the status and final ID
+  they had when searched.
+- **Analytics.** It was recomputed only after Confirm ID or Clear on
+  the Analysis tab. Cancelling, reinstating, reviewing, editing or
+  deleting an investigation left its counts and turnaround old until
+  Refresh.
+
+**Implemented:**
+- `SearchViewModel.OnTabSelected` re-runs the antigen and investigation
+  searches behind the results on screen, with the criteria, zygosity,
+  text and dates they were run with, and keeps the selected row when it
+  still matches. A refused or cleared search is not re-run. The status
+  line is left to the screen announcement.
+- `AnalyticsViewModel.OnTabSelected` recomputes the tab.
+- `SearchViewModel` can be built without the main window, for tests.
+
+**Tests:** `TabFreshnessTests` (6 cases): a lot deactivated elsewhere
+shows as not in use with the selection kept; re-running uses the
+original criteria, not ones edited since; a cleared search and a
+refused investigation search are not re-run; investigation results show
+a confirmation made elsewhere; Analytics counts it.
+
+**Docs:** the Search and Analytics help topics.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other screens that show cached data after
-another tab changes it (Panels cell grid after a panel edit elsewhere,
-Search results after an edit, Analytics after a confirmation).
+Continue clean-pass reviews: long-running or repeated actions that can
+be started twice (double-clicking Save, Run Analysis, Print or an
+import button while the first is still working).
 
 Loop clean passes: 0/5

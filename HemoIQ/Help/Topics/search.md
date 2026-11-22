@@ -39,4 +39,6 @@ Each row is a panel, lot, and cell, followed by the stored antigen typing. A fin
 
 A − criterion matches only a typed minus. Cells stored as NT are left out of that search.
 
+Opening the Search tab runs the antigen search and the investigation search behind the results on screen again, with the criteria and text they were run with, and keeps the selected row when it still matches. A lot deactivated or expired, or an investigation confirmed or cancelled, on another tab is therefore shown as it is now. Criteria you changed but have not searched with yet are left for you to run. Clear stops the antigen search from being run again.
+
 Search does not change grades or confirm an identification. To test a cell you found, enter the grades on the Reactions tab for the specimen you are working up.

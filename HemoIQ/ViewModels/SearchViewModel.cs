@@ -10,7 +10,7 @@ namespace HemoIQ.ViewModels
     public class SearchViewModel : BaseViewModel
     {
         private readonly DatabaseService _db;
-        private readonly MainViewModel _main;
+        private readonly MainViewModel? _main;
 
         public ObservableCollection<AntigenCriterionRow> Criteria { get; } = new();
         public ObservableCollection<SearchResultRow> Results { get; } = new();
@@ -60,31 +60,63 @@ namespace HemoIQ.ViewModels
             private set => SetField(ref _investigationMessage, value);
         }
 
-        public void RunInvestigationSearch()
+        /// <summary>The query behind the investigation results now shown, so opening the tab can run it again.</summary>
+        private (string? Query, DateTime? From, DateTime? To)? _lastInvestigationSearch;
+
+        /// <summary>The antigen criteria and zygosity behind the cell results now shown.</summary>
+        private (Dictionary<string, string> Criteria, string Zygosity)? _lastCellSearch;
+
+        /// <summary>
+        /// Opening the Search tab runs the searches behind the results on screen again, with the criteria they were
+        /// run with (not criteria edited since), so a lot deactivated or expired, or an investigation confirmed or
+        /// cancelled on another tab, is not picked from an older list. The selected row is kept when it still matches.
+        /// </summary>
+        public void OnTabSelected()
+        {
+            if (_lastCellSearch is { } cells)
+            {
+                var key = ResultKey(SelectedResult);
+                ExecuteCellSearch(cells.Criteria, cells.Zygosity, announce: false);
+                SelectedResult = Results.FirstOrDefault(r => ResultKey(r) == key);
+            }
+            if (_lastInvestigationSearch is { } inv)
+            {
+                var accession = SelectedInvestigation?.Accession;
+                ExecuteInvestigationSearch(inv.Query, inv.From, inv.To, announce: false);
+                SelectedInvestigation = InvestigationResults.FirstOrDefault(r => r.Accession == accession);
+            }
+        }
+
+        public void RunInvestigationSearch() =>
+            ExecuteInvestigationSearch(InvestigationQuery, FromDate, ToDate, announce: true);
+
+        private void ExecuteInvestigationSearch(string? query, DateTime? fromDate, DateTime? toDate, bool announce)
         {
             InvestigationResults.Clear();
-            if (string.IsNullOrWhiteSpace(InvestigationQuery) && FromDate == null && ToDate == null)
+            _lastInvestigationSearch = null;
+            if (string.IsNullOrWhiteSpace(query) && fromDate == null && toDate == null)
             {
                 InvestigationMessage = "Enter search text or a date range.";
                 return;
             }
-            if (FromDate != null && ToDate != null && FromDate > ToDate)
+            if (fromDate != null && toDate != null && fromDate > toDate)
             {
                 InvestigationMessage = "The From date is after the To date.";
                 return;
             }
-            foreach (var row in Services.InvestigationSearch.Search(_db, InvestigationQuery, FromDate, ToDate))
+            foreach (var row in Services.InvestigationSearch.Search(_db, query, fromDate, toDate))
                 InvestigationResults.Add(row);
+            _lastInvestigationSearch = (query, fromDate, toDate);
             InvestigationMessage = InvestigationResults.Count == 0
                 ? "No investigations match."
                 : $"{InvestigationResults.Count} investigation(s), newest first. Double-click or Open to view.";
-            _main.SetStatus(InvestigationMessage);
+            if (announce) _main?.SetStatus(InvestigationMessage);
         }
 
         private void OpenInvestigation()
         {
             if (SelectedInvestigation == null) return;
-            _main.NavigateToWorklistItem(new WorklistItem
+            _main?.NavigateToWorklistItem(new WorklistItem
             {
                 AccessionNumber = SelectedInvestigation.Accession,
                 TargetTab = "Specimens",
@@ -101,7 +133,7 @@ namespace HemoIQ.ViewModels
             {
                 var previous = ResultKey(_selectedResult);
                 if (!SetField(ref _selectedResult, value)) return;
-                if (_main.SelectedTabIndex == 7 && previous != ResultKey(_selectedResult))
+                if (_main?.SelectedTabIndex == 7 && previous != ResultKey(_selectedResult))
                     AnnounceStatus();
                 CommandManager.InvalidateRequerySuggested();
             }
@@ -114,7 +146,7 @@ namespace HemoIQ.ViewModels
             set => SetField(ref _selectedZygosity, value);
         }
 
-        public SearchViewModel(DatabaseService db, MainViewModel main)
+        public SearchViewModel(DatabaseService db, MainViewModel? main = null)
         {
             _db = db;
             _main = main;
@@ -130,7 +162,7 @@ namespace HemoIQ.ViewModels
         }
 
         public void OpenResult(SearchResultRow row) =>
-            _main.OpenPanel(row.PanelId, row.CellNumber, LastActiveAntigen(Criteria), ActiveAntigens(Criteria));
+            _main?.OpenPanel(row.PanelId, row.CellNumber, LastActiveAntigen(Criteria), ActiveAntigens(Criteria));
 
         /// <summary>
         /// The first antigen the search is actually filtering on, in the
@@ -192,20 +224,26 @@ namespace HemoIQ.ViewModels
 
             if (criteria.Count == 0)
             {
-                _main.SetStatus("Please select at least one antigen criterion.");
+                _main?.SetStatus("Please select at least one antigen criterion.");
                 return;
             }
+            ExecuteCellSearch(criteria, SelectedZygosity, announce: true);
+        }
 
-            var matches = _db.SearchCellsByProfile(criteria, SelectedZygosity);
-            _completedStatus = FormatResultStatus(matches.Count, criteria.Count, SelectedZygosity,
+        private void ExecuteCellSearch(Dictionary<string, string> criteria, string zygosity, bool announce)
+        {
+            var matches = _db.SearchCellsByProfile(criteria, zygosity);
+            _lastCellSearch = (criteria, zygosity);
+            _completedStatus = FormatResultStatus(matches.Count, criteria.Count, zygosity,
                 matches.Count(m => SearchResultRow.LotStatus(m.panel, DateTime.Today) != null));
             SelectedResult = null;
             Results.Clear();
             foreach (var (panel, cell) in matches)
                 Results.Add(new SearchResultRow(panel, cell));
 
+            if (!announce) return;
             PublishResultAntigen(LastActiveAntigen(Criteria), ActiveAntigens(Criteria));
-            _main.SetStatus(ScreenStatus.Search(_completedStatus));
+            _main?.SetStatus(ScreenStatus.Search(_completedStatus));
         }
 
         /// <summary>
@@ -232,8 +270,9 @@ namespace HemoIQ.ViewModels
             _completedStatus = "Search criteria cleared.";
             SelectedResult = null;
             Results.Clear();
+            _lastCellSearch = null;
             PublishResultAntigen(null, null);
-            _main.SetStatus(ScreenStatus.Search(_completedStatus));
+            _main?.SetStatus(ScreenStatus.Search(_completedStatus));
         }
 
         private string? _resultAntigen;
@@ -348,7 +387,7 @@ namespace HemoIQ.ViewModels
         /// row is named after that count.
         /// </summary>
         public void AnnounceStatus() =>
-            _main.SetStatus(ScreenStatus.Search(_completedStatus, FormatSelectedResult(SelectedResult)));
+            _main?.SetStatus(ScreenStatus.Search(_completedStatus, FormatSelectedResult(SelectedResult)));
 
         public static string? FormatSelectedResult(SearchResultRow? row)
         {
