@@ -6872,10 +6872,33 @@ analyses stale and says each change is audited.
 
 All 1462 tests pass.
 
+## Iteration 254 (clean pass): rules and engine tables in the audit and the snapshot
+
+**Reviewed:**
+- **Rule audit.** Rule add, update and delete each write an audit entry
+  (`add_rule`, `update_rule`, `delete_rule`) with before and after values.
+  These actions are in the configuration-change sequence, so open analyses
+  go stale (Iteration 152).
+- **Snapshot.** Each analysis snapshot stores the software version, the
+  rule engine version, the clinical settings JSON (Iteration 253) and
+  `AnalysisRuleTrace.Serialize`. That holds every rule with all its fields
+  (antibody, minimum rule-out count, heterozygous permission, exception
+  antigen, separation exemption and partners), the ACS antigen list, and
+  the rule-out, ID and separation counts.
+- **Engine tables.** The fixed ACS core list and the treatment tables are
+  code, so the software version identifies them.
+
+No new issue or gap worth fixing. All 1462 tests pass.
+
+**Release note (process, not code):** the treatment-table corrections in
+Iterations 166–168 were made without a version change (still 2.0.0). Bump
+the version at the next release, so snapshots taken before and after the
+corrections can be told apart.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other configuration the analysis reads
-outside Preferences (rules, ACS core list, treatment tables) for the same
-audit and snapshot coverage.
+Continue clean-pass reviews: the analysis input fingerprint (which inputs
+it covers: reactions, panel typing, specimen fields, patient record) and
+whether every staleness trigger has a matching fingerprint input.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
