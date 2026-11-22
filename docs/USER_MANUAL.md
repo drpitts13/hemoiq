@@ -1356,6 +1356,8 @@ The log is a history of actions taken in the application. It is not the clinical
 
 **Tools → Load Demo Data** adds sample specimens, panels, and results so you can learn the screens. Existing data is not removed. The application asks you to confirm before it writes anything.
 
+Demo specimens use realistic accession numbers and demo lots use real vendor names, so demo data is loaded only into an **empty database** or one that already holds only demo data. In a database with laboratory records it is refused and nothing is added. To try the demo alongside real work, start HemoIQ with a separate database file (set the `HEMOIQ_DB` environment variable to a new file name). The whole load is one step: if anything fails part-way, nothing from it is kept.
+
 What the loader adds, when those records are not already present:
 
 - 10 clinical specimens, accessions 2026-001 through 2026-010, on 5 shared panels.
