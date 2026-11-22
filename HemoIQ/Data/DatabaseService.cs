@@ -27,35 +27,50 @@ namespace HemoIQ.Data
         {
             DbPath = dbPath ?? DefaultDbPath();
             _conn = new SqliteConnection($"Data Source={DbPath};Pooling=False");
-            _conn.Open();
-            EnableForeignKeys();
-            CreateTables();
-            MigrateSpecimenTimestamps();
-            MigratePanelStartCell();
-            MigrateActiveFlag();
-            MigrateReactionsToRuns();
-            MigrateSpecimenClinical();
-            MigrateSpecimenFinalCall();
-            MigrateWarehouseAntigens();
-            MigratePanelAntigenOrder();
-            MigrateVendorPanelMetadata();
-            MigrateAuditAndSnapshots();
-            MigrateReactionExtraPhases();
-            MigrateAnalysisSnapshotRules();
-            MigratePatients();
-            ExecNonQuery(@"
-                CREATE TABLE IF NOT EXISTS users (
-                    login TEXT PRIMARY KEY COLLATE NOCASE CHECK (length(login) BETWEEN 1 AND 128),
-                    initials TEXT NOT NULL CHECK (length(initials) BETWEEN 1 AND 12),
-                    name TEXT,
-                    role TEXT NOT NULL CHECK (role IN ('technologist','supervisor','administrator','readonly')),
-                    active INTEGER NOT NULL DEFAULT 1
-                )");
-            MigrateUserRoles();
-            ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_audit_entity ON audit_events(entity_type, entity_id)");
-            CreateForeignKeyIndexes();
-            DeactivateExpiredSpecimens();
-            DeactivateExpiredPanels();
+            // If opening or migrating fails (a read-only file or share, a file another program holds), release the
+            // file before the error reaches the caller, so nothing is left holding it.
+            try
+            {
+                _conn.Open();
+                // SQLite opens a read-only file (or a file on a read-only share) quietly in read-only mode, and an
+                // up-to-date database needs no write at start-up, so the problem would only appear on the first save.
+                // Refuse at open instead, with SQLite's own read-only error, so start-up can explain it.
+                if (SQLitePCL.raw.sqlite3_db_readonly(_conn.Handle, "main") == 1)
+                    throw new SqliteException("attempt to write a readonly database", 8);
+                EnableForeignKeys();
+                CreateTables();
+                MigrateSpecimenTimestamps();
+                MigratePanelStartCell();
+                MigrateActiveFlag();
+                MigrateReactionsToRuns();
+                MigrateSpecimenClinical();
+                MigrateSpecimenFinalCall();
+                MigrateWarehouseAntigens();
+                MigratePanelAntigenOrder();
+                MigrateVendorPanelMetadata();
+                MigrateAuditAndSnapshots();
+                MigrateReactionExtraPhases();
+                MigrateAnalysisSnapshotRules();
+                MigratePatients();
+                ExecNonQuery(@"
+                    CREATE TABLE IF NOT EXISTS users (
+                        login TEXT PRIMARY KEY COLLATE NOCASE CHECK (length(login) BETWEEN 1 AND 128),
+                        initials TEXT NOT NULL CHECK (length(initials) BETWEEN 1 AND 12),
+                        name TEXT,
+                        role TEXT NOT NULL CHECK (role IN ('technologist','supervisor','administrator','readonly')),
+                        active INTEGER NOT NULL DEFAULT 1
+                    )");
+                MigrateUserRoles();
+                ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_audit_entity ON audit_events(entity_type, entity_id)");
+                CreateForeignKeyIndexes();
+                DeactivateExpiredSpecimens();
+                DeactivateExpiredPanels();
+            }
+            catch
+            {
+                _conn.Dispose();
+                throw;
+            }
         }
 
         /// <summary>
@@ -77,7 +92,7 @@ namespace HemoIQ.Data
             ExecNonQuery("CREATE INDEX IF NOT EXISTS ix_audit_action_entity ON audit_events(action, entity_id)");
         }
 
-        private static string DefaultDbPath()
+        public static string DefaultDbPath()
         {
             // ANTIBODY_PANELS_DB is the variable name used before the rename to HemoIQ.
             var envPath = Environment.GetEnvironmentVariable("HEMOIQ_DB");

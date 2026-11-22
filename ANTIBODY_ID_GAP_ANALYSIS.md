@@ -6449,10 +6449,55 @@ All 1435 tests pass.
 
 No new issue or gap worth fixing. All 1435 tests pass.
 
+## Iteration 240: a read-only or unusable database is refused at start-up with a clear message
+
+**Reviewed, no gap:**
+- **Locking.** SQLite allows a second copy of HemoIQ on the same file.
+  Microsoft.Data.Sqlite waits on a busy lock before failing.
+- **Archives.** They are read through their own `Mode=ReadOnly` connection
+  and attached for restore, so a read-only archive still opens.
+
+**Deficiency found (reliability, data integrity):**
+- **Read-only opens quietly.** SQLite opens a read-only database file, or
+  one on a read-only share, in read-only mode without any error. An
+  up-to-date database needs no write at start-up, so HemoIQ started
+  normally.
+- **Every save then failed.** Each save failed with SQLite's raw "attempt
+  to write a readonly database" through the app-wide error handler, so the
+  user could do a full workup before learning nothing could be recorded.
+- **Invisible process.** If opening did throw (locked, damaged, cannot
+  open), the app-wide handler swallowed it after `MainWindow` had failed
+  to build. HemoIQ then stayed running invisibly, with no window, after
+  the error box.
+- **File left open.** A constructor failure left the connection open.
+
+**Bounded improvement:**
+- `DatabaseService` refuses a read-only database at open, using
+  `sqlite3_db_readonly` and throwing SQLite's own read-only error (code 8).
+- Any open or migration failure disposes the connection before rethrowing,
+  so the file is released.
+- `App.OnStartup` catches a main-window failure, logs it, and shows
+  `StartupFailure.Describe`: the database path and a plain reason for
+  read-only, in use, cannot open, damaged, or the underlying error. It
+  says "Nothing was changed", then `Shutdown(1)`.
+
+**Data/schema:** none.
+
+**Tests:** `StartupFailureTests` (7 cases):
+- each SQLite failure code is explained with the path, even when wrapped
+  in another exception;
+- other errors show the innermost message;
+- a real read-only, up-to-date database file is refused at open with the
+  read-only explanation, and the file is released (deleted afterwards).
+
+**Docs:** the Getting started help topic gains "If HemoIQ cannot start".
+
+All 1442 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: start-up and shutdown with a locked or
-read-only database file (another copy of HemoIQ open, a read-only share):
-a clear message and no partial writes.
+Continue clean-pass reviews: what happens when the database becomes
+unwritable during a session (disk full, network share dropped): saves fail
+with a clear message and no half-saved record.
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5

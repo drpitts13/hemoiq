@@ -71,7 +71,21 @@ namespace HemoIQ
             base.OnStartup(e);
             // Opened here rather than through StartupUri: the headless runs above return before any window
             // exists, so shutting them down cannot raise the quit confirmation and wait for a click.
-            new MainWindow().Show();
+            MainWindow window;
+            try
+            {
+                window = new MainWindow();
+            }
+            catch (Exception ex)
+            {
+                // Without a main window the app would otherwise keep running invisibly after the error box.
+                AppLog.Error("Could not start: database unavailable", ex);
+                MessageBox.Show(StartupFailure.Describe(ex, DatabaseService.DefaultDbPath()), "HemoIQ could not start",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown(1);
+                return;
+            }
+            window.Show();
         }
 
         private static void OnPreviewKeyDown(object sender, KeyEventArgs e)
