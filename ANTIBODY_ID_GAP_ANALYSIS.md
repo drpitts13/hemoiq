@@ -6536,10 +6536,30 @@ No new issue or gap worth fixing. All 1442 tests pass.
 No new issue or gap worth fixing. All 1442 tests pass (this run took 7
 minutes from machine load).
 
+## Iteration 243 (clean pass): Search at scale and with partial warehouse antigens
+
+**Reviewed:**
+- **Indexing.** Warehouse-antigen criteria filter with `EXISTS` on
+  `panel_cell_extra_antigens`, whose primary key (cell_id, antigen_name)
+  serves each probe. Standard-antigen criteria compare `panel_cells`
+  columns directly.
+- **Extra antigens.** Each search attaches the matched cells' extra
+  antigens in a single query. The cell IDs are a literal integer list, so
+  there is no parameter-count limit.
+- **Lots without the antigen.** A lot that never typed the antigen has
+  no row for it. A "−" criterion needs a stored "−", and a "+" criterion
+  needs + or ++, so those cells are left out rather than treated as
+  negative. The Lot column marks inactive and expired lots (Iteration
+  213).
+- **Performance.** `PerformanceTests.SearchCellsByProfile_CompletesUnder1Second`
+  times 50 searches on the seeded database.
+
+No new issue or gap worth fixing. All 1442 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Search tab performance and correctness with
-many lots (thousands of cells) and with warehouse antigens on only some
-lots.
+Continue clean-pass reviews: the About box and version identity (version
+shown matches the installer and the report footers, and the intended-use
+statement is consistent).
 
-Loop clean passes: 2/5
+Loop clean passes: 3/5
