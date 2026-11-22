@@ -18,3 +18,5 @@ The preview line states how many specimens match before you commit.
 **Purge** deletes the matching specimens after you confirm. Pressing Enter does not purge: click **Purge**, and in the confirmation the highlighted answer is **No**, so choose **Yes** deliberately. Every other confirmation that deletes data (a specimen, panel, rule, run, extra antigen, attached panel or reactions) also defaults to **No**. Once users are registered, only an Administrator can purge. If any matching specimen has a confirmed identification, an archive is required: without one, the purge is refused and nothing is deleted. The deletion and its audit entry are saved together. Panels that are still needed by remaining specimens stay. **Cancel** closes the dialog without deleting anything.
 
 After a purge, every tab reloads. The status bar reports how many specimens were removed and the new database size. **Help** opens this chapter.
+
+Only an Administrator can purge once users are registered. Any other role is told so when it opens Purge Database, before choosing a cutoff or an archive, and the start-up *Database nearly full* message asks it to have an Administrator purge.

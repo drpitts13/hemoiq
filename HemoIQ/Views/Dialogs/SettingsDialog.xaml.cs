@@ -17,6 +17,18 @@ namespace HemoIQ.Views.Dialogs
             InitializeComponent();
             // Never taller than the screen's working area, so Save and Cancel stay reachable on small displays.
             MaxHeight = Math.Max(300, SystemParameters.WorkArea.Height - 40);
+            // A role that cannot change Preferences sees them read-only from the start, with the reason,
+            // instead of filling in the form and being refused at Save.
+            if (_db != null && AccessControl.Refusal(_db, Permission.ConfigurePreferences) is string refusal)
+            {
+                Title += " (view only)";
+                foreach (var button in new[] { SaveButton, ImportButton })
+                {
+                    button.IsEnabled = false;
+                    button.ToolTip = refusal;
+                    System.Windows.Controls.ToolTipService.SetShowOnDisabled(button, true);
+                }
+            }
             var s = AppSettings.Current;
             LabNameBox.Text = s.LabName;
             DepartmentBox.Text = s.Department;

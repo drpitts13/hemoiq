@@ -87,6 +87,21 @@ namespace HemoIQ.Services
             return user != null && Grants[permission].Contains(user.Role);
         }
 
+        /// <summary>
+        /// Why the current user may not use the permission (the same message <see cref="Demand"/> throws), or null.
+        /// Screens check it before a dialog is filled in, so a refusal never comes only after the work is done.
+        /// </summary>
+        public static string? Refusal(DatabaseService db, Permission permission)
+        {
+            try { Demand(db, permission); return null; }
+            catch (UnauthorizedAccessException ex) { return ex.Message; }
+        }
+
+        /// <summary>The start-up question when the database is nearly full: an offer to purge, or who can purge.</summary>
+        public static string PurgeOffer(DatabaseService db) =>
+            NextStep(db, Permission.PurgeData, "Would you like to purge old specimen data?",
+                "purge old specimen data (Tools > Purge Database).");
+
         /// <summary>Throws <see cref="UnauthorizedAccessException"/> when the current user lacks the permission.</summary>
         public static void Demand(DatabaseService db, Permission permission)
         {

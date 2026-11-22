@@ -7626,10 +7626,49 @@ No new issue or gap worth fixing. All tests pass.
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 278: refused before the form is filled in
+
+**Reviewed:** every command the database refuses for a role.
+- **Data changes** (Record results) are disabled for view-only
+  sessions.
+- **Rules:** add, edit, delete and import check the role before the
+  rule dialog opens.
+- **Supervisor review, reinstate and clear:** these report the refusal,
+  and the messages name who can do it (Iteration 260).
+- **Users & roles:** Save reports the refusal.
+
+**Found:** two commands were refused only after the work was done:
+- **Purge Database.** A Technologist chose a cutoff and an archive
+  location and confirmed. Only then did "Purge failed: … cannot purge
+  specimens" appear. The start-up "Database nearly full" prompt asked
+  every role "Would you like to purge old specimen data?".
+- **Preferences.** Any role could edit every field. A non-Administrator
+  was refused only at Save, and Import… was refused the same way.
+
+**Implemented:**
+- `AccessControl.Refusal(db, permission)` gives the same message
+  `Demand` throws, or null.
+- **Purge Database** shows the refusal before the dialog opens.
+- `AccessControl.PurgeOffer` gives the start-up prompt for the user's
+  role: the Yes/No offer for an Administrator (or when no users are
+  registered), or "Ask an Administrator to purge old specimen data
+  (Tools > Purge Database)." with OK only.
+- **Preferences** opened by a role that cannot change them shows "(view
+  only)" in the title, with Save and Import… disabled and the reason as
+  their tooltip.
+
+**Tests:** `RefusedUpFrontTests` (3 cases): `Refusal` is the Demand
+message for a Technologist and null for an Administrator or an empty
+registry; the capacity prompt offers the purge only to a role that can
+run it; Preferences open view-only for a Technologist and editable for
+an Administrator.
+
+**Docs:** the Preferences and Purge help topics.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the permission check on every write
-command (each change command that the database refuses for a role is
-also disabled, or explained, on screen for that role).
+Continue clean-pass reviews: Open Archive (restore) by role and on a
+view-only session (restoring writes specimens, so check the refusal
+comes before the archive is chosen).
 
-Loop clean passes: 3/5
+Loop clean passes: 0/5

@@ -73,20 +73,28 @@ namespace HemoIQ
             if (!ViewModel.IsDatabaseNearCapacity) return;
 
             var cap = ViewModel.GetCapacityStatus();
+            var canPurge = AccessControl.Can(ViewModel.Database, Permission.PurgeData);
+            // Only a role that can purge is offered the purge; anyone else is told who can.
             var result = MessageBox.Show(
                 $"The database is {cap.PercentUsed:0}% of the configured maximum size " +
                 $"({DatabaseCapacityStatus.FormatBytes(cap.FileBytes)} / {DatabaseCapacityStatus.FormatBytes(cap.MaxBytes)}).\n\n" +
-                "Would you like to purge old specimen data?",
+                AccessControl.PurgeOffer(ViewModel.Database),
                 "Database nearly full",
-                MessageBoxButton.YesNo,
+                canPurge ? MessageBoxButton.YesNo : MessageBoxButton.OK,
                 MessageBoxImage.Warning,
-                MessageBoxResult.No);
-            if (result == MessageBoxResult.Yes)
+                canPurge ? MessageBoxResult.No : MessageBoxResult.OK);
+            if (canPurge && result == MessageBoxResult.Yes)
                 ShowPurgeDatabase();
         }
 
         private void ShowPurgeDatabase()
         {
+            // Refused before the cutoff and archive are chosen, not after the confirmation.
+            if (AccessControl.Refusal(ViewModel.Database, Permission.PurgeData) is string refusal)
+            {
+                MessageBox.Show(this, refusal, "Purge Database", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             var dlg = new Views.Dialogs.PurgeDatabaseDialog(ViewModel.Database) { Owner = this };
             if (dlg.ShowDialog() != true) return;
 
