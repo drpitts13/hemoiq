@@ -7050,10 +7050,43 @@ All 1480 tests pass.
 
 No new issue or gap worth fixing. All 1480 tests pass.
 
+## Iteration 259: safety-warning overrides default to No
+
+**Reviewed:** prompts that repeat after acknowledgement. The
+intended-use acknowledgement shows once and is saved; draft recovery
+asks once and deletes the draft on either answer (it keeps the file only
+when the run cannot be opened, so the grades are not lost); the ACS
+exception offer is asked once per explicit Run Analysis. None repeats.
+
+**Found:** the prompts that let the user go ahead past a safety warning
+did not agree on their keyboard default. The stale-analysis and
+open-testing prompts at Confirm ID default to No, but these defaulted
+to Yes, so pressing Enter recorded the override:
+- duplicate lot on save, and activating an expired lot (Panels);
+- grading an expired specimen or an expired panel lot (Reactions);
+- an encounter recorded on another patient, and a pregnancy recorded
+  for a male patient (Specimens);
+- confirming multiple antibodies short of the separation criterion
+  (Analysis);
+- replacing a stored lot from a vendor download.
+
+**Implemented:**
+- `OverrideConfirm.Ask` shows a Yes/No warning with No as the default,
+  like `DestructiveConfirm`. All eight prompts above use it.
+- The database-nearly-full purge offer at start-up also defaults to No.
+
+**Tests:** `OverrideConfirmTests` (11 cases): the default is No; a
+source scan refuses any Yes/No warning without a default answer and any
+literal "anyway?" prompt that bypasses the helper; each prompt above
+asks through it.
+
+**Docs:** risk R-19, SRS-SAFE-09 and its traceability row; developer
+conventions.
+
 ## Likely next tick
 
-Continue clean-pass reviews: prompts that repeat after acknowledgement
-(the intended-use acknowledgement shows once; recovery prompts and
-confirmation overrides are not asked twice for the same decision).
+Continue clean-pass reviews: messages that name a next step the user
+cannot take in their role (a view-only session or a non-supervisor
+told to "Clear", "Review" or "Deactivate").
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5

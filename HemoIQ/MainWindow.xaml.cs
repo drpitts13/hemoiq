@@ -78,7 +78,8 @@ namespace HemoIQ
                 "Would you like to purge old specimen data?",
                 "Database nearly full",
                 MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+                MessageBoxImage.Warning,
+                MessageBoxResult.No);
             if (result == MessageBoxResult.Yes)
                 ShowPurgeDatabase();
         }

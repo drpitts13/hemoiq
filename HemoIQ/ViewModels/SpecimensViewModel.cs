@@ -452,8 +452,7 @@ namespace HemoIQ.ViewModels
             try { warning = Services.EncounterCheck.Describe(_db, accession, encounter, mrn); }
             catch (System.ArgumentException) { return true; } // the save reports the invalid value
             if (warning == null) return true;
-            if (MessageBox.Show(warning + "\n\nSave anyway?", "Encounter on another patient",
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return false;
+            if (!OverrideConfirm.Ask(warning + "\n\nSave anyway?", "Encounter on another patient")) return false;
             savedPast.Add(warning);
             return true;
         }
@@ -465,8 +464,7 @@ namespace HemoIQ.ViewModels
             if (mrn == null) return true;
             var patient = _db.GetPatient(mrn);
             if (Services.PatientSexCheck.PregnancyConflict(patient?.Sex, pregnancyStatus, mrn) is not string warning) return true;
-            if (MessageBox.Show(warning + "\n\nSave anyway?", "Pregnancy and patient sex",
-                    MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return false;
+            if (!OverrideConfirm.Ask(warning + "\n\nSave anyway?", "Pregnancy and patient sex")) return false;
             savedPast.Add(warning);
             return true;
         }

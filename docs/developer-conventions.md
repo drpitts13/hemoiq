@@ -81,6 +81,14 @@ comparisons, the import schema check, and Final ID entries.
   728 px, the work area of a 1366×768 screen, unless the dialog scrolls and caps itself. When
   adding a dialog, add it to that test.
 
+## Confirmations default to the safe answer
+
+- A confirmation that deletes data uses `DestructiveConfirm.Ask`; one that goes ahead past a safety
+  warning ("Save anyway?", "Record these reactions anyway?", "Replace it?") uses `OverrideConfirm.Ask`.
+  Both default to No, so a stray Enter never deletes records or records an override.
+- Any other Yes/No warning passes `MessageBoxResult.No` as its default. `OverrideConfirmTests` and
+  `DestructiveConfirmTests` scan the source and fail otherwise.
+
 ## Command-line runs open no window
 
 `App.OnStartup` handles `--write-manual`, `--seed-clinical` (through `DemoDataGuard`: refused with exit code 3 on a database with laboratory records) and `--import-vendor-samples`, then shuts down

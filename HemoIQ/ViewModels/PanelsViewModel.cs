@@ -405,10 +405,10 @@ namespace HemoIQ.ViewModels
         {
             var dupes = PanelIntegrityCheck.DuplicatesOf(_db.GetAllPanels(), vendor, lot, panelId);
             if (dupes.Count == 0) return true;
-            return MessageBox.Show(
+            return OverrideConfirm.Ask(
                 $"Lot {lot?.Trim()} is already stored: {PanelIntegrityCheck.DescribeDuplicates(dupes)}.\n\n" +
                 "Two panels with the same lot can lead to results being recorded against the wrong copy. Save anyway?",
-                "Duplicate lot", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+                "Duplicate lot");
         }
 
         private void EditPanel()
@@ -487,8 +487,8 @@ namespace HemoIQ.ViewModels
         internal static bool ConfirmExpiredActivation(string? expirationDate)
         {
             var expiry = Services.PanelEditActivation.ExpiryWarning(expirationDate, System.DateTime.Today);
-            return expiry == null || MessageBox.Show(expiry + "\n\nActivate it anyway? No keeps it inactive.",
-                "Activate expired lot", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes;
+            return expiry == null || OverrideConfirm.Ask(expiry + "\n\nActivate it anyway? No keeps it inactive.",
+                "Activate expired lot");
         }
 
         private void ComparePanels()

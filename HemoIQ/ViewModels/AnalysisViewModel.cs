@@ -683,8 +683,7 @@ namespace HemoIQ.ViewModels
             var separation = _analyzer.EvaluateFinalCall(SelectedSpecimen.AccessionNumber, antibodies);
             if (SeparationShortfallMessage(separation) is string shortfall)
             {
-                if (MessageBox.Show(shortfall + "\n\nConfirm this identification anyway?", "Multiple antibodies",
-                        MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                if (!OverrideConfirm.Ask(shortfall + "\n\nConfirm this identification anyway?", "Multiple antibodies"))
                 {
                     _main.SetStatus("Not confirmed: the multiple-antibody separation criterion is not met.");
                     return;

@@ -887,7 +887,7 @@ namespace HemoIQ.ViewModels
             // A specimen that expired while the application was open is still active until the next start-up
             // deactivates it; warn the same way as for an expired lot rather than saving silently.
             if (Rows.Any(r => r.HasEnteredGrade) && ExpiredSpecimenPrompt(SelectedSpecimen, DateTime.Today) is string specimenPrompt &&
-                MessageBox.Show(specimenPrompt, "Expired specimen", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                !OverrideConfirm.Ask(specimenPrompt, "Expired specimen"))
             {
                 const string notSaved = "Not saved: the specimen has expired.";
                 _main.SetStatus(notSaved);
@@ -896,10 +896,10 @@ namespace HemoIQ.ViewModels
             }
 
             if (SelectedPanel?.IsExpired == true && Rows.Any(r => r.HasEnteredGrade) &&
-                MessageBox.Show(
+                !OverrideConfirm.Ask(
                     $"Panel lot {SelectedPanel.LotNumber} expired {SelectedPanel.ExpirationDate}. Results from expired reagent " +
                     "red cells will be flagged for review in analysis and on the Worklist.\n\nRecord these reactions anyway?",
-                    "Expired panel", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                    "Expired panel"))
             {
                 const string notSaved = "Not saved: the panel lot has expired.";
                 _main.SetStatus(notSaved);

@@ -22,5 +22,6 @@
 | SRS-SAFE-06 | `DestructiveConfirm` | `DestructiveConfirmTests` |
 | SRS-SAFE-07 | `DatabaseService` constructor, `StartupFailure`, `App.OnStartup`, `RunInTransaction` | `StartupFailureTests` |
 | SRS-SAFE-08 | `ReportService.ScoreLabel`, `AntigenConstants.AcsExceptionCriterion` | `AcsEvaluationTests` |
+| SRS-SAFE-09 | `OverrideConfirm` | `OverrideConfirmTests` |
 
 Algorithm / clinical performance (pre-existing): `AntibodyAnalysisTests`, `AcsEvaluationTests`, `ScenarioTests`, `ValidationStressTests`, `ReportAccuracyTests`.

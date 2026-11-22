@@ -141,10 +141,9 @@ namespace HemoIQ.Views.Dialogs
             var replace = false;
             if (existing != null)
             {
-                var answer = MessageBox.Show(
-                    $"Lot {parsed.LotNumber} from {parsed.Vendor} is already stored as '{existing.Name}'. Replace it?",
-                    "Duplicate lot", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (answer != MessageBoxResult.Yes) return;
+                if (!ViewModels.OverrideConfirm.Ask(
+                        $"Lot {parsed.LotNumber} from {parsed.Vendor} is already stored as '{existing.Name}'. Replace it?",
+                        "Duplicate lot", this)) return;
                 replace = true;
             }
 

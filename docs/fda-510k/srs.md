@@ -23,3 +23,4 @@
 | SRS-SAFE-06 | Every confirmation that deletes data shall default to No, and Enter shall not trigger Purge. |
 | SRS-SAFE-07 | A database that cannot be written shall be refused at start-up with its path and reason, and the application shall close; a failed save shall roll back and keep the unsaved entries. |
 | SRS-SAFE-08 | Combined scores shall be labelled as scores, never described as probabilities. |
+| SRS-SAFE-09 | Every prompt that goes ahead past a safety warning shall default to No. |
