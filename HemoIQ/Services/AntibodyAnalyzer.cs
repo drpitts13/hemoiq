@@ -268,6 +268,7 @@ namespace HemoIQ.Services
                              specimen.TransfusionStatus, specimen.LastTransfusionDate, specimen.TransfusionProducts,
                              specimen.PregnancyStatus, specimen.PregnancyEndDate, specimen.RhigDate,
                              specimen.Phenotype, specimen.Genotype, specimen.PreviousAntibodies, specimen.Notes,
+                             specimen.Hemolysis,
                          })
                     sb.Append(field ?? "").Append('|');
                 sb.Append(';');

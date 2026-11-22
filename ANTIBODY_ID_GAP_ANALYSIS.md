@@ -6936,9 +6936,60 @@ Clinical reports as "Input fingerprint".
 
 All 1466 tests pass.
 
+## Iteration 256: every analysis input marks open analyses stale when it changes
+
+**Reviewed, no gap:** these already mark staleness:
+- reactions, panel typing (Iteration 192) and run add or delete;
+- specimen type, notes, phenotype, genotype, previous antibodies, DAT,
+  transfusion status and products, and pregnancy (193);
+- the patient's transplant and antigen-negative fields;
+- MRN changes and same-patient final calls (195);
+- eluate links (194).
+
+**Deficiency found (data integrity, patient safety):** checked against the
+inputs listed in Iteration 255, four writes changed what analysis computes
+without marking anything stale:
+- **Hemolysis.** `UpdateSpecimenHemolysis`, although analysis prints
+  hemolysis REVIEW notes. Hemolysis was also missing from the fingerprint.
+- **Collection time.** `UpdateSpecimenCollection`, although collection is
+  the reference date for specimen dating and the transfusion-history
+  window.
+- **Free-text requirements.** `SavePatient` marked transplant and
+  antigen-negative changes, but not the free-text transfusion
+  requirements that feed the antigen-negative review note.
+- **Other specimens.** Transfusion record, collection time and phenotype
+  changes marked only their own specimen, although the patient's other
+  specimens read them (transfusion history, historical phenotype).
+
+**Bounded improvement:**
+- Hemolysis changes mark the specimen stale.
+- Collection changes mark the specimen and the patient's other specimens.
+- Transfusion status and products, and phenotype changes, also mark the
+  patient's other specimens.
+- Free-text requirement changes mark the MRN's specimens.
+- Hemolysis is added to the input fingerprint.
+- Every writer still returns early when nothing changed, so an unchanged
+  save marks nothing.
+
+**Data/schema:** none.
+
+**Tests:** `AnalysisInputStalenessTests` (6 cases):
+- hemolysis;
+- collection on one specimen marks it and the patient's other open
+  analysis stale, but not another patient's;
+- transfusion and phenotype on another specimen;
+- free-text requirements;
+- hemolysis in the fingerprint.
+
+**Docs:** the Analysis help topic's stale-warning list adds hemolysis,
+collection time, transfusion requirements and the same-patient changes.
+
+All 1472 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the staleness triggers against the same input
-list (each fingerprint input has a write that marks open analyses stale).
+Continue clean-pass reviews: the reverse direction: writes that mark
+analyses stale but do not change any analysis input (needless "stale"
+warnings train users to ignore them).
 
 Loop clean passes: 0/5

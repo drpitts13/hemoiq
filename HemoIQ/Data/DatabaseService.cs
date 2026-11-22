@@ -718,6 +718,9 @@ namespace HemoIQ.Data
                 JsonSerializer.Serialize(changed.ToDictionary(c => c.Key, c => c.Value.after)));
             if (changed.Keys.Any(k => k is "type" or "notes" or "phenotype" or "previousAntibodies" or "datResult" or "genotype"))
                 MarkAnalysisInputChanged(accessionNumber);
+            // An earlier specimen's phenotype can stand in for unreliable current typing on the patient's other specimens.
+            if (changed.ContainsKey("phenotype"))
+                MarkSamePatientSpecimensChanged(accessionNumber);
         }
 
         /// <summary>
@@ -750,6 +753,7 @@ namespace HemoIQ.Data
                 JsonSerializer.Serialize(new { products = before.TransfusionProducts, units = before.TransfusionUnits }),
                 JsonSerializer.Serialize(new { products = codes, units = count }));
             MarkAnalysisInputChanged(accessionNumber);
+            MarkSamePatientSpecimensChanged(accessionNumber); // the patient's other specimens read transfusion history
         }
 
         public void UpdateSpecimenTransfusion(string accessionNumber, string? status, string? lastTransfusionDate)
@@ -784,6 +788,7 @@ namespace HemoIQ.Data
                 JsonSerializer.Serialize(new { status = before.TransfusionStatus, lastTransfusionDate = before.LastTransfusionDate }),
                 JsonSerializer.Serialize(new { status = code, lastTransfusionDate = date }));
             MarkAnalysisInputChanged(accessionNumber);
+            MarkSamePatientSpecimensChanged(accessionNumber); // the patient's other specimens read transfusion history
         }
 
         /// <summary>
@@ -838,6 +843,8 @@ namespace HemoIQ.Data
             AppendAudit("update_hemolysis", "specimen", accessionNumber, null,
                 JsonSerializer.Serialize(new { hemolysis = before.Hemolysis }),
                 JsonSerializer.Serialize(new { hemolysis = level }));
+            // Analysis prints hemolysis REVIEW notes from this value.
+            MarkAnalysisInputChanged(accessionNumber);
         }
 
         public List<AppUser> GetUsers()
@@ -1025,8 +1032,10 @@ namespace HemoIQ.Data
                 JsonSerializer.Serialize(Snap(after)));
             // The transplant and antigen-negative requirement feed analysis (typing reliability, autoadsorption,
             // transfusion-requirement notes) for every open investigation on this MRN.
+            // The free-text requirements feed the antigen-negative review note too.
             if (before == null || before.HpcTransplant != after.HpcTransplant ||
-                before.HpcTransplantDate != after.HpcTransplantDate || before.AntigenNegative != after.AntigenNegative)
+                before.HpcTransplantDate != after.HpcTransplantDate || before.AntigenNegative != after.AntigenNegative ||
+                before.TransfusionRequirements != after.TransfusionRequirements)
                 foreach (var s in GetSpecimensByMrn(key))
                     MarkAnalysisInputChanged(s.AccessionNumber);
         }
@@ -1218,6 +1227,13 @@ namespace HemoIQ.Data
             AppendAudit("update_collection", "specimen", accessionNumber, null,
                 JsonSerializer.Serialize(new { collectedAt = before.CollectedAt, receivedAt = before.ReceivedAt }),
                 JsonSerializer.Serialize(new { collectedAt = collected, receivedAt = received }));
+            // Collection is the reference date for specimen dating and the transfusion-history window, here and on
+            // the patient's other specimens (their historical-phenotype and transfusion-history checks read it).
+            if (before.CollectedAt != collected)
+            {
+                MarkAnalysisInputChanged(accessionNumber);
+                MarkSamePatientSpecimensChanged(accessionNumber);
+            }
         }
 
         /// <summary>
