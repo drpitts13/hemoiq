@@ -1246,6 +1246,8 @@ While **no user is registered**, everyone may do everything, as in earlier versi
 
 The right end of the status bar shows who is signed in and their role, for example "Signed in: Tom Tech (TE) (Technologist)". When the session can only view (a Read-only user, or a login that is not registered), the label turns amber, reads "view only", and the buttons that change laboratory data are disabled. These buttons are Add, Edit, Delete, Attach and Cancel on Specimens; Add, Edit, Copy, Import, Activate and the extra-antigen buttons on Panels; Save, Clear, Fill negatives and the run buttons on Reactions; Confirm ID and Clear on Analysis; and Add, Edit, Delete and Import on Rules. Hover over the label for details. The label updates when you close Preferences, so a role change takes effect immediately.
 
+Messages that name a next step follow your role. A Technologist asked to change a confirmed identification, or to edit a cancelled investigation, is told to ask a Supervisor or Administrator to clear or reinstate it, rather than to click a command the role refuses.
+
 When users are registered, the initials entered for a supervisor review must be the signed-in user's own. Every audit entry records the signed-in Windows login, and user changes are audited.
 
 ## Export and import

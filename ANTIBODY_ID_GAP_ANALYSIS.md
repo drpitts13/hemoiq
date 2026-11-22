@@ -7119,10 +7119,40 @@ can reinstate it.
 
 **Docs:** the Preferences help topic (users and roles).
 
+## Iteration 261: printed reports are never an older preview
+
+**Reviewed:** text that goes stale after a later action. The status
+line is replaced on every screen change and by every action. The
+Worklist is rebuilt when its tab opens and after every write. The
+Analysis tab re-reads the stale state when it opens, and Confirm ID
+re-reads the specimen from the database.
+
+**Found:** the Reports preview is built only when the report type,
+specimen or panel selection changes. Running analysis, saving grades or
+changing rules on another tab did not rebuild it, and opening the
+Reports tab did not either. **Copy** and **Print** sent that cached
+text, while Export PDF and CSV rebuild from the database. So a report
+built from the earlier analysis could be printed and recorded in the
+audit log (with its fingerprint) as the issued report.
+
+**Implemented:**
+- `ReportsViewModel.OnTabSelected` rebuilds the lists and the preview
+  when the Reports tab opens, keeping the selection.
+- `ReportsViewModel.CurrentShareText` rebuilds the report at the moment
+  of Copy or Print. The printed text, the preview and the audited
+  fingerprint are the same current report.
+
+**Tests:** `ReportPreviewFreshnessTests` (3 cases): a confirmation on
+another tab leaves the preview old until the tab opens, then shows it
+with the selection kept; the Copy/Print text is rebuilt and matches the
+preview; a deleted specimen leaves the list when the tab opens.
+
+**Docs:** the Reports help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: status-bar and Worklist text that goes
-stale after the action it describes (a status line still naming a
-specimen or count that a later action changed).
+Continue clean-pass reviews: other screens that show cached data after
+another tab changes it (Panels cell grid after a panel edit elsewhere,
+Search results after an edit, Analytics after a confirmation).
 
 Loop clean passes: 0/5

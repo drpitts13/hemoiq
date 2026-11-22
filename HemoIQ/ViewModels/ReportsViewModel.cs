@@ -133,6 +133,23 @@ namespace HemoIQ.ViewModels
         public void AnnounceStatus() =>
             _main?.SetStatus(ScreenStatus.Reports(SelectedReportType));
 
+        /// <summary>
+        /// Opening the Reports tab rebuilds the lists and the preview, so a report never shows an analysis,
+        /// identification or grades that another tab has since changed.
+        /// </summary>
+        public void OnTabSelected() => Refresh();
+
+        /// <summary>
+        /// The report text to copy or print, rebuilt from the database at that moment. The preview can be older
+        /// than the data (it is built when the selection changes), and the printed copy is recorded in the audit
+        /// log as issued, so it must be the current report.
+        /// </summary>
+        public string CurrentShareText()
+        {
+            UpdatePreview();
+            return PreviewText;
+        }
+
         public void Refresh()
         {
             var selSpecimen = SelectedSpecimen?.AccessionNumber;
@@ -206,10 +223,11 @@ namespace HemoIQ.ViewModels
 
         private void CopyPreview()
         {
-            if (!CanSharePreview(PreviewText)) return;
+            var text = CurrentShareText();
+            if (!CanSharePreview(text)) return;
             try
             {
-                Clipboard.SetText(PreviewText);
+                Clipboard.SetText(text);
                 _main?.SetStatus("Report copied to the clipboard.");
             }
             catch (Exception ex)
@@ -221,18 +239,19 @@ namespace HemoIQ.ViewModels
 
         private void PrintPreview()
         {
-            if (!CanSharePreview(PreviewText)) return;
+            var text = CurrentShareText();
+            if (!CanSharePreview(text)) return;
             try
             {
                 var dialog = new System.Windows.Controls.PrintDialog();
                 if (dialog.ShowDialog() != true) return;
                 var width = dialog.PrintableAreaWidth > 0 ? dialog.PrintableAreaWidth : 816;
                 var height = dialog.PrintableAreaHeight > 0 ? dialog.PrintableAreaHeight : 1056;
-                var doc = BuildPrintDocument(SelectedReportType, PreviewText, width, height);
+                var doc = BuildPrintDocument(SelectedReportType, text, width, height);
                 dialog.PrintDocument(((IDocumentPaginatorSource)doc).DocumentPaginator,
                     $"{SelectedReportType} report");
                 _reportService.RecordPrint(GetReportType(), SelectedSpecimen?.AccessionNumber,
-                    SelectedPanel?.PanelId, PreviewText);
+                    SelectedPanel?.PanelId, text);
                 _main?.SetStatus($"Sent {SelectedReportType} to the printer.");
             }
             catch (Exception ex)

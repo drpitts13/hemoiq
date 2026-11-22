@@ -139,6 +139,8 @@ namespace HemoIQ
                 ViewModel.AnalysisVM.OnTabSelected();
             else if (header == "Worklist")
                 ViewModel.WorklistVM.Refresh();
+            else if (header == "Reports")
+                ViewModel.ReportsVM.OnTabSelected();
             ViewModel.AnnounceScreen(header);
         }
 
