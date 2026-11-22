@@ -42,6 +42,7 @@ namespace HemoIQ.Views.Dialogs
             {
                 MessageBox.Show("Name and Antibody are required.", "Validation",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
+                if (string.IsNullOrWhiteSpace(NameBox.Text)) NameBox.Focus(); else AntibodyBox.Focus();
                 return;
             }
             if (!int.TryParse(MinCountBox.Text.Trim(), System.Globalization.NumberStyles.None,
@@ -61,6 +62,7 @@ namespace HemoIQ.Views.Dialogs
                 MessageBox.Show($"Unknown antigen(s) in Exempt from: {string.Join(", ", unknown)}. " +
                     "Antigen names are case-sensitive (E and e differ).", "Validation",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
+                SeparationFromBox.Focus();
                 return;
             }
             DialogResult = true;

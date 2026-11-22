@@ -6401,10 +6401,41 @@ deleting confirmation.
 
 All 1430 tests pass.
 
+## Iteration 238: the Rule dialog puts the cursor in the refused field
+
+**Reviewed, no gap:** these dialogs already focus the field named by
+every refusal on Save:
+- Preferences (13 checks);
+- Panel (3);
+- Patient (3);
+- Specimen (1 Validation message; its other refusals come from the
+  transactional save and name the field).
+
+**Deficiency found (UX):** two of the Rule dialog's three refusals left
+the cursor where it was:
+- "Name and Antibody are required";
+- "Unknown antigen(s) in Exempt from …".
+
+The user had to find the box named in the message.
+
+**Bounded improvement:**
+- The required-fields refusal focuses Name when it is empty, otherwise
+  Antibody.
+- The unknown-antigen refusal focuses the Exempt from box.
+
+**Data/schema:** none.
+
+**Tests:** `ValidationFocusTests` (5 cases, one per dialog) is a source
+guard: every "Validation" message box in a dialog's code is followed by a
+`.Focus()` before its `return`. It was verified to flag the two old Rule
+dialog refusals and to find refusals in every dialog.
+
+All 1435 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: validation focus in the Specimen, Panel, Rule
-and Preferences dialogs (a refused value names the field and puts the
-cursor in it).
+Continue clean-pass reviews: the remaining dialogs (Users, Reason, Select
+panel, Select warehouse antigen, Panel run) for the same refusal-and-focus
+rule and for an explicit Cancel that changes nothing.
 
 Loop clean passes: 0/5
