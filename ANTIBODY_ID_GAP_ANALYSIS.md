@@ -6570,7 +6570,7 @@ No new issue or gap worth fixing. All 1442 tests pass.
   It states decision support for licensed professionals, that a
   qualified professional must confirm the identification, and that the
   software does not issue units.
-- **Author.** The About box credits the author (Iteration 178 follow-up).
+- **Author.** The About box credits the author, as requested by the user (commit a299f55).
 
 No new issue or gap worth fixing. All 1442 tests pass.
 
