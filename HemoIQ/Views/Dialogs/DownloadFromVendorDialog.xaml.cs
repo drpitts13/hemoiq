@@ -13,6 +13,7 @@ namespace HemoIQ.Views.Dialogs
         private readonly DatabaseService _db;
         private readonly VendorCatalogService _catalog;
         private readonly VendorPanelImportService _importer;
+        private readonly VendorDialogGate _gate = new();
 
         public int? ImportedPanelId { get; private set; }
         public string? ImportedPanelName { get; private set; }
@@ -25,7 +26,22 @@ namespace HemoIQ.Views.Dialogs
             _importer = new VendorPanelImportService(db);
             VendorBox.ItemsSource = _catalog.Sources.Select(s => s.DisplayName).ToList();
             VendorBox.SelectedIndex = 0;
-            Closed += (_, _) => _catalog.Dispose();
+            // Closing cancels a download in progress; its result is then discarded, not stored.
+            Closing += (_, _) => _gate.Close();
+            Closed += (_, _) => { _gate.Dispose(); _catalog.Dispose(); };
+        }
+
+        /// <summary>Only one download or import at a time: everything that starts one is disabled while it runs.</summary>
+        private void SetBusy(bool busy)
+        {
+            if (busy && !_gate.TryBegin()) return;
+            if (!busy) _gate.End();
+            var source = SelectedSource;
+            var canList = !busy && source?.CanListLots == true;
+            VendorBox.IsEnabled = !busy;
+            RefreshButton.IsEnabled = canList;
+            ImportSelectedButton.IsEnabled = canList;
+            ImportFileButton.IsEnabled = !busy;
         }
 
         private IVendorPanelSource? SelectedSource
@@ -53,29 +69,32 @@ namespace HemoIQ.Views.Dialogs
         private async void RefreshClick(object sender, RoutedEventArgs e)
         {
             var source = SelectedSource;
-            if (source == null || !source.CanListLots) return;
-            RefreshButton.IsEnabled = false;
+            if (source == null || !source.CanListLots || _gate.IsBusy || _gate.IsClosed) return;
+            SetBusy(true);
             StatusText.Text = "Loading public lot catalog…";
             try
             {
-                var lots = await source.ListLotsAsync().ConfigureAwait(true);
+                var lots = await source.ListLotsAsync(_gate.Token).ConfigureAwait(true);
+                if (!_gate.MayApply) return;
                 LotGrid.ItemsSource = lots;
                 StatusText.Text = lots.Count == 0
                     ? "No public lots were listed. Import a vendor file instead."
                     : $"Found {lots.Count} public lot(s). Select one and import.";
             }
-            catch (Exception ex)
+            catch (Exception ex) when (_gate.MayApply)
             {
                 StatusText.Text = "Could not list lots: " + ex.Message;
             }
+            catch (Exception) { /* the dialog was closed: nothing to show */ }
             finally
             {
-                RefreshButton.IsEnabled = true;
+                if (!_gate.IsClosed) SetBusy(false);
             }
         }
 
         private async void ImportSelectedClick(object sender, RoutedEventArgs e)
         {
+            if (_gate.IsBusy || _gate.IsClosed) return;
             if (LotGrid.SelectedItem is not VendorLotListing lot)
             {
                 MessageBox.Show("Select a lot from the catalog.", "Download",
@@ -88,27 +107,30 @@ namespace HemoIQ.Views.Dialogs
                     "Download", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            ImportSelectedButton.IsEnabled = false;
+            SetBusy(true);
             StatusText.Text = $"Downloading {lot.LotNumber}…";
             try
             {
-                var parsed = await _catalog.DownloadAndParseAsync(lot).ConfigureAwait(true);
+                var parsed = await _catalog.DownloadAndParseAsync(lot, _gate.Token).ConfigureAwait(true);
+                // A download that finishes after the dialog was closed is discarded, never stored.
+                if (!_gate.MayApply) return;
                 PersistParsed(parsed);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (_gate.MayApply)
             {
-                MessageBox.Show(ex.Message, "Download", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(this, ex.Message, "Download", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+            catch (Exception) { /* the dialog was closed: nothing was stored */ }
             finally
             {
-                ImportSelectedButton.IsEnabled = true;
+                if (!_gate.IsClosed) SetBusy(false);
             }
         }
 
         private void ImportFileClick(object sender, RoutedEventArgs e)
         {
             var source = SelectedSource;
-            if (source == null) return;
+            if (source == null || _gate.IsBusy || _gate.IsClosed) return;
             var open = new OpenFileDialog
             {
                 Title = "Import vendor panel file",

@@ -1002,7 +1002,7 @@ Analytics counts confirmed antibody identifications over a date range. It uses o
 - **To** includes confirmations on or before that date.
 - **30 days**, **90 days**, and **12 months** set the range through today.
 - **All time** includes every confirmed identification, including any that have no confirmation date.
-- **Refresh** reloads the cards, charts, and grid.
+- **Refresh** reloads the cards, charts, and grid. Opening the Analytics tab does the same, so a cancellation, reinstatement, review, edit or deletion made on another tab is counted.
 - **Export CSV** saves the detail rows.
 - **Help** opens this chapter.
 
@@ -1121,6 +1121,8 @@ An untyped partner is not treated as negative. Antigens without an antithetical 
 Each row is a panel, lot, and cell, followed by the stored antigen typing. A finished search brings the antigen used in the search into view on the result row. The panel, lot, and cell stay on screen. When several antigens are set, those columns are shown first and stay on screen with the panel, lot, and cell when the row is scrolled, so the earlier one stays beside the later one. A warehouse antigen that is blank on every matching cell is left off the row. Clearing the search, or searching on one antigen, restores the usual column order, including a warehouse column the matches left blank. The column headings stay visible while you scroll down the rows. The panel name and the lot are shown in full. A cell on a lot that is not in use is marked in the Lot column in red italics, for example *LOT-7 · inactive* or *LOT-3 · expired 2026-10-31*, and the result count says how many matches are on such lots. Choose selected cells from a lot in current use. A typed minus stays −. An antigen that was not tested shows NT, which is not the same as antigen-negative. A warehouse column that stays, because some matching cell types it, shows NT on a cell that was not typed for that antigen. An explicit ++ stays ++. Matching looks across the lots stored in the database, including extra warehouse antigens when a panel types them.
 
 A − criterion matches only a typed minus. Cells stored as NT are left out of that search.
+
+Opening the Search tab runs the antigen search and the investigation search behind the results on screen again, with the criteria and text they were run with, and keeps the selected row when it still matches. A lot deactivated or expired, or an investigation confirmed or cancelled, on another tab is therefore shown as it is now. Criteria you changed but have not searched with yet are left for you to run. Clear stops the antigen search from being run again.
 
 Search does not change grades or confirm an identification. To test a cell you found, enter the grades on the Reactions tab for the specimen you are working up.
 

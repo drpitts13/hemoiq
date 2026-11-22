@@ -7181,10 +7181,41 @@ a confirmation made elsewhere; Analytics counts it.
 
 **Docs:** the Search and Analytics help topics.
 
+## Iteration 263: one vendor download at a time, none after closing
+
+**Reviewed:** actions that can be started twice. Every command handler
+runs on the UI thread, and its prompts are modal, so a second click
+waits until the first finishes and then sees the saved state. The only
+work that yields while running is the vendor dialog's catalog listing
+and lot download.
+
+**Found:** during a download only **Import selected** was disabled.
+- **Import vendor file…** could start a second import, and the vendor
+  could be changed.
+- Closing the dialog did not cancel the download. When it finished, the
+  lot was imported (inactive) into a dialog the user had closed, and the
+  attempt to close an already closed window failed with a message.
+
+**Implemented:**
+- `VendorDialogGate` allows one download or import at a time. Its
+  cancellation token is passed to the catalog listing and the download,
+  and it is cancelled when the dialog closes.
+- After either finishes, the dialog stores and shows the result only
+  while the gate is still open (`MayApply`). A download cut off by
+  closing is discarded silently: nothing was stored.
+- While busy, the vendor list and all three buttons are disabled.
+
+**Tests:** `VendorDialogGateTests` (4 cases): a second start is refused
+while the first runs; closing cancels the token and forbids storing; a
+download cancelled by closing is not applied; the dialog passes the
+token and checks the gate before storing.
+
+**Docs:** the Download from vendor help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: long-running or repeated actions that can
-be started twice (double-clicking Save, Run Analysis, Print or an
-import button while the first is still working).
+Continue clean-pass reviews: files written by the application (exports,
+archives, recovery drafts) when the target is read-only, locked by
+another program or on a full disk.
 
 Loop clean passes: 0/5
