@@ -56,8 +56,8 @@ namespace HemoIQ.Services
             var dosageEffects = DetectDosageEffects(byRun, contexts, suspected, scoreExclusions);
             var inferences = BuildTreatmentInferences(byRun, contexts, suspected);
 
-            if (updateDb && _db.IsSpecimenLocked(specimenId))
-                throw new RecordLockedException(specimenId);
+            // Names the actual lock (cancelled or confirmed) and who can lift it.
+            if (updateDb) _db.EnsureSpecimenUnlocked(specimenId);
 
             var untypedCs = AppSettings.Current.AcsAntigenList()
                 .Where(ag => !antigens.Contains(ag))

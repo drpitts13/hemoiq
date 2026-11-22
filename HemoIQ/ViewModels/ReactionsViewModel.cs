@@ -439,7 +439,9 @@ namespace HemoIQ.ViewModels
                     $"HemoIQ did not close normally. Unsaved grades for {draft.RunDescription} (last edited {when}) were found, " +
                     "but the identification has since been confirmed, so they cannot be restored:\n\n" +
                     string.Join("\n", changed.Take(10).Select(DescribeDraftRow)) +
-                    "\n\nClear the identification first if these grades must be recorded.",
+                    "\n\n" + AccessControl.NextStep(_db, Permission.ClearIdentification,
+                        "Clear the identification first if these grades must be recorded.",
+                        "clear the identification first if these grades must be recorded."),
                     "Recovered grades", MessageBoxButton.OK, MessageBoxImage.Warning);
                 Drafts.Delete();
                 return;

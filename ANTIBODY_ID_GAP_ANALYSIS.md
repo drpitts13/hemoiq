@@ -7083,10 +7083,46 @@ asks through it.
 **Docs:** risk R-19, SRS-SAFE-09 and its traceability row; developer
 conventions.
 
+## Iteration 260: next steps that follow the user's role
+
+**Reviewed:** messages that name a next step. View-only sessions have
+every change command disabled, so they are not sent anywhere. But a
+Technologist was told to do things only a Supervisor or Administrator
+may do, and following the message ended in a refusal:
+- "click Clear and give a reason" when confirming over a confirmed
+  identification (Analysis and the database refusal);
+- "Clear the confirmation" or "Reinstate it" in every locked-record
+  refusal;
+- "Clear the identification first" in the draft-recovery message;
+- "Reinstate … or clear it" on the Inconsistent status Worklist item.
+
+**Also found:** running analysis on a cancelled investigation said it
+"has a confirmed identification". The analyzer now uses the same lock
+check as every other write, which names the actual lock.
+
+**Implemented:**
+- `AccessControl.WhoCan(permission)` gives "a Supervisor or
+  Administrator" or "an Administrator".
+- `AccessControl.NextStep(db, permission, step, askFor)` returns the
+  step when the signed-in user may take it, otherwise "Ask a Supervisor
+  or Administrator to …". With no users registered the step is
+  unchanged.
+- `RecordLockedException` takes who to ask. `DatabaseService.LockedError`
+  fills it from the permission that lifts the lock (reinstate for a
+  cancellation, clear for a confirmation).
+
+**Tests:** `RoleAwareNextStepTests` (7 cases): role names and articles,
+the unchanged step with no registry, a Technologist and a Supervisor
+confirming over a confirmed call and editing a confirmed record, and
+analysis of a cancelled investigation naming the cancellation and who
+can reinstate it.
+
+**Docs:** the Preferences help topic (users and roles).
+
 ## Likely next tick
 
-Continue clean-pass reviews: messages that name a next step the user
-cannot take in their role (a view-only session or a non-supervisor
-told to "Clear", "Review" or "Deactivate").
+Continue clean-pass reviews: status-bar and Worklist text that goes
+stale after the action it describes (a status line still naming a
+specimen or count that a later action changed).
 
 Loop clean passes: 0/5

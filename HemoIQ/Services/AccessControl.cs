@@ -57,6 +57,22 @@ namespace HemoIQ.Services
             _ => p.ToString(),
         };
 
+        /// <summary>Who holds the permission, as "a Supervisor or Administrator", for messages that send the user to them.</summary>
+        public static string WhoCan(Permission permission)
+        {
+            var labels = Grants[permission].Select(UserRole.Label).ToList();
+            var article = "AEIOU".Contains(labels[0][0]) ? "an" : "a";
+            return $"{article} {string.Join(" or ", labels)}";
+        }
+
+        /// <summary>
+        /// The next step a message names: <paramref name="step"/> when the current user may take it, otherwise
+        /// "Ask a Supervisor or Administrator to " + <paramref name="askFor"/>, so no message sends a user to a
+        /// command their role will refuse.
+        /// </summary>
+        public static string NextStep(DatabaseService db, Permission permission, string step, string askFor) =>
+            Can(db, permission) ? step : $"Ask {WhoCan(permission)} to {askFor}";
+
         public static bool RegistryEnabled(DatabaseService db) => db.GetUsers().Any(u => u.Active);
 
         /// <summary>The active registered user for the current login, or null.</summary>

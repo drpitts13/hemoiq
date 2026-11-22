@@ -1356,12 +1356,14 @@ namespace HemoIQ.Data
             EnsureCanRecord();
             var current = GetSpecimen(accessionNumber);
             if (current?.IsCancelled == true)
-                throw new RecordLockedException(accessionNumber, cancelled: true);
+                throw LockedError(accessionNumber, cancelled: true);
             if (current?.HasFinalCall == true)
                 throw new RecordLockedException(accessionNumber,
                     $"Specimen {accessionNumber} already has a confirmed identification ({current.FinalAntibodies}). " +
-                    "To change it, click Clear on the Analysis tab and give a reason, then confirm the new identification. " +
-                    "The earlier identification stays in the amendment history.");
+                    AccessControl.NextStep(this, Permission.ClearIdentification,
+                        "To change it, click Clear on the Analysis tab and give a reason, then confirm the new identification.",
+                        "clear it with a reason; the new identification can then be confirmed.") +
+                    " The earlier identification stays in the amendment history.");
             WriteFinalCall(accessionNumber, antibodies, comment, identifiedBy, identifiedAt, overrides);
         }
 
@@ -3440,7 +3442,10 @@ namespace HemoIQ.Data
                     KindLabel = "Inconsistent status",
                     Title = s.AccessionNumber,
                     Detail = $"Cancelled {s.CancelledAt} but still holds confirmed identification {s.FinalAntibodies}. " +
-                             "Analytics does not count it. Reinstate and keep the identification, or clear it with a reason.",
+                             "Analytics does not count it. " +
+                             AccessControl.NextStep(this, Permission.ReinstateInvestigation,
+                                 "Reinstate and keep the identification, or clear it with a reason.",
+                                 "reinstate it and keep the identification, or clear the identification with a reason."),
                     UrgencyLabel = "Resolve",
                     SortOrder = 1,
                     AccessionNumber = s.AccessionNumber,
@@ -4947,9 +4952,17 @@ namespace HemoIQ.Data
         {
             var specimen = GetSpecimen(specimenId);
             if (specimen?.IsCancelled == true)
-                throw new RecordLockedException(specimenId, cancelled: true);
+                throw LockedError(specimenId, cancelled: true);
             if (specimen?.HasFinalCall == true)
-                throw new RecordLockedException(specimenId);
+                throw LockedError(specimenId, cancelled: false);
+        }
+
+        /// <summary>The locked-record error, naming who can unlock it when the current user cannot.</summary>
+        private RecordLockedException LockedError(string accessionNumber, bool cancelled)
+        {
+            var unlock = cancelled ? Permission.ReinstateInvestigation : Permission.ClearIdentification;
+            return new RecordLockedException(accessionNumber, cancelled,
+                AccessControl.Can(this, unlock) ? null : AccessControl.WhoCan(unlock));
         }
 
         private int _savepointDepth;

@@ -633,8 +633,10 @@ namespace HemoIQ.ViewModels
             {
                 MessageBox.Show(
                     $"{confirmed.AccessionNumber} already has a confirmed identification ({confirmed.FinalAntibodies}).\n\n" +
-                    "To change it, click Clear and give a reason, then confirm the new identification. " +
-                    "The earlier identification stays in the amendment history.",
+                    AccessControl.NextStep(_db, Permission.ClearIdentification,
+                        "To change it, click Clear and give a reason, then confirm the new identification.",
+                        "clear it with a reason; the new identification can then be confirmed.") +
+                    " The earlier identification stays in the amendment history.",
                     "Confirm identification", MessageBoxButton.OK, MessageBoxImage.Information);
                 LoadFinalCall(confirmed);
                 return;
