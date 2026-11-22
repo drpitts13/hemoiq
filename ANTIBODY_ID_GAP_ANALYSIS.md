@@ -7383,10 +7383,42 @@ more than 8 candidates prints a report naming every one.
 
 **Docs:** the Reports help topic.
 
+## Iteration 269: the Analysis Results report carries the warnings
+
+**Reviewed:** printed reports against the Analysis tab.
+- The Clinical Identification report prints suspected antibodies,
+  rule-outs, absorption conclusions, score exclusions, separation,
+  Explain Analysis and every suggestion.
+- Pattern Matches, Combinations and Dosage are extra views of the same
+  run (analysis help). Their dosage, gated rule-out and treatment REVIEW
+  notes reach the reports through Suggestions.
+
+**Found:** the Analysis Results report printed suspected antibodies,
+rule-outs and pattern evidence, but none of the Suggestions. Its
+printout therefore left out every warning and REVIEW note the screen
+shows first, for example:
+- an antibody both ruled out and suspected;
+- patient typing or genotype arguing against a suspected antibody;
+- hemolysis, expired reagent and specimen dating;
+- transfusion requirements;
+- a separation shortfall.
+
+A printed analysis could read cleaner than the screen it came from.
+
+**Implemented:** the Analysis Results report adds a "SUGGESTIONS
+(warnings and review items first)" section, with the same list in the
+same order as the Analysis tab.
+
+**Tests:** `AnalysisResultsReportTests` (2 cases): every suggestion
+the analysis gives is printed, in the analysis order; a grossly
+hemolyzed specimen's hemolysis note is printed.
+
+**Docs:** the Reports help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: printed reports against the screen for the
-same investigation (every section on the Analysis tab that a report
-claims to reproduce, such as the absorption, phase and dosage notes).
+Continue clean-pass reviews: the Specimen Summary report and its CSV
+against the specimen record (fields shown on the Specimens tab that a
+summary leaves out).
 
 Loop clean passes: 0/5

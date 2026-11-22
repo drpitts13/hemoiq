@@ -965,6 +965,7 @@ Panel Summary, Panel Antigram, and the antigen grid on Clinical Identification l
 
 ## Send it out
 
+- The Clinical Identification report describes the first eight Explain Analysis candidates in full (suspected and unresolved ones come first). Any further candidates are named on one line with their status, for example *4 more candidate(s) not described here: anti-c (Ruled out); …*, so the printed record lists every candidate the analysis considered.
 - **Copy** puts the full preview on the clipboard.
 - **Print** prints the preview. Ctrl+P does the same while this tab is open.
 - The preview is rebuilt whenever you open the Reports tab, and Copy and Print rebuild the report from the current data at that moment, as Export PDF and Export CSV always have. A re-analysis, new grades or a confirmed identification recorded on another tab is therefore never printed from an older preview.

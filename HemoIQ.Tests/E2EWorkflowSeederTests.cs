@@ -102,8 +102,12 @@ public class E2EWorkflowSeederTests
         Assert.Contains("RULED-OUT ANTIBODIES (0)", analysisReport);
         Assert.Contains("PATTERN EVIDENCE (not a diagnosis):", analysisReport);
         Assert.Contains("favors autoantibody", analysisReport);
-        Assert.DoesNotContain("anti-E", analysisReport);
-        Assert.DoesNotContain("anti-K", analysisReport);
+        // No alloantibody is listed as suspected or ruled out. The Suggestions section may still name the ones
+        // that cannot yet be excluded under the autoantibody (that is the point of printing it).
+        var listed = analysisReport[..analysisReport.IndexOf("SUGGESTIONS", StringComparison.Ordinal)];
+        Assert.DoesNotContain("anti-E", listed);
+        Assert.DoesNotContain("anti-K", listed);
+        Assert.Contains("SUGGESTIONS (warnings and review items first):", analysisReport);
         var antiKReport = iso.Reports.GeneratePreviewText(
             ReportType.AnalysisResults, E2EWorkflowSeeder.WarmK);
         Assert.Contains("anti-K", antiKReport);

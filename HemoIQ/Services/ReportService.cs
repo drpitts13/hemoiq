@@ -275,6 +275,15 @@ namespace HemoIQ.Services
                     sb.AppendLine("PATTERN EVIDENCE (not a diagnosis):");
                     sb.AppendLine(pattern);
                 }
+                // The same list as Suggestions on the Analysis tab, warnings and REVIEW notes first, so a printed
+                // analysis never reads cleaner than the screen it came from.
+                if (result.Suggestions.Count > 0)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("SUGGESTIONS (warnings and review items first):");
+                    foreach (var sug in result.Suggestions)
+                        sb.AppendLine($"  • {sug}");
+                }
             }
 
             if (runs.Count > 0)
