@@ -35,7 +35,7 @@
             </StackPanel>
             <StackPanel Grid.Row="2" Grid.ColumnSpan="4" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                 <Button Content="Use my login" Width="100" Margin="0,0,8,0" Click="UseMyLogin_Click"/>
-                <Button Content="Save user" Width="90" Margin="0,0,8,0" Click="Save_Click" IsDefault="True"/>
+                <Button x:Name="SaveUserButton" Content="Save user" Width="90" Margin="0,0,8,0" Click="Save_Click" IsDefault="True"/>
                 <Button Content="Close" Width="80" IsCancel="True"/>
             </StackPanel>
         </Grid>

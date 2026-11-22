@@ -19,8 +19,21 @@ namespace HemoIQ.Views.Dialogs
             InitializeComponent();
             RoleBox.ItemsSource = UserRole.Options.Select(o => new RoleOption(o.Code, o.Label)).ToList();
             RoleBox.SelectedIndex = AccessControl.RegistryEnabled(db) ? 0 : 2; // first user: Administrator
+            // Anyone may see who is registered; only an Administrator may change it. Say so before the form is
+            // filled in rather than at Save.
+            if (AccessControl.Refusal(db, Permission.ManageUsers) is string refusal)
+            {
+                Title += " (view only)";
+                SaveUserButton.IsEnabled = false;
+                SaveUserButton.ToolTip = refusal;
+                ToolTipService.SetShowOnDisabled(SaveUserButton, true);
+                ViewOnlyNote = refusal;
+            }
             Reload();
         }
+
+        /// <summary>The reason this session cannot change users, or null.</summary>
+        public string? ViewOnlyNote { get; }
 
         private void Reload()
         {
@@ -31,6 +44,8 @@ namespace HemoIQ.Views.Dialogs
                 : me == null
                     ? $"Windows login '{AccessControl.CurrentLogin}' is not an active user."
                     : $"Signed in as {me.DisplayName}, {me.RoleLabel}.";
+            if (ViewOnlyNote != null)
+                CurrentUserText.Text += " View only: " + ViewOnlyNote;
         }
 
         private void UsersGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)

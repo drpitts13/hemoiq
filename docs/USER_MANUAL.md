@@ -1170,6 +1170,8 @@ The right pane is read-only. It shows the name, antibody, exception antigen, whe
 
 Rules apply the next time you run analysis. They do not rewrite a final ID you have already confirmed.
 
+**Tools > Import Lab Configuration** checks your role before it changes anything. A role that can change neither rules nor Preferences (a Technologist) is told before choosing a file. A Supervisor may import rules, but a file that also changes Preferences, which need the Administrator role, is refused after its preview and before the confirmation; nothing is changed.
+
 ---
 
 # Rule editor
@@ -1390,6 +1392,8 @@ A DEMO- scenario that already has grades and has never been analyzed is analyzed
 Sample records are still stored in the same database as laboratory work. Delete individual DEMO- or 2026- specimens from the Specimens tab when you no longer want them, or exclude them by accession when you read Analytics.
 
 **Help** for this action is this chapter. The menu item itself does not open a separate dialog before the confirmation prompt.
+
+A view-only session (a Read-only user or an unregistered login) cannot load demo data, because it adds specimens and lots. It is told so before the confirmation, and nothing is added.
 
 ---
 

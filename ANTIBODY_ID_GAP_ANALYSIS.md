@@ -7725,10 +7725,39 @@ tooltip and summary; an Administrator has Restore enabled with no note.
 
 **Docs:** the Demo data and Rules help topics.
 
+## Iteration 281: Users & roles is view-only for non-Administrators
+
+**Reviewed:** the remaining menu paths for a view-only session or a
+lesser role.
+- **Exports** (rules, Preferences, configuration, user manual,
+  Analytics, audit log) only read. The data exports record the export
+  in the audit log, which every session may append to. Rules and
+  configuration exports hold no patient data.
+- **Rules import** checks the role before the file dialog
+  (Iteration 278 review).
+
+**Found:** Users & roles (Preferences > Users & roles…) let any role
+fill in a login, initials, name and role. Only then did Save user
+refuse it ("… cannot manage users and roles").
+
+**Implemented:** when `AccessControl.Refusal(db, ManageUsers)` is not
+null, the dialog shows "(view only)" in its title and the registered
+users as before. Save user is disabled with the reason as its tooltip,
+and the signed-in line ends with "View only: …". Before any user is
+registered the first one can still be added (it must be an
+Administrator).
+
+**Tests:** `UsersDialogViewOnlyTests` (2 cases): a Supervisor sees the
+users view-only with the reason and Save user disabled, while an
+Administrator can save; with no users registered, the first can be
+added.
+
+**Docs:** the Preferences help topic (users and roles).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the remaining write paths reachable from
-menus by a view-only session (Rules import/export, Preferences export,
-User Manual export, Analytics export) for refusals that come late.
+Continue clean-pass reviews: every remaining dialog that saves for its
+role (Patient, Specimen, Panel, Rule, Panel run) opened in a view-only
+session (their commands are disabled; check no other path opens them).
 
 Loop clean passes: 0/5
