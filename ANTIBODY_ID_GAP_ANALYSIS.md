@@ -7609,10 +7609,27 @@ No new issue or gap worth fixing. All tests pass.
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 277 (clean pass): help topics against their screens
+
+**Reviewed:**
+- **Every button is described.** A script compared the buttons in the
+  nine main views with the help topics. Every button is named in its
+  own topic or in a chapter beneath it, for example Confirm ID and Add
+  selected in the Analysis sub-chapters (Suspected, Explain). The only one not named in any topic is the Suggestions
+  Show all / Show fewer toggle, whose label is set from code.
+- **Every bold term in a topic exists.** The bold terms in each topic
+  were checked against the XAML and code. Every one is on screen or in
+  the code, or is a section label (for example "Advisory:" or
+  "Steps:"). Two are examples, "Complete (8 of 8)" for the receipt
+  checklist and "No reactions entered yet" for the eluate note, and
+  both match the strings the code produces.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: help topics against the screens they
-describe (each button or column a help topic names still exists on that
-screen, and each screen's buttons are described).
+Continue clean-pass reviews: the permission check on every write
+command (each change command that the database refuses for a role is
+also disabled, or explained, on screen for that role).
 
-Loop clean passes: 2/5
+Loop clean passes: 3/5
