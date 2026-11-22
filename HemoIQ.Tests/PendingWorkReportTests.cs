@@ -86,4 +86,43 @@ public class PendingWorkReportTests
             AppSettings.Current.RequireSupervisorReview = previous;
         }
     }
+    [Fact]
+    public void PanelItemOnTheWorklist_IsListed_AndWithholdsNoPendingWork()
+    {
+        using var iso = new IsolatedDatabase();
+        // A lot with no antigen typed positive: an "Untyped cells" panel item, with no investigation pending.
+        iso.Db.AddPanel("Blank lot", "L-BLANK", "V", 2, null, false, startTypedNegative: true);
+        var items = iso.Db.GetWorklistItems(AppSettings.Current.ExpirationWarningDays);
+        var expired = Assert.Single(ReportService.OtherWorklistItems(items),
+            i => i.Kind == HemoIQ.Models.WorklistKind.UntypedPanel);
+
+        var text = iso.Reports.GeneratePreviewText(ReportType.PendingWork);
+        Assert.Contains("OTHER WORKLIST ITEMS (", text);
+        Assert.Contains($"{expired.KindLabel}: {expired.Title}", text);
+        Assert.DoesNotContain("No pending work", text);
+        Assert.Contains("Worklist item(s) above still need attention", text);
+    }
+
+    [Fact]
+    public void ItemsListedAbove_AreNotRepeated()
+    {
+        var items = new[]
+        {
+            new HemoIQ.Models.WorklistItem { Kind = HemoIQ.Models.WorklistKind.StaleAnalysis, Title = "S" },
+            new HemoIQ.Models.WorklistItem { Kind = HemoIQ.Models.WorklistKind.AwaitingSupervisorReview, Title = "R" },
+            new HemoIQ.Models.WorklistItem { Kind = HemoIQ.Models.WorklistKind.OverdueAdditionalTesting, Title = "O" },
+            new HemoIQ.Models.WorklistItem { Kind = HemoIQ.Models.WorklistKind.ExpiredReagentUse, Title = "E" },
+        };
+        Assert.Equal(new[] { "O", "E" }, ReportService.OtherWorklistItems(items).Select(i => i.Title));
+    }
+
+    [Fact]
+    public void EmptyWorklist_StillSaysNoPendingWork()
+    {
+        using var iso = new IsolatedDatabase();
+        Assert.Empty(iso.Db.GetWorklistItems(AppSettings.Current.ExpirationWarningDays));
+        var text = iso.Reports.GeneratePreviewText(ReportType.PendingWork);
+        Assert.DoesNotContain("OTHER WORKLIST ITEMS", text);
+        Assert.Contains("No pending work.", text);
+    }
 }

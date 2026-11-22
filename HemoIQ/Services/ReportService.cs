@@ -846,6 +846,13 @@ namespace HemoIQ.Services
             return "Analyzed";
         }
 
+        /// <summary>
+        /// The Worklist items the Pending Work sections above do not already list (stale analysis and awaiting
+        /// supervisor review are), in Worklist order.
+        /// </summary>
+        public static List<WorklistItem> OtherWorklistItems(IEnumerable<WorklistItem> items) =>
+            items.Where(i => i.Kind is not (WorklistKind.StaleAnalysis or WorklistKind.AwaitingSupervisorReview)).ToList();
+
         private string PendingWorkText()
         {
             var allSpecimens = _db.GetAllSpecimens().Where(s => s.IsActive).ToList();
@@ -925,10 +932,32 @@ namespace HemoIQ.Services
                 sb.AppendLine();
             }
 
+            // Everything else the Worklist raises (overdue testing, expired reagent use, incomplete reactions, expiring
+            // and expired specimens and lots, untyped cells, duplicate lots, rule conflicts, data inconsistencies),
+            // so a printed hand-off list never says "No pending work" while the Worklist still has items.
+            var others = OtherWorklistItems(_db.GetWorklistItems(settings.ExpirationWarningDays));
+            if (others.Count > 0)
+            {
+                sb.AppendLine($"OTHER WORKLIST ITEMS ({others.Count}):");
+                foreach (var item in others)
+                {
+                    sb.AppendLine($"  {item.KindLabel}: {item.Title}" +
+                                  (string.IsNullOrWhiteSpace(item.UrgencyLabel) ? "" : $" ({item.UrgencyLabel})"));
+                    if (!string.IsNullOrWhiteSpace(item.Detail))
+                        sb.AppendLine($"    {item.Detail}");
+                }
+                sb.AppendLine();
+            }
+
             if (pending.Count == 0 && awaitingReview.Count == 0)
-                sb.AppendLine(cancelled.Count == 0
-                    ? "All active specimens have a confirmed antibody identification. No pending work."
-                    : "Every active specimen has a confirmed identification or a cancelled investigation. No pending work.");
+            {
+                if (others.Count > 0)
+                    sb.AppendLine($"No investigation awaits analysis or confirmation, but {others.Count} Worklist item(s) above still need attention.");
+                else
+                    sb.AppendLine(cancelled.Count == 0
+                        ? "All active specimens have a confirmed antibody identification. No pending work."
+                        : "Every active specimen has a confirmed identification or a cancelled investigation. No pending work.");
+            }
 
             return sb.ToString();
         }

@@ -7489,10 +7489,43 @@ worksheet prints them under the run; a plain lot adds nothing.
 
 **Docs:** the Reports help topic.
 
+## Iteration 272: the Pending Work report carries the whole Worklist
+
+**Found:** the Pending Work report, described in help as "specimens
+and panels that still need attention", listed only analysis state: not
+analyzed, stale, awaiting confirmation and awaiting review. It omitted
+every other Worklist item, and no panel item appeared at all:
+- overdue additional testing and expired reagent use;
+- incomplete reactions and data inconsistencies;
+- expiring or expired specimens and lots, and untyped cells;
+- duplicate lots and rule conflicts.
+
+It could print "No pending work" while the Worklist still held items
+that need review, so a printed hand-off could hide them.
+
+**Implemented:**
+- `ReportService.OtherWorklistItems` gives the Worklist items not
+  already listed (everything except stale analysis and awaiting
+  review), in Worklist order.
+- The report adds an "OTHER WORKLIST ITEMS (n)" section with each
+  item's kind, title, urgency and detail, built from the same
+  `GetWorklistItems` call and expiration window as the Worklist.
+- "No pending work" is printed only when that list is empty too;
+  otherwise the report says how many Worklist items still need
+  attention.
+
+**Tests:** `PendingWorkReportTests` (+3): a lot's "Untyped cells"
+item is listed and "No pending work" is withheld; the items already covered
+above are not repeated; with an empty Worklist the report still says
+"No pending work".
+
+**Docs:** the Reports help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Pending Work and All Specimens reports
-against the Worklist (every item the Worklist raises for an open
-investigation appears on the printed pending list).
+Check why an active lot entered with an expiration date already past
+raised no Worklist item in the Iteration 272 test (ExpiredPanel), then
+continue clean-pass reviews: the All Specimens report and its CSV
+against the Specimens tab columns.
 
 Loop clean passes: 0/5
