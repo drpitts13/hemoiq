@@ -37,6 +37,7 @@ HemoIQ writes to its database file every time it runs, to keep the audit trail. 
 - **Edit → Save** (Ctrl+S) saves the antigen grid on Panels or the grades on Reactions.
 - **Edit → Refresh All** (Ctrl+R) reloads every tab.
 - **Edit → New Item** (Ctrl+N) adds a specimen, panel, or rule, depending on the tab.
+- Ctrl+S and Ctrl+N do only what the matching button would do. When that button is disabled (for example in a view-only session, or Save on Panels before you choose Edit), the shortcut does nothing and the status bar says why.
 - **Tools** opens Preferences, Purge Database, Open Archive, Audit Log, and Load Demo Data.
 
 The first time the application starts, it shows the intended-use statement. The status bar at the bottom reports the result of the last action. Opening a screen replaces that line with a line for the screen you are looking at, so a worklist message does not stay on Search. Returning to Search shows the last search result again, including the homozygous or heterozygous wording.

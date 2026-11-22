@@ -7754,10 +7754,47 @@ added.
 
 **Docs:** the Preferences help topic (users and roles).
 
+## Iteration 282: keyboard shortcuts follow their buttons
+
+**Reviewed:** every way into the data-entry dialogs in a view-only
+session.
+- **Buttons.** Every change command's CanExecute includes
+  `SessionAccess.CanRecord`.
+- **Double-clicks.** The six grid double-click handlers (Specimens
+  Edit, Analysis Add selected, Search and Worklist Open, Analytics drill
+  case) call `CanExecute` before `Execute`.
+- **Reports Ctrl+P.** It is a command binding, so WPF checks it.
+
+**Found:** the main window's Ctrl+N and Ctrl+S handlers called
+`Command.Execute` directly, and `RelayCommand.Execute` does not check
+`CanExecute`.
+- **Ctrl+N.** In a view-only session it opened Add Specimen, Add Panel
+  or Add Rule although the Add button was disabled. The user filled the
+  form in and was refused at save.
+- **Ctrl+S.** On Reactions it ran Save with the button disabled and
+  failed with "Save failed: …". On Panels it called the save method
+  directly, which silently did nothing outside edit mode.
+
+**Implemented:**
+- `ShortcutCommand.Run(command, action, session)` executes the command
+  only when `CanExecute` is true. Otherwise it returns the status:
+  "<action> is not available: <session>. Commands that change
+  laboratory data are disabled." in a view-only session, or "<action>
+  is not available right now.".
+- Ctrl+N (Specimens, Panels, Rules) and Ctrl+S (Panels' Save cells
+  command, Reactions' Save) go through it.
+
+**Tests:** `ShortcutCommandTests` (4 cases): an enabled command runs;
+a disabled one in a view-only session does not run and names the
+session; a disabled one otherwise does not run; a source check that the
+main window has no direct Execute or SaveAllCells call left.
+
+**Docs:** the Getting started help topic (shortcuts).
+
 ## Likely next tick
 
-Continue clean-pass reviews: every remaining dialog that saves for its
-role (Patient, Specimen, Panel, Rule, Panel run) opened in a view-only
-session (their commands are disabled; check no other path opens them).
+Continue clean-pass reviews: commands that stay enabled while their
+target is locked (a confirmed or cancelled investigation): Reactions
+Save and run buttons, Specimens Attach and Detach, Analysis Run.
 
 Loop clean passes: 0/5

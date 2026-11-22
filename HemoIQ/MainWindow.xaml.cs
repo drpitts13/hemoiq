@@ -161,19 +161,26 @@ namespace HemoIQ
         {
             switch ((MainTabControl.SelectedItem as TabItem)?.Header as string)
             {
-                case "Panels": ViewModel.PanelsVM.SaveAllCells(); break;
-                case "Reactions": ViewModel.ReactionsVM.SaveCommand.Execute(null); break;
+                case "Panels": RunShortcut(ViewModel.PanelsVM.SaveCellsCommand, "Save"); break;
+                case "Reactions": RunShortcut(ViewModel.ReactionsVM.SaveCommand, "Save"); break;
                 default: ViewModel.SetStatus("No save action for this tab."); break;
             }
+        }
+
+        /// <summary>A shortcut runs only when the matching button would be enabled; otherwise the status says why.</summary>
+        private void RunShortcut(ICommand command, string action)
+        {
+            if (ShortcutCommand.Run(command, action, SessionAccess.Current) is string refused)
+                ViewModel.SetStatus(refused);
         }
 
         private void NewItem()
         {
             switch ((MainTabControl.SelectedItem as TabItem)?.Header as string)
             {
-                case "Specimens": ViewModel.SpecimensVM.AddCommand.Execute(null); break;
-                case "Panels": ViewModel.PanelsVM.AddCommand.Execute(null); break;
-                case "Rules": ViewModel.RulesVM.AddCommand.Execute(null); break;
+                case "Specimens": RunShortcut(ViewModel.SpecimensVM.AddCommand, "New specimen"); break;
+                case "Panels": RunShortcut(ViewModel.PanelsVM.AddCommand, "New panel"); break;
+                case "Rules": RunShortcut(ViewModel.RulesVM.AddCommand, "New rule"); break;
                 default: ViewModel.SetStatus("No new item action for this tab."); break;
             }
         }
