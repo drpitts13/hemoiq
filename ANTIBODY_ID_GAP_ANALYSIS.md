@@ -6494,10 +6494,28 @@ No new issue or gap worth fixing. All 1435 tests pass.
 
 All 1442 tests pass.
 
+## Iteration 241 (clean pass): the database becoming unwritable mid-session
+
+**Reviewed:**
+- **Savepoints.** Writes run inside `RunInTransaction`. A failure rolls
+  back to the savepoint, including the audit entries written in it, so a
+  disk-full or dropped-share error cannot leave a half-saved record.
+- **Reaction saves.** The batch save (`SaveReactions`) is one transaction.
+  On failure `TrySaveGrades` shows "Save failed: …" in the save status and
+  status line. It leaves the grid marked unsaved and keeps the recovery
+  draft, so no entered grade is lost and the save can be retried.
+- **Specimen saves.** `SpecimenSaveService` is one transaction, and the
+  Specimens view shows the refusal.
+- **Other errors.** Any other write that fails reaches the app-wide
+  handler, which logs it and shows the message. HemoIQ keeps running and
+  the rolled-back data is unchanged.
+
+No new issue or gap worth fixing. All 1442 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: what happens when the database becomes
-unwritable during a session (disk full, network share dropped): saves fail
-with a clear message and no half-saved record.
+Continue clean-pass reviews: the recovery draft (written on every grade
+edit, offered back after a crash, discarded on save or explicit discard)
+across specimen and run switches.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
