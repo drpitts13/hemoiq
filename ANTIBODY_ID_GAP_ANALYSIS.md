@@ -6556,10 +6556,28 @@ minutes from machine load).
 
 No new issue or gap worth fixing. All 1442 tests pass.
 
+## Iteration 244 (clean pass): version identity and intended use
+
+**Reviewed:**
+- **Version.** `SoftwareIdentity.Version` reads the assembly's
+  informational version (2.0.0 from the project file). The About box and
+  every report preamble (`ReportPreamble`, prefixed to every report by
+  `ReportService`) both use it. The installer's 2.0 is the same release,
+  and its file name `HemoIQ-Setup-2.0.exe` is the delivery name the user
+  asked for.
+- **Intended use.** One constant, `SoftwareIdentity.IntendedUse`, feeds
+  the first-run acknowledgement, the report preamble and the user manual.
+  It states decision support for licensed professionals, that a
+  qualified professional must confirm the identification, and that the
+  software does not issue units.
+- **Author.** The About box credits the author (Iteration 178 follow-up).
+
+No new issue or gap worth fixing. All 1442 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the About box and version identity (version
-shown matches the installer and the report footers, and the intended-use
-statement is consistent).
+Continue clean-pass reviews: the demo and seeded data (Load Demo Data is
+clearly marked as demo, cannot mix into real records unnoticed, and its
+lots are not activated without the usual review).
 
-Loop clean passes: 3/5
+Loop clean passes: 4/5
