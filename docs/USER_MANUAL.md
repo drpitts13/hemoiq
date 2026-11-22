@@ -1260,7 +1260,7 @@ If the Preferences file exists but cannot be read at start-up (damaged, cut shor
 
 If the file holds an analysis setting outside its allowed range (for example a separation count of 9, or a score threshold below 0.30), HemoIQ replaces it at start-up and lists each one as *setting: stored → used*. Some are replaced by their default rather than the nearest limit. The file as it was is kept as *settings.adjusted-<date-time>.json*. Review the values in Preferences before testing. Imports never do this: an out-of-range value in an imported file is refused, not replaced.
 
-Messages that name a next step follow your role. A Technologist asked to change a confirmed identification, or to edit a cancelled investigation, is told to ask a Supervisor or Administrator to clear or reinstate it, rather than to click a command the role refuses.
+Messages that name a next step follow your role. A Technologist asked to change a confirmed identification, or to edit a cancelled investigation, is told to ask a Supervisor or Administrator to clear or reinstate it, rather than to click a command the role refuses. Preferences opened by a role that cannot change them show *(view only)* in the title, with **Save** and **Import…** disabled; hover over either for the reason. **Tools > Purge Database** tells a role that cannot purge before anything is chosen, and the start-up *Database nearly full* message asks such a user to have an Administrator purge, instead of offering the purge.
 
 When users are registered, the initials entered for a supervisor review must be the signed-in user's own. Every audit entry records the signed-in Windows login, and user changes are audited.
 
@@ -1320,6 +1320,8 @@ The preview line states how many specimens match before you commit.
 **Purge** deletes the matching specimens after you confirm. Pressing Enter does not purge: click **Purge**, and in the confirmation the highlighted answer is **No**, so choose **Yes** deliberately. Every other confirmation that deletes data (a specimen, panel, rule, run, extra antigen, attached panel or reactions) also defaults to **No**. Once users are registered, only an Administrator can purge. If any matching specimen has a confirmed identification, an archive is required: without one, the purge is refused and nothing is deleted. The deletion and its audit entry are saved together. Panels that are still needed by remaining specimens stay. **Cancel** closes the dialog without deleting anything.
 
 After a purge, every tab reloads. The status bar reports how many specimens were removed and the new database size. **Help** opens this chapter.
+
+Only an Administrator can purge once users are registered. Any other role is told so when it opens Purge Database, before choosing a cutoff or an archive, and the start-up *Database nearly full* message asks it to have an Administrator purge.
 
 ---
 

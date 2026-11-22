@@ -7665,10 +7665,34 @@ an Administrator.
 
 **Docs:** the Preferences and Purge help topics.
 
+## Iteration 279: Restore is unavailable, with the reason, in a view-only session
+
+**Reviewed:** Tools > Open Archive by role. Reading an archive is open
+to everyone: it shows what an archive holds and changes nothing.
+Restoring writes specimens, so it needs Record results (the database
+refuses it otherwise).
+
+**Found:** in a view-only session, Restore was enabled once an archive
+with restorable specimens was loaded. The user confirmed "Restore N
+specimen(s) …?" and was then shown an error box, "Restore failed: …
+cannot record or change laboratory data". This is the same
+refused-after-the-work pattern as Purge in Iteration 278.
+
+**Implemented:** when an archive is loaded, Restore is enabled only if
+`AccessControl.Refusal(db, RecordResults)` is null. Otherwise it stays
+disabled with the reason as its tooltip, and the summary line ends with
+"View only: …". Reading the archive is unchanged.
+
+**Tests:** `RestoreViewOnlyTests` (1 case, two roles): a Read-only user
+reads the archive but has Restore disabled with the reason in the
+tooltip and summary; an Administrator has Restore enabled with no note.
+
+**Docs:** the Open Archive help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Open Archive (restore) by role and on a
-view-only session (restoring writes specimens, so check the refusal
-comes before the archive is chosen).
+Continue clean-pass reviews: Load Demo Data and Import Lab
+Configuration for a view-only session and by role (both write; check
+the refusal comes before the file or confirmation).
 
 Loop clean passes: 0/5
