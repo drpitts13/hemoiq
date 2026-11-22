@@ -7028,10 +7028,31 @@ stale.
 
 All 1480 tests pass.
 
+## Iteration 258 (clean pass): every Worklist item can be cleared
+
+**Reviewed:**
+- **Recomputed items.** Incomplete reactions, stale analysis, expiring
+  and expired items, untyped cells, rule problems, data inconsistencies
+  and inconsistent status clear when the data they describe is fixed.
+  They are recomputed on every refresh (Iteration 212).
+- **Expired reagent and graded-after-expiry items.** These stay until a
+  confirmed call is supervisor-reviewed, as the Worklist help states. The
+  REVIEW note asks for documented review before relying on such results.
+  The Supervisor Review action is available on any confirmed, unreviewed
+  specimen whether or not Preferences require review, so the item can
+  always be cleared by a documented review.
+- **Duplicate lots.** These are listed only while at least one copy is
+  active, so deactivating the extra copies clears them even when every
+  copy holds test history and cannot be deleted.
+- **Overdue testing.** This clears when the testing is recorded or the
+  investigation is confirmed.
+
+No new issue or gap worth fixing. All 1480 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other needless-warning sources: Worklist items
-that cannot be cleared by any action, or review prompts that repeat after
-the user has already acknowledged them.
+Continue clean-pass reviews: prompts that repeat after acknowledgement
+(the intended-use acknowledgement shows once; recovery prompts and
+confirmation overrides are not asked twice for the same decision).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
