@@ -6790,10 +6790,29 @@ No new issue or gap worth fixing. All 1452 tests pass.
 
 All 1459 tests pass.
 
+## Iteration 251 (clean pass): plain-text files outside the database
+
+**Reviewed:**
+- **Recovery draft.** The draft (`reaction-draft.json`) holds an accession
+  and unsaved grades. It is stored in the Windows user's own profile
+  (`%LOCALAPPDATA%\HemoIQ\drafts`), which Windows restricts to that
+  user, SYSTEM and administrators. Each Windows user on a shared
+  workstation has their own. It is deleted on save or discard (Iteration
+  242), and its tests use a temporary directory.
+- **Import artifacts.** These are vendor antigram files stored beside the
+  database, with no patient data.
+- **Exported preferences and configuration.** These are settings only.
+- **Exports.** Report and CSV exports go to a location the user picks.
+  They are audited as `export_data` with what was exported, and their
+  default names say what they contain.
+- **Log.** Since Iteration 250 the log withholds record identifiers.
+
+No new issue or gap worth fixing. All 1459 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other plain-text outputs outside the database
-(import artifacts folder, recovery draft file, exported preferences) for
-patient identifiers and for who can read them.
+Continue clean-pass reviews: the archive file written by Purge (holds full
+specimen records): its location default, the warning that it contains
+patient records, and that Open Archive reads it without changing it.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
