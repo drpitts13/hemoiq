@@ -23,6 +23,9 @@ namespace HemoIQ.Services
         /// <summary>Null when demo data may be loaded; otherwise why not, for the user.</summary>
         public static string? RefusalReason(DatabaseService db)
         {
+            // Loading writes specimens and lots, so a view-only session is told before the confirmation.
+            if (AccessControl.Refusal(db, Permission.RecordResults) is string role)
+                return role + " Nothing was added.";
             var specimens = db.GetAllSpecimens();
             var panels = db.GetAllPanels();
             if (specimens.Count == 0 && panels.Count == 0) return null;

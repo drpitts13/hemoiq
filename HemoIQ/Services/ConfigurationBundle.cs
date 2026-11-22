@@ -84,6 +84,31 @@ namespace HemoIQ.Services
         /// only after the database writes commit. With <paramref name="removeLocalOnlyRules"/>, stored
         /// rules missing from the file are deleted (audited), so the rules match the source exactly.
         /// </summary>
+        /// <summary>
+        /// Why the current user may not apply this preview (rule changes need Configure rules, Preference changes
+        /// Configure preferences), or null. The import asks this before its confirmation, as <see cref="Apply"/> does.
+        /// </summary>
+        public static string? Refusal(DatabaseService db, ConfigurationPreview preview, bool removeLocalOnlyRules)
+        {
+            var reasons = new List<string>();
+            if ((preview.Rules.Any(l => l.Action is RuleImportAction.Add or RuleImportAction.Update) ||
+                 (removeLocalOnlyRules && preview.LocalOnlyRules.Count > 0)) &&
+                AccessControl.Refusal(db, Permission.ConfigureRules) is string rules)
+                reasons.Add(rules);
+            if (preview.Preferences.Changes.Count > 0 &&
+                AccessControl.Refusal(db, Permission.ConfigurePreferences) is string prefs)
+                reasons.Add(prefs);
+            return reasons.Count == 0 ? null : string.Join("\n", reasons);
+        }
+
+        /// <summary>Why no import could apply (the current user can change neither rules nor Preferences), or null.</summary>
+        public static string? RefusalBeforeChoosingAFile(DatabaseService db)
+        {
+            var rules = AccessControl.Refusal(db, Permission.ConfigureRules);
+            var prefs = AccessControl.Refusal(db, Permission.ConfigurePreferences);
+            return rules != null && prefs != null ? rules + "\n" + prefs : null;
+        }
+
         /// <param name="persist">
         /// Writes the new Preferences to disk inside the transaction (the application passes
         /// <see cref="SettingsService.Persist"/>). When it throws, the rules, Preferences and audit entries are all
@@ -96,10 +121,8 @@ namespace HemoIQ.Services
                 throw new ArgumentException("The file has refused entries, so applying it would not reproduce its configuration. " +
                                             "Correct the file, or import its rules and Preferences separately.");
             var removing = removeLocalOnlyRules ? preview.LocalOnlyRules : new List<Rule>();
-            if (preview.Rules.Any(l => l.Action is RuleImportAction.Add or RuleImportAction.Update) || removing.Count > 0)
-                AccessControl.Demand(db, Permission.ConfigureRules);
-            if (preview.Preferences.Changes.Count > 0)
-                AccessControl.Demand(db, Permission.ConfigurePreferences);
+            if (Refusal(db, preview, removeLocalOnlyRules) is string refusal)
+                throw new UnauthorizedAccessException(refusal);
             if (!preview.HasChanges && removing.Count == 0) return new ConfigurationImportResult(0, 0, 0, 0);
 
             // Preferences are applied to a copy inside the transaction (for the audit) and to the

@@ -18,3 +18,5 @@ A DEMO- scenario that already has grades and has never been analyzed is analyzed
 Sample records are still stored in the same database as laboratory work. Delete individual DEMO- or 2026- specimens from the Specimens tab when you no longer want them, or exclude them by accession when you read Analytics.
 
 **Help** for this action is this chapter. The menu item itself does not open a separate dialog before the confirmation prompt.
+
+A view-only session (a Read-only user or an unregistered login) cannot load demo data, because it adds specimens and lots. It is told so before the confirmation, and nothing is added.

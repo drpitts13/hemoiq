@@ -285,6 +285,11 @@ namespace HemoIQ
         private void ImportConfiguration()
         {
             var db = ViewModel.Database;
+            if (ConfigurationBundle.RefusalBeforeChoosingAFile(db) is string cannot)
+            {
+                MessageBox.Show(this, cannot, "Import Lab Configuration", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             var dlg = new Microsoft.Win32.OpenFileDialog { Title = "Import Lab Configuration", Filter = "HemoIQ configuration (*.json)|*.json" };
             if (dlg.ShowDialog(this) != true) return;
             ConfigurationPreview preview;
@@ -317,6 +322,13 @@ namespace HemoIQ
             if (!preview.HasChanges && !removeLocalOnly)
             {
                 MessageBox.Show("Nothing to change.\n\n" + summary, "Import Lab Configuration", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            // A Supervisor may change rules but not Preferences: refuse this file before asking to apply it.
+            if (ConfigurationBundle.Refusal(db, preview, removeLocalOnly) is string refused)
+            {
+                MessageBox.Show(this, "Nothing was changed.\n\n" + refused + "\n\n" + summary, "Configuration not imported",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             if (MessageBox.Show(summary + "\n\nApply the rules and Preferences together now?", "Import Lab Configuration",

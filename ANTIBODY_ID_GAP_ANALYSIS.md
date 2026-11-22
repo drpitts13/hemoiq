@@ -7689,10 +7689,46 @@ tooltip and summary; an Administrator has Restore enabled with no note.
 
 **Docs:** the Open Archive help topic.
 
+## Iteration 280: demo data and configuration import refuse before confirmation
+
+**Found:**
+- **Load Demo Data.** In a view-only session, the database checks
+  passed, the user confirmed, and only then was the write refused
+  ("Failed to seed demo data: … cannot record or change laboratory
+  data").
+- **Import Lab Configuration.** The role was checked only inside
+  `Apply`, after the file was chosen, the preview shown, local-only
+  rules asked about and the import confirmed. A Technologist (who can
+  change neither rules nor Preferences) went through all of it, and so
+  did a Supervisor with a file that also changes Preferences.
+
+**Implemented:**
+- `DemoDataGuard.RefusalReason` first returns the Record-results
+  refusal, ending "Nothing was added.". It is shown before the
+  confirmation, and `--seed-clinical` refuses the same way.
+- `ConfigurationBundle.Refusal(db, preview, removeLocalOnly)` gives the
+  role refusal for exactly the changes the preview would make: rule
+  changes need Configure rules, Preference changes Configure
+  preferences. `Apply` throws the same message, and the import shows it
+  after the preview and before the confirmation.
+- `ConfigurationBundle.RefusalBeforeChoosingAFile` refuses before the
+  file dialog when the user can change neither.
+
+**Tests:** `ImportRefusedUpFrontTests` (3 cases):
+- demo data is refused for a Read-only user and allowed for an
+  Administrator;
+- a Technologist is refused before choosing a file, while a Supervisor
+  and an Administrator are not;
+- a Supervisor is refused a file that changes Preferences but not a
+  rules-only file, and `Apply` gives the same message and changes
+  nothing.
+
+**Docs:** the Demo data and Rules help topics.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Load Demo Data and Import Lab
-Configuration for a view-only session and by role (both write; check
-the refusal comes before the file or confirmation).
+Continue clean-pass reviews: the remaining write paths reachable from
+menus by a view-only session (Rules import/export, Preferences export,
+User Manual export, Analytics export) for refusals that come late.
 
 Loop clean passes: 0/5

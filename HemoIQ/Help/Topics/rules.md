@@ -34,3 +34,5 @@ The right pane is read-only. It shows the name, antibody, exception antigen, whe
 **Min Ruleout Count** replaces the default count for this antibody only. The Ruled Out tab shows that number in the **Needed** column and explains when the custom rule was used.
 
 Rules apply the next time you run analysis. They do not rewrite a final ID you have already confirmed.
+
+**Tools > Import Lab Configuration** checks your role before it changes anything. A role that can change neither rules nor Preferences (a Technologist) is told before choosing a file. A Supervisor may import rules, but a file that also changes Preferences, which need the Administrator role, is refused after its preview and before the confirmation; nothing is changed.
