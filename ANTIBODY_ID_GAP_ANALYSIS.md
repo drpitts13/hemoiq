@@ -7567,10 +7567,30 @@ a valid file name; no lot and very long names are handled.
 
 **Docs:** the Panels help topic.
 
+## Iteration 275 (clean pass): keyboard access
+
+**Reviewed:**
+- **Escape.** Every dialog has a Cancel or Close button, so Escape
+  closes it without changing anything.
+- **Enter.** Every dialog has a default button except two, both by
+  design: Help, which has nothing to accept, and Purge, which must never
+  run on Enter (Iteration 237).
+- **First focus.** The dialogs whose first focus is not set
+  (`ArtifactViewerDialog`, `AuditLogDialog`, `ImportReviewDialog`,
+  `PanelCompareDialog`, `PanelRunDialog`, `RestoreArchiveDialog`,
+  `SelectPanelDialog`, `UsersDialog`, `PurgeDatabaseDialog`,
+  `HelpWindow`) have read-only, filter or optional text boxes. Enter,
+  Escape and Tab work there without one.
+- **Main window.** Ctrl+S, Ctrl+N and Ctrl+R work on the main tabs,
+  Ctrl+P prints on Reports, F1 opens context help, and every menu
+  command has an access key.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: keyboard access on the main tabs (every
-command reachable without the mouse, a sensible tab order, and Enter
-or Escape doing the expected thing in each dialog).
+Continue clean-pass reviews: number and date entry under a non-English
+Windows locale (decimal commas in Preferences, dates typed as
+dd/MM/yyyy in date fields) against the Gregorian-dates convention.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
