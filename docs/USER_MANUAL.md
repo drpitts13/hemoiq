@@ -1255,6 +1255,8 @@ If the Preferences file cannot be written (read-only, locked by another program,
 
 If the Preferences file exists but cannot be read at start-up (damaged, cut short, or locked), HemoIQ starts with the default Preferences and says so before anything else, naming the file. The unreadable file is first copied beside it as *settings.unreadable-<date-time>.json*, so a later save cannot overwrite the lab's settings; re-enter them from that copy, or import a Preferences or configuration export, before testing.
 
+If the file holds an analysis setting outside its allowed range (for example a separation count of 9, or a score threshold below 0.30), HemoIQ replaces it at start-up and lists each one as *setting: stored → used*. Some are replaced by their default rather than the nearest limit. The file as it was is kept as *settings.adjusted-<date-time>.json*. Review the values in Preferences before testing. Imports never do this: an out-of-range value in an imported file is refused, not replaced.
+
 Messages that name a next step follow your role. A Technologist asked to change a confirmed identification, or to edit a cancelled investigation, is told to ask a Supervisor or Administrator to clear or reinstate it, rather than to click a command the role refuses.
 
 When users are registered, the initials entered for a supervisor review must be the signed-in user's own. Every audit entry records the signed-in Windows login, and user changes are audited.

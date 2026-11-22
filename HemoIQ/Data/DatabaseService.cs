@@ -5091,6 +5091,40 @@ namespace HemoIQ.Data
             return list;
         }
 
+        public int CountAuditEvents()
+        {
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = "SELECT COUNT(*) FROM audit_events";
+            return Convert.ToInt32(cmd.ExecuteScalar());
+        }
+
+        /// <summary>
+        /// Every audit event, newest first, read one at a time so a long log is never held in memory whole. Used by
+        /// the audit-log export, which must contain the whole log, not only the events the viewer loaded.
+        /// </summary>
+        public IEnumerable<AuditEvent> ReadAllAuditEvents()
+        {
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = @"
+                SELECT id, occurred_at_utc, operator, action, entity_type, entity_id, reason, before_json, after_json
+                FROM audit_events
+                ORDER BY id DESC";
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
+                yield return new AuditEvent
+                {
+                    Id = r.GetInt64(0),
+                    OccurredAtUtc = r.GetString(1),
+                    Operator = r.GetString(2),
+                    Action = r.GetString(3),
+                    EntityType = r.IsDBNull(4) ? null : r.GetString(4),
+                    EntityId = r.IsDBNull(5) ? null : r.GetString(5),
+                    Reason = r.IsDBNull(6) ? null : r.GetString(6),
+                    BeforeJson = r.IsDBNull(7) ? null : r.GetString(7),
+                    AfterJson = r.IsDBNull(8) ? null : r.GetString(8),
+                };
+        }
+
         public List<AuditEvent> GetAuditEvents(int limit = 500)
         {
             var list = new List<AuditEvent>();

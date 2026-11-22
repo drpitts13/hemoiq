@@ -15,6 +15,8 @@
                      ToolTip="Filter by accession, action, Windows login, record type, or reason"
                      TextChanged="FindChanged"/>
         </DockPanel>
+        <TextBlock x:Name="TruncationText" DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,0,0,8"
+                   Foreground="#8D6E00" Visibility="Collapsed"/>
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
             <Button Content="Help" Width="84" Margin="0,0,8,0"
                     Command="{x:Static help:HelpCommands.ShowContext}"

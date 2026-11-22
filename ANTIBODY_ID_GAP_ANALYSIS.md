@@ -7324,9 +7324,42 @@ setting.
 
 **Docs:** the Preferences help topic.
 
+## Iteration 267: the audit-log export is the whole log
+
+**Found:** the Audit Log window loads the newest 5,000 events. With a
+longer log:
+- its count still read "5000 event(s)", as if that were everything;
+- **Export CSV** wrote only those loaded rows, to a file named
+  audit-log.csv, so an inspection copy could silently omit every older
+  event;
+- the export gave no confirmation of what it wrote, and a failed write
+  fell through to the generic error box.
+
+**Implemented:**
+- `DatabaseService.CountAuditEvents` and `ReadAllAuditEvents` (newest
+  first, read one row at a time, so a long log is never held in memory
+  whole).
+- `AuditLogExport.Write` writes the header and every event in the whole
+  log that matches the Find text, through the formula-neutralising CSV
+  field, and returns the count. The dialog streams it to the file,
+  records the export as before, and reports "Exported N event(s) … (the
+  whole audit log)" or "… matching …". A failed write says the log was
+  not exported, and nothing is recorded.
+- `AuditLogExport.CountLabel` reads "Newest 5000 of 12000" when only
+  part of the log is listed. `TruncationNote` adds a line under Find
+  saying what is listed and that the export covers the whole log.
+
+**Tests:** `AuditLogExportTests` (8 cases): the export writes every
+event, newest first, beyond what a viewer loads; Find filters across the
+whole log; formulas are neutralised; the count labels; the note appears
+only when the log is longer than what was loaded.
+
+**Docs:** the Audit Log help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the audit log viewer and its export with a
-very large log (paging, filtering and the export's completeness).
+Continue clean-pass reviews: the other exports that read a limited
+list (Analytics CSV, the All Specimens and All Panels reports, the
+Timeline) for the same silent truncation.
 
 Loop clean passes: 0/5

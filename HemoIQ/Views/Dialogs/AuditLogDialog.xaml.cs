@@ -16,12 +16,14 @@ namespace HemoIQ.Views.Dialogs
 
         private readonly DatabaseService _db;
         private List<AuditEvent> _events = new();
+        private int _total;
 
         public AuditLogDialog(DatabaseService db)
         {
             InitializeComponent();
             _db = db;
             _events = _db.GetAuditEvents(MaxEvents);
+            _total = _db.CountAuditEvents();
             ApplyFilter();
         }
 
@@ -31,9 +33,10 @@ namespace HemoIQ.Views.Dialogs
         {
             var shown = _events.Where(ev => ev.MatchesFilter(FindBox.Text)).ToList();
             EventsGrid.ItemsSource = shown;
-            CountText.Text = shown.Count == _events.Count
-                ? $"{shown.Count} event(s)"
-                : $"Showing {shown.Count} of {_events.Count}";
+            CountText.Text = Services.AuditLogExport.CountLabel(shown.Count, _events.Count, _total);
+            var note = Services.AuditLogExport.TruncationNote(_events.Count, _total);
+            TruncationText.Text = note ?? "";
+            TruncationText.Visibility = note == null ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void ExportClick(object sender, RoutedEventArgs e)
@@ -45,20 +48,24 @@ namespace HemoIQ.Views.Dialogs
             };
             if (dlg.ShowDialog() != true) return;
 
-            var shown = EventsGrid.ItemsSource as IEnumerable<AuditEvent> ?? _events;
-            var sb = new StringBuilder();
-            sb.AppendLine("OccurredAtUtc,Operator,Action,EntityType,EntityId,Reason,BeforeJson,AfterJson");
-            foreach (var ev in shown)
+            int written;
+            try
             {
-                sb.AppendLine(string.Join(",",
-                    Csv(ev.OccurredAtUtc), Csv(ev.Operator), Csv(ev.Action),
-                    Csv(ev.EntityType), Csv(ev.EntityId), Csv(ev.Reason),
-                    Csv(ev.BeforeJson), Csv(ev.AfterJson)));
+                // The whole log (filtered by Find), read from the database, not only the events loaded on screen.
+                using (var writer = new StreamWriter(dlg.FileName, false, new UTF8Encoding(true)))
+                    written = Services.AuditLogExport.Write(_db, writer, FindBox.Text);
             }
-            File.WriteAllText(dlg.FileName, sb.ToString(), new UTF8Encoding(true));
+            catch (System.Exception ex) when (ex is IOException or System.UnauthorizedAccessException)
+            {
+                MessageBox.Show(this, $"The audit log was not exported: {ex.Message}", "Export audit log",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             Services.ExportAudit.Record(_db, "audit_log", dlg.FileName);
+            MessageBox.Show(this, $"Exported {written} event(s) to {Path.GetFileName(dlg.FileName)}" +
+                                  (string.IsNullOrWhiteSpace(FindBox.Text) ? " (the whole audit log)." : $" matching \"{FindBox.Text.Trim()}\"."),
+                "Export audit log", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private static string Csv(string? value) => Services.CsvText.Field(value);
     }
 }
