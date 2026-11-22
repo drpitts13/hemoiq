@@ -6809,10 +6809,30 @@ All 1459 tests pass.
 
 No new issue or gap worth fixing. All 1459 tests pass.
 
+## Iteration 252 (clean pass): the purge archive file
+
+**Reviewed:**
+- **Saving.** The Purge dialog's save box suggests a timestamped name
+  (`hemoiq_archive_yyyyMMdd_HHmm.db`) in a folder the user chooses, and
+  refuses an existing file (Iteration 160), so an earlier archive is
+  never overwritten.
+- **Warning.** The purge confirmation says "Archives contain specimen
+  records and should be stored securely", and the Purge help says the
+  same.
+- **Reading.** Open Archive inspects the file through `OpenArchiveReadOnly`
+  (`Mode=ReadOnly`). Restore attaches it and only reads from it. Every
+  `INSERT INTO archive.*` is in the purge path that creates the archive,
+  so inspecting or restoring never changes it.
+- **Archive refused.** A purge that includes confirmed identifications
+  needs an archive or is refused.
+
+No new issue or gap worth fixing. All 1459 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the archive file written by Purge (holds full
-specimen records): its location default, the warning that it contains
-patient records, and that Open Archive reads it without changing it.
+Continue clean-pass reviews: Preferences changes that alter analysis (score
+threshold, ID rule, ACS count, extra phases) are audited with old and new
+values and mark open analyses stale, and Preferences import goes through
+the same path.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
