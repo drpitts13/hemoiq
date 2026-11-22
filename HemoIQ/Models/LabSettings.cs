@@ -232,14 +232,36 @@ namespace HemoIQ.Models
         public string ClinicalSettingsJson() => JsonSerializer.Serialize(ClinicalSnapshot());
 
         /// <summary>
-        /// True when a saved analysis used a different score threshold, ID cell
-        /// rule, ACS count, default rule-out count, or extra-phase list.
+        /// True when a saved analysis used a different value for any analysis setting it recorded (score
+        /// threshold, ID cell rule, ACS count and antigens, rule-out and separation counts, extra phases, and the
+        /// transfusion, specimen-dating and RhIG windows).
         /// Lab name and other display settings are ignored. A blank snapshot
         /// is not treated as a change.
         /// </summary>
-        public static bool ClinicalSettingsDiffer(string? savedJson, string currentJson) =>
-            !string.IsNullOrWhiteSpace(savedJson) &&
-            !string.Equals(savedJson.Trim(), currentJson, StringComparison.Ordinal);
+        public static bool ClinicalSettingsDiffer(string? savedJson, string currentJson)
+        {
+            if (string.IsNullOrWhiteSpace(savedJson)) return false;
+            // Compare setting by setting, over the settings the saved analysis recorded. A setting added to the
+            // snapshot later is absent from older analyses; that alone must not mark them stale (its later changes
+            // are still caught through the update_settings audit entry).
+            try
+            {
+                using var saved = JsonDocument.Parse(savedJson);
+                using var current = JsonDocument.Parse(currentJson);
+                if (saved.RootElement.ValueKind != JsonValueKind.Object || current.RootElement.ValueKind != JsonValueKind.Object)
+                    return !string.Equals(savedJson.Trim(), currentJson, StringComparison.Ordinal);
+                foreach (var setting in saved.RootElement.EnumerateObject())
+                {
+                    if (!current.RootElement.TryGetProperty(setting.Name, out var now)) continue;
+                    if (setting.Value.GetRawText() != now.GetRawText()) return true;
+                }
+                return false;
+            }
+            catch (JsonException)
+            {
+                return !string.Equals(savedJson.Trim(), currentJson, StringComparison.Ordinal);
+            }
+        }
 
         public object ClinicalSnapshot() => new
         {
@@ -250,7 +272,11 @@ namespace HemoIQ.Models
             DefaultMinRuleoutCount,
             SeparationCellCount,
             ExtraPhases,
-            RecentTransfusionWindowDays
+            RecentTransfusionWindowDays,
+            // Read by analysis for its specimen-dating and passive anti-D REVIEW notes.
+            DefaultSpecimenDatingDays,
+            DatingTransfusionLookbackDays,
+            RhigPassiveWindowDays,
         };
 
         public string IsolatedWorklistLabel =>

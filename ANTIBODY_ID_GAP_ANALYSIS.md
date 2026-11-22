@@ -6828,11 +6828,54 @@ No new issue or gap worth fixing. All 1459 tests pass.
 
 No new issue or gap worth fixing. All 1459 tests pass.
 
+## Iteration 253: every Preferences value analysis reads is audited and recorded
+
+**Reviewed, no gap:**
+- **Dialog and import.** The Preferences dialog and Preferences import
+  write `update_settings` with the before and after clinical snapshot,
+  and import also writes `import_preferences`.
+- **Staleness.** Open analyses go stale by the snapshot comparison and by
+  the configuration-change sequence (Iteration 152).
+
+**Deficiency found (auditability, traceability, patient safety):**
+- **Missing settings.** Analysis reads `DefaultSpecimenDatingDays`,
+  `DatingTransfusionLookbackDays` and `RhigPassiveWindowDays` for its
+  critical specimen-dating and passive anti-D REVIEW notes. The RhIG
+  window decides whether anti-D is flagged as possibly passive.
+- **Consequences.** None of the three was in `ClinicalSnapshot`, so a
+  change was not audited (the audit entry is written only when the
+  snapshot differs). It did not mark open analyses stale, and an
+  analysis did not record which value produced its notes.
+- **Upgrade risk.** Simply adding them would have made every analysis
+  saved before the change read stale, because the snapshots were compared
+  as whole strings.
+
+**Bounded improvement:**
+- The three windows are added to `ClinicalSnapshot`.
+- `LabSettings.ClinicalSettingsDiffer` now compares setting by setting,
+  over the settings the saved analysis recorded. A setting added later
+  does not mark older analyses stale, and later changes to it are caught
+  through the audit sequence. Unparseable JSON falls back to the old
+  whole-string comparison.
+
+**Data/schema:** none (the snapshot JSON gains three keys).
+
+**Tests:** `AnalysisSettingsSnapshotTests` (3 cases):
+- the snapshot holds the three windows;
+- an older snapshot without them is not stale, while a changed shared
+  setting is, and missing or unparseable JSON behaves as before;
+- changing the RhIG window through Preferences import after an analysis
+  marks it stale and audits the old and new values.
+
+**Docs:** the Preferences help topic lists every setting that marks
+analyses stale and says each change is audited.
+
+All 1462 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Preferences changes that alter analysis (score
-threshold, ID rule, ACS count, extra phases) are audited with old and new
-values and mark open analyses stale, and Preferences import goes through
-the same path.
+Continue clean-pass reviews: other configuration the analysis reads
+outside Preferences (rules, ACS core list, treatment tables) for the same
+audit and snapshot coverage.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5
