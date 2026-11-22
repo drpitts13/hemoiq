@@ -6725,10 +6725,25 @@ the cited-test check now covers the new rows.
 
 All 1452 tests pass.
 
+## Iteration 249 (clean pass): V&V summary, version history and gap register
+
+**Reviewed:**
+- **Gap register.** `gap-register.md` has no OPEN items; all 16 entries
+  are CLOSED or RESIDUAL.
+- **Version history.** `version-history.md` describes release 2.0.0, which
+  is still the product version (Iteration 244).
+- **V&V summary.** `vv-summary.md` is labelled a starter document. It lists
+  categories of automated verification rather than counts, so it states
+  nothing that has gone stale. The newer safety-control tests are mapped
+  in the risk register and traceability matrix (Iterations 247–248),
+  guarded by `RiskRegisterTraceabilityTests`.
+
+No new issue or gap worth fixing. All 1452 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: `vv-summary.md` and `version-history.md`
-(test counts and notable changes up to date) and `gap-register.md` items
-marked open that have since been closed.
+Continue clean-pass reviews: the HIPAA-related controls (log files contain
+no reaction grades or PHI, exports name what they contain, the database
+ACL test) against the code as it now stands.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
