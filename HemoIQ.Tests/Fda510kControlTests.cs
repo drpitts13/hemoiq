@@ -195,7 +195,9 @@ public class Fda510kControlTests
         AppLog.Info("fda-510k-control-test");
         var today = Path.Combine(AppLog.LogDirectory, $"app-{DateTime.Now:yyyy-MM-dd}.log");
         Assert.True(File.Exists(today));
-        var text = File.ReadAllText(today);
+        // Read the way a viewer would, sharing the file with concurrent writers from other tests.
+        using var stream = new FileStream(today, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        var text = new StreamReader(stream).ReadToEnd();
         Assert.Contains("fda-510k-control-test", text);
         Assert.Contains($"v{SoftwareIdentity.Version}", text);
     }

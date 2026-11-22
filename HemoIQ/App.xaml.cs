@@ -52,7 +52,7 @@ namespace HemoIQ
                 if (DemoDataGuard.RefusalReason(db) is string refusal)
                 {
                     Console.Error.WriteLine(refusal);
-                    AppLog.Info("--seed-clinical refused: " + refusal);
+                    AppLog.Info("--seed-clinical refused: the database holds laboratory records."); // the reason names one
                     Shutdown(3);
                     return;
                 }

@@ -6740,10 +6740,60 @@ All 1452 tests pass.
 
 No new issue or gap worth fixing. All 1452 tests pass.
 
+## Iteration 250: the log holds no record identifiers and does not drop lines
+
+**Reviewed, no gap:**
+- **Exports.** They are audited as `export_data`, with what was exported,
+  and CSV output is safe against spreadsheet formulas.
+- **Database file.** The ACL tests in `HipaaSecurityTests` still apply.
+- **Reaction grades.** No code logs grades.
+
+**Deficiency found (privacy, reliability):**
+- **Identifiers in the log.** `AppLog` states "Do not write … PHI", but
+  `AppLog.Error` wrote `ex.Message` for every exception the app-wide
+  handler caught. HemoIQ's own messages name records: "Specimen X not
+  found", "X is already cancelled", and since Iteration 220 "belong to
+  different patients (MRN a and b)". Accessions and MRNs could therefore
+  reach the plain-text log, which sits outside the database's access
+  controls. Iteration 246's `--seed-clinical` refusal also logged an
+  accession.
+- **Dropped lines.** Writes used `File.AppendAllText` and swallowed every
+  error. A second writer, or any program holding the file open with
+  read-only sharing (a viewer, a backup agent), made lines vanish
+  silently. A test reading the log while another wrote showed it.
+
+**Bounded improvement:**
+- `AppLog.Describe` keeps the message only for framework storage, file and
+  network errors (SQLite, I/O, HTTP, timeout), whose text concerns the
+  system.
+- For HemoIQ's own exceptions, including wrapped ones, it logs the type,
+  "message withheld because it may name a patient record", and the
+  throwing type and method.
+- The seed refusal is logged without the record.
+- Writes are serialized and open the file with shared read, write and
+  delete access, with a short retry.
+- SRS-LOG-01, the traceability row and risk R-08 describe the control and
+  cite `AppLogPrivacyTests`.
+
+**Data/schema:** none.
+
+**Tests:** `AppLogPrivacyTests` (7 cases):
+- an application exception's accession and MRN are withheld, with its
+  type and site kept, including when wrapped;
+- SQLite and I/O messages are kept;
+- the log file line holds no identifier;
+- 40 concurrent writes all land;
+- a reader holding the file open does not block writing;
+- a source guard on the seed refusal.
+
+`Fda510kControlTests` now reads the log with shared access.
+
+All 1459 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the HIPAA-related controls (log files contain
-no reaction grades or PHI, exports name what they contain, the database
-ACL test) against the code as it now stands.
+Continue clean-pass reviews: other plain-text outputs outside the database
+(import artifacts folder, recovery draft file, exported preferences) for
+patient identifiers and for who can read them.
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5

@@ -12,7 +12,7 @@
 | SRS-LOCK-02 | `ClearSpecimenFinalCall(reason)` + `ReasonDialog` | `ConfirmAndClear_WriteAuditEvents_AndRequireReason` |
 | SRS-SNAP-01 | `SaveAnalysisSnapshot` / `PersistSnapshot` | `AnalyzeSpecimen_PersistsTraceabilitySnapshot` |
 | SRS-SNAP-02 | `ReportService.AnalysisTraceLine` | `Reports_IncludeIntendedUseVersionAndTraceLine` |
-| SRS-LOG-01 | `AppLog`, `App.OnStartup` | `AppLog_WritesVersionedLineWithoutThrowing` |
+| SRS-LOG-01 | `AppLog`, `App.OnStartup` | `AppLog_WritesVersionedLineWithoutThrowing`, `AppLogPrivacyTests` |
 | SRS-CYB-01 | `Environment.UserName` on audit; `AccessControl.Demand` and `EnsureCanRecord` on every writer; NTFS ACL tests | `HipaaSecurityTests`, `AccessControlTests`, `RecordResultsPermissionTests` |
 | SRS-SAFE-01 | `ReactionsViewModel.ExpiredSpecimenPrompt`, `PanelEditActivation.ExpiryWarning`, `ExpiredReagentCheck` | `ExpiredReagentTests`, `ExpiredSpecimenEntryTests`, `PanelEditAuditTests` |
 | SRS-SAFE-02 | `DatabaseService.SetEluateSource`, `UpdateSpecimenMrn` | `EluateEvidenceTests` |
