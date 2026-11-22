@@ -7356,10 +7356,37 @@ only when the log is longer than what was loaded.
 
 **Docs:** the Audit Log help topic.
 
+## Iteration 268: the printed Explain Analysis names every candidate
+
+**Reviewed:** exports and reports that read a limited list. The All
+Specimens and All Panels reports, the Analytics CSV (its date range is
+stated) and the Timeline read their whole lists. The Audit Log viewer
+was the only database read with a cap (Iteration 267). On-screen
+prompts that list the first 10 or 12 changes say "… and N more".
+
+**Found:** the Clinical Identification report printed only the first 8
+Explain Analysis narratives (`Take(8)`), with nothing to say more
+existed. Candidates include every antibody evaluated for rule-out, so
+a routine panel often has more than 8. Ruled-out candidates sort last,
+so the printed record silently dropped them while the Analysis tab
+listed them all.
+
+**Implemented:** `ReportService.ExplainLines` prints the first
+`ExplainNarrativesPrinted` (8) narratives, then one line naming every
+further candidate with its status, pointing to Explain Analysis on the
+Analysis tab for the full descriptions.
+
+**Tests:** `ExplainReportCompletenessTests` (4 cases): up to the limit
+there is no remainder line; beyond it each further candidate is named
+with its status; no candidates gives no lines; a real analysis with
+more than 8 candidates prints a report naming every one.
+
+**Docs:** the Reports help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the other exports that read a limited
-list (Analytics CSV, the All Specimens and All Panels reports, the
-Timeline) for the same silent truncation.
+Continue clean-pass reviews: printed reports against the screen for the
+same investigation (every section on the Analysis tab that a report
+claims to reproduce, such as the absorption, phase and dosage notes).
 
 Loop clean passes: 0/5

@@ -495,8 +495,8 @@ namespace HemoIQ.Services
             {
                 sb.AppendLine();
                 sb.AppendLine("Explain Analysis (decision support, not a diagnosis):");
-                foreach (var exp in analysis.CandidateExplanations.Take(8))
-                    sb.AppendLine("  " + exp.Narrative);
+                foreach (var line in ExplainLines(analysis.CandidateExplanations))
+                    sb.AppendLine("  " + line);
             }
             // Separation lines already printed above are not repeated.
             var printed = separation.Select(e => e.Explanation).ToHashSet(StringComparer.Ordinal);
@@ -661,6 +661,25 @@ namespace HemoIQ.Services
         /// A suspected antibody's combined score as printed: labelled "score" so a percentage is never read as a
         /// probability (it is the mean of 1 - Fisher p and the pattern share; see AntigenConstants.AcsExceptionCriterion).
         /// </summary>
+        /// <summary>Narratives printed in full on the Clinical Identification report; the rest are named, never dropped.</summary>
+        public const int ExplainNarrativesPrinted = 8;
+
+        /// <summary>
+        /// The Clinical Identification report's Explain Analysis lines: the first <see cref="ExplainNarrativesPrinted"/> narratives (suspected
+        /// and unresolved candidates sort first), then one line naming every further candidate with its status, so the
+        /// printed record says what it left out instead of silently ending.
+        /// </summary>
+        public static List<string> ExplainLines(IReadOnlyList<CandidateExplanation> explanations)
+        {
+            var lines = explanations.Take(ExplainNarrativesPrinted).Select(e => e.Narrative).ToList();
+            var rest = explanations.Skip(ExplainNarrativesPrinted).ToList();
+            if (rest.Count > 0)
+                lines.Add($"{rest.Count} more candidate(s) not described here: " +
+                          string.Join("; ", rest.Select(e => string.IsNullOrWhiteSpace(e.Status) ? e.Antibody : $"{e.Antibody} ({e.Status})")) +
+                          ". Explain Analysis on the Analysis tab describes each one.");
+            return lines;
+        }
+
         public static string ScoreLabel(double combinedScore) =>
             $"score {combinedScore * 100:F1}%";
 
