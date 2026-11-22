@@ -6621,10 +6621,43 @@ database.
 
 All 1447 tests pass.
 
+## Iteration 246: the headless seed switch follows the demo-data rule; risk file updated
+
+**Reviewed, no gap:** `--import-vendor-samples` imports vendor lots through
+`VendorPanelImportService`, which stores them inactive and never replaces a
+lot with test history. It follows the rule that imported data is never
+activated without review.
+
+**Deficiency found (patient safety, traceability):**
+- `--seed-clinical` still called the four seeders directly. It bypassed
+  Iteration 245's `DemoDataGuard`, so run against the default database it
+  could seed demo data into a laboratory database, non-transactionally.
+- The FDA documentation named this switch as a controlled entry point:
+  risk R-03 "Seed / demo data treated as patient work", requirement
+  SRS-SEED-02, and the traceability matrix. The control and verification
+  they described no longer matched the code.
+
+**Bounded improvement:**
+- `--seed-clinical` uses `DemoDataGuard`: refused, with the reason on
+  standard error and in the log, and exit code 3, unless the database is
+  empty or demo-only; otherwise loaded in one transaction.
+- `docs/fda-510k/risk-management.md` (R-03 sequence, control and
+  verification), `srs.md` (SRS-SEED-02) and `traceability.md` now
+  describe the guard and `DemoDataGuardTests`.
+- `docs/developer-conventions.md` notes the exit code.
+
+**Data/schema:** none.
+
+**Tests:** `DemoDataGuardTests` gains a source guard. The switch's branch
+uses the guard and exits with 3. No code outside the guard and the
+seeders calls `ClinicalDataSeeder.SeedIfNeeded`.
+
+All 1448 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the headless seeding switch (`--seed-clinical`)
-and the vendor live-import switch for the same protection against running
-on a laboratory database.
+Continue clean-pass reviews: the rest of `docs/fda-510k` (risk register,
+SRS and traceability rows) against the code as it now stands, for controls
+added or changed in Iterations 200–246.
 
 Loop clean passes: 0/5

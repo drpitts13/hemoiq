@@ -75,4 +75,26 @@ public class DemoDataGuardTests
         Assert.Contains("DemoDataGuard.Load(", method);
         Assert.DoesNotContain("ClinicalDataSeeder.SeedIfNeeded(", method);
     }
+
+    [Fact]
+    public void SeedClinicalSwitch_GoesThroughTheGuard()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "HemoIQ", "HemoIQ.csproj"))) dir = dir.Parent;
+        var src = File.ReadAllText(Path.Combine(dir!.FullName, "HemoIQ", "App.xaml.cs"));
+        var branch = src[src.IndexOf("\"--seed-clinical\"", StringComparison.Ordinal)..];
+        branch = branch[..branch.IndexOf("--import-vendor-samples", StringComparison.Ordinal)];
+        Assert.Contains("DemoDataGuard.RefusalReason(", branch);
+        Assert.Contains("DemoDataGuard.Load(", branch);
+        Assert.Contains("Shutdown(3)", branch);
+        Assert.DoesNotContain("ClinicalDataSeeder.SeedIfNeeded(", branch);
+        // No other code outside the guard and the seeders' own tests calls the seeders.
+        foreach (var file in Directory.EnumerateFiles(Path.Combine(dir.FullName, "HemoIQ"), "*.cs", SearchOption.AllDirectories))
+        {
+            if (file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")) continue;
+            var name = Path.GetFileName(file);
+            if (name is "DemoDataGuard.cs" or "ClinicalDataSeeder.cs" or "DemoDataSeeder.cs" or "E2EWorkflowSeeder.cs") continue;
+            Assert.DoesNotContain("ClinicalDataSeeder.SeedIfNeeded(", File.ReadAllText(file));
+        }
+    }
 }

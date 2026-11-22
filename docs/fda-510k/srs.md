@@ -5,7 +5,7 @@
 | SRS-IU-01 | The software shall display the intended-use statement in About, first-run acknowledgment, Help, and report headers. |
 | SRS-IU-02 | Reports and About shall display the assembly / informational version, not a hardcoded marketing string. |
 | SRS-SEED-01 | Normal application launch shall not insert clinical or demo seed specimens. |
-| SRS-SEED-02 | Seed data may be loaded only by Tools > Load Demo Data or the `--seed-clinical` switch. |
+| SRS-SEED-02 | Seed data may be loaded only by Tools > Load Demo Data or the `--seed-clinical` switch, only into an empty database or one holding only demo records, and as a single transaction. |
 | SRS-AUD-01 | Clinical actions shall write an append-only audit event with UTC time, Windows operator, action, entity, optional reason, and before/after JSON. |
 | SRS-AUD-02 | Confirm ID, clear ID, reaction save, panel/rule edits, settings changes, purge, and restore shall be audited. |
 | SRS-AUD-03 | Operators shall be able to view and export the audit log. |

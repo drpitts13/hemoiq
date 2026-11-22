@@ -48,11 +48,15 @@ namespace HemoIQ
             if (e.Args.Any(a => string.Equals(a, "--seed-clinical", StringComparison.OrdinalIgnoreCase)))
             {
                 using var db = new DatabaseService();
-                var analyzer = new AntibodyAnalyzer(db);
-                ClinicalDataSeeder.SeedIfNeeded(db, analyzer);
-                DemoDataSeeder.SeedIfNeeded(db);
-                DemoDataSeeder.AnalyzeIfNeverAnalyzed(db, analyzer);
-                E2EWorkflowSeeder.SeedIfNeeded(db, analyzer);
+                // Same rule as Tools > Load Demo Data: only an empty or demo-only database, in one transaction.
+                if (DemoDataGuard.RefusalReason(db) is string refusal)
+                {
+                    Console.Error.WriteLine(refusal);
+                    AppLog.Info("--seed-clinical refused: " + refusal);
+                    Shutdown(3);
+                    return;
+                }
+                DemoDataGuard.Load(db, new AntibodyAnalyzer(db));
                 Shutdown();
                 return;
             }

@@ -5,7 +5,7 @@
 | SRS-IU-01 | `SoftwareIdentity`, `MainWindow.ShowAbout`, first-run, F1, `ReportService.GeneratePreviewText` | `Fda510kControlTests.SoftwareIdentity_*`, `Reports_IncludeIntendedUseVersionAndTraceLine` |
 | SRS-IU-02 | `SoftwareIdentity.Version`, About / reports | `SoftwareIdentity_ExposesAssemblyVersionAndIntendedUse` |
 | SRS-SEED-01 | `MainViewModel` constructor (no seeder calls) | `FreshDatabase_HasNoSeededSpecimens` |
-| SRS-SEED-02 | `App.xaml.cs --seed-clinical`, `MainWindow.LoadDemoData` | Existing seeder tests |
+| SRS-SEED-02 | `DemoDataGuard` (used by `App.xaml.cs --seed-clinical` and `MainWindow.LoadDemoData`) | `DemoDataGuardTests` |
 | SRS-AUD-01 / 02 | `DatabaseService.AppendAudit` on confirm/clear/reaction/panel/rule/purge/restore; settings dialog | `ConfirmAndClear_WriteAuditEvents_AndRequireReason`, `SettingsChange_CanBeAudited` |
 | SRS-AUD-03 | `AuditLogDialog` | Manual; export uses `GetAuditEvents` |
 | SRS-LOCK-01 | `EnsureSpecimenUnlocked`, analyzer `updateDb` guard | `ConfirmedSpecimen_LocksReactionsAndAnalysisWrites` |

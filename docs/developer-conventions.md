@@ -83,7 +83,7 @@ comparisons, the import schema check, and Final ID entries.
 
 ## Command-line runs open no window
 
-`App.OnStartup` handles `--write-manual`, `--seed-clinical` and `--import-vendor-samples`, then shuts down
+`App.OnStartup` handles `--write-manual`, `--seed-clinical` (through `DemoDataGuard`: refused with exit code 3 on a database with laboratory records) and `--import-vendor-samples`, then shuts down
 and returns. The shortcut and installer builds run these with nobody at the screen. The main window is
 opened at the end of `OnStartup`, never through `StartupUri`; otherwise shutting down a command-line run
 would show the quit confirmation and the build would wait for a click. Add any new command-line run
