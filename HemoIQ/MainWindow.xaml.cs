@@ -206,6 +206,11 @@ namespace HemoIQ
 
         private void LoadDemoData()
         {
+            if (DemoDataGuard.RefusalReason(ViewModel.Database) is string refusal)
+            {
+                MessageBox.Show(refusal, "Load Demo Data", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             if (MessageBox.Show(
                     "This will add sample specimens, panels, and results if they are not already present.\n" +
                     "Existing data will not be removed. Continue?",
@@ -214,10 +219,7 @@ namespace HemoIQ
 
             try
             {
-                ClinicalDataSeeder.SeedIfNeeded(ViewModel.Database, ViewModel.Analyzer);
-                DemoDataSeeder.SeedIfNeeded(ViewModel.Database);
-                DemoDataSeeder.AnalyzeIfNeverAnalyzed(ViewModel.Database, ViewModel.Analyzer);
-                E2EWorkflowSeeder.SeedIfNeeded(ViewModel.Database, ViewModel.Analyzer);
+                DemoDataGuard.Load(ViewModel.Database, ViewModel.Analyzer);
                 ViewModel.RefreshAll();
                 ViewModel.SetStatus("Sample workload and demo scenarios loaded.");
                 MessageBox.Show(

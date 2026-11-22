@@ -6574,10 +6574,57 @@ No new issue or gap worth fixing. All 1442 tests pass.
 
 No new issue or gap worth fixing. All 1442 tests pass.
 
+## Iteration 245: demo data cannot be mixed into a laboratory database
+
+**Reviewed, no gap:**
+- **Confirmation.** Load Demo Data asks before writing.
+- **Auditing and permissions.** Every seeded write goes through the
+  audited, permission-checked writers, so a read-only session cannot load
+  it and the audit log records who did.
+
+**Deficiency found (patient safety, data integrity):**
+- **Any database.** Load Demo Data seeded whatever database was open,
+  including a live laboratory database.
+- **Look-alike records.** The clinical seed set uses realistic accession
+  numbers (2026-001 to 2026-010) with analysed, interpretable results. Its
+  five lots carry real vendor names and plausible lot numbers, and are
+  created active, so they are offered for real testing. Once loaded,
+  nothing distinguished them from laboratory records.
+- **Partial seeding.** The seeders were not transactional. A laboratory
+  specimen that happened to use a demo accession (for example 2026-005)
+  made seeding fail part-way, leaving the earlier demo specimens and the
+  active demo lots behind.
+
+**Bounded improvement:**
+- `DemoDataGuard.RefusalReason` allows demo data only into an empty
+  database, or one whose every specimen is a demo accession (to fill in
+  missing scenarios).
+- Otherwise it refuses, naming the non-demo record or the lab lots, and
+  explains how to use a separate database (`HEMOIQ_DB`).
+- `DemoDataGuard.Load` runs all four seeders in one transaction, so a
+  failure leaves nothing.
+- The Tools menu command uses both.
+
+**Data/schema:** none.
+
+**Tests:** `DemoDataGuardTests` (5 cases):
+- an empty database loads, and a demo-only one may be reloaded;
+- a database with a laboratory specimen is refused with its accession,
+  and nothing is added;
+- a database with only lab lots is refused;
+- a load that fails part-way on a duplicate accession leaves exactly the
+  pre-existing record and no demo lots;
+- a source guard that the command goes through the guard.
+
+**Docs:** the Demo data help topic explains the rule and the separate
+database.
+
+All 1447 tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the demo and seeded data (Load Demo Data is
-clearly marked as demo, cannot mix into real records unnoticed, and its
-lots are not activated without the usual review).
+Continue clean-pass reviews: the headless seeding switch (`--seed-clinical`)
+and the vendor live-import switch for the same protection against running
+on a laboratory database.
 
-Loop clean passes: 4/5
+Loop clean passes: 0/5
