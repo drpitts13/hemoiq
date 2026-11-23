@@ -647,6 +647,54 @@ namespace HemoIQ.ViewModels
             var s = SelectedSpecimen?.AccessionNumber;
             LoadAllSpecimens();
             ApplySpecimenFilter(s);
+            // The specimen setter returns early for the same accession, so a panel attached or detached on the
+            // Specimens tab would not show here until another specimen was picked.
+            if (s != null && SelectedSpecimen?.AccessionNumber == s)
+                ReloadPanelsInPlace();
+        }
+
+        /// <summary>
+        /// The panel list after the specimen's attached panels changed elsewhere: the attached panels in order, and the
+        /// selected panel kept when it is still attached. A detached panel that holds unsaved grades stays listed and
+        /// selected so the grades are not discarded behind the user's back; saving them is refused until the panel is
+        /// attached again (<c>DatabaseService.EnsurePanelAttached</c>).
+        /// </summary>
+        public static (List<Panel> Panels, int? SelectedPanelId) ReconcilePanels(
+            IReadOnlyList<Panel> attached, Panel? selected, bool gradesUnsaved)
+        {
+            var list = attached.ToList();
+            if (selected == null)
+                return (list, list.FirstOrDefault()?.PanelId);
+            if (list.Any(p => p.PanelId == selected.PanelId))
+                return (list, selected.PanelId);
+            if (gradesUnsaved)
+            {
+                list.Insert(0, selected);
+                return (list, selected.PanelId);
+            }
+            return (list, list.FirstOrDefault()?.PanelId);
+        }
+
+        private void ReloadPanelsInPlace()
+        {
+            if (SelectedSpecimen == null) return;
+            var (panels, selectId) = ReconcilePanels(
+                _db.GetSpecimenPanels(SelectedSpecimen.AccessionNumber), SelectedPanel, _gradesDirty);
+            if (panels.Select(p => p.PanelId).SequenceEqual(Panels.Select(p => p.PanelId))) return;
+            var keep = SelectedPanel;
+            // Remove and add around the selected panel rather than clearing, so the selection (and any unsaved
+            // grades on it) is not dropped by the list being emptied.
+            foreach (var gone in Panels.Where(p => !panels.Any(n => n.PanelId == p.PanelId)).ToList())
+                if (keep == null || gone.PanelId != keep.PanelId || selectId != keep.PanelId)
+                    Panels.Remove(gone);
+            for (var i = 0; i < panels.Count; i++)
+            {
+                var at = Panels.ToList().FindIndex(p => p.PanelId == panels[i].PanelId);
+                if (at < 0) Panels.Insert(Math.Min(i, Panels.Count), panels[i]);
+                else if (at != i) Panels.Move(at, Math.Min(i, Panels.Count - 1));
+            }
+            var next = Panels.FirstOrDefault(p => p.PanelId == selectId);
+            if (next?.PanelId != SelectedPanel?.PanelId) SelectedPanel = next;
         }
 
         private void RefreshPanels()

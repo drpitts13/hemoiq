@@ -8612,10 +8612,40 @@ lets the grades be saved.
 
 **Docs:** the Specimens help topic (Linked Panels).
 
+## Iteration 314: the Reactions panel list follows Attach and Detach
+
+**Found:** Attach Panel and Detach on the Specimens tab call
+`ReactionsVM.RefreshSpecimens`, which reselects the same specimen. The
+specimen setter returns early for the same accession, so the Reactions
+tab kept its old panel list:
+- a newly attached panel could not be picked there until another
+  specimen was chosen and back;
+- a detached panel stayed listed.
+
+**Implemented:** `RefreshSpecimens` now reloads the panel list in place
+when the same specimen stays selected (`ReloadPanelsInPlace`).
+`ReactionsViewModel.ReconcilePanels` decides the list:
+- the attached panels, in order;
+- the selection is kept while it is still attached;
+- otherwise the first attached panel, or none.
+
+A detached panel that holds unsaved grades stays listed and selected,
+so the grades are not discarded behind the user's back. Save on it is
+refused (Iteration 313) until the panel is attached again. The list is
+changed item by item rather than cleared, so the selection is not
+dropped while it is rebuilt.
+
+**Tests:** `ReactionsPanelListReloadTests` (6 cases): an attached panel
+is listed and the selection kept; the first panel is selected when none
+was; a detached panel without unsaved grades is dropped; one with
+unsaved grades stays selected; detaching the only panel leaves nothing
+selected; a source check that `RefreshSpecimens` reloads the panels.
+
+**Docs:** the Specimens help topic (Linked Panels).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reactions tab's panel list after an
-Attach or Detach on the Specimens tab (whether it reloads for the same
-specimen).
+Continue clean-pass reviews: the Reactions tab's run list after a
+treated run is added or deleted on another path for the same specimen.
 
 Loop clean passes: 0/5
