@@ -8491,10 +8491,33 @@ The start-up demo analysis already skipped such a session.
 
 **Docs:** the Preferences help topic (users and roles).
 
+## Iteration 309 (clean pass): every database write a view-only session can reach checks the role
+
+**Reviewed:** a script listed the public `DatabaseService` methods that
+write (an INSERT, UPDATE or DELETE, or a call to a write core) and do
+not call `EnsureCanRecord` or `AccessControl.Demand`. Each of the ten is
+accounted for:
+- **Analysis writes.** `SetSpecimenLastAnalyzed`, `AddSpecimenAntibody`,
+  `ClearSpecimenAntibodies`, `AddSpecimenRuleout`,
+  `ClearSpecimenRuleouts` and `SaveAnalysisSnapshot` are called only by
+  `AntibodyAnalyzer`, which demands Record results before storing
+  (Iteration 308).
+- **`AppendAudit`** must work for every session: exports and refusals
+  are audited.
+- **Internal writes.** `TouchSpecimenReactionsUpdated` and `AddPanelCell`
+  are called only from inside guarded methods (`DeleteSpecimen`,
+  `AddPanel`, `UpdatePanel`, `SavePanelCellEdits`, `ReplacePanelCells`,
+  `DeletePanelRun`, `SaveReaction`, `DeleteReactions`).
+- **`SetPanelVendorMetadata`** has no caller on any screen path, only
+  tests.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other database writes that do not call
-`EnsureCanRecord` (search the write methods for a missing role check
-behind a path a view-only session can reach).
+Continue clean-pass reviews: Settings and file writes a view-only
+session can reach (Worklist filter and column preferences are saved to
+the per-workstation settings file; check none of them is a clinical
+Preference).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
