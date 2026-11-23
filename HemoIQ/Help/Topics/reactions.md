@@ -24,7 +24,7 @@ The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cel
   - Pasted grades are unsaved until **Save**, and the unsaved-grade warnings apply to them.
 - **Save** writes grades without running analysis. Ctrl+S does the same.
 - A confirmed or cancelled investigation is locked. An orange banner gives the reason and who can unlock it (clear the identification, or reinstate the investigation). The grades are shown read-only, and **Save**, **Save & Analyze**, **Clear**, **Fill negatives** and the run buttons are disabled. The lock is checked again whenever you open the Reactions tab, so a confirmation made on the Analysis tab shows here at once.
-- **Save & Analyze** writes grades, runs analysis, and shows a green or red banner with the result.
+- **Save & Analyze** writes grades, runs analysis, and shows a green or red banner with the result. A save that fails writes nothing and says *Not saved: …*; the grades stay on screen. If the grades are saved but the analysis then fails, the banner says *Grades saved, but analysis did not run*, so run analysis again rather than re-entering the grades.
 - **Unsaved grades** are protected in three places:
   - Changing the specimen, panel or run asks whether to discard them. **No** (keep them) is the default, so pressing Enter never throws grades away.
   - **Run Analysis** on the Analysis tab, for the same specimen, explains that analysis uses saved grades only. **Yes** saves them first, with the usual expired-lot and change-reason checks. **No** analyzes without them. **Cancel** does nothing.

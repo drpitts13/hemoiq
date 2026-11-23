@@ -7961,9 +7961,43 @@ typed text; discarding grades asks through the destructive helper.
 **Docs:** the Preferences help topic (ACS) and the Reactions help topic
 (the discard prompt).
 
+## Iteration 288: failure messages say what was kept
+
+**Reviewed:** the status and failure messages after commands. Specimen
+saves say "No changes were saved". Preferences saves and configuration
+imports say nothing was changed (Iterations 264 and 280). Exports
+change no data.
+
+**Found:**
+- **Save & Analyze** saves first and then analyses. When the analysis
+  failed, the message was "Save & Analyze failed: …", which reads as
+  if the grades were lost, though they were saved. A user might
+  re-enter them.
+- **Save** failures said "Save failed: …" without saying that nothing
+  was written (the save is one transaction) and that the grades were
+  still on screen.
+- **Load Demo Data** failures said "Failed to seed demo data", though
+  the load is one transaction and adds nothing.
+
+**Implemented:**
+- `ReactionsViewModel.SaveFailedText` gives "Not saved: … Nothing was
+  written; the grades are still on screen."
+- `ReactionsViewModel.AnalyzeAfterSaveFailedText` gives "Grades saved,
+  but analysis did not run: … Run Analysis again on the Analysis tab."
+- The demo-data failure now reads "Demo data was not loaded: …
+  Nothing was added (the load is one transaction)."
+
+**Tests:** `FailureMessageTruthTests` (3 cases): the save-failure and
+analysis-after-save wording; a refused save (on a confirmed
+investigation) leaves every stored reaction unchanged, as the message
+claims.
+
+**Docs:** the Reactions help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: status-line messages after each command
-(that each says what was done, and on failure that nothing was saved).
+Continue clean-pass reviews: success messages that overstate (a
+status saying "saved" or "updated" when nothing changed, for example
+saving an unchanged form).
 
 Loop clean passes: 0/5

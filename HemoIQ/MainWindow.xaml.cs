@@ -257,7 +257,7 @@ namespace HemoIQ
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"Failed to seed demo data:\n{ex.Message}",
+                MessageBox.Show($"Demo data was not loaded: {ex.Message}\n\nNothing was added (the load is one transaction).",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

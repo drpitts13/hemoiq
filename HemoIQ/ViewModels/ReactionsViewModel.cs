@@ -986,12 +986,23 @@ namespace HemoIQ.ViewModels
             }
             catch (Exception ex)
             {
-                var msg = $"Save failed: {ex.Message}";
+                var msg = SaveFailedText(ex.Message);
                 _main.SetStatus(msg);
                 SetSaveStatus(false, msg);
                 return false;
             }
         }
+
+        /// <summary>A failed save writes nothing (it is one transaction); the grades stay on screen to correct or retry.</summary>
+        public static string SaveFailedText(string reason) =>
+            $"Not saved: {reason} Nothing was written; the grades are still on screen.";
+
+        /// <summary>
+        /// Save & Analyze saves first: when the analysis then fails, the grades are already saved, and the message
+        /// must say so rather than read as if nothing was kept.
+        /// </summary>
+        public static string AnalyzeAfterSaveFailedText(string reason) =>
+            $"Grades saved, but analysis did not run: {reason} Run Analysis again on the Analysis tab.";
 
         private void SaveAndAnalyze()
         {
@@ -1012,7 +1023,7 @@ namespace HemoIQ.ViewModels
             }
             catch (Exception ex)
             {
-                var msg = $"Save & Analyze failed: {ex.Message}";
+                var msg = AnalyzeAfterSaveFailedText(ex.Message);
                 _main.SetStatus(msg);
                 SetSaveStatus(false, msg);
             }
