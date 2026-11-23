@@ -8307,10 +8307,26 @@ An export of every drill-down case list would be an enhancement, not
 a defect: nothing claims those lists are exported. No new issue or gap
 worth fixing. All tests pass.
 
+## Iteration 301 (clean pass): Search investigation results for a look-back
+
+**Reviewed:** Search's investigation results as a list for a registry
+or look-back (for example every patient with anti-K in a year).
+- The search finds by final antibody, technologist, location or MRN
+  with a received-date range (Iteration 214).
+- Its grid uses the WPF defaults: extended row selection, and Ctrl+A
+  then Ctrl+C copies the rows (accession, MRN, patient, date of birth,
+  encounter, date, status, panels, final ID and who identified it) for
+  pasting into a spreadsheet. Each row opens the investigation.
+- Like every grid, the clipboard copy is not audited. The file exports
+  that carry accession numbers (report, Analytics and audit-log CSVs)
+  are recorded with a fingerprint.
+
+A dedicated, audited investigation-list export would be an
+enhancement. No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Search's investigation results (whether
-the investigation list can be copied or exported for a registry or
-look-back, and whether that is offered anywhere else).
+Continue clean-pass reviews: the Timeline (Specimens tab) for events
+that change an investigation but do not appear there.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
