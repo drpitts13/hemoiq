@@ -18,6 +18,7 @@ public class RoleGateTests
     [InlineData("AnalysisViewModel.cs", "private void ClearConfirmation()", "Permission.ClearIdentification")]
     [InlineData("SpecimensViewModel.cs", "private void SupervisorReview()", "Permission.SupervisorReview")]
     [InlineData("SpecimensViewModel.cs", "private void ReinstateInvestigation()", "Permission.ReinstateInvestigation")]
+    [InlineData("WorklistViewModel.cs", "private void VerifySelectedTyping()", "Permission.SupervisorReview")]
     public void TheRoleIsChecked_BeforeTheDialogOpens(string file, string method, string permission)
     {
         var src = Source("ViewModels", file);
@@ -25,7 +26,9 @@ public class RoleGateTests
         Assert.True(at >= 0, method);
         var body = src[at..];
         var gate = body.IndexOf($"RoleGate.AllowedOrExplained(_db, {permission}", StringComparison.Ordinal);
-        var dialog = body.IndexOf("ReasonDialog(", StringComparison.Ordinal);
+        var reason = body.IndexOf("ReasonDialog(", StringComparison.Ordinal);
+        var question = body.IndexOf("MessageBox.Show(", StringComparison.Ordinal);
+        var dialog = new[] { reason, question }.Where(i => i >= 0).DefaultIfEmpty(int.MaxValue).Min();
         Assert.True(gate >= 0, $"{method} does not check {permission}");
         Assert.True(gate < dialog, $"{method} opens its dialog before checking the role");
     }

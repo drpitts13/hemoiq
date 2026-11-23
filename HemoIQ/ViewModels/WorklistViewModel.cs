@@ -193,6 +193,8 @@ namespace HemoIQ.ViewModels
         private void VerifySelectedTyping()
         {
             if (SelectedItem is not { Kind: WorklistKind.ExtraAntigenReview, PanelId: int panelId, Antigen: string antigen }) return;
+            // Before asking the user to check the vendor antigram: only a Supervisor or Administrator may verify.
+            if (!RoleGate.AllowedOrExplained(_db, Permission.SupervisorReview, "Mark typing verified")) return;
             if (System.Windows.MessageBox.Show(
                     $"Confirm that {antigen} is negative on every cell of {SelectedItem.Title}, as printed on the vendor antigram?",
                     "Mark typing verified", System.Windows.MessageBoxButton.YesNo,

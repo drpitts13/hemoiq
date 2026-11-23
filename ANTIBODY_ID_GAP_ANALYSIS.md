@@ -8395,10 +8395,36 @@ its permission before creating its reason or initials dialog.
 
 **Docs:** the Preferences help topic (users and roles).
 
+## Iteration 305: Mark typing verified checks the role first
+
+**Reviewed:** every role the database demands beyond Record results,
+against the command that reaches it.
+- **Clear, Supervisor review and Reinstate:** checked first (Iteration
+  304).
+- **Preferences, Users & roles, Purge and the imports:** checked first
+  (Iterations 278-281).
+- **Rules:** checked before its dialog (`CanConfigure`).
+
+**Found:** the Worklist's **Mark typing verified** (extra-antigen
+review) asked "Confirm that Doa is negative on every cell …, as printed
+on the vendor antigram?". A Technologist would compare the antigram,
+answer Yes, and only then be refused. `VerifyExtraAntigenTyping`
+demands Supervisor review.
+
+**Implemented:** `VerifySelectedTyping` calls `RoleGate.AllowedOrExplained`
+with Supervisor review before the question.
+
+**Tests:** `RoleGateTests` (+1): the Worklist handler checks the role
+before its question. The test now treats a confirmation message box,
+as well as a reason dialog, as the dialog that must come after the
+check.
+
+**Docs:** the Worklist help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: any other dialog-first command that needs
-a role (search the view models for reason, initials or file dialogs
-opened before `AccessControl` is consulted).
+Continue clean-pass reviews: menu commands with a role (Tools menu)
+against `RoleGate`/`AccessControl.Refusal` (Purge and the imports done;
+check Open Archive, Audit Log and exports need no role).
 
 Loop clean passes: 0/5
