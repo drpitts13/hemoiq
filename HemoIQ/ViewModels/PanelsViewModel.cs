@@ -256,6 +256,11 @@ namespace HemoIQ.ViewModels
                 return;
             }
 
+            // A lot registered on another workstation after this list loaded is found by reloading once (not while
+            // editing, which a reload would disturb).
+            if (!IsEditingAntigens && !_allPanels.Any(p => p.PanelId == panelId))
+                Refresh();
+
             _applyingFocusedCell = true;
             _focusCellNumber = string.IsNullOrWhiteSpace(cellNumber) ? null : cellNumber.Trim();
             _focusAntigen = string.IsNullOrWhiteSpace(antigen) ? null : antigen.Trim();

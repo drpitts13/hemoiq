@@ -19,7 +19,7 @@ Click a card to show only that category. Click the same card again to show every
 - **Find** narrows the grid by accession, panel name, kind, urgency, or detail.
 - **Show all** clears the card filter.
 - The **Show** checkboxes turn Incomplete, Stale analysis, Expiring, Expired, and Review on or off.
-- **Open** goes to the selected row. Double-click a row, or press **Enter**, to do the same. If that specimen can no longer be shown there (deleted on another workstation, or inactive when Open goes to Reactions), a *Specimen not opened* message says why and you stay on the Worklist; HemoIQ never opens another specimen in its place.
+- **Open** goes to the selected row. Double-click a row, or press **Enter**, to do the same. If that specimen can no longer be shown there (deleted on another workstation, or inactive when Open goes to Reactions), a *Not opened* message says why and you stay on the Worklist; HemoIQ never opens another specimen in its place. A panel item whose lot was deleted on another workstation says so the same way, and the Panels tab keeps its current lot.
 - **Refresh** reloads the counts and the grid.
 - **Help** opens this chapter.
 

@@ -8729,7 +8729,7 @@ tab's `SelectSpecimen`.
   another workstation" or "inactive, so the Reactions tab does not list
   it; reactivate it on the Specimens tab".
 - **Tab switch last.** `MainViewModel` now selects before switching
-  tab. When the tab cannot open the specimen, it shows a *Specimen not
+  tab. When the tab cannot open the specimen, it shows a *Not
   opened* warning, puts the reason on the status line and stays on the
   current tab.
 
@@ -8745,9 +8745,40 @@ tab's `SelectSpecimen`.
 
 **Docs:** the Worklist help topic (Open).
 
+## Iteration 318: opening a missing panel is refused, not shown on another lot
+
+**Found:** Search cell results and Worklist panel items open a lot
+through `MainViewModel.OpenPanel` and `PanelsViewModel.SelectPanel`.
+- **The cached list.** `SelectPanel` looked the lot up in its cached
+  list and never reloaded it.
+- **Deleted lots.** A lot deleted on another workstation left the tab
+  on its previous lot.
+- **New lots.** A lot registered there after the list loaded was not
+  found either.
+- **Misleading highlight.** The search result's cell number and antigen
+  were still applied, so a cell was highlighted on the wrong lot.
+
+**Implemented:**
+- `SpecimenNavigation.PanelCannotOpen` says why a lot cannot be opened.
+- `OpenPanel` checks it before switching tab. A missing lot shows the same
+  *Not opened* warning and status line, and the Panels
+  tab keeps its lot, with no highlight applied.
+- The Worklist's Panels items now go through `OpenPanel`.
+- `SelectPanel` reloads its list once when the lot is not in it, except
+  while antigen edits are open, so a lot registered elsewhere is found.
+
+**Tests:** `PanelNavigationTests` (4 cases):
+- a deleted lot gets a reason;
+- an existing lot opens;
+- a source check that `OpenPanel` refuses before switching tab;
+- a source check that `SelectPanel` reloads a lot missing from its list.
+
+**Docs:** the Worklist help topic (Open).
+
 ## Likely next tick
 
-Continue clean-pass reviews: `PanelsViewModel.SelectPanel` when the
-panel opened from the Worklist or Search was deleted elsewhere.
+Broader product review: the Search tab's other result kinds (specimens
+by antibody, patients by MRN) for the same navigation path, then a
+clean-pass review.
 
 Loop clean passes: 0/5

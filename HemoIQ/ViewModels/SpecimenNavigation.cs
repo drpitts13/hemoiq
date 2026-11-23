@@ -23,5 +23,15 @@ namespace HemoIQ.ViewModels
                        "on the Specimens tab (Edit, then Active) to work on it there.";
             return null;
         }
+
+        /// <summary>
+        /// Why panel <paramref name="panelId"/> cannot be opened on the Panels tab, or null when it can. Without this,
+        /// the tab kept its previous lot and a search result's cell and antigen were highlighted on that other lot.
+        /// </summary>
+        public static string? PanelCannotOpen(DatabaseService db, int panelId) =>
+            db.GetPanel(panelId) == null
+                ? $"Panel #{panelId} was not found, so the Panels tab was not opened on it. It may have been deleted " +
+                  "on another workstation; refresh the list you opened it from."
+                : null;
     }
 }

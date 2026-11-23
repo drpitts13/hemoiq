@@ -181,9 +181,12 @@ namespace HemoIQ.ViewModels
                     OpenSpecimenAnalysis(item.AccessionNumber);
                     break;
                 case "Panels":
-                    SelectedTabIndex = 2;
                     if (item.PanelId is int pid)
-                        PanelsVM.SelectPanel(pid);
+                    {
+                        OpenPanel(pid);
+                        break;
+                    }
+                    SelectedTabIndex = 2;
                     break;
                 case "Rules":
                     SelectedTabIndex = 8;
@@ -221,7 +224,7 @@ namespace HemoIQ.ViewModels
         {
             if (problem == null) return false;
             SetStatus(problem);
-            System.Windows.MessageBox.Show(problem, "Specimen not opened",
+            System.Windows.MessageBox.Show(problem, "Not opened",
                 System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
             return true;
         }
@@ -232,6 +235,9 @@ namespace HemoIQ.ViewModels
             string? antigen = null,
             IReadOnlyList<string>? searchAntigens = null)
         {
+            // Checked before switching tab: a missing lot would leave the previous lot selected, with the search
+            // result's cell and antigen highlighted on it.
+            if (NotOpened(SpecimenNavigation.PanelCannotOpen(Database, panelId))) return;
             SelectedTabIndex = 2;
             PanelsVM.SelectPanel(panelId, cellNumber, antigen, searchAntigens);
         }
