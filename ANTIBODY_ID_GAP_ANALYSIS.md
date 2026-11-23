@@ -8106,10 +8106,25 @@ for an unrelated one.
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 293 (clean pass): the Analysis tab after a configuration change
+
+**Reviewed:** the Analysis tab while it is open during a Preferences or
+rule change.
+- The suspected and ruled-out lists, the green ID-rule rows and the ACS
+  text stay as the last run computed them until Run Analysis. They are
+  the record of that run, not a recomputation.
+- The orange stale banner (`StaleMessage`) is refreshed by
+  `OnSettingsChanged` (`AnalysisVM.RefreshStaleState`) and on tab
+  selection. It says why the analysis is out of date.
+- Confirm ID re-reads staleness from the database
+  (`AnalysisStaleText`) and asks before confirming on a stale analysis,
+  recording the override.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Analysis tab's suspected and ruled-out
-lists after a configuration change while it is open (they show the
-last run until Run Analysis, with the stale banner).
+Continue clean-pass reviews: the Reactions tab's column visibility and
+extra-phase columns after Preferences change while it is open.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
