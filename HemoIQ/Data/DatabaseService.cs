@@ -2871,18 +2871,25 @@ namespace HemoIQ.Data
         {
             EnsureCanRecord();
             EnsureSpecimenUnlocked(specimenId);
-            try
-            {
-                using var cmd = _conn.CreateCommand();
-                cmd.CommandText = @"
-                    INSERT INTO specimen_panels (specimen_id, panel_id) VALUES ($sid, $pid)";
-                cmd.Parameters.AddWithValue("$sid", specimenId);
-                cmd.Parameters.AddWithValue("$pid", panelId);
-                cmd.ExecuteNonQuery();
-                AppendAudit("link_panel", "specimen", specimenId, null,
-                    afterJson: JsonSerializer.Serialize(new { panelId, panel = PanelAuditName(panelId) }));
-            }
-            catch (SqliteException) { /* already linked */ }
+            // Every SQLite error used to be read as "already linked", so a specimen or lot deleted on another
+            // workstation failed its foreign key silently and the Specimens tab reported the panel attached.
+            if (GetSpecimen(specimenId) == null)
+                throw new InvalidOperationException(
+                    $"Specimen {specimenId} no longer exists; it may have been deleted on another workstation, so no " +
+                    "panel was attached. Refresh the list.");
+            if (GetPanel(panelId) == null)
+                throw new InvalidOperationException(
+                    $"Panel #{panelId} no longer exists; it may have been deleted on another workstation, so it was " +
+                    "not attached. Refresh the list.");
+            if (GetSpecimenPanels(specimenId).Any(p => p.PanelId == panelId)) return; // already linked
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO specimen_panels (specimen_id, panel_id) VALUES ($sid, $pid)";
+            cmd.Parameters.AddWithValue("$sid", specimenId);
+            cmd.Parameters.AddWithValue("$pid", panelId);
+            cmd.ExecuteNonQuery();
+            AppendAudit("link_panel", "specimen", specimenId, null,
+                afterJson: JsonSerializer.Serialize(new { panelId, panel = PanelAuditName(panelId) }));
         }
 
         public void UnlinkSpecimenPanel(string specimenId, int panelId)

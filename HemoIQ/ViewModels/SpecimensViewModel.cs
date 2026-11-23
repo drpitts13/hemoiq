@@ -600,7 +600,16 @@ namespace HemoIQ.ViewModels
 
             var dlg = new Views.Dialogs.SelectPanelDialog(available);
             if (dlg.ShowDialog() != true || dlg.SelectedPanel == null) return;
-            _db.LinkSpecimenPanel(SelectedSpecimen.AccessionNumber, dlg.SelectedPanel.PanelId);
+            try
+            {
+                _db.LinkSpecimenPanel(SelectedSpecimen.AccessionNumber, dlg.SelectedPanel.PanelId);
+            }
+            catch (System.Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException)
+            {
+                MessageBox.Show(ex.Message, "Panel not attached", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotifySpecimensChanged();
+                return;
+            }
             _main.SetStatus($"Panel '{dlg.SelectedPanel.Name}' attached.");
             LoadSpecimenDetails();
             _main.ReactionsVM.RefreshSpecimens();

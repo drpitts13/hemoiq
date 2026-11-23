@@ -8877,10 +8877,43 @@ deleted on another workstation after a tab listed it.
 
 **Docs:** the Suspected Antibodies help topic (Confirm and Clear).
 
+## Iteration 323: attaching a panel to a missing specimen or lot is refused
+
+**Reviewed:** Specimens tab writes on a specimen deleted on another
+workstation.
+- **Edit is fine.** Edit saves every dialog field (phenotype,
+  transfusion, DAT, collection, pregnancy and the rest) through
+  `SpecimenSaveService` in one transaction. `UpdateSpecimen` refuses
+  "not found", nothing is kept, and the tab shows *No changes were
+  saved*.
+- **Detach is fine.** It audits only when a link row was removed.
+
+**Found:** `LinkSpecimenPanel` caught every `SqliteException` as
+"already linked".
+- When the specimen or the lot had been deleted, the insert failed its
+  foreign key.
+- The failure was swallowed, and **Attach Panel** reported *Panel '…'
+  attached.*
+
+**Implemented:**
+- `LinkSpecimenPanel` refuses a missing specimen or lot in words. A
+  repeated link is now detected by reading the existing links rather
+  than by catching any database error, so it stays a quiet no-op.
+- Attach Panel shows the refusal as *Panel not attached* and refreshes
+  the lists.
+
+**Tests:** `LinkPanelMissingRecordTests` (4 cases):
+- linking to a deleted specimen is refused and not audited;
+- linking a deleted lot is refused and links nothing;
+- linking twice is a no-op, audited once;
+- a source check that Attach Panel shows the refusal before its
+  success status.
+
+**Docs:** the Specimens help topic (Linked Panels).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Specimens tab's Edit and the phenotype
-and transfusion sub-dialogs on a specimen deleted elsewhere (they
-throw "not found"; check each caller shows it rather than crashing).
+Continue clean-pass reviews: other `catch (SqliteException)` blocks
+that may read every database error as one expected case.
 
 Loop clean passes: 0/5
