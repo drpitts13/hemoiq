@@ -8580,10 +8580,42 @@ it.
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 313: grades cannot be saved on a detached panel
+
+**Found:** a panel with no saved grades can be detached on the
+Specimens tab (`UnlinkSpecimenPanel` refuses only when graded cells are
+stored). Detaching does not delete the panel's runs.
+- **The tab kept the run.** While grades typed on the Reactions tab were
+  still unsaved, a detach left that tab on the same run.
+  `RefreshSpecimens` reselects the same specimen, and the specimen
+  setter returns early for the same accession, so the panel list was
+  not reloaded.
+- **Save went through.** `SaveReaction` did not check that the run's
+  panel was still attached, so Save then recorded the grades on a lot
+  the investigation no longer lists: the "Reactions on detached panel"
+  data inconsistency.
+
+A deleted run cannot take grades: the reactions table's foreign key to
+`panel_runs` (with `PRAGMA foreign_keys = ON`) rejects the insert and
+nothing is stored, though the message is SQLite's own wording.
+
+**Implemented:** `DatabaseService.EnsurePanelAttached(run)` refuses a
+reaction save whose run's panel is no longer attached to the specimen,
+naming the panel and saying to attach it again, then save. It runs on
+every save path (`SaveReaction`, through `SaveReactions` and the
+specimen-level overload). On the Reactions tab the refusal shows as
+"Not saved: … the grades are still on screen" (Iteration 288).
+
+**Tests:** `DetachedPanelSaveTests` (2 cases): saving on a detached
+panel is refused and nothing is written; attaching the panel again
+lets the grades be saved.
+
+**Docs:** the Specimens help topic (Linked Panels).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reactions tab when the selected run is
-deleted, or its panel detached, from another path while grades are
-unsaved.
+Continue clean-pass reviews: the Reactions tab's panel list after an
+Attach or Detach on the Specimens tab (whether it reloads for the same
+specimen).
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5

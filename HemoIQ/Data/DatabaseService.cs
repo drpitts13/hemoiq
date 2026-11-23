@@ -3154,6 +3154,19 @@ namespace HemoIQ.Data
         }
 
         /// <summary>Primary overload: saves a reaction for a specific run.</summary>
+        /// <summary>
+        /// Refuses grades for a run whose panel is no longer attached to the specimen. A panel with no saved grades
+        /// can be detached on the Specimens tab while grades typed on the Reactions tab are still unsaved; saving them
+        /// afterwards would record results on a lot the investigation no longer lists (a data inconsistency).
+        /// </summary>
+        private void EnsurePanelAttached(PanelRun run)
+        {
+            if (GetSpecimenPanels(run.SpecimenId).Any(p => p.PanelId == run.PanelId)) return;
+            throw new InvalidOperationException(
+                $"{PanelAuditName(run.PanelId) ?? $"Panel #{run.PanelId}"} is no longer attached to {run.SpecimenId}, " +
+                "so these grades cannot be saved on it. Attach the panel again on the Specimens tab, then save.");
+        }
+
         public void SaveReaction(int runId, string cellNumber,
             string is_, string c37, string ahg, string cc,
             IReadOnlyDictionary<string, string>? extraPhases = null, string? reason = null)
@@ -3161,7 +3174,11 @@ namespace HemoIQ.Data
             EnsureCanRecord();
             // Need specimen_id to call TouchSpecimenReactionsUpdated
             var run = GetPanelRun(runId);
-            if (run != null) EnsureSpecimenUnlocked(run.SpecimenId);
+            if (run != null)
+            {
+                EnsureSpecimenUnlocked(run.SpecimenId);
+                EnsurePanelAttached(run);
+            }
             // Grades are stored in their normalized form; anything unrecognized is refused, as is a cell the
             // panel does not have (it could not be matched to antigen typing). See DataConsistencyCheck.
             is_ = RequireGrade(is_, cellNumber, "IS");
