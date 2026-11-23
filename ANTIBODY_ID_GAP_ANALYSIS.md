@@ -9021,9 +9021,52 @@ fell back to the lists saved at the last Run Analysis.
 **Docs:** the Specimens help topic (Suspected and Ruled-out
 Antibodies), corrected.
 
+## Iteration 328: reports say when they print saved analysis lists
+
+**Found:** `ReportService.TryAnalyze` swallowed any analysis failure.
+Three outputs then printed the lists saved at the last Run Analysis
+exactly as if they were current:
+- the Analysis Results report;
+- the Clinical Identification report (`AppendCurrentSuspectedAndRuleouts`);
+- the Specimen Summary CSV.
+
+These are issued and audited outputs. Lists saved before later grades
+could show an antibody as ruled out, or suspected, when it no longer
+is.
+
+**Reviewed and fine:**
+- **Pending Work.** Its "top suspected" column reads the saved list
+  only for specimens that are analyzed and current; stale ones are
+  listed apart with their reason.
+- **Eluate evidence.** It reads the eluate's saved list and says
+  "suspected".
+- **Search by antibody.** `InvestigationSearch` matches confirmed
+  identifications and recorded previous antibodies, never the saved
+  suspected lists.
+
+**Implemented:**
+- **The reason.** `TryAnalyze` now returns why the analysis failed and
+  logs it (`AppLog.Error`).
+- **Text reports.** They print `ReportService.SavedListsNote` above the
+  lists: *NOTE: The current analysis could not be computed (reason).
+  The lists below were saved at the last Run Analysis (time) and may be
+  out of date; run analysis again before relying on them.*
+- **The CSV.** It writes the same text as an `AnalysisNote` row.
+
+**Tests:** `ReportSavedListsNoteTests` (4 cases):
+- the note's wording with a reason and time, and without either;
+- a real failure (the typing table made unreadable) prints the note
+  before the lists on Analysis Results, and no note when the analysis
+  works;
+- a source check for the CSV row and that no fallback is left
+  unlabelled.
+
+**Docs:** the Reports help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other places that fall back to saved
-analysis lists (Reports, Search by antibody) and whether they say so.
+Continue clean-pass reviews: the Analytics tab's figures when one
+specimen's analysis cannot be computed (whether that specimen is
+skipped silently).
 
 Loop clean passes: 0/5

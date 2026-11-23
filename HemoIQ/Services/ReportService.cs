@@ -340,10 +340,10 @@ namespace HemoIQ.Services
             sb.AppendLine($"ANALYSIS RESULTS — {specimenId}");
             sb.AppendLine(new string('=', 50));
             sb.AppendLine(AnalysisTraceLine(specimenId));
-            var result = TryAnalyze(specimenId);
+            var (result, failure) = TryAnalyze(specimenId);
             if (result == null)
             {
-                AppendSavedSuspectedAndRuleouts(sb, specimenId);
+                AppendSavedSuspectedAndRuleouts(sb, specimenId, failure);
             }
             else
             {
@@ -640,10 +640,10 @@ namespace HemoIQ.Services
 
         private void AppendCurrentSuspectedAndRuleouts(StringBuilder sb, string specimenId)
         {
-            var result = TryAnalyze(specimenId);
+            var (result, failure) = TryAnalyze(specimenId);
             if (result == null)
             {
-                AppendSavedSuspectedAndRuleouts(sb, specimenId);
+                AppendSavedSuspectedAndRuleouts(sb, specimenId, failure);
                 return;
             }
             AppendSuspectedAndRuleouts(sb, result);
@@ -669,8 +669,10 @@ namespace HemoIQ.Services
             return string.IsNullOrWhiteSpace(r.Note) ? line : $"{line}  {r.Note}";
         }
 
-        private void AppendSavedSuspectedAndRuleouts(StringBuilder sb, string specimenId)
+        private void AppendSavedSuspectedAndRuleouts(StringBuilder sb, string specimenId, string? failure)
         {
+            sb.AppendLine(SavedListsNote(failure, _db.GetSpecimen(specimenId)?.LastAnalyzedAt));
+            sb.AppendLine();
             var antibodies = _db.GetSpecimenAntibodies(specimenId);
             sb.AppendLine($"SUSPECTED ANTIBODIES ({antibodies.Count}):");
             foreach (var a in antibodies)
@@ -765,7 +767,13 @@ namespace HemoIQ.Services
                 }
             }
 
-            var result = TryAnalyze(specimenId);
+            var (result, failure) = TryAnalyze(specimenId);
+            if (result == null)
+            {
+                csv.WriteField("AnalysisNote");
+                csv.WriteField(SavedListsNote(failure, _db.GetSpecimen(specimenId)?.LastAnalyzedAt));
+                csv.NextRecord();
+            }
             var antibodies = result == null
                 ? _db.GetSpecimenAntibodies(specimenId)
                 : SpecimenPatternEvidence.SuspectedRows(result);
@@ -811,17 +819,31 @@ namespace HemoIQ.Services
             }
         }
 
-        private AnalysisResult? TryAnalyze(string specimenId)
+        /// <summary>
+        /// The current analysis, or the reason it could not be computed. The caller then falls back to the lists saved
+        /// at the last Run Analysis and must say so (<see cref="SavedListsNote"/>): an issued report showing older
+        /// lists as if current could carry antibodies ruled out, or suspected, before later grades.
+        /// </summary>
+        private (AnalysisResult? Result, string? Failure) TryAnalyze(string specimenId)
         {
             try
             {
-                return new AntibodyAnalyzer(_db).AnalyzeSpecimen(specimenId, updateDb: false);
+                return (new AntibodyAnalyzer(_db).AnalyzeSpecimen(specimenId, updateDb: false), null);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return null;
+                AppLog.Error($"Report analysis for {specimenId} failed; the saved lists are shown", ex);
+                return (null, ex.Message);
             }
         }
+
+        /// <summary>The line a report prints above suspected and ruled-out lists it read from the last saved analysis.</summary>
+        public static string SavedListsNote(string? failure, string? lastAnalyzedAt) =>
+            "NOTE: The current analysis could not be computed" +
+            (string.IsNullOrWhiteSpace(failure) ? "" : $" ({failure.Trim().TrimEnd('.')})") +
+            ". The lists below were saved at the last Run Analysis" +
+            (string.IsNullOrWhiteSpace(lastAnalyzedAt) ? "" : $" ({lastAnalyzedAt})") +
+            " and may be out of date; run analysis again before relying on them.";
 
         private string AnalysisTraceLine(string specimenId)
         {
