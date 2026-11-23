@@ -8060,10 +8060,38 @@ status wording and marker edge cases.
 
 **Docs:** the Rules help topic.
 
+## Iteration 291: the Preferences status says when analyses went stale
+
+**Found:**
+- **No stale note.** After Save, the status line always read
+  "Preferences saved.", even when a clinical value (for example the ID
+  rule) had just marked every open analysis stale. Rule edits and
+  imports now say so (Iterations 289 and 290), so this was the one
+  configuration change that did not.
+- **Overwritten confirmation.** The near-capacity check ran right after
+  and replaced the line, so on a nearly full database the save
+  confirmation vanished at once.
+
+**Implemented:**
+- `MainViewModel.PreferencesSavedStatus(analysisAffected, capacity)`
+  adds the stale note when the analysis-configuration marker moved
+  during the dialog (`AnalysisConfigurationMarker`, Iteration 290).
+  Save writes `update_settings` only for a clinical change. The status
+  ends with the capacity warning when there is one.
+- `MainViewModel.CapacityText` is shared by this and
+  `NotifyCapacityIfNeeded`.
+
+**Tests:** `PreferencesSavedStatusTests` (3 cases): the stale note
+appears only for a clinical change; the capacity warning is kept on the
+same line; the marker moves for an `update_settings` audit entry and not
+for an unrelated one.
+
+**Docs:** the Preferences help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Preferences Save's status ("Preferences
-saved.") and whether it mentions stale analyses when clinical values
-changed.
+Continue clean-pass reviews: the Worklist after a configuration change
+(the Stale analysis items appear without switching tabs when the
+Worklist is the open tab).
 
 Loop clean passes: 0/5

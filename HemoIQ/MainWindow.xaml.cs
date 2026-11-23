@@ -190,13 +190,13 @@ namespace HemoIQ
         private void ShowSettings()
         {
             var dlg = new Views.Dialogs.SettingsDialog(ViewModel.Database) { Owner = this };
+            var marker = ViewModel.Database.LastAnalysisConfigurationChange();
             var saved = dlg.ShowDialog() == true;
             ViewModel.RefreshSession(); // users and roles may have changed even when Preferences were cancelled
             if (saved)
-            {
-                ViewModel.SetStatus("Preferences saved.");
-                ViewModel.NotifyCapacityIfNeeded();
-            }
+                ViewModel.SetStatus(MainViewModel.PreferencesSavedStatus(
+                    AnalysisConfigurationMarker.Moved(marker, ViewModel.Database.LastAnalysisConfigurationChange()),
+                    MainViewModel.CapacityText(ViewModel.GetCapacityStatus())));
         }
 
         private void ShowShortcuts() => HelpService.Show(HelpCatalog.ShortcutsId);

@@ -101,11 +101,23 @@ namespace HemoIQ.ViewModels
 
         public void NotifyCapacityIfNeeded()
         {
-            var cap = GetCapacityStatus();
-            if (!cap.IsNearCapacity) return;
-            SetStatus(
-                $"Database {cap.PercentUsed:0}% full ({DatabaseCapacityStatus.FormatBytes(cap.FileBytes)} / {DatabaseCapacityStatus.FormatBytes(cap.MaxBytes)})");
+            if (CapacityText(GetCapacityStatus()) is string text) SetStatus(text);
         }
+
+        /// <summary>The near-capacity warning for the status line, or null when the database is not near capacity.</summary>
+        public static string? CapacityText(DatabaseCapacityStatus cap) =>
+            cap.IsNearCapacity
+                ? $"Database {cap.PercentUsed:0}% full ({DatabaseCapacityStatus.FormatBytes(cap.FileBytes)} / {DatabaseCapacityStatus.FormatBytes(cap.MaxBytes)})"
+                : null;
+
+        /// <summary>
+        /// The status after Preferences are saved: says when a clinical change marked open analyses stale (as rule
+        /// edits and imports do) and keeps the near-capacity warning rather than replacing one with the other.
+        /// </summary>
+        public static string PreferencesSavedStatus(bool analysisAffected, string? capacity) =>
+            "Preferences saved." +
+            (analysisAffected ? " Open investigations analyzed before this change are listed on the Worklist as Stale analysis." : "") +
+            (capacity == null ? "" : " " + capacity + ".");
 
         public void SetStatus(string message) => StatusText = message;
 
