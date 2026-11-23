@@ -8175,10 +8175,39 @@ removed from Preferences.
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 296: the PDF never cuts a line off at the page edge
+
+**Reviewed:** which reports print grades. Only the Clinical
+Identification worksheet does, and no other report or help topic claims
+to. Print builds a document that wraps long lines.
+
+**Found:** Export PDF draws every line at a fixed size (7 pt landscape,
+9 pt portrait) with no wrapping, so text past the page width was simply
+lost. Courier at 7 pt fits about 175 characters on a landscape page,
+and a worksheet row on a full panel is near that. Iteration 294 added
+the extra-phase grades at the end of each row, so on a wide panel the
+PDF could drop the CC and extra-phase grades of every cell, the grades
+it had just been made to include.
+
+**Implemented:**
+- `ReportService.PdfFontSizeToFit` sizes the font so the widest line
+  fits, never above the default or below `PdfMinimumFontSize` (4.5 pt).
+- `PdfCharsPerLine` (with a rounding tolerance) and `WrapForPdf` split
+  any line still too wide into pieces that fit, indenting the
+  continuations.
+- The line height follows the font size. The audited fingerprint is
+  still of the full report text.
+
+**Tests:** `PdfLineFitTests` (4 cases): short lines keep the default
+size; a 220-character line shrinks the font until it fits; a
+1000-character line is wrapped at the minimum size and every character
+is kept; a worksheet with three extra phases fits the page in full.
+
+**Docs:** the Reports help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Specimen Summary and Analysis Results
-reports for extra-phase grades (the worksheet prints them since
-Iteration 294; check the others do not claim to show all grades).
+Continue clean-pass reviews: the Panel Antigram PDF (Panels tab,
+Antigram) for the same fit, since it is built from the same text.
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5

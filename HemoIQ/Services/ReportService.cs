@@ -1124,6 +1124,33 @@ namespace HemoIQ.Services
 
         // ── PDF Export ────────────────────────────────────────────────────────
 
+        /// <summary>Width of one Courier character, as a share of the font size.</summary>
+        private const double CourierCharWidth = 0.6;
+        public const double PdfMinimumFontSize = 4.5;
+
+        /// <summary>The font size at which a line of <paramref name="longestLine"/> characters fits, never above the default or below the minimum.</summary>
+        public static double PdfFontSizeToFit(int longestLine, double usableWidth, double defaultSize) =>
+            longestLine <= 0
+                ? defaultSize
+                : Math.Max(PdfMinimumFontSize, Math.Min(defaultSize, usableWidth / (longestLine * CourierCharWidth)));
+
+        public static int PdfCharsPerLine(double usableWidth, double fontSize) =>
+            Math.Max(20, (int)Math.Floor(usableWidth / (fontSize * CourierCharWidth) + 1e-9)); // tolerance: the exact fit is not lost to rounding
+
+        /// <summary>A line split into pieces that fit, continuation pieces indented, so no character is lost off the page.</summary>
+        public static IEnumerable<string> WrapForPdf(string line, int maxChars)
+        {
+            if (line.Length <= maxChars) { yield return line; yield break; }
+            yield return line[..maxChars];
+            var rest = line[maxChars..];
+            while (rest.Length > 0)
+            {
+                var take = Math.Min(rest.Length, maxChars - 4);
+                yield return "    " + rest[..take];
+                rest = rest[take..];
+            }
+        }
+
         public void ExportToPdf(ReportType type, string filePath,
             string? specimenId = null, int? panelId = null)
         {
@@ -1136,11 +1163,16 @@ namespace HemoIQ.Services
             if (landscape)
                 page.Orientation = PdfSharp.PageOrientation.Landscape;
             XGraphics? gfx = XGraphics.FromPdfPage(page);
-            var fontSize = landscape ? 7 : 9;
+            // Lines are drawn without wrapping, so a line wider than the page was cut off at its edge: on a wide
+            // panel that dropped the CC and extra-phase grades at the end of each worksheet row. The font shrinks
+            // so the widest line fits, and anything still too wide at the smallest size is wrapped.
+            var usable = page.Width.Point - 56;
+            var lines = text.Split('\n').Select(l => l.TrimEnd('\r')).ToList();
+            var fontSize = PdfFontSizeToFit(lines.Count == 0 ? 0 : lines.Max(l => l.TrimEnd().Length), usable, landscape ? 7 : 9);
             var font = new XFont("Courier New", fontSize);
-            double x = 28, y = 28, lineH = landscape ? 10 : 13;
+            double x = 28, y = 28, lineH = fontSize * 1.4;
             double bottom = page.Height.Point - 36;
-            foreach (var line in text.Split('\n'))
+            foreach (var line in lines.SelectMany(l => WrapForPdf(l.TrimEnd(), PdfCharsPerLine(usable, fontSize))))
             {
                 if (y > bottom)
                 {
