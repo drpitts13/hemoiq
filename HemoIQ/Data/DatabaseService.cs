@@ -2302,6 +2302,11 @@ namespace HemoIQ.Data
         public List<string> SavePanelCellEdits(int panelId, IReadOnlyList<PanelCell> edited, string? reason = null)
         {
             EnsureCanRecord();
+            // A panel deleted elsewhere has no stored cells, so every edit would compare as "no typing changes".
+            if (GetPanel(panelId) == null)
+                throw new InvalidOperationException(
+                    $"Panel #{panelId} no longer exists; it may have been deleted on another workstation, so this " +
+                    "typing was not saved. Refresh the Panels tab.");
             var changes = DescribePanelCellChanges(panelId, edited);
             if (changes.Count == 0) return changes;
             var usage = GetPanelUsage(panelId);
@@ -3878,10 +3883,14 @@ namespace HemoIQ.Data
             bool separationExempt = false, string? separationExemptFrom = null)
         {
             Services.AccessControl.Demand(this, Services.Permission.ConfigureRules);
+            // A rule deleted elsewhere (another workstation) would update no row and be reported as "unchanged",
+            // so the edit would be lost without a word.
+            var previousRule = GetRule(ruleId) ?? throw new InvalidOperationException(
+                $"Rule #{ruleId} no longer exists; it may have been deleted on another workstation, so this edit was " +
+                "not saved. Refresh the Rules tab, then add the rule again if it is still needed.");
             antibody = Services.RuleValidation.NormalizeAntibody(antibody, GetKnownAntigens(), GetAllRules(), ruleId);
             minRuleoutCount = Services.RuleValidation.RequireRuleoutCount(minRuleoutCount);
             separationExemptFrom = NormalizeSeparationList(separationExempt, separationExemptFrom);
-            var previousRule = GetRule(ruleId);
             var before = RuleAuditJson(previousRule);
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"

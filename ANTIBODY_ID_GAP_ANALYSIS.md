@@ -8669,10 +8669,41 @@ existing treated run still works.
 
 **Docs:** the Reactions help topic (Save & Analyze).
 
+## Iteration 316: an edit to a rule or panel deleted elsewhere is not lost silently
+
+**Reviewed:** writes keyed by an id that another workstation could
+delete meanwhile.
+- Specimen edits and panel details already refuse with "not found".
+- Reactions refuse since Iteration 315.
+
+**Found:** two edits were lost without a word.
+- **Rules tab Edit.** `UpdateRule` on a deleted rule updated no row.
+  Before and after both read as nothing, so it returned `Unchanged`
+  and the status said *unchanged; nothing was saved*.
+- **Panels tab typing Save.** `SavePanelCellEdits` on a deleted panel
+  found no stored cells, so every edit compared as no change. The
+  status said *no typing changes*.
+
+**Implemented:**
+- `UpdateRule` refuses an edit to a rule that no longer exists. The
+  Rules tab shows it in its *Rule not saved* box.
+- `SavePanelCellEdits` refuses typing edits on a panel that no longer
+  exists. The Panels tab shows it in its *Panel not saved* box.
+
+Both messages say the record may have been deleted on another
+workstation and nothing was saved. Nothing is written or audited.
+
+**Tests:** `DeletedRecordEditTests` (4 cases):
+- a deleted rule's edit is refused and not audited;
+- an existing rule still saves;
+- typing on a deleted panel is refused and not audited;
+- typing on an existing panel still saves.
+
+**Docs:** the Rules help topic (Edit).
+
 ## Likely next tick
 
-Continue clean-pass reviews: other writes keyed by an id that another
-workstation could delete meanwhile (cell notes, panel edits, rule
-edits), for the same raw-error pattern.
+Continue clean-pass reviews: the Worklist and Search tabs when an item
+they list is deleted on another workstation before it is opened.
 
 Loop clean passes: 0/5

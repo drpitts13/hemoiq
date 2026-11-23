@@ -111,7 +111,7 @@ namespace HemoIQ.ViewModels
                     dlg.ExceptionAntigen, dlg.HeterozygousOk, dlg.MinRuleoutCount,
                     dlg.SeparationExempt, dlg.SeparationExemptFrom);
             }
-            catch (System.ArgumentException ex)
+            catch (System.Exception ex) when (ex is System.ArgumentException or System.InvalidOperationException)
             {
                 MessageBox.Show(ex.Message, "Rule not saved", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
