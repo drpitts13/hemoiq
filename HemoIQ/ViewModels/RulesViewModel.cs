@@ -121,6 +121,11 @@ namespace HemoIQ.ViewModels
             _main.SetStatus(EditStatus(dlg.RuleName, outcome));
         }
 
+        /// <summary>The status after a rules import: the stale note only when something analysis reads changed.</summary>
+        public static string ImportStatus(int added, int updated, bool analysisAffected) =>
+            $"Rules imported: {added} added, {updated} updated." +
+            (analysisAffected ? StaleNote : updated > 0 ? " Only names or descriptions changed; analyses are not affected." : "");
+
         /// <summary>The status after Edit: only an edit to what analysis reads says open analyses are now stale.</summary>
         public static string EditStatus(string ruleName, DatabaseService.RuleEditResult outcome) => outcome switch
         {
@@ -177,8 +182,10 @@ namespace HemoIQ.ViewModels
                     "Import rules", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             try
             {
+                var marker = _db.LastAnalysisConfigurationChange();
                 var (added, updated) = RuleTransfer.Apply(_db, preview);
-                _main.SetStatus($"Rules imported: {added} added, {updated} updated." + StaleNote);
+                _main.SetStatus(ImportStatus(added, updated,
+                    AnalysisConfigurationMarker.Moved(marker, _db.LastAnalysisConfigurationChange())));
             }
             catch (System.Exception ex) when (ex is System.ArgumentException or System.UnauthorizedAccessException)
             {

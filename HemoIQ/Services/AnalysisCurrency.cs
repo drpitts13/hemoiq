@@ -8,6 +8,17 @@ namespace HemoIQ.Services
     /// The latest rule or Preferences change. <see cref="Seq"/> is its audit id (-1 when unknown);
     /// <see cref="Local"/> is its local time for display and for analyses saved without an audit id.
     /// </summary>
+    /// <summary>
+    /// Whether an import or edit changed anything analysis reads: the latest analysis-configuration audit entry
+    /// moved. A status line names stale analyses only then, not after a change of names, descriptions or display
+    /// Preferences that leaves every analysis current.
+    /// </summary>
+    public static class AnalysisConfigurationMarker
+    {
+        public static bool Moved(AnalysisConfigurationChange? before, AnalysisConfigurationChange? after) =>
+            after != null && after.Seq != before?.Seq;
+    }
+
     public sealed record AnalysisConfigurationChange(long Seq, string Local)
     {
         /// <summary>A bare local time, as older callers and tests pass it: compared by time only.</summary>

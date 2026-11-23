@@ -343,6 +343,7 @@ namespace HemoIQ
             if (MessageBox.Show(summary + "\n\nApply the rules and Preferences together now?", "Import Lab Configuration",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
             ConfigurationImportResult result;
+            var marker = db.LastAnalysisConfigurationChange();
             try
             {
                 result = ConfigurationBundle.Apply(db, AppSettings.Current, preview, removeLocalOnly, System.IO.Path.GetFileName(dlg.FileName),
@@ -356,9 +357,8 @@ namespace HemoIQ
             AppSettings.RaiseChanged();
             ViewModel.RulesVM.Refresh();
             ViewModel.WorklistVM.Refresh();
-            ViewModel.SetStatus($"Lab configuration imported: {result.RulesAdded} rule(s) added, {result.RulesUpdated} updated, " +
-                                $"{result.RulesRemoved} removed, {result.PreferencesChanged} Preference(s) changed. " +
-                                "Open investigations analyzed before this change are listed on the Worklist as Stale analysis.");
+            ViewModel.SetStatus(ConfigurationBundle.ImportStatus(result,
+                AnalysisConfigurationMarker.Moved(marker, db.LastAnalysisConfigurationChange())));
         }
 
         /// <summary>Says so when start-up fell back to default Preferences because the file could not be read.</summary>

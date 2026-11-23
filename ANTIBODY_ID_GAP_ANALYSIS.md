@@ -8030,9 +8030,40 @@ no audit entry; the status wording for each outcome.
 
 **Docs:** the Rules help topic.
 
+## Iteration 290: imports name stale analyses only when analysis changed
+
+**Reviewed:** rule import and lab configuration import after Iteration
+289. Updates go through `UpdateRule`, so a label-only update is already
+audited as `update_rule_label` and marks nothing stale. The counts in
+both status lines are the rows actually added, updated and removed.
+
+**Found:** both status lines always ended with "Open investigations
+analyzed before this change are listed on the Worklist as Stale
+analysis." That was false for an import that only renamed rules or
+changed display Preferences (for example the lab name).
+
+**Implemented:**
+- `AnalysisConfigurationMarker.Moved(before, after)` is true when the
+  latest analysis-configuration audit entry
+  (`LastAnalysisConfigurationChange`) moved during the import. This is
+  exact: it moves for an added, removed or analysis-changing rule and
+  for a clinical Preferences change, and only then.
+- `RulesViewModel.ImportStatus` and `ConfigurationBundle.ImportStatus`
+  add the stale note only when the marker moved. Otherwise they say
+  "Only names or descriptions changed; analyses are not affected" or
+  "Nothing analysis reads changed, so analyses stay current".
+
+**Tests:** `ImportStaleNoteTests` (4 cases): a rename-only rule import
+does not move the marker; a count change does; a configuration import
+of the lab name alone does not, and says analyses stay current; the
+status wording and marker edge cases.
+
+**Docs:** the Rules help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: rule import (`RuleTransfer.Apply`) for the
-same label-only distinction, and its status counts.
+Continue clean-pass reviews: Preferences Save's status ("Preferences
+saved.") and whether it mentions stale analyses when clinical values
+changed.
 
 Loop clean passes: 0/5

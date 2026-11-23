@@ -149,6 +149,14 @@ namespace HemoIQ.Services
             return new ConfigurationImportResult(added, updated, removing.Count, preview.Preferences.Changes.Count);
         }
 
+        /// <summary>The status after an import: the stale note only when rules or clinical Preferences changed what analysis reads.</summary>
+        public static string ImportStatus(ConfigurationImportResult r, bool analysisAffected) =>
+            $"Lab configuration imported: {r.RulesAdded} rule(s) added, {r.RulesUpdated} updated, " +
+            $"{r.RulesRemoved} removed, {r.PreferencesChanged} Preference(s) changed. " +
+            (analysisAffected
+                ? "Open investigations analyzed before this change are listed on the Worklist as Stale analysis."
+                : "Nothing analysis reads changed, so analyses stay current.");
+
         /// <summary>Both sections and the stored rules the file lacks, for the confirmation prompt.</summary>
         public static string Summarize(ConfigurationPreview p)
         {
