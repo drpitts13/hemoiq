@@ -460,6 +460,33 @@ namespace HemoIQ.ViewModels
         /// Startup: a recovery file means the application did not close normally. Offers to put
         /// the recovered grades back on the grid, still unsaved, for review and Save.
         /// </summary>
+        /// <summary>Why recovered grades cannot be put back, what to do, and whether the draft is discarded.</summary>
+        public sealed record RecoveryRefusal(string Why, string NextStep, bool DeleteDraft);
+
+        /// <summary>
+        /// Recovered grades are put back only where they can be saved: not on a confirmed or cancelled investigation (the
+        /// draft is discarded, since it can never be saved there as it stands), and not in a view-only session (the draft
+        /// is kept for a login that can record). Otherwise null.
+        /// </summary>
+        public static RecoveryRefusal? RecoveryBlock(DatabaseService db, Specimen specimen, bool canRecord)
+        {
+            if (specimen.HasFinalCall)
+                return new RecoveryRefusal("the identification has since been confirmed",
+                    AccessControl.NextStep(db, Permission.ClearIdentification,
+                        "Clear the identification first if these grades must be recorded.",
+                        "clear the identification first if these grades must be recorded."), DeleteDraft: true);
+            if (specimen.IsCancelled)
+                return new RecoveryRefusal("the investigation has since been cancelled",
+                    AccessControl.NextStep(db, Permission.ReinstateInvestigation,
+                        "Reinstate the investigation first if these grades must be recorded.",
+                        "reinstate the investigation first if these grades must be recorded."), DeleteDraft: true);
+            if (!canRecord)
+                return new RecoveryRefusal("this session is view only",
+                    "The grades are kept: start HemoIQ with a login that can record results to restore and save them.",
+                    DeleteDraft: false);
+            return null;
+        }
+
         public void OfferDraftRecovery()
         {
             var draft = Drafts.Load();
@@ -475,17 +502,14 @@ namespace HemoIQ.ViewModels
             }
             var when = DateTime.TryParse(draft.SavedAtUtc, null, System.Globalization.DateTimeStyles.RoundtripKind, out var at)
                 ? at.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : draft.SavedAtUtc;
-            if (specimen.HasFinalCall)
+            if (RecoveryBlock(_db, specimen, SessionAccess.CanRecord) is { } block)
             {
                 MessageBox.Show(
                     $"HemoIQ did not close normally. Unsaved grades for {draft.RunDescription} (last edited {when}) were found, " +
-                    "but the identification has since been confirmed, so they cannot be restored:\n\n" +
-                    string.Join("\n", changed.Take(10).Select(DescribeDraftRow)) +
-                    "\n\n" + AccessControl.NextStep(_db, Permission.ClearIdentification,
-                        "Clear the identification first if these grades must be recorded.",
-                        "clear the identification first if these grades must be recorded."),
+                    $"but {block.Why}, so they cannot be restored here:\n\n" +
+                    string.Join("\n", changed.Take(10).Select(DescribeDraftRow)) + "\n\n" + block.NextStep,
                     "Recovered grades", MessageBoxButton.OK, MessageBoxImage.Warning);
-                Drafts.Delete();
+                if (block.DeleteDraft) Drafts.Delete();
                 return;
             }
             var answer = MessageBox.Show(

@@ -8530,11 +8530,45 @@ which opens view-only for a role that may not change them (Iteration
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 311: crash recovery restores only where the grades can be saved
+
+**Reviewed:** start-up crash recovery (`OfferDraftRecovery`). A draft is
+never written for a view-only session or a locked investigation
+(`WriteDraft` returns when `GradesReadOnly`), but one written earlier
+can meet either at the next start.
+
+**Found:** only a confirmed identification was caught.
+- **Cancelled since.** Recovery offered to put the grades back,
+  "unsaved until you review them and Save", but the investigation was
+  locked and Save disabled. After a Yes the draft was never cleared, so
+  the offer came back at every start.
+- **View-only session.** If the next start was view-only (for example
+  the login's role changed), recovery likewise restored grades that
+  could not be saved.
+
+**Implemented:** `ReactionsViewModel.RecoveryBlock(db, specimen,
+canRecord)` gives why the grades cannot be restored, the next step, and
+whether to discard the draft:
+- **Confirmed:** clear the identification first, with who can (as
+  before); the draft is discarded.
+- **Cancelled:** reinstate the investigation first, with who can; the
+  draft is discarded.
+- **View-only:** the draft is kept, to be restored by a login that can
+  record results.
+
+In each case the message lists the grades.
+
+**Tests:** `RecoveryBlockTests` (4 cases): an open investigation in a
+recording session is restored; confirmed and cancelled investigations
+discard the draft with the right next step; a view-only session keeps
+it.
+
+**Docs:** the Reactions help topic (crash recovery).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the recovery draft (Reactions crash
-recovery) for a view-only session and a locked investigation (no draft
-is written in either, Iterations 283 and earlier; check recovery at
-start-up does not restore into either).
+Continue clean-pass reviews: the Panels tab's antigen edit mode when
+the session becomes view-only, or the lot gains test history, while
+editing.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5
