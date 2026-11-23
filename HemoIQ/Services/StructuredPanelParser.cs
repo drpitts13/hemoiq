@@ -61,7 +61,13 @@ namespace HemoIQ.Services
             }
             foreach (var cell in parsed.Cells)
             {
-                var imported = new ImportedPanelCell { CellNumber = cell.CellNumber };
+                var imported = new ImportedPanelCell
+                {
+                    CellNumber = cell.CellNumber,
+                    DonorId = cell.DonorId,
+                    RhPhenotype = cell.RhPhenotype,
+                    SpecialTypes = cell.SpecialTypes,
+                };
                 foreach (var pair in cell.Antigens)
                 {
                     if (!AntigenConstants.IsTypedAntigenValue(pair.Value)) continue;

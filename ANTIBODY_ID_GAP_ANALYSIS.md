@@ -8218,10 +8218,44 @@ is kept; a worksheet with three extra phases fits the page in full.
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 298: panel cell details survive export and import
+
+**Found:**
+- **Export.** The panel CSV (Panels > Export) wrote the cell number and
+  antigen typing only. It left out each cell's donor ID, Rh phenotype
+  and special types, which the printed antigram shows (Iteration 271)
+  and analysis reads (special types).
+- **Import.** CSV import recognised those headings as metadata, so they
+  were not flagged as unknown, but ignored them. `ImportedPanelCell`
+  carried no such fields, so the structured (JSON/XML) import also
+  dropped the donor ID and Rh phenotype its parser had read
+  (`ToLabResult`).
+
+A lot moved between workstations by export and import lost all three
+without a warning.
+
+**Implemented:**
+- `ImportedPanelCell` carries DonorId, RhPhenotype and SpecialTypes.
+  `ToLabResult` and `LabPanelImportService.ToCells` pass them through,
+  and `ReplacePanelCells` already stored them.
+- `PanelCsvService.Export` writes Donor and Rh after Cell, and Special
+  types at the end, when any cell has a value, so a plain grid exports
+  exactly as before.
+- `Import` reads them under several spellings (Donor, Donor ID, Donor
+  No; Rh, Rh phenotype, Rh-hr; Special types, Special), matched with the
+  vendor-alias normalisation.
+
+**Tests:** `PanelCellDetailRoundTripTests` (4 cases): a CSV round trip
+keeps donor, Rh and special types with no unknown headings; cells
+without details export the usual columns only; other header spellings
+are read; a JSON import keeps donor and Rh.
+
+**Docs:** the Panels help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: CSV exports for completeness (each CSV has
-the columns of its on-screen or printed counterpart, for example the
-panel CSV with extra antigens and special types).
+Continue clean-pass reviews: the remaining CSV exports (Analytics,
+Specimen Summary, All Specimens, All Panels, audit log) against their
+on-screen columns.
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5

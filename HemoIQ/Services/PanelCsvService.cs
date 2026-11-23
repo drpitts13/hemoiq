@@ -7,6 +7,7 @@ using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 using HemoIQ.Models;
+using HemoIQ.Services.Vendors;
 
 namespace HemoIQ.Services
 {
@@ -14,6 +15,10 @@ namespace HemoIQ.Services
     {
         public string CellNumber { get; set; } = string.Empty;
         public Dictionary<string, string> Antigens { get; set; } = new();
+        /// <summary>Donor ID, Rh phenotype and special types: kept through import so a lot round-trips intact.</summary>
+        public string? DonorId { get; set; }
+        public string? RhPhenotype { get; set; }
+        public string? SpecialTypes { get; set; }
     }
 
     public class PanelCsvImportResult
@@ -38,18 +43,45 @@ namespace HemoIQ.Services
 
             var extras = ExtraAntigensOnCells(cells);
             var antigens = AntigenConstants.ResolveDisplayOrder(columnOrder, extras);
+            // The cell details analysis or the bench copy use, written when any cell has them; Import reads them back.
+            var donor = cells.Any(c => !string.IsNullOrWhiteSpace(c.DonorId));
+            var rh = cells.Any(c => !string.IsNullOrWhiteSpace(c.RhPhenotype));
+            var special = cells.Any(c => !string.IsNullOrWhiteSpace(c.SpecialTypes));
             csv.WriteField("Cell");
+            if (donor) csv.WriteField(DonorHeader);
+            if (rh) csv.WriteField(RhHeader);
             foreach (var ag in antigens)
                 csv.WriteField(ag);
+            if (special) csv.WriteField(SpecialTypesHeader);
             csv.NextRecord();
 
             foreach (var cell in cells)
             {
                 csv.WriteField(cell.CellNumber);
+                if (donor) csv.WriteField(cell.DonorId ?? "");
+                if (rh) csv.WriteField(cell.RhPhenotype ?? "");
                 foreach (var ag in antigens)
                     csv.WriteField(cell.GetTypedValue(ag) ?? cell.GetAntigen(ag));
+                if (special) csv.WriteField(cell.SpecialTypes ?? "");
                 csv.NextRecord();
             }
+        }
+
+        public const string DonorHeader = "Donor";
+        public const string RhHeader = "Rh";
+        public const string SpecialTypesHeader = "Special types";
+
+        private static readonly string[] DonorKeys = { "DONOR", "DONORID", "DONORNO" };
+        private static readonly string[] RhKeys = { "RH", "RHHR", "RHPHENOTYPE" };
+        private static readonly string[] SpecialKeys = { "SPECIALTYPES", "SPECIAL" };
+
+        /// <summary>The index of the first header whose normalised name is one of <paramref name="keys"/>, or -1.</summary>
+        private static int ColumnOf(string[] headers, string[] keys)
+        {
+            for (int i = 0; i < headers.Length; i++)
+                if (keys.Contains(VendorAntigenAliases.NormalizeKey(headers[i].Trim()), StringComparer.Ordinal)) // NormalizeKey upper-cases
+                    return i;
+            return -1;
         }
 
         public static PanelCsvImportResult Import(string filePath)
@@ -136,6 +168,10 @@ namespace HemoIQ.Services
                     PanelTypingInspector.TryRecordUnknownHeader(name, result.UnknownHeaders);
             }
 
+            var donorCol = ColumnOf(csv.HeaderRecord, DonorKeys);
+            var rhCol = ColumnOf(csv.HeaderRecord, RhKeys);
+            var specialCol = ColumnOf(csv.HeaderRecord, SpecialKeys);
+
             int rowNum = 1;
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             while (csv.Read())
@@ -161,7 +197,14 @@ namespace HemoIQ.Services
                     continue;
                 }
 
-                var imported = new ImportedPanelCell { CellNumber = cellNumber };
+                string? Optional(int col) => col < 0 || string.IsNullOrWhiteSpace(csv.GetField(col)) ? null : csv.GetField(col)!.Trim();
+                var imported = new ImportedPanelCell
+                {
+                    CellNumber = cellNumber,
+                    DonorId = Optional(donorCol),
+                    RhPhenotype = Optional(rhCol),
+                    SpecialTypes = Optional(specialCol),
+                };
                 foreach (var ag in AntigenConstants.Antigens)
                 {
                     if (!headerMap.TryGetValue(ag, out var idx))

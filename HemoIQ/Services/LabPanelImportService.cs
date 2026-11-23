@@ -120,7 +120,13 @@ namespace HemoIQ.Services
         public static List<PanelCell> ToCells(PanelCsvImportResult parsed) =>
             parsed.Cells.Select(c =>
             {
-                var cell = new PanelCell { CellNumber = c.CellNumber };
+                var cell = new PanelCell
+                {
+                    CellNumber = c.CellNumber,
+                    DonorId = c.DonorId,
+                    RhPhenotype = c.RhPhenotype,
+                    SpecialTypes = c.SpecialTypes,
+                };
                 foreach (var (ag, val) in c.Antigens)
                     cell.SetAntigen(ag, val);
                 return cell;
