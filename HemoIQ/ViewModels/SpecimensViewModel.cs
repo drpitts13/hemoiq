@@ -21,14 +21,18 @@ namespace HemoIQ.ViewModels
 
         private Specimen? _selectedSpecimen;
         /// <summary>
-        /// Why panels cannot be attached to or detached from the selected investigation (it is confirmed or cancelled),
-        /// naming who can unlock it, or null. Attach and Detach are disabled with this as their tooltip, rather than
-        /// refusing after a panel has been chosen.
+        /// Why the selected investigation cannot be edited or have panels attached or detached (it is confirmed or
+        /// cancelled), naming who can unlock it, or null. Edit, Attach and Detach are disabled with this as their
+        /// tooltip, rather than refusing after the dialog has been filled in or a panel chosen.
         /// </summary>
-        public string? PanelLinkLock =>
+        public string? InvestigationLock =>
             SelectedSpecimen is { } s && (s.HasFinalCall || s.IsCancelled)
                 ? ReactionsViewModel.LockMessageFor(_db, s.AccessionNumber)
                 : null;
+
+        /// <summary>Why Delete is unavailable for the selected specimen (a confirmed identification), or null.</summary>
+        public string? DeleteLock =>
+            SelectedSpecimen is { HasFinalCall: true } s ? _db.DeleteRefusal(s) : null;
 
         public Specimen? SelectedSpecimen
         {
@@ -37,7 +41,8 @@ namespace HemoIQ.ViewModels
             {
                 var previous = _selectedSpecimen?.AccessionNumber;
                 if (!SetField(ref _selectedSpecimen, value)) return;
-                OnPropertyChanged(nameof(PanelLinkLock));
+                OnPropertyChanged(nameof(InvestigationLock));
+                OnPropertyChanged(nameof(DeleteLock));
                 var failed = LoadSpecimenDetails();
                 if (!failed
                     && _main.SelectedTabIndex == 1
@@ -115,8 +120,10 @@ namespace HemoIQ.ViewModels
                 () => SelectedSpecimen is { HasFinalCall: true, IsReviewed: false });
             EditPatientCommand = new RelayCommand(EditPatient,
                 () => SessionAccess.CanRecord && (!string.IsNullOrWhiteSpace(SelectedSpecimen?.Mrn)));
-            EditCommand = new RelayCommand(EditSpecimen, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
-            DeleteCommand = new RelayCommand(DeleteSpecimen, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
+            EditCommand = new RelayCommand(EditSpecimen,
+                () => SessionAccess.CanRecord && SelectedSpecimen != null && !(SelectedSpecimen.HasFinalCall || SelectedSpecimen.IsCancelled));
+            DeleteCommand = new RelayCommand(DeleteSpecimen,
+                () => SessionAccess.CanRecord && SelectedSpecimen != null && !SelectedSpecimen.HasFinalCall);
             AttachPanelCommand = new RelayCommand(AttachPanel,
                 () => SessionAccess.CanRecord && SelectedSpecimen != null && !(SelectedSpecimen.HasFinalCall || SelectedSpecimen.IsCancelled));
             DetachPanelCommand = new RelayCommand(DetachPanel,

@@ -20,8 +20,10 @@
             </DockPanel>
             <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,6,0,0">
                 <Button Content="Add" Command="{Binding AddCommand}" Width="60" Margin="0,0,4,0"/>
-                <Button Content="Edit" Command="{Binding EditCommand}" Width="60" Margin="0,0,4,0"/>
-                <Button Content="Delete" Command="{Binding DeleteCommand}" Width="60" Margin="0,0,4,0"/>
+                <Button Content="Edit" Command="{Binding EditCommand}" Width="60" Margin="0,0,4,0"
+                        ToolTip="{Binding InvestigationLock}" ToolTipService.ShowOnDisabled="True"/>
+                <Button Content="Delete" Command="{Binding DeleteCommand}" Width="60" Margin="0,0,4,0"
+                        ToolTip="{Binding DeleteLock}" ToolTipService.ShowOnDisabled="True"/>
                 <Button Content="Refresh" Command="{Binding RefreshCommand}" Width="65" Margin="0,0,8,0"/>
                 <CheckBox Content="Show Inactive" IsChecked="{Binding ShowInactive}" VerticalAlignment="Center"/>
             </StackPanel>
@@ -207,9 +209,9 @@
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,4,0,0">
                         <Button Content="Attach Panel" Command="{Binding AttachPanelCommand}" Margin="0,0,6,0"
-                                ToolTip="{Binding PanelLinkLock}" ToolTipService.ShowOnDisabled="True"/>
+                                ToolTip="{Binding InvestigationLock}" ToolTipService.ShowOnDisabled="True"/>
                         <Button Content="Detach" Command="{Binding DetachPanelCommand}"
-                                ToolTip="{Binding PanelLinkLock}" ToolTipService.ShowOnDisabled="True"/>
+                                ToolTip="{Binding InvestigationLock}" ToolTipService.ShowOnDisabled="True"/>
                     </StackPanel>
                     <ListBox ItemsSource="{Binding LinkedPanels}"
                              SelectedItem="{Binding SelectedLinkedPanel}"

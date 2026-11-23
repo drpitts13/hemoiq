@@ -1548,20 +1548,33 @@ namespace HemoIQ.Data
         /// investigation or clear the identification first) or when eluates name it as
         /// their source. Audited with what was removed. Missing accessions are ignored.
         /// </summary>
+        /// <summary>
+        /// Why the specimen cannot be deleted, or null. A confirmed identification stays on record: the way to withdraw
+        /// it is to clear it with a reason (it stays in the amendment history) and then cancel the investigation;
+        /// cancelling first is refused, so the message must not suggest it.
+        /// </summary>
+        public string? DeleteRefusal(Specimen s)
+        {
+            if (s.HasFinalCall)
+                return $"Specimen {s.AccessionNumber} has a confirmed identification ({s.FinalAntibodies}) and cannot be deleted: " +
+                       "a confirmed result stays on record. " +
+                       AccessControl.NextStep(this, Permission.ClearIdentification,
+                           "To withdraw it, clear the identification with a reason (it stays in the amendment history), then cancel the investigation.",
+                           "clear the identification with a reason (it stays in the amendment history); the investigation can then be cancelled.");
+            var eluates = GetEluatesFor(s.AccessionNumber);
+            if (eluates.Count > 0)
+                return $"Specimen {s.AccessionNumber} is the source of eluate(s) {string.Join(", ", eluates.Select(e => e.AccessionNumber))}. " +
+                       "Remove those links before deleting it.";
+            return null;
+        }
+
         public void DeleteSpecimen(string accessionNumber)
         {
             EnsureCanRecord();
             var s = GetSpecimen(accessionNumber);
             if (s == null) return;
-            if (s.HasFinalCall)
-                throw new InvalidOperationException(
-                    $"Specimen {accessionNumber} has a confirmed identification ({s.FinalAntibodies}) and cannot be deleted. " +
-                    "Cancel the investigation instead, or have a supervisor clear the identification first.");
-            var eluates = GetEluatesFor(accessionNumber);
-            if (eluates.Count > 0)
-                throw new InvalidOperationException(
-                    $"Specimen {accessionNumber} is the source of eluate(s) {string.Join(", ", eluates.Select(e => e.AccessionNumber))}. " +
-                    "Remove those links before deleting it.");
+            if (DeleteRefusal(s) is string refusal)
+                throw new InvalidOperationException(refusal);
 
             int reactionRows;
             using (var count = _conn.CreateCommand())

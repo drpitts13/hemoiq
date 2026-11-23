@@ -37,7 +37,7 @@ public class PanelLinkLockTests
         {
             var at = xaml.IndexOf($"Command=\"{{Binding {command}}}\"", StringComparison.Ordinal);
             Assert.True(at >= 0, command);
-            Assert.Contains("ToolTip=\"{Binding PanelLinkLock}\"", xaml.Substring(at, 200));
+            Assert.Contains("ToolTip=\"{Binding InvestigationLock}\"", xaml.Substring(at, 200));
         }
     }
 

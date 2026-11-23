@@ -7853,10 +7853,52 @@ with.
 
 **Docs:** the Specimens help topic (Linked Panels).
 
+## Iteration 285: Edit and Delete follow the lock, and the Delete advice works
+
+**Reviewed:** what can change after confirmation. Every specimen field
+update refuses a confirmed or cancelled investigation
+(`EnsureSpecimenUnlocked`). The patient record is shared by MRN and
+stays editable; open investigations are marked stale when an analysis
+input changes (Iteration 256).
+
+**Found:**
+- **Edit stayed enabled.** On a confirmed or cancelled investigation
+  the specimen dialog opened, the whole form could be filled in, and
+  save then failed ("No changes were saved … locked …").
+- **Delete gave advice that fails.** On a confirmed specimen, Delete
+  was refused with "Cancel the investigation instead, or have a
+  supervisor clear the identification first". But cancelling a
+  confirmed investigation is itself refused ("Clear the confirmed
+  identification with a reason before cancelling"), so the first
+  suggestion could not succeed.
+
+**Implemented:**
+- `DatabaseService.DeleteRefusal(specimen)` gives the reason a specimen
+  cannot be deleted, or null. For a confirmed identification it now
+  says a confirmed result stays on record, then gives the role-aware
+  next step: clear the identification with a reason (it stays in the
+  amendment history), then cancel. A Technologist is told to ask a
+  Supervisor or Administrator. The eluate-source refusal is unchanged.
+  `DeleteSpecimen` throws the same message.
+- Edit is disabled on a confirmed or cancelled investigation, with the
+  lock (now `InvestigationLock`, shared with Attach and Detach) as its
+  tooltip. Delete is disabled on a confirmed one, with `DeleteLock` as
+  its tooltip.
+
+**Tests:**
+- `EditDeleteLockTests` (4 cases): following the advice works (cancel
+  is refused while confirmed, then clear and cancel succeed); a
+  Technologist is told who can clear it, and Delete throws the same
+  message; an open specimen has no refusal; source checks for the Edit
+  and Delete commands and tooltips.
+- `SpecimenHistoryProtectionTests` now checks the corrected advice.
+
+**Docs:** the Specimens help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Edit specimen and Edit patient on a locked
-investigation (which fields may still change after confirmation, and
-whether the dialog says so).
+Continue clean-pass reviews: other refusal messages that suggest a next
+step, checked against what that step actually allows (as the Delete
+advice was).
 
 Loop clean passes: 0/5

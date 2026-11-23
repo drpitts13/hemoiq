@@ -39,7 +39,8 @@ public class SpecimenHistoryProtectionTests
 
         var ex = Assert.Throws<InvalidOperationException>(() => iso.Db.DeleteSpecimen("SH-2"));
         Assert.Contains("confirmed identification (anti-K)", ex.Message);
-        Assert.Contains("Cancel the investigation instead", ex.Message);
+        Assert.Contains("clear the identification with a reason", ex.Message);
+        Assert.DoesNotContain("Cancel the investigation instead", ex.Message); // cancelling a confirmed one is refused
         Assert.NotNull(iso.Db.GetSpecimen("SH-2"));
         Assert.NotEmpty(iso.Db.GetSpecimenPanels("SH-2"));
     }
