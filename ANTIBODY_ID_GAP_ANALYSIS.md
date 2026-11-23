@@ -8324,9 +8324,30 @@ or look-back (for example every patient with anti-K in a year).
 A dedicated, audited investigation-list export would be an
 enhancement. No new issue or gap worth fixing. All tests pass.
 
+## Iteration 302 (clean pass): every investigation change reaches the Timeline
+
+**Reviewed:** a script listed every audit action written against a
+specimen (`AppendAudit(<action>, "specimen", …)`, including calls split
+over lines) and compared them with the actions
+`InvestigationTimeline.Describe` handles. Every one is handled except
+three, each accounted for:
+- `add_specimen`: the Timeline adds its own "Specimen entered in
+  HemoIQ" line (Iteration 231).
+- `delete_specimen`: the specimen no longer exists.
+- `save_reaction`: saves are grouped into "Reactions entered" lines.
+
+The Timeline also adds events from other records:
+- panel audit entries for the linked lots;
+- patient-record changes for the MRN;
+- analysis-configuration changes made while the investigation was open.
+  Rule renames (`update_rule_label`, Iteration 289) are rightly left out
+  because they do not change analysis.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Timeline (Specimens tab) for events
-that change an investigation but do not appear there.
+Continue clean-pass reviews: the eluate's Timeline (events on its source
+specimen that affect it, such as the source's MRN or transfusion record).
 
-Loop clean passes: 2/5
+Loop clean passes: 3/5
