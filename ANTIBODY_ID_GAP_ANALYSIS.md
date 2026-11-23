@@ -8289,9 +8289,28 @@ are read; a JSON import keeps donor and Rh.
 
 **Docs:** the Reports help topic.
 
+## Iteration 300 (clean pass): Analytics drill-down lists
+
+**Reviewed:**
+- **Overridden warnings.** The drill-down lists use the same rules as
+  their counts (Analytics help), so the row count matches. Export CSV
+  appends the whole list (`OverrideCsvLines`: accession, date, final ID
+  and the warnings overridden) after the summary sections, and records
+  the export in the audit log.
+- **Antibody, technologist and location counts.** These are exported as
+  counts. The cases behind them are not exported as lists, but they can
+  be listed and opened from Analytics and found again with a Search
+  investigation query (final antibody, technologist or location with a
+  date range).
+
+An export of every drill-down case list would be an enhancement, not
+a defect: nothing claims those lists are exported. No new issue or gap
+worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Analytics drill-down lists and their
-CSV (whether the case lists can be exported and match the counts).
+Continue clean-pass reviews: Search's investigation results (whether
+the investigation list can be copied or exported for a registry or
+look-back, and whether that is offered anywhere else).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
