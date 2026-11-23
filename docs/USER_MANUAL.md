@@ -577,7 +577,8 @@ The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cel
   - If HemoIQ closed unexpectedly (a crash, power loss, or the process ended), the next start says which specimen, panel and run, how many cells, and when they were last edited.
   - **Yes** puts the grades back on the Reactions tab, still unsaved, for you to review and **Save**. **No** discards them.
   - Recovered values are checked as grades, so an unrecognized value is not restored. Cells matching what is already saved are left out.
-  - If the identification was confirmed in the meantime, the grades are listed but not restored.
+  - If the identification was confirmed, or the investigation cancelled, in the meantime, the grades are listed but not restored, with who can clear or reinstate it; the recovered grades are then discarded.
+  - In a view-only session the grades are listed but not restored, and they are kept so a login that can record results can restore and save them.
 - Saving graded results on a panel lot that has expired asks for confirmation first. If you record them anyway, analysis shows a REVIEW note and the Worklist lists the investigation as **Expired reagent**.
 - Saving graded results on a specimen past its expiration date also asks first, because the results may not represent the patient's current antibodies. **No** leaves the grades unsaved. Expired specimens are made inactive when HemoIQ starts, so this prompt appears for a specimen that expired while HemoIQ was open (for example overnight). If you record them anyway, analysis shows a REVIEW note naming each run recorded after the specimen expired, the reports print it, and the Worklist lists the investigation as **Graded after specimen expiry** while the specimen is still active (besides the usual **Expired specimen** item).
 - The grid is saved as one unit: if any cell cannot be saved, none is. Cells you did not change are not rewritten and add nothing to the audit log.

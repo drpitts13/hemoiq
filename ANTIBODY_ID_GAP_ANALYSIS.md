@@ -8565,10 +8565,25 @@ it.
 
 **Docs:** the Reactions help topic (crash recovery).
 
+## Iteration 312 (clean pass): Panels edit mode against changes made mid-edit
+
+**Reviewed:**
+- **Test history gained mid-edit.** `SaveAllCells` reads the lot's usage
+  (`GetPanelUsage`) when Save is pressed, not when editing began. A lot
+  that gained reactions or a confirmed identification meanwhile still
+  asks for a reason, and the edit marks those investigations stale.
+- **Role change mid-edit.** A session that can no longer record (only
+  possible through Preferences, a modal dialog) is refused by
+  `SavePanelCellEdits`. The message says the typing was not saved, with
+  the reason, and the grid stays in edit mode with the edits, so Cancel
+  still discards them.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Panels tab's antigen edit mode when
-the session becomes view-only, or the lot gains test history, while
-editing.
+Continue clean-pass reviews: the Reactions tab when the selected run is
+deleted, or its panel detached, from another path while grades are
+unsaved.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
