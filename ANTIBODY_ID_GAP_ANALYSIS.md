@@ -9142,10 +9142,25 @@ commit it with any help change.
 
 No code change; the full suite passes.
 
+## Iteration 332: clean review of the installer's bundled manual
+
+**Reviewed:** the manual shipped by the installer against the committed
+one.
+- **How it is made.** `installer/Build-Installer.ps1` writes
+  `USER_MANUAL.md` into the publish folder from the published
+  application (`--write-manual`), refuses to continue if it is missing,
+  and copies it to `docs/USER_MANUAL.md`.
+- **No drift.** After the Iteration 331 build, the bundled copy and the
+  committed manual are identical (154,167 bytes, no difference).
+- **The tree stays clean.** After the shortcut and installer rebuilds
+  the working tree was clean, so the committed manual is what a fresh
+  build produces.
+
+No new issue; the full suite passes.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the installer's bundled manual (the copy
-under `publish`) against the committed one after the next installer
-build.
+Continue clean-pass reviews: the Reactions tab's compare mode (two runs
+side by side) after a run is deleted from the selector.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
