@@ -8775,10 +8775,28 @@ through `MainViewModel.OpenPanel` and `PanelsViewModel.SelectPanel`.
 
 **Docs:** the Worklist help topic (Open).
 
+## Iteration 319: clean review of every path that opens a specimen or lot
+
+**Reviewed:**
+- **Search.** The Search tab opens only lots (`OpenPanel`, Iteration
+  318).
+- **Other tabs.** The Specimens, Analysis and Worklist tabs open
+  specimens only through `MainViewModel.OpenSpecimenReactions`,
+  `OpenSpecimenAnalysis` and `OpenSpecimenReport`, which refuse a
+  specimen the tab cannot show (Iteration 317).
+- **Draft recovery** (`ReactionsViewModel.OfferDraftRecovery`) also
+  opens through `OpenSpecimenReactions`. When the specimen cannot be
+  shown (deleted, inactive, or its panel detached), the run is then
+  looked up by its database-wide unique id. That lookup cannot match a
+  run of another specimen, so the grades are never restored onto
+  another patient. The user sees why ("Not opened"), then that the run
+  could not be opened, and the recovery file is kept.
+
+No new issue; the full suite passes.
+
 ## Likely next tick
 
-Broader product review: the Search tab's other result kinds (specimens
-by antibody, patients by MRN) for the same navigation path, then a
-clean-pass review.
+Continue clean-pass reviews: the Analytics tab's drill-downs (whether
+any lists a specimen and opens it outside the guarded path).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
