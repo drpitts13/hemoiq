@@ -442,12 +442,17 @@ namespace HemoIQ.Services
 
                 var fullOrder = _db.GetPanelDisplayAntigens(run.PanelId);
                 var antigens = PanelCell.AntigensTypedOnAnyCell(fullOrder, cells);
+                // Every extra phase analysis reads: the configured ones and any other graded on this run.
+                var extraPhases = ExtraPhaseParser.ColumnsFor(settings.ExtraPhases, rxns.Values.Select(x => x.ExtraPhases.Keys));
                 sb.Append($"{"Cell",-5}");
                 foreach (var ag in antigens)
                     sb.Append(ag.PadLeft(Math.Max(3, ag.Length) + 1));
                 sb.Append("  IS   37   AHG  CC");
+                foreach (var phase in extraPhases)
+                    sb.Append("  " + phase.PadRight(Math.Max(4, phase.Length)));
                 sb.AppendLine();
-                sb.AppendLine(new string('-', 5 + antigens.Sum(a => Math.Max(3, a.Length) + 1) + 22));
+                sb.AppendLine(new string('-', 5 + antigens.Sum(a => Math.Max(3, a.Length) + 1) + 22 +
+                                              extraPhases.Sum(p => Math.Max(4, p.Length) + 2)));
 
                 foreach (var cell in cells)
                 {
@@ -459,7 +464,12 @@ namespace HemoIQ.Services
                         var v = cell.PrintedAntigen(ag);
                         sb.Append(v.PadLeft(w));
                     }
-                    sb.Append($"  {(rxn?.IS ?? "NT"),-4} {(rxn?.C37 ?? "NT"),-4} {(rxn?.AHG ?? "NT"),-4} {rxn?.CC ?? "NT"}");
+                    sb.Append($"  {(rxn?.IS ?? "NT"),-4} {(rxn?.C37 ?? "NT"),-4} {(rxn?.AHG ?? "NT"),-4} {(rxn?.CC ?? "NT"),-2}");
+                    foreach (var phase in extraPhases)
+                    {
+                        var grade = rxn != null && rxn.ExtraPhases.TryGetValue(phase, out var g) ? g : "NT";
+                        sb.Append("  " + grade.PadRight(Math.Max(4, phase.Length)));
+                    }
                     sb.AppendLine();
                 }
                 AppendOmittedAntigenNote(sb, fullOrder.Count, antigens.Count);

@@ -94,6 +94,8 @@ namespace HemoIQ.Views
             else if (e.PropertyName == nameof(ReactionsViewModel.AntigenDisplayOrder) ||
                      e.PropertyName == nameof(ReactionsViewModel.ExtraAntigens))
                 RebuildAntigenColumns();
+            else if (e.PropertyName == nameof(ReactionsViewModel.GridExtraPhases))
+                RebuildExtraPhaseColumns();
             else if (e.PropertyName == nameof(ReactionsViewModel.CompareExtraPhases))
             {
                 RebuildCompareExtraColumns();
@@ -263,7 +265,8 @@ namespace HemoIQ.Views
                 ReactionsGrid.Columns.Remove(col);
             _extraPhaseColumns.Clear();
 
-            var phases = ExtraPhaseParser.Parse(AppSettings.Current.ExtraPhases);
+            var phases = _vm?.GridExtraPhases ?? new List<string>(ExtraPhaseParser.Parse(AppSettings.Current.ExtraPhases));
+            var configured = new HashSet<string>(ExtraPhaseParser.Parse(AppSettings.Current.ExtraPhases), StringComparer.OrdinalIgnoreCase);
             if (phases.Count == 0)
             {
                 FreezeThroughPhaseColumns();
@@ -276,8 +279,9 @@ namespace HemoIQ.Views
             {
                 var col = new DataGridComboBoxColumn
                 {
-                    Header = phase,
-                    Width = 90,
+                    // A phase graded on this run but no longer in Preferences: still shown, because analysis reads it.
+                    Header = configured.Contains(phase) ? phase : phase + " (stored)",
+                    Width = configured.Contains(phase) ? 90 : 120,
                     ItemsSource = ReactionsViewModel.ReactionValues,
                     SelectedItemBinding = new Binding($"Extra[{phase}].Value")
                     {

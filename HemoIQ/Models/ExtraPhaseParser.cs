@@ -119,6 +119,23 @@ namespace HemoIQ.Models
             return string.Join(", ", list);
         }
 
+        /// <summary>
+        /// The extra-phase columns for a run: the phases configured in Preferences, in order, then any other phase
+        /// already graded on the run's reactions. Analysis reads every stored phase, so a phase removed from
+        /// Preferences after it was graded must still be shown and printed, never hidden while it counts.
+        /// </summary>
+        public static List<string> ColumnsFor(string? configured, IEnumerable<IEnumerable<string>> storedPhaseNames)
+        {
+            var columns = new List<string>(Parse(configured));
+            var seen = new HashSet<string>(columns, StringComparer.OrdinalIgnoreCase);
+            foreach (var name in storedPhaseNames.SelectMany(n => n))
+            {
+                if (string.IsNullOrWhiteSpace(name) || IsReserved(name)) continue;
+                if (seen.Add(name.Trim())) columns.Add(name.Trim());
+            }
+            return columns;
+        }
+
         public static IReadOnlyList<string> Parse(string? configured)
         {
             if (string.IsNullOrWhiteSpace(configured))

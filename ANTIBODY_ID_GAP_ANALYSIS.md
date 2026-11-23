@@ -8122,9 +8122,46 @@ rule change.
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 294: every extra-phase grade analysis reads is shown and printed
+
+**Reviewed:** the Reactions tab after a Preferences change.
+`AppSettings.Changed` rebuilds the extra-phase and compare columns and
+re-applies column visibility. Rows keep stored phases that are no
+longer configured, so saving a run never drops them.
+
+**Found:**
+- **The printed worksheet had no extra phases.** The Clinical
+  Identification grid printed IS, 37, AHG and CC only. Analysis reads
+  every stored extra phase (`RunContext.InterpretablePhaseNames` loops
+  over the reaction's stored phases), so a lab grading PEG, enzyme or
+  4 °C phases got a printed record without grades the analysis used.
+- **The grid hid removed phases.** Its columns came only from the
+  phases in Preferences. After a phase was removed, its grades were
+  kept and still counted in analysis, but disappeared from the
+  Reactions tab.
+
+**Implemented:**
+- `ExtraPhaseParser.ColumnsFor(configured, storedPhaseNames)` gives a
+  run's extra-phase columns: the configured phases in order, then any
+  other phase graded on the run (core phases excluded,
+  case-insensitive).
+- The worksheet prints those columns after CC for each run.
+- The grid uses `ReactionsViewModel.GridExtraPhases`, rebuilt when the
+  run's rows load. A phase not in Preferences is headed
+  "<phase> (stored)".
+
+**Tests:** `ExtraPhaseVisibilityTests` (3 cases): columns are the
+configured phases then other stored ones, case-insensitive, without
+core phases; none configured or stored gives none; the worksheet prints
+a configured phase's grade and the grade of a phase graded and then
+removed from Preferences.
+
+**Docs:** the Reactions and Reports help topics.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reactions tab's column visibility and
-extra-phase columns after Preferences change while it is open.
+Continue clean-pass reviews: other places that list phases from
+Preferences only (the Compare grid, paste targets, the Analysis phase
+notes) against the stored phases.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5

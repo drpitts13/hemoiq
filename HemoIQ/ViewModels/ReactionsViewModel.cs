@@ -594,6 +594,10 @@ namespace HemoIQ.ViewModels
             RefreshSpecimens();
         }
 
+        /// <summary>The grid's extra-phase columns: configured phases, then any other phase graded on this run.</summary>
+        public List<string> GridExtraPhases =>
+            ExtraPhaseParser.ColumnsFor(AppSettings.Current.ExtraPhases, Rows.Select(r => r.Extra.Keys));
+
         public void ApplyColumnVisibilitySettings()
         {
             OnPropertyChanged(nameof(HideRuledOutAntigenColumns));
@@ -878,6 +882,7 @@ namespace HemoIQ.ViewModels
                 Rows.Add(new ReactionRow(cell, rxn, rules, ctx, OnGradeEdited));
             }
 
+            OnPropertyChanged(nameof(GridExtraPhases)); // a stored phase no longer in Preferences gets its column back
             UpdateTreatmentBanner();
             RefreshRuledOutAntigens();
             RebuildCompareRows();

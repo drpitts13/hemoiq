@@ -1,6 +1,6 @@
 # Reactions
 
-The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cell, plus any extra phases configured in Preferences.
+The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cell, plus any extra phases configured in Preferences. A phase that was graded on the run but has since been removed from Preferences keeps its column, headed *(stored)*, because analysis still reads those grades.
 
 ## Choose the work
 
