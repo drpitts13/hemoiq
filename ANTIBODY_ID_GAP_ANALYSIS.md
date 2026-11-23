@@ -8948,10 +8948,25 @@ specimen's results when it is selected.
 
 **Docs:** the Analysis help topic (Top of the tab).
 
+## Iteration 325: clean review of the Reports preview's failure path
+
+**Reviewed:** `ReportsViewModel.UpdatePreview` when the report cannot
+be built.
+- **The preview.** The preview itself then reads *Error generating
+  report: …*, so the failure is on screen where the report would be.
+- **Copy and Print.** They are disabled while it shows
+  (`CanSharePreview`), and re-check the freshly rebuilt text before
+  sharing.
+- **Exports.** Export CSV and Export PDF build the report again in the
+  service and show *Export failed* with the reason. Nothing is written
+  to the audit log for an export that fails.
+
+Unlike the Analysis reload (Iteration 324), nothing here can pass for a
+result. No new issue; the full suite passes.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reports tab's `UpdatePreview` error
-text ("Error generating report") for the same pattern, then a clean
-pass.
+Continue clean-pass reviews: the Worklist's empty state (whether a
+failed refresh can show "nothing to do").
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
