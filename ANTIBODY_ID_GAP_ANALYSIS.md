@@ -8643,9 +8643,36 @@ selected; a source check that `RefreshSpecimens` reloads the panels.
 
 **Docs:** the Specimens help topic (Linked Panels).
 
+## Iteration 315: saving on a deleted run says so plainly
+
+**Reviewed:** the Reactions run list. Treated runs are added and
+deleted only on the Reactions tab, which rebuilds its own run list
+after both, so that list does not go stale within one workstation.
+
+**Found:** on a shared database, another workstation can delete a
+treated run while grades for it are typed here.
+- `SaveReaction` skipped every check when `GetPanelRun` found nothing:
+  the lock, the attached-panel check and the cell check.
+- The insert then failed on the reactions foreign key, so the banner
+  showed a raw "SQLite Error 19: FOREIGN KEY constraint failed".
+
+**Implemented:** `SaveReaction` refuses a save on a run that no longer
+exists, in plain words: the run may have been deleted on another
+workstation; reselect the specimen and enter the grades on a run that
+exists. The lock, attached-panel and cell checks now always run.
+Nothing is written, and the grades stay on screen ("Not saved: …",
+Iteration 288).
+
+**Tests:** `DeletedRunSaveTests` (2 cases): a save on a deleted run is
+refused without a database error and stores nothing; a save on an
+existing treated run still works.
+
+**Docs:** the Reactions help topic (Save & Analyze).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reactions tab's run list after a
-treated run is added or deleted on another path for the same specimen.
+Continue clean-pass reviews: other writes keyed by an id that another
+workstation could delete meanwhile (cell notes, panel edits, rule
+edits), for the same raw-error pattern.
 
 Loop clean passes: 0/5

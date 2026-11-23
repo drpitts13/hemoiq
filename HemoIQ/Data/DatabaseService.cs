@@ -3173,12 +3173,14 @@ namespace HemoIQ.Data
         {
             EnsureCanRecord();
             // Need specimen_id to call TouchSpecimenReactionsUpdated
-            var run = GetPanelRun(runId);
-            if (run != null)
-            {
-                EnsureSpecimenUnlocked(run.SpecimenId);
-                EnsurePanelAttached(run);
-            }
+            // A run deleted elsewhere (another workstation) while grades were typed for it would otherwise fail on the
+            // reactions foreign key with a raw database message.
+            var run = GetPanelRun(runId) ?? throw new InvalidOperationException(
+                $"This run (#{runId}) no longer exists; it may have been deleted on another workstation, so these " +
+                "grades cannot be saved on it. Copy down any grades you need, reselect the specimen, and enter them on " +
+                "a run that exists.");
+            EnsureSpecimenUnlocked(run.SpecimenId);
+            EnsurePanelAttached(run);
             // Grades are stored in their normalized form; anything unrecognized is refused, as is a cell the
             // panel does not have (it could not be matched to antigen typing). See DataConsistencyCheck.
             is_ = RequireGrade(is_, cellNumber, "IS");
@@ -3188,7 +3190,7 @@ namespace HemoIQ.Data
             if (extraPhases != null)
                 extraPhases = extraPhases.ToDictionary(kv => kv.Key, kv => RequireGrade(kv.Value, cellNumber, kv.Key),
                     StringComparer.OrdinalIgnoreCase);
-            if (run != null) EnsureCellOnPanel(run.PanelId, cellNumber);
+            EnsureCellOnPanel(run.PanelId, cellNumber);
             var extra = ExtraPhaseParser.Serialize(extraPhases);
 
             // Unchanged saves write nothing, so the audit log holds only real entries and changes.
