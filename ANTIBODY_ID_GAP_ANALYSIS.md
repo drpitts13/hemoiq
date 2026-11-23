@@ -8440,10 +8440,25 @@ check.
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 307 (clean pass): Panels tab buttons by role
+
+**Reviewed:**
+- **Change commands.** Add, Edit, Details, Delete, Copy, Import,
+  Download, Activate and the extra-antigen buttons all require
+  `SessionAccess.CanRecord`, so they are disabled in a view-only
+  session.
+- **Edit mode.** Save and Cancel act only in edit mode, which needs Edit.
+- **Read-only.** Export and Antigram only read.
+- **Roles.** Panel changes need no role beyond Record results in the
+  database (no Configure or Supervisor demand), so a Technologist may
+  use them all and is never refused after the fact.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: buttons on the Panels tab that need a role
-(Activate, Edit, Delete, Copy, Import, Download, extra antigens) in a
-view-only session and for a Technologist.
+Continue clean-pass reviews: the Reactions and Analysis tab buttons by
+role (Clear reactions and Delete run need only Record results; Clear
+identification checks first since Iteration 304).
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
