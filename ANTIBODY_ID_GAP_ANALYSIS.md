@@ -8345,9 +8345,29 @@ The Timeline also adds events from other records:
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 303 (clean pass): eluate and source timelines
+
+**Reviewed:**
+- **The eluate's analysis.** It reads only the eluate's own record and
+  grades. The source accession enters the input fingerprint as an
+  identifier, not as data (`ComputeInputFingerprint`). Nothing recorded
+  on the source changes the eluate's analysis, so nothing from the
+  source belongs on the eluate's Timeline. Both share the MRN, so both
+  show the same patient-record events.
+- **The dependency runs the other way.** The source's analysis reads the
+  eluate (the eluate evidence note). An eluate change marks the source's
+  analysis stale (`MarkEluateSourceChanged`), and its stale banner says
+  so. The eluate's own events stay on the eluate's Timeline; the
+  source's Eluate link line names the eluate to open.
+
+Listing the eluate's events on the source's Timeline as well would be a
+convenience, not a correction. No new issue or gap worth fixing. All
+tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the eluate's Timeline (events on its source
-specimen that affect it, such as the source's MRN or transfusion record).
+Continue clean-pass reviews: a broader product review of the Worklist,
+Specimens and Analysis tabs together for any remaining inconsistency
+in how a locked, stale or view-only state is shown.
 
-Loop clean passes: 3/5
+Loop clean passes: 4/5
