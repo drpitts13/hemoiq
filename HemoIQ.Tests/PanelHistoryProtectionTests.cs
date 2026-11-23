@@ -40,7 +40,7 @@ public class PanelHistoryProtectionTests
 
         var ex = Assert.Throws<InvalidOperationException>(() => iso.Db.DeletePanel(panelId));
         Assert.Contains("holds test history", ex.Message);
-        Assert.Contains("Deactivate it instead", ex.Message);
+        Assert.Contains("Deactivate it instead (Details on the Panels tab, then clear Active)", ex.Message);
         Assert.NotNull(iso.Db.GetPanel(panelId));
         Assert.Contains(iso.Db.GetSpecimenPanels("PH-1"), p => p.PanelId == panelId);
         Assert.DoesNotContain(iso.Db.GetAuditEventsForEntity("panel", panelId.ToString()), e => e.Action == "delete_panel");

@@ -7895,10 +7895,42 @@ input changes (Iteration 256).
 
 **Docs:** the Specimens help topic.
 
+## Iteration 286: refusal advice says where the next step is
+
+**Reviewed:** every database refusal that suggests a next step, against
+what that step allows.
+- **Confirming over a confirmed call, and the locked-record messages.**
+  These name Clear or Reinstate and who can do it (Iterations 260 and
+  285).
+- **Cancelling a confirmed investigation.** The refusal says to clear
+  the identification first. Clearing permits cancelling, and Cancel is
+  disabled on a confirmed investigation, so the screen never offers it.
+- **Detaching a graded panel.** "Clear its reactions on the Reactions
+  tab (with a reason) first" works: Clear deletes the run's reactions
+  with a reason, and the panel then has no grades.
+- **An eluate MRN conflict.** "Unlink or correct the eluate first"
+  works: both are edits on the eluate.
+- **Purging without an archive** when confirmed specimens would go.
+  This asks for an archive file, which the dialog offers.
+
+**Found:** deleting a lot with test history was refused with
+"Deactivate it instead so it is no longer offered for new testing".
+The Panels tab has no Deactivate button: its Activate button only
+activates. The only way to deactivate is Details, then clearing Active,
+which the message did not say.
+
+**Implemented:** the refusal now says "Deactivate it instead (Details
+on the Panels tab, then clear Active) …". The Panels help says the
+same.
+
+**Tests:** `PanelHistoryProtectionTests` checks the new wording.
+
+**Docs:** the Panels help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other refusal messages that suggest a next
-step, checked against what that step actually allows (as the Delete
-advice was).
+Continue clean-pass reviews: confirmation prompts whose Yes does
+something other than what the prompt says (each Yes/No prompt's text
+checked against the action that follows a Yes).
 
 Loop clean passes: 0/5

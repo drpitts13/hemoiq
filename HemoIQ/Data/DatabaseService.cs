@@ -2156,7 +2156,7 @@ namespace HemoIQ.Data
             if (usage.ProtectsHistory)
                 throw new InvalidOperationException(
                     $"Panel #{panelId} cannot be deleted because it holds test history: {usage.Describe()}. " +
-                    "Deactivate it instead so it is no longer offered for new testing.");
+                    "Deactivate it instead (Details on the Panels tab, then clear Active) so it is no longer offered for new testing.");
             RunInTransaction(() =>
             {
                 using var cmd = _conn.CreateCommand();
