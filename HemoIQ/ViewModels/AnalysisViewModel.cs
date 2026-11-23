@@ -304,11 +304,22 @@ namespace HemoIQ.ViewModels
                 PopulateFromResult(result);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                // Empty Suspected and Ruled-out lists with no word would read as "no antibodies" for a specimen that
+                // was analyzed, so the failure is shown where the results would be.
+                AppLog.Error($"Reloading the analysis for {SelectedSpecimen.AccessionNumber} failed", ex);
+                SummaryText = ReloadFailedText(SelectedSpecimen.AccessionNumber, ex.Message);
+                if (_main.SelectedTabIndex == 4) _main.SetStatus(SummaryText);
                 return false;
             }
         }
+
+        /// <summary>What the Analysis tab shows when an analyzed specimen's results cannot be rebuilt.</summary>
+        public static string ReloadFailedText(string accession, string reason) =>
+            $"The analysis of {accession} could not be shown: {reason.Trim().TrimEnd('.')}. The empty lists are not a result; " +
+            "nothing is ruled out or suspected on this screen. Click Run Analysis to try again, or check the " +
+            "specimen's panels and grades.";
 
         /// <summary>Triggered by the Run Analysis button — computes, persists, and refreshes.</summary>
         private void RunAnalysis()

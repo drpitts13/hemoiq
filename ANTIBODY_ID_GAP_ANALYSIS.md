@@ -8911,9 +8911,47 @@ workstation.
 
 **Docs:** the Specimens help topic (Linked Panels).
 
+## Iteration 324: a failed analysis reload is shown, not passed off as empty results
+
+**Reviewed:** every bare or broad `catch` in the application.
+- **Rethrows.** The database ones all roll back or dispose and rethrow:
+  the schema setup, the reactions migration, the archive open and
+  `RunInTransaction`.
+- **The file size.** `GetFileSizeBytes` returns 0 when the file cannot
+  be read, which only affects the capacity estimate.
+- **The analyzer.** Its `catch { }` wraps the Fisher exact computation
+  for an informational per-phase probability, and skips only that one
+  value.
+- **No other SQLite catches.** No `catch (SqliteException)` is left
+  since Iteration 323.
+
+**Found:** `AnalysisViewModel.AutoLoadAnalysis` rebuilds an analyzed
+specimen's results when it is selected.
+- **The swallow.** It swallowed any exception and returned false.
+- **The screen.** The results had already been cleared, so the tab
+  showed empty Suspected and Ruled-out lists with no word.
+- **The risk.** For a specimen that was analyzed, that reads as "no
+  antibodies".
+
+**Implemented:** the failure is logged (`AppLog.Error`).
+- **The message.** The Summary shows `ReloadFailedText`: the analysis
+  could not be shown, with the reason. It says the empty lists are not
+  a result and points to Run Analysis or the specimen's panels and
+  grades.
+- **The status line.** It repeats the message while the Analysis tab is
+  open.
+
+**Tests:** `AnalysisReloadFailureTests` (3 cases):
+- the text says the empty lists are not a result;
+- a reason without a full stop still reads as a sentence;
+- a source check that the reload no longer swallows the error.
+
+**Docs:** the Analysis help topic (Top of the tab).
+
 ## Likely next tick
 
-Continue clean-pass reviews: other `catch (SqliteException)` blocks
-that may read every database error as one expected case.
+Continue clean-pass reviews: the Reports tab's `UpdatePreview` error
+text ("Error generating report") for the same pattern, then a clean
+pass.
 
 Loop clean passes: 0/5

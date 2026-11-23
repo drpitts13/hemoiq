@@ -10,6 +10,7 @@ Analysis computes rule-outs, scores, and pattern statistics from the grades and 
 - **Enter Reactions** jumps to the Reactions tab for this specimen.
 - **Clinical Report** opens the clinical identification report.
 - **Run Analysis** recalculates every inner tab.
+- Selecting an analyzed specimen rebuilds its results. If that fails, the Summary says *The analysis of … could not be shown* with the reason, and the status line repeats it: the empty lists are then not a result. Click **Run Analysis** to try again, or check the specimen's panels and grades.
 - **Help** opens help for the inner tab you are viewing, or this overview if no inner topic is available.
 
 When the engine has testing suggestions, they appear in the yellow **Suggestions** box under the toolbar. Read them as next steps, such as cells still worth testing. The box is ordered by priority. Warnings and REVIEW items come first, then important next steps, then informational notes.
