@@ -741,6 +741,7 @@ namespace HemoIQ.ViewModels
         private void ClearConfirmation()
         {
             if (SelectedSpecimen == null) return;
+            if (!RoleGate.AllowedOrExplained(_db, Permission.ClearIdentification, "Clear identification")) return;
             var reasonDlg = new ReasonDialog(
                 "Enter the reason for clearing the confirmed identification. This is recorded in the audit log.");
             if (reasonDlg.ShowDialog() != true) return;

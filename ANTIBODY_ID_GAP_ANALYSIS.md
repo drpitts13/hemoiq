@@ -8364,10 +8364,41 @@ Listing the eluate's events on the source's Timeline as well would be a
 convenience, not a correction. No new issue or gap worth fixing. All
 tests pass.
 
+## Iteration 304: Clear, Supervisor review and Reinstate check the role first
+
+**Reviewed (broader):** how the Worklist, Specimens and Analysis tabs
+show a locked, stale or view-only investigation.
+- Change commands are disabled in a view-only session.
+- Locked investigations disable Reactions grading (Iteration 283),
+  panel links (284) and Edit and Delete (285).
+- Stale analyses show a banner and are re-checked by Confirm ID.
+
+**Found:** three commands that need the Supervisor or Administrator
+role still used the refuse-after-the-work pattern that Iterations
+278-281 removed elsewhere:
+- **Clear** (Analysis) asked a Technologist for the reason for clearing
+  the identification, then refused;
+- **Supervisor Review** (Specimens) asked for initials, then refused;
+- **Reinstate** (Specimens) asked for the reason, then refused.
+
+The refusals name who can act (Iteration 260), but only after the
+typing.
+
+**Implemented:** `ViewModels.RoleGate.AllowedOrExplained(db,
+permission, title)` shows `AccessControl.Refusal`'s message and returns
+false before the dialog opens. It is used by `ClearConfirmation`,
+`SupervisorReview` and `ReinstateInvestigation`. The database still
+checks every write.
+
+**Tests:** `RoleGateTests` (3 cases): each of the three handlers checks
+its permission before creating its reason or initials dialog.
+
+**Docs:** the Preferences help topic (users and roles).
+
 ## Likely next tick
 
-Continue clean-pass reviews: a broader product review of the Worklist,
-Specimens and Analysis tabs together for any remaining inconsistency
-in how a locked, stale or view-only state is shown.
+Continue clean-pass reviews: any other dialog-first command that needs
+a role (search the view models for reason, initials or file dialogs
+opened before `AccessControl` is consulted).
 
-Loop clean passes: 4/5
+Loop clean passes: 0/5

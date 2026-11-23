@@ -229,6 +229,7 @@ namespace HemoIQ.ViewModels
         {
             var s = SelectedSpecimen;
             if (s == null) return;
+            if (!RoleGate.AllowedOrExplained(_db, Permission.ReinstateInvestigation, "Reinstate investigation")) return;
             var dlg = new Views.Dialogs.ReasonDialog(
                 $"Reinstate investigation {s.AccessionNumber} (cancelled {s.CancelledAt}: {s.CancelReason})?\nEnter the reason.");
             if (dlg.ShowDialog() != true) return;
@@ -248,6 +249,7 @@ namespace HemoIQ.ViewModels
         {
             var s = SelectedSpecimen;
             if (s == null) return;
+            if (!RoleGate.AllowedOrExplained(_db, Permission.SupervisorReview, "Supervisor review")) return;
             var dlg = new Views.Dialogs.ReasonDialog(
                 $"Supervisor review of {s.AccessionNumber}: confirmed {s.FinalAntibodies} by {s.IdentifiedBy ?? "—"}.\n" +
                 "Enter your initials. You must not be the person who confirmed the identification.");
