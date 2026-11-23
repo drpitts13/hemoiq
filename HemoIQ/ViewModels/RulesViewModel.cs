@@ -104,9 +104,10 @@ namespace HemoIQ.ViewModels
             if (SelectedRule == null || !CanConfigure()) return;
             var dlg = new Views.Dialogs.RuleDialog(SelectedRule);
             if (dlg.ShowDialog() != true) return;
+            DatabaseService.RuleEditResult outcome;
             try
             {
-                _db.UpdateRule(SelectedRule.RuleId, dlg.RuleName, dlg.Description, dlg.Antibody,
+                outcome = _db.UpdateRule(SelectedRule.RuleId, dlg.RuleName, dlg.Description, dlg.Antibody,
                     dlg.ExceptionAntigen, dlg.HeterozygousOk, dlg.MinRuleoutCount,
                     dlg.SeparationExempt, dlg.SeparationExemptFrom);
             }
@@ -117,8 +118,16 @@ namespace HemoIQ.ViewModels
             }
             _main.WorklistVM.Refresh();
             Refresh();
-            _main.SetStatus($"Rule '{dlg.RuleName}' updated." + StaleNote);
+            _main.SetStatus(EditStatus(dlg.RuleName, outcome));
         }
+
+        /// <summary>The status after Edit: only an edit to what analysis reads says open analyses are now stale.</summary>
+        public static string EditStatus(string ruleName, DatabaseService.RuleEditResult outcome) => outcome switch
+        {
+            DatabaseService.RuleEditResult.Unchanged => $"Rule '{ruleName}' unchanged; nothing was saved.",
+            DatabaseService.RuleEditResult.LabelOnly => $"Rule '{ruleName}' updated (name or description only; analyses are not affected).",
+            _ => $"Rule '{ruleName}' updated." + StaleNote,
+        };
 
         private void DeleteRule()
         {

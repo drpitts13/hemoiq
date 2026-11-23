@@ -3846,7 +3846,15 @@ namespace HemoIQ.Data
             return list;
         }
 
-        public void UpdateRule(int ruleId, string name, string? description, string antibody,
+        /// <summary>What a rule edit changed: nothing, only its name or description, or something analysis reads.</summary>
+        public enum RuleEditResult { Unchanged, LabelOnly, AnalysisChanged }
+
+        /// <summary>
+        /// Saves a rule. A change to what analysis reads is audited as <c>update_rule</c>, a configuration change that
+        /// marks open analyses stale. A change to the name or description only is audited as <c>update_rule_label</c>,
+        /// which does not: analysis never reads them, and a needless "stale" warning teaches users to ignore real ones.
+        /// </summary>
+        public RuleEditResult UpdateRule(int ruleId, string name, string? description, string antibody,
             string? exceptionAntigen, bool heterozygousOk, int minRuleoutCount,
             bool separationExempt = false, string? separationExemptFrom = null)
         {
@@ -3854,7 +3862,8 @@ namespace HemoIQ.Data
             antibody = Services.RuleValidation.NormalizeAntibody(antibody, GetKnownAntigens(), GetAllRules(), ruleId);
             minRuleoutCount = Services.RuleValidation.RequireRuleoutCount(minRuleoutCount);
             separationExemptFrom = NormalizeSeparationList(separationExempt, separationExemptFrom);
-            var before = RuleAuditJson(GetRule(ruleId));
+            var previousRule = GetRule(ruleId);
+            var before = RuleAuditJson(previousRule);
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = @"
                 UPDATE rules SET name=$name, description=$desc, antibody=$ab,
@@ -3871,10 +3880,21 @@ namespace HemoIQ.Data
             cmd.Parameters.AddWithValue("$sepfrom", (object?)separationExemptFrom ?? DBNull.Value);
             cmd.Parameters.AddWithValue("$id", ruleId);
             cmd.ExecuteNonQuery();
-            var after = RuleAuditJson(GetRule(ruleId));
-            if (before != after)
-                AppendAudit("update_rule", "rule", ruleId.ToString(), null, before, after);
+            var updated = GetRule(ruleId);
+            var after = RuleAuditJson(updated);
+            if (before == after) return RuleEditResult.Unchanged;
+            var analysisChanged = RuleAnalysisJson(previousRule) != RuleAnalysisJson(updated);
+            AppendAudit(analysisChanged ? "update_rule" : "update_rule_label", "rule", ruleId.ToString(), null, before, after);
+            return analysisChanged ? RuleEditResult.AnalysisChanged : RuleEditResult.LabelOnly;
         }
+
+        /// <summary>The rule fields analysis reads (everything but the name and description).</summary>
+        private static string? RuleAnalysisJson(Rule? r) => r == null ? null : JsonSerializer.Serialize(new
+        {
+            antibody = r.Antibody, exceptionAntigen = r.ExceptionAntigen, heterozygousOk = r.HeterozygousOk,
+            minRuleoutCount = r.MinRuleoutCount, separationExempt = r.SeparationExempt,
+            separationExemptFrom = r.SeparationExemptFrom,
+        });
 
         public Rule? GetRule(int ruleId) => GetAllRules().FirstOrDefault(r => r.RuleId == ruleId);
 

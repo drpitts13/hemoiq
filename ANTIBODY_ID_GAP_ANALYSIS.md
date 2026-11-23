@@ -7994,10 +7994,45 @@ claims.
 
 **Docs:** the Reactions help topic.
 
+## Iteration 289: renaming a rule no longer marks analyses stale
+
+**Reviewed:** success messages that overstate. Grade saves report the
+count saved. Specimen and patient saves write nothing (and no audit)
+when no field changed, so "updated" only overstates.
+
+**Found:**
+- **Renaming a rule marked every open analysis stale.** A rule edit
+  that changed only the name or description was audited as
+  `update_rule`. That counts as an analysis configuration change, so
+  every open analysis was marked stale, though analysis never reads
+  the name or description. This is the same needless warning as panel
+  labels (Iteration 257).
+- **The Edit status always overstated.** After every rule edit,
+  unchanged or not, it said "Rule '…' updated. Open investigations
+  analyzed before this change are listed on the Worklist as Stale
+  analysis."
+
+**Implemented:**
+- `DatabaseService.UpdateRule` returns `RuleEditResult` (Unchanged,
+  LabelOnly or AnalysisChanged). It compares the fields analysis reads
+  (`RuleAnalysisJson`: antibody, exception antigen, zygosity, rule-out
+  count, separation exemption). A label-only edit is audited as
+  `update_rule_label`, which is not a configuration action, so it
+  marks nothing stale. An unchanged save writes nothing.
+- `RulesViewModel.EditStatus` says "unchanged; nothing was saved", or
+  "name or description only; analyses are not affected", or adds the
+  stale note only when analysis input changed.
+
+**Tests:** `RuleLabelEditTests` (4 cases): a rename or description edit
+is audited and leaves analyses current; a rule-out count change is
+audited as `update_rule` and marks them stale; an unchanged save writes
+no audit entry; the status wording for each outcome.
+
+**Docs:** the Rules help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: success messages that overstate (a
-status saying "saved" or "updated" when nothing changed, for example
-saving an unchanged form).
+Continue clean-pass reviews: rule import (`RuleTransfer.Apply`) for the
+same label-only distinction, and its status counts.
 
 Loop clean passes: 0/5
