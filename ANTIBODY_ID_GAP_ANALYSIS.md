@@ -7927,10 +7927,43 @@ same.
 
 **Docs:** the Panels help topic.
 
+## Iteration 287: prompts say what Yes does
+
+**Reviewed:** every Yes/No prompt's text against the action that
+follows a Yes, covering activation, restore, demo data, configuration
+and Preferences import, paste-over grades, draft recovery, Mark typing
+verified, duplicate accession, the Confirm ID warnings and quit. They
+match, apart from these two.
+
+**Found:**
+- **The ACS-with-exception offer** asked "Result ACS and anti-K with a
+  comment listing rule-out counts?". A Yes only filled in Final ID and
+  the comment: nothing was resulted until Confirm ID. It also silently
+  replaced whatever was already typed in Final ID.
+- **"Discard unsaved reaction grades?"** (asked when changing specimen,
+  panel or run with unsaved grades) defaulted to Yes, so a stray Enter
+  threw the typed grades away. The destructive-prompt scan
+  (`DestructiveConfirmTests`) did not catch it, because it looked only
+  for messages starting with Delete, Remove, Detach, Purge or Clear.
+
+**Implemented:**
+- `AnalysisViewModel.AcsExceptionPrompt(acs, currentFinalId)` asks
+  "Fill in Final ID with ACS and …, and the comment with the rule-out
+  counts?". It says when this replaces what is in Final ID now, and
+  that nothing is confirmed until review and Confirm ID.
+- The discard prompt goes through `DestructiveConfirm.Ask` (default
+  No). The scan now also covers messages starting with "Discard".
+
+**Tests:** `PromptMatchesActionTests` (3 cases): the ACS offer says it
+fills in Final ID and confirms nothing; it says when it would replace
+typed text; discarding grades asks through the destructive helper.
+
+**Docs:** the Preferences help topic (ACS) and the Reactions help topic
+(the discard prompt).
+
 ## Likely next tick
 
-Continue clean-pass reviews: confirmation prompts whose Yes does
-something other than what the prompt says (each Yes/No prompt's text
-checked against the action that follows a Yes).
+Continue clean-pass reviews: status-line messages after each command
+(that each says what was done, and on failure that nothing was saved).
 
 Loop clean passes: 0/5

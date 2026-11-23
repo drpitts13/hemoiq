@@ -546,10 +546,8 @@ namespace HemoIQ.ViewModels
         private bool ConfirmDiscardUnsaved()
         {
             if (!_gradesDirty) return true;
-            var discard = MessageBox.Show(
-                "Discard unsaved reaction grades?",
-                "Unsaved grades", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (discard != MessageBoxResult.Yes) return false;
+            // Discarding loses typed grades, so No is the answer under the keyboard.
+            if (!DestructiveConfirm.Ask("Discard unsaved reaction grades?", "Unsaved grades")) return false;
             MarkGradesClean();
             Drafts.Delete();
             return true;

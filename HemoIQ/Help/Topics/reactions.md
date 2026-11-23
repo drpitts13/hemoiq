@@ -26,7 +26,7 @@ The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cel
 - A confirmed or cancelled investigation is locked. An orange banner gives the reason and who can unlock it (clear the identification, or reinstate the investigation). The grades are shown read-only, and **Save**, **Save & Analyze**, **Clear**, **Fill negatives** and the run buttons are disabled. The lock is checked again whenever you open the Reactions tab, so a confirmation made on the Analysis tab shows here at once.
 - **Save & Analyze** writes grades, runs analysis, and shows a green or red banner with the result.
 - **Unsaved grades** are protected in three places:
-  - Changing the specimen, panel or run asks whether to discard them.
+  - Changing the specimen, panel or run asks whether to discard them. **No** (keep them) is the default, so pressing Enter never throws grades away.
   - **Run Analysis** on the Analysis tab, for the same specimen, explains that analysis uses saved grades only. **Yes** saves them first, with the usual expired-lot and change-reason checks. **No** analyzes without them. **Cancel** does nothing.
   - Quitting HemoIQ lists the unsaved grades, and an unfinished antigram edit on Panels, and asks before quitting. **No** is the default.
 - **Recovery after a crash:** while grades are unsaved, HemoIQ keeps a recovery copy on this computer, in `%LocalAppData%\HemoIQ\drafts`.

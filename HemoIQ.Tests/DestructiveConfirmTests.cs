@@ -26,7 +26,7 @@ public class DestructiveConfirmTests
     {
         // A Yes/No MessageBox whose message starts by deleting, removing, detaching or purging something.
         var deleting = new Regex(
-            @"MessageBox\.Show\(\s*(?:this,\s*)?\$?""(?:Permanently delete|Delete|Remove|Detach|Purge|Clear)[^;]*?MessageBoxButton\.YesNo",
+            @"MessageBox\.Show\(\s*(?:this,\s*)?\$?""(?:Permanently delete|Delete|Remove|Detach|Purge|Clear|Discard)[^;]*?MessageBoxButton\.YesNo",
             RegexOptions.Singleline);
         var offenders = new List<string>();
         foreach (var file in Directory.EnumerateFiles(Root(), "*.cs", SearchOption.AllDirectories))

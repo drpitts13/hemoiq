@@ -593,16 +593,30 @@ namespace HemoIQ.ViewModels
             if (fresh.HasFinalCall) return;
             if (!result.Acs.IsEligibleWithException) return;
 
-            var names = string.Join(", ", result.Acs.Exceptions.Select(e => e.Antibody));
-            var verb = result.Acs.Exceptions.Count == 1 ? "has" : "have";
-            var message = $"{names} {verb} a {AntigenConstants.AcsExceptionCriterion} (a score from the Fisher test and the reaction pattern, " +
-                          $"not a probability). Result ACS and {names} with a comment listing rule-out counts?";
+            var message = AcsExceptionPrompt(result.Acs, FinalAntibodiesText);
             if (MessageBox.Show(message, "ACS with exception",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;
 
             FinalAntibodiesText = result.Acs.SuggestedCombinedResult;
             FinalComment = result.Acs.SuggestedComment;
+        }
+
+        /// <summary>
+        /// The offer made after analysis when ACS is available with an exception. Yes only fills in Final ID and the
+        /// comment; nothing is resulted until the user reviews them and chooses Confirm ID, and the prompt says so,
+        /// and says when it would replace what is already typed in Final ID.
+        /// </summary>
+        public static string AcsExceptionPrompt(AcsEvaluation acs, string? currentFinalId)
+        {
+            var names = string.Join(", ", acs.Exceptions.Select(e => e.Antibody));
+            var verb = acs.Exceptions.Count == 1 ? "has" : "have";
+            var replaces = string.IsNullOrWhiteSpace(currentFinalId)
+                ? ""
+                : $" This replaces what is in Final ID now ({currentFinalId.Trim()}).";
+            return $"{names} {verb} a {AntigenConstants.AcsExceptionCriterion} (a score from the Fisher test and the reaction pattern, " +
+                   $"not a probability).\n\nFill in Final ID with ACS and {names}, and the comment with the rule-out counts?{replaces} " +
+                   "Nothing is confirmed until you review them and choose Confirm ID.";
         }
 
         public static string AppendAntibodyToFinalId(string? current, string antibody) =>
