@@ -8205,9 +8205,23 @@ is kept; a worksheet with three extra phases fits the page in full.
 
 **Docs:** the Reports help topic.
 
+## Iteration 297 (clean pass): every PDF writer fits the page
+
+**Reviewed:**
+- **Panel Antigram PDF.** The Panels tab's Antigram button calls
+  `ReportService.ExportToPdf(PanelAntigram)`, so it uses the
+  shrink-then-wrap fit from Iteration 296, as do the Reports tab's
+  exports.
+- **User Manual PDF.** `UserManualPdf` measures each line with
+  `MeasureString` and wraps by word. Only a single word wider than the
+  page could overflow, and the manual has none.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Panel Antigram PDF (Panels tab,
-Antigram) for the same fit, since it is built from the same text.
+Continue clean-pass reviews: CSV exports for completeness (each CSV has
+the columns of its on-screen or printed counterpart, for example the
+panel CSV with extra antigens and special types).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5

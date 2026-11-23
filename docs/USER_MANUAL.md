@@ -962,7 +962,7 @@ The **Report** list has eight types:
 
 Panel Summary, Panel Antigram, and each run on Clinical Identification also print what the vendor sheet records beyond the grid: **ENZYME-TREATED** for a treated lot, the product line and catalog number, the lot notes, and a **Cell details** list with each cell's donor ID, Rh phenotype and special types (for example *Cell 3: donor D-100; Rh R1R1; special types Yt(a-)*). Analysis reads the special types, so the printed lot shows them. A lot with none of these prints nothing extra.
 
-Each run on Clinical Identification prints its extra-phase grades after CC: the phases configured in Preferences and any other phase graded on that run, so the printed worksheet shows every grade analysis read.
+Each run on Clinical Identification prints its extra-phase grades after CC: the phases configured in Preferences and any other phase graded on that run, so the printed worksheet shows every grade analysis read. **Export PDF** shrinks the text so the widest line fits the page (down to 4.5 point), and wraps a line that is still too wide, indenting the continuation, so no grade at the end of a long row is cut off at the page edge. **Print** wraps long lines the same way.
 
 Panel Summary, Panel Antigram, and the antigen grid on Clinical Identification leave out an antigen that is NT on every cell. A cell that is NT in a column typed on another cell prints NT. A typed minus stays a minus. The stored panel order is unchanged, and Edit on the Panels tab still shows the full order.
 7. **Panel Antigram** — the bench antigram for one lot. Requires a panel.
