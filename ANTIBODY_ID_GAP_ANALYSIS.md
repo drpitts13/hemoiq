@@ -8158,10 +8158,27 @@ removed from Preferences.
 
 **Docs:** the Reactions and Reports help topics.
 
+## Iteration 295 (clean pass): other phase lists against stored phases
+
+**Reviewed:**
+- **Compare grid.** Its phases are the configured ones plus any stored
+  on either run (`CompareReactionRow` names), so it already shows a
+  removed phase.
+- **Phase-specific probabilities.** These use the configured phases
+  (`AllInterpretableNames`), but they are not displayed or printed.
+  Positivity, rule-outs and scores read every stored phase.
+- **Grade keys, paste and Tab-to-next-phase.** These recognise columns
+  by header, so they do not act on a "(stored)" column (Iteration 294).
+  A grade there can still be changed with the column's dropdown, and it
+  is shown and printed. A removed phase holds earlier readings, so
+  keyboard entry into it is not worth adding.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: other places that list phases from
-Preferences only (the Compare grid, paste targets, the Analysis phase
-notes) against the stored phases.
+Continue clean-pass reviews: the Specimen Summary and Analysis Results
+reports for extra-phase grades (the worksheet prints them since
+Iteration 294; check the others do not claim to show all grades).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
