@@ -8778,8 +8778,10 @@ through `MainViewModel.OpenPanel` and `PanelsViewModel.SelectPanel`.
 ## Iteration 319: clean review of every path that opens a specimen or lot
 
 **Reviewed:**
-- **Search.** The Search tab opens only lots (`OpenPanel`, Iteration
-  318).
+- **Search.** The Search tab opens lots through `OpenPanel` (Iteration
+  318). It opens investigation results through
+  `NavigateToWorklistItem` (corrected in Iteration 320; this entry
+  first said Search opens only lots).
 - **Other tabs.** The Specimens, Analysis and Worklist tabs open
   specimens only through `MainViewModel.OpenSpecimenReactions`,
   `OpenSpecimenAnalysis` and `OpenSpecimenReport`, which refuse a
@@ -8794,9 +8796,27 @@ through `MainViewModel.OpenPanel` and `PanelsViewModel.SelectPanel`.
 
 No new issue; the full suite passes.
 
+## Iteration 320: clean review of Analytics and Search drill-downs
+
+**Reviewed:** every caller that opens a specimen or lot from a list.
+- **Analytics.** The drill-down cases (`OpenDrillCase`) and overdue
+  investigations (`OpenOverdue`) open through
+  `MainViewModel.NavigateToWorklistItem` with the Specimens target.
+- **Search.** Investigation results (`OpenInvestigation`) do the same.
+- **The guarded path.** `NavigateToWorklistItem` routes the Reactions
+  and Analysis targets to the guarded Open methods, Panels items to
+  `OpenPanel`, and the Specimens target to
+  `SpecimensViewModel.SelectSpecimen`. Each refuses a record it cannot
+  show before switching tab (Iterations 317 and 318).
+- **Nothing bypasses it.** No view code-behind switches tab and selects
+  a specimen directly.
+
+No new issue; the full suite passes.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Analytics tab's drill-downs (whether
-any lists a specimen and opens it outside the guarded path).
+Continue clean-pass reviews: the Reports tab's Print and Export when
+the selected specimen was deleted on another workstation after the
+preview was built.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
