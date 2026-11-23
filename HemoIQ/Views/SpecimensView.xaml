@@ -235,6 +235,21 @@
                 </ScrollViewer>
             </GroupBox>
 
+            <!-- The panes below hold saved lists, not the current analysis -->
+            <TextBlock DockPanel.Dock="Top" Text="{Binding AnalysisReadProblem}" TextWrapping="Wrap"
+                       Margin="0,0,0,8" Padding="6" Foreground="#8A4B00" Background="#FFF3E0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasAnalysisReadProblem}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
             <!-- Suspected Antibodies -->
             <GroupBox DockPanel.Dock="Top" Header="Suspected Antibodies" Margin="0,0,0,8" Padding="6">
                 <DataGrid ItemsSource="{Binding Antibodies}" IsReadOnly="True"

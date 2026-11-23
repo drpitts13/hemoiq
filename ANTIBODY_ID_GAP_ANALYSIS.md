@@ -8980,9 +8980,50 @@ reads as "nothing to do".
 
 No new issue; the full suite passes.
 
+## Iteration 327: saved lists shown on the Specimens tab are labelled as such
+
+**Reviewed:** the Specimens tab's failure paths.
+- **Saves.** Patient save, Edit, Cancel, Reinstate, Supervisor Review,
+  Attach and Detach all show their refusal.
+- **The status strip.** It is computed without a `catch`, so it fails
+  visibly.
+
+**Found:** `LoadAnalysisSummary` rebuilds the current analysis for the
+Pattern evidence, Suspected and Ruled-out panes. When that failed, it
+fell back to the lists saved at the last Run Analysis.
+- **Only a status line.** The failure was noted only on the transient
+  status line.
+- **A false claim.** The ruled-out pane could still say *No specificity
+  meets the current rule-out criteria* about an analysis that did not
+  run.
+- **Help contradicted.** The help topic said an older saved list is
+  never shown in their place.
+
+**Implemented:**
+- **A lasting warning.** A failure now sets `AnalysisReadProblem`, an
+  orange note above Suspected Antibodies that stays while that
+  specimen is shown (`SpecimensViewModel.SavedListsNote`). It says the
+  current analysis could not be read, gives the reason, and says the
+  lists are the saved ones and may be out of date, pointing to Run
+  Analysis.
+- **No false claim.** The rule-out criteria line is dropped in that
+  case.
+- **Logged.** The failure is written to the application log.
+- **Reset.** The note is cleared at every load.
+
+**Tests:** `SpecimenSavedListsNoteTests` (3 cases):
+- the note's wording;
+- a source check that a failure sets the note, drops the criteria
+  claim and logs;
+- the view shows the note above Suspected Antibodies, collapsed when
+  empty.
+
+**Docs:** the Specimens help topic (Suspected and Ruled-out
+Antibodies), corrected.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Specimens tab's status strip (Stale,
-Awaiting testing counts) after a failed load.
+Continue clean-pass reviews: other places that fall back to saved
+analysis lists (Reports, Search by antibody) and whether they say so.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5

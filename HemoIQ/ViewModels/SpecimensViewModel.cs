@@ -85,6 +85,20 @@ namespace HemoIQ.ViewModels
 
         public bool HasPatternEvidence => !string.IsNullOrWhiteSpace(PatternEvidence);
 
+        private string _analysisReadProblem = string.Empty;
+        /// <summary>Shown above the Suspected and Ruled-out panes when they hold saved lists, not the current analysis.</summary>
+        public string AnalysisReadProblem
+        {
+            get => _analysisReadProblem;
+            private set
+            {
+                if (SetField(ref _analysisReadProblem, value))
+                    OnPropertyChanged(nameof(HasAnalysisReadProblem));
+            }
+        }
+
+        public bool HasAnalysisReadProblem => !string.IsNullOrWhiteSpace(AnalysisReadProblem);
+
         private string _ruleoutNote = "";
         public string RuleoutNote
         {
@@ -363,6 +377,7 @@ namespace HemoIQ.ViewModels
             Ruleouts.Clear();
             PatternEvidence = string.Empty;
             RuleoutNote = "";
+            AnalysisReadProblem = string.Empty;
 
             if (_selectedSpecimen == null) return false;
             var sid = _selectedSpecimen.AccessionNumber;
@@ -407,6 +422,7 @@ namespace HemoIQ.ViewModels
         private bool LoadAnalysisSummary(string specimenId)
         {
             var failed = false;
+            string? failure = null;
             try
             {
                 var result = _main.Analyzer.AnalyzeSpecimen(specimenId, updateDb: false);
@@ -419,16 +435,26 @@ namespace HemoIQ.ViewModels
             catch (System.Exception ex)
             {
                 failed = true;
+                failure = ex.Message;
+                AppLog.Error($"Reading the analysis of {specimenId} for the Specimens tab failed", ex);
                 PatternEvidence = string.Empty;
                 foreach (var a in _db.GetSpecimenAntibodies(specimenId)) Antibodies.Add(a);
                 foreach (var r in _db.GetSpecimenRuleouts(specimenId)) Ruleouts.Add(r);
                 _main.SetStatus($"Pattern evidence for {specimenId} could not be read: {ex.Message}");
             }
-            RuleoutNote = Ruleouts.Count == 0
-                ? "No specificity meets the current rule-out criteria."
+            // A failure keeps a lasting note on the panes: the saved lists shown instead may predate later grades,
+            // and "no specificity meets the criteria" would describe an analysis that did not run.
+            AnalysisReadProblem = failure != null ? SavedListsNote(failure) : string.Empty;
+            RuleoutNote = failure != null ? ""
+                : Ruleouts.Count == 0 ? "No specificity meets the current rule-out criteria."
                 : "";
             return failed;
         }
+
+        /// <summary>The note on the Suspected and Ruled-out panes when the current analysis could not be read.</summary>
+        public static string SavedListsNote(string reason) =>
+            $"The current analysis could not be read ({reason.Trim().TrimEnd('.')}). These are the lists saved at the " +
+            "last Run Analysis and may be out of date; open the Analysis tab and click Run Analysis.";
 
         /// <summary>
         /// After any specimen CRUD, refresh both this tab and any other tabs that hold a specimen list.
