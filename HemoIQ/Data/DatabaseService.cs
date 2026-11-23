@@ -1354,7 +1354,7 @@ namespace HemoIQ.Data
                 throw new ArgumentException(
                     "Clearing a confirmed identification needs a reason; use ClearSpecimenFinalCall.", nameof(antibodies));
             EnsureCanRecord();
-            var current = GetSpecimen(accessionNumber);
+            var current = GetSpecimen(accessionNumber) ?? throw MissingSpecimenError(accessionNumber, "confirmed");
             if (current?.IsCancelled == true)
                 throw LockedError(accessionNumber, cancelled: true);
             if (current?.HasFinalCall == true)
@@ -1366,6 +1366,14 @@ namespace HemoIQ.Data
                     " The earlier identification stays in the amendment history.");
             WriteFinalCall(accessionNumber, antibodies, comment, identifiedBy, identifiedAt, overrides);
         }
+
+        /// <summary>
+        /// A specimen deleted on another workstation after a tab listed it: the update would change no row, yet the
+        /// audit log would record a confirmed or cleared identification and the tab would report success.
+        /// </summary>
+        private static InvalidOperationException MissingSpecimenError(string accessionNumber, string verb) =>
+            new($"Specimen {accessionNumber} no longer exists; it may have been deleted on another workstation, so " +
+                $"the identification was not {verb}. Refresh the list.");
 
         private void WriteFinalCall(string accessionNumber,
             string? antibodies, string? comment, string? identifiedBy,
@@ -1530,7 +1538,7 @@ namespace HemoIQ.Data
             Services.AccessControl.Demand(this, Services.Permission.ClearIdentification);
 
             EnsureCanRecord();
-            var before = GetSpecimen(accessionNumber);
+            var before = GetSpecimen(accessionNumber) ?? throw MissingSpecimenError(accessionNumber, "cleared");
             WriteFinalCall(accessionNumber, null, null, null, null, null);
             AppendAudit("clear_final_call", "specimen", accessionNumber, reason.Trim(),
                 beforeJson: before == null ? null : JsonSerializer.Serialize(new

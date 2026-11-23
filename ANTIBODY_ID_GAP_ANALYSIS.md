@@ -8845,10 +8845,42 @@ rebuilt the preview as "Specimen X not found." Then:
 
 **Docs:** the Reports help topic.
 
+## Iteration 322: confirm or clear on a deleted specimen is refused
+
+**Reviewed:** identification and investigation actions on a specimen
+deleted on another workstation after a tab listed it.
+- **Already refused.** Cancel, Reinstate and Supervisor Review on the
+  Specimens tab refuse with "not found", and the tab shows it.
+
+**Found:** Confirm ID and Clear on the Analysis tab were not refused.
+- **No checks ran.** `SetSpecimenFinalCall` and
+  `ClearSpecimenFinalCall` read a missing specimen as null, so the
+  cancelled and already-confirmed checks never ran.
+- **Success reported.** The specimen update changed no row, yet the tab
+  went on to report *Identification confirmed for X* and refresh the
+  other tabs.
+- **A crash path.** Clear also caught only `UnauthorizedAccessException`.
+
+**Implemented:**
+- Both methods refuse a missing specimen before writing anything. The
+  message says it no longer exists, may have been deleted on another
+  workstation, and the identification was not confirmed or cleared.
+- The Analysis tab shows the refusal for both actions. Confirm catches
+  `InvalidOperationException`, which includes the locked and cancelled
+  refusals; Clear catches it alongside `UnauthorizedAccessException`.
+
+**Tests:** `DeletedSpecimenFinalCallTests` (4 cases):
+- Confirm on a deleted specimen is refused and not audited;
+- Clear on a deleted specimen is refused and not audited;
+- both still work on an existing specimen;
+- a source check that the Analysis tab catches the refusal for both.
+
+**Docs:** the Suspected Antibodies help topic (Confirm and Clear).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Analysis tab's Confirm and Supervisor
-Review when the specimen was deleted on another workstation after the
-tab listed it.
+Continue clean-pass reviews: the Specimens tab's Edit and the phenotype
+and transfusion sub-dialogs on a specimen deleted elsewhere (they
+throw "not found"; check each caller shows it rather than crashing).
 
 Loop clean passes: 0/5

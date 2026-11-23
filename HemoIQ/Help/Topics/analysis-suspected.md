@@ -30,5 +30,6 @@ Green rows meet that rule. Yellow rows do not. Double-click a row to add it to *
   - Clearing the identification removes the overrides from the current record. The audit log keeps them. Reports, Analytics, and the Worklist then treat the specimen as confirmed.
 - **Clear** removes a confirmed ID. You must enter a reason. The reason is written to the audit log.
 - A confirmed ID cannot be replaced by editing Final ID and clicking **Confirm ID** again. HemoIQ says the specimen already has a confirmed identification. To change it, click **Clear**, give the reason, then confirm the new identification. The earlier identification, who confirmed it and the reason for the change appear in the amendment history on the clinical report.
+- If the specimen was deleted meanwhile (for example on another workstation), **Confirm ID** and **Clear** say it no longer exists and record nothing; refresh the list.
 
 Confirm only after you agree with the evidence. The software does not confirm an identification for you.

@@ -723,7 +723,7 @@ namespace HemoIQ.ViewModels
                     string.IsNullOrWhiteSpace(FinalComment) ? null : FinalComment.Trim(), initials,
                     overrides: overrides);
             }
-            catch (RecordLockedException ex)
+            catch (InvalidOperationException ex) // locked, cancelled, or deleted on another workstation
             {
                 MessageBox.Show(ex.Message, "Confirm identification", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -758,7 +758,7 @@ namespace HemoIQ.ViewModels
             {
                 _db.ClearSpecimenFinalCall(SelectedSpecimen.AccessionNumber, reasonDlg.Reason);
             }
-            catch (UnauthorizedAccessException ex)
+            catch (Exception ex) when (ex is UnauthorizedAccessException or InvalidOperationException)
             {
                 MessageBox.Show(ex.Message, "Clear identification", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
