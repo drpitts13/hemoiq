@@ -46,10 +46,10 @@ public class ListReportStatusTests
         {
             iso.Reports.ExportToCsv(ReportType.AllPanels, path);
             var lines = File.ReadAllLines(path);
-            Assert.EndsWith(",Status", lines[0]);
-            Assert.EndsWith(",Active", lines.Single(l => l.Contains(",L-1,")));
-            Assert.EndsWith(",\"Imported, inactive\"", lines.Single(l => l.Contains(",I-1,")));
-            Assert.EndsWith(",Expired", lines.Single(l => l.Contains(",X-1,")));
+            Assert.EndsWith(",Status,Typing", lines[0]); // Typing as on the printed list (Iteration 299)
+            Assert.Contains(",Active,", lines.Single(l => l.Contains(",L-1,")));
+            Assert.Contains(",\"Imported, inactive\",", lines.Single(l => l.Contains(",I-1,")));
+            Assert.Contains(",Expired,", lines.Single(l => l.Contains(",X-1,")));
         }
         finally { File.Delete(path); }
     }
@@ -71,8 +71,8 @@ public class ListReportStatusTests
         {
             iso.Reports.ExportToCsv(ReportType.AllSpecimens, path);
             var lines = File.ReadAllLines(path);
-            Assert.EndsWith(",Status", lines[0]);
-            Assert.EndsWith(",Cancelled", lines.Single(l => l.StartsWith("CX-1,")));
+            Assert.EndsWith(",Status,FinalId", lines[0]); // the final ID, as on the printed list (Iteration 299)
+            Assert.Contains(",Cancelled,", lines.Single(l => l.StartsWith("CX-1,")));
         }
         finally { File.Delete(path); }
     }

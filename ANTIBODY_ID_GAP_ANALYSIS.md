@@ -8252,10 +8252,46 @@ are read; a JSON import keeps donor and Rh.
 
 **Docs:** the Panels help topic.
 
+## Iteration 299: report CSVs carry their printed columns
+
+**Reviewed:** the remaining CSV exports against the printed reports.
+- The Specimen Summary CSV begins with the specimen it describes
+  (Iteration 270).
+- The audit-log CSV is the whole log (Iteration 267).
+- The Analytics CSV states its date range.
+
+**Found:**
+- **All Specimens CSV** had no final identification, though the printed
+  list has a Final ID column.
+- **All Panels CSV** had no typing summary, though the printed list has
+  a Typing column.
+- **Panel Summary CSV** was the antigen grid alone. The printed Panel
+  Summary also shows the lot's status, enzyme treatment, product,
+  catalog and notes, and each cell's donor, Rh phenotype and special
+  types (Iteration 271).
+
+**Implemented:**
+- All Specimens adds `FinalId`, in full: the printed column truncates at
+  28 characters.
+- All Panels adds `Typing` (`PanelIntegrityCheck.Summarize(...).Display`,
+  as printed).
+- `ReportService.WritePanelSummaryCsv` writes a Panel Field/Value
+  section (Name, Lot, Vendor, Expiration, Status, EnzymeTreated,
+  ProductLine, CatalogNumber, LotNotes). Then comes the cell grid, with
+  Donor, Rh and SpecialTypes columns after the antigens.
+
+**Tests:**
+- `ReportCsvColumnTests` (3 cases): a long final ID is exported in full;
+  the All Panels row carries its typing summary; the Panel Summary CSV
+  has the lot details and the cell details.
+- `ListReportStatusTests` and `ReportAccuracyTests` now expect the
+  added columns and the Panel section ahead of the grid.
+
+**Docs:** the Reports help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the remaining CSV exports (Analytics,
-Specimen Summary, All Specimens, All Panels, audit log) against their
-on-screen columns.
+Continue clean-pass reviews: the Analytics drill-down lists and their
+CSV (whether the case lists can be exported and match the counts).
 
 Loop clean passes: 0/5

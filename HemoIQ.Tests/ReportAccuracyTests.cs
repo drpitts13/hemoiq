@@ -122,7 +122,8 @@ public class ReportAccuracyTests
         try
         {
             _fixture.Reports.ExportToCsv(ReportType.PanelSummary, csvPath, panelId: ortho.PanelId);
-            var header = File.ReadLines(csvPath).First();
+            // The lot's details come first (Iteration 299); the antigen header is the line that starts with Cell.
+            var header = File.ReadLines(csvPath).First(l => l.StartsWith("Cell,"));
             Assert.Contains("Cell", header);
             Assert.Contains("D", header);
             Assert.Contains("P1", header);

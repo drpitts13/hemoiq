@@ -682,6 +682,54 @@ namespace HemoIQ.Services
                 sb.AppendLine(FormatRuleoutCountLine(r));
         }
 
+        /// <summary>
+        /// The Panel Summary CSV: the lot's identity and vendor-sheet details (status, enzyme treatment, product,
+        /// catalog, notes), then the antigen grid with each cell's donor ID, Rh phenotype and special types, as the
+        /// printed Panel Summary shows them (Iteration 271).
+        /// </summary>
+        private void WritePanelSummaryCsv(CsvWriter csv, int panelId)
+        {
+            var p = _db.GetPanel(panelId);
+            if (p != null)
+            {
+                csv.WriteField("Panel");
+                csv.NextRecord();
+                csv.WriteField("Field");
+                csv.WriteField("Value");
+                csv.NextRecord();
+                foreach (var (field, value) in new (string, string?)[]
+                {
+                    ("Name", p.Name), ("Lot", p.LotNumber), ("Vendor", p.Vendor), ("Expiration", p.ExpirationDate),
+                    ("Status", PanelStatusShort(p)), ("EnzymeTreated", p.EnzymeTreated ? "Yes" : "No"),
+                    ("ProductLine", p.ProductLine), ("CatalogNumber", p.CatalogNumber), ("LotNotes", p.SpecialNotes),
+                })
+                {
+                    csv.WriteField(field);
+                    csv.WriteField(value ?? "");
+                    csv.NextRecord();
+                }
+                csv.WriteField("Cells");
+                csv.NextRecord();
+            }
+            var cells = _db.GetPanelCells(panelId);
+            var antigens = PanelCell.AntigensTypedOnAnyCell(_db.GetPanelDisplayAntigens(panelId), cells);
+            csv.WriteField("Cell");
+            foreach (var ag in antigens) csv.WriteField(ag);
+            csv.WriteField("Donor");
+            csv.WriteField("Rh");
+            csv.WriteField("SpecialTypes");
+            csv.NextRecord();
+            foreach (var cell in cells)
+            {
+                csv.WriteField(cell.CellNumber);
+                foreach (var ag in antigens) csv.WriteField(cell.PrintedAntigen(ag));
+                csv.WriteField(cell.DonorId ?? "");
+                csv.WriteField(cell.RhPhenotype ?? "");
+                csv.WriteField(cell.SpecialTypes ?? "");
+                csv.NextRecord();
+            }
+        }
+
         private void WriteSpecimenSummaryCsv(CsvWriter csv, string specimenId)
         {
             // Which specimen and investigation the rows below belong to: a CSV opened later, away from the
@@ -1086,35 +1134,27 @@ namespace HemoIQ.Services
             switch (type)
             {
                 case ReportType.AllSpecimens:
+                    // The printed list's columns, with the final ID in full (the printed column is truncated).
                     csv.WriteRecords(_db.GetAllSpecimens().Select(s => new
                     {
                         s.AccessionNumber, s.Type, s.CreatedDate, s.ExpirationDate, s.LastAnalyzedAt,
-                        Status = GetSpecimenStatus(s)
+                        Status = GetSpecimenStatus(s),
+                        FinalId = s.FinalAntibodies ?? "",
                     }));
                     break;
                 case ReportType.AllPanels:
                     csv.WriteRecords(_db.GetAllPanels().Select(p => new
                     {
                         p.Name, p.LotNumber, p.Vendor, p.NumCells, p.ExpirationDate,
-                        Status = PanelStatusShort(p)
+                        Status = PanelStatusShort(p),
+                        Typing = PanelIntegrityCheck.Summarize(_db.GetPanelCells(p.PanelId)).Display,
                     }));
                     break;
                 case ReportType.SpecimenSummary when specimenId != null:
                     WriteSpecimenSummaryCsv(csv, specimenId);
                     break;
                 case ReportType.PanelSummary when panelId.HasValue:
-                    var cells = _db.GetPanelCells(panelId.Value);
-                    var antigens = PanelCell.AntigensTypedOnAnyCell(
-                        _db.GetPanelDisplayAntigens(panelId.Value), cells);
-                    csv.WriteField("Cell");
-                    foreach (var ag in antigens) csv.WriteField(ag);
-                    csv.NextRecord();
-                    foreach (var cell in cells)
-                    {
-                        csv.WriteField(cell.CellNumber);
-                        foreach (var ag in antigens) csv.WriteField(cell.PrintedAntigen(ag));
-                        csv.NextRecord();
-                    }
+                    WritePanelSummaryCsv(csv, panelId.Value);
                     break;
                 default:
                     writer.Write(GeneratePreviewText(type, specimenId, panelId));
