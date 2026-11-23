@@ -9089,10 +9089,32 @@ named the wrong report.
 
 No code change; the full suite passes.
 
+## Iteration 330: clean review that recent refusals leave no audit trace
+
+**Reviewed:** every refusal added in Iterations 313–323. Each throws
+before any database write or `AppendAudit`, so the Timeline gains no
+line for an action that did not happen.
+
+| Refusal | Throws before | Covered by |
+|---|---|---|
+| Grades on a detached panel | the reaction write | `DetachedPanelSaveTests` |
+| Grades on a deleted run | the reaction write | `DeletedRunSaveTests` |
+| Rule edit after deletion | the UPDATE | `DeletedRecordEditTests` |
+| Typing edit after deletion | the transaction | `DeletedRecordEditTests` |
+| Report for a missing specimen or lot | the file and `report_output` | `ReportMissingSubjectTests` |
+| Confirm or Clear on a missing specimen | `WriteFinalCall` | `DeletedSpecimenFinalCallTests` |
+| Attach to a missing specimen or lot | the insert and `link_panel` | `LinkPanelMissingRecordTests` |
+
+The tests in the last column also assert that no audit event or data
+was written. The navigation and display changes (Iterations 317, 318,
+324, 327 and 328) write nothing.
+
+No new issue; the full suite passes.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Timeline's audit-event descriptions
-for actions added since Iteration 313 (whether each new refusal writes
-nothing, so no Timeline line is missing or invented).
+Continue clean-pass reviews: the Help index and the user manual,
+checking that every help topic edited since Iteration 313 is reachable
+from its tab's Help button.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
