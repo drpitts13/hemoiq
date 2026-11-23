@@ -8513,11 +8513,28 @@ accounted for:
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 310 (clean pass): Preferences a view-only session can save
+
+**Reviewed:** every `SettingsService.Save()` outside the Preferences
+dialog.
+- The Reactions display choices (`HideRuledOutAntigenColumns`,
+  `ShowAntigramDosage`) and the Worklist filters.
+- The intended-use acknowledgement (`IntendedUseAcknowledged`).
+- `DefaultIdentifiedBy`, remembered only after Confirm ID, which needs
+  Record results.
+
+None of these is in `LabSettings.ClinicalSnapshot`, the settings
+analysis reads. The clinical ones can be saved only from Preferences,
+which opens view-only for a role that may not change them (Iteration
+278), or from an import that checks the role first (280).
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: Settings and file writes a view-only
-session can reach (Worklist filter and column preferences are saved to
-the per-workstation settings file; check none of them is a clinical
-Preference).
+Continue clean-pass reviews: the recovery draft (Reactions crash
+recovery) for a view-only session and a locked investigation (no draft
+is written in either, Iterations 283 and earlier; check recovery at
+start-up does not restore into either).
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
