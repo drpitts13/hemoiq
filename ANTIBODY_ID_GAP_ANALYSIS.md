@@ -8088,10 +8088,28 @@ for an unrelated one.
 
 **Docs:** the Preferences help topic.
 
+## Iteration 292 (clean pass): open tabs after a configuration change
+
+**Reviewed:**
+- **Preferences.** Saving raises `AppSettings.Changed`, and
+  `MainViewModel.OnSettingsChanged` refreshes the Worklist and the
+  Analysis stale banner, column visibility, the show-inactive filters
+  and the size limit, so the open tab shows the new state without a tab
+  switch. The dialog writes its `update_settings` audit entry just
+  after saving, but staleness also compares each analysis's saved
+  clinical settings with the current ones (`ClinicalSettingsDiffer`),
+  so an open analysis is already stale at that refresh.
+- **Rule add, edit, delete and import.** Each calls
+  `WorklistVM.Refresh()` after its audit entry.
+- **Lab configuration import.** It raises `AppSettings.Changed` after
+  the transaction has committed its audit entries.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Worklist after a configuration change
-(the Stale analysis items appear without switching tabs when the
-Worklist is the open tab).
+Continue clean-pass reviews: the Analysis tab's suspected and ruled-out
+lists after a configuration change while it is open (they show the
+last run until Run Analysis, with the stale banner).
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
