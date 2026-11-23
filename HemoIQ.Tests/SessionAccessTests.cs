@@ -87,7 +87,7 @@ public class SessionAccessTests
     [InlineData("SpecimensViewModel", "AddCommand,CancelInvestigationCommand,EditPatientCommand,EditCommand,DeleteCommand,AttachPanelCommand,DetachPanelCommand")]
     [InlineData("PanelsViewModel", "AddCommand,EditCommand,EditDetailsCommand,DeleteCommand,CopyCommand,ImportCsvCommand,DownloadVendorCommand,AddExtraAntigenCommand,RemoveExtraAntigenCommand,ActivateCommand")]
     [InlineData("ReactionsViewModel", "SaveCommand,SaveAnalyzeCommand,ClearCommand,FillNegativesCommand,AddRunCommand,DeleteRunCommand")]
-    [InlineData("AnalysisViewModel", "ConfirmIdCommand,ClearConfirmationCommand")]
+    [InlineData("AnalysisViewModel", "AnalyzeCommand,ConfirmIdCommand,ClearConfirmationCommand")]
     [InlineData("RulesViewModel", "AddCommand,EditCommand,DeleteCommand,ImportCommand")]
     public void ChangeCommands_AreDisabledWhenViewOnly(string viewModel, string commands)
     {

@@ -216,7 +216,7 @@ namespace HemoIQ.ViewModels
             _analyzer = analyzer;
             _main = main;
 
-            AnalyzeCommand = new RelayCommand(RunAnalysis, () => SelectedSpecimen != null);
+            AnalyzeCommand = new RelayCommand(RunAnalysis, () => SessionAccess.CanRecord && SelectedSpecimen != null);
             RefreshSpecimensCommand = new RelayCommand(Refresh);
             ConfirmIdCommand = new RelayCommand(ConfirmId, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
             ClearConfirmationCommand = new RelayCommand(ClearConfirmation, () => SessionAccess.CanRecord && (SelectedSpecimen != null));
@@ -337,6 +337,10 @@ namespace HemoIQ.ViewModels
             {
                 MessageBox.Show(ex.Message, "Record locked",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                MessageBox.Show(ex.Message, "Run analysis", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

@@ -57,7 +57,13 @@ namespace HemoIQ.Services
             var inferences = BuildTreatmentInferences(byRun, contexts, suspected);
 
             // Names the actual lock (cancelled or confirmed) and who can lift it.
-            if (updateDb) _db.EnsureSpecimenUnlocked(specimenId);
+            if (updateDb)
+            {
+                // Saving an analysis replaces the stored suspected and ruled-out lists and writes a snapshot, so it
+                // needs Record results like every other change: a view-only session may view, not store, an analysis.
+                AccessControl.Demand(_db, Permission.RecordResults);
+                _db.EnsureSpecimenUnlocked(specimenId);
+            }
 
             var untypedCs = AppSettings.Current.AcsAntigenList()
                 .Where(ag => !antigens.Contains(ag))

@@ -8455,10 +8455,46 @@ No new issue or gap worth fixing. All tests pass.
 
 No new issue or gap worth fixing. All tests pass.
 
+## Iteration 308: a view-only session can no longer store an analysis
+
+**Reviewed:** the Reactions and Analysis tab buttons by role. The
+Reactions change commands require Record results and an unlocked
+investigation (Iteration 283). Confirm ID requires Record results.
+Clear checks its role first (Iteration 304).
+
+**Found:** **Run Analysis** was enabled in a view-only session (a
+Read-only user or an unregistered login), and nothing behind it checked
+the role. `AnalyzeSpecimen(updateDb: true)` replaces the stored
+suspected and ruled-out lists, sets the last-analyzed time (clearing
+the stale state) and writes an analysis snapshot. The lower-level
+writes (`ClearSpecimenAntibodies`, `AddSpecimenRuleout`,
+`SetSpecimenLastAnalyzed`, `SaveAnalysisSnapshot`) do not demand
+Record results either. So a session the help describes as unable to
+change laboratory data could change an investigation's stored analysis.
+The start-up demo analysis already skipped such a session.
+
+**Implemented:**
+- `AntibodyAnalyzer.AnalyzeSpecimen` demands Record results before
+  anything is written when `updateDb` is true. This covers every path
+  that stores an analysis: Run Analysis, Save & Analyze and the seeders.
+  Computing an analysis to view (`updateDb: false`, as the Analysis tab
+  and the reports do) is unchanged.
+- The Analysis tab's Run Analysis requires `SessionAccess.CanRecord`,
+  and a refusal is reported instead of reaching the generic error box.
+
+**Tests:**
+- `ViewOnlyAnalysisTests` (3 cases): a Read-only user's stored analysis
+  is refused and nothing is written; a Read-only user can still compute
+  and view one; a Technologist stores it.
+- `SessionAccessTests` now includes `AnalyzeCommand` among the
+  Analysis commands disabled when view-only.
+
+**Docs:** the Preferences help topic (users and roles).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reactions and Analysis tab buttons by
-role (Clear reactions and Delete run need only Record results; Clear
-identification checks first since Iteration 304).
+Continue clean-pass reviews: other database writes that do not call
+`EnsureCanRecord` (search the write methods for a missing role check
+behind a path a view-only session can reach).
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5
