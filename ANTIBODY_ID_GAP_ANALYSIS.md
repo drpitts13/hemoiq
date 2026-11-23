@@ -9111,10 +9111,41 @@ was written. The navigation and display changes (Iterations 317, 318,
 
 No new issue; the full suite passes.
 
+## Iteration 331: the committed user manual caught up with the help topics
+
+**Reviewed:** the seven help topics edited in Iterations 313–329:
+- analysis;
+- analysis-suspected;
+- reactions;
+- reports;
+- rules;
+- specimens;
+- worklist.
+
+Each is in `HelpCatalog` and opened by its tab's Help button.
+
+**Found:** the generated manual was not committed after those edits.
+- **How it is made.** `docs/USER_MANUAL.md` is regenerated from the
+  help topics by `CreateShortcut.ps1` (`--write-manual`) on every
+  build.
+- **The lapse.** Until Iteration 312 the regenerated manual was
+  committed with the work. From Iteration 313 it was left out of each
+  commit, mistaken for an unrelated local change.
+- **The result.** The committed manual still lacked every help change
+  since then: the refusals for deleted runs, rules, panels and
+  specimens; *Not opened*; *Report not issued*; the saved-list notes;
+  and the analysis-reload message.
+
+**Implemented:** the regenerated manual is committed. Its diff is
+exactly those help-topic changes and nothing else. Later iterations
+commit it with any help change.
+
+No code change; the full suite passes.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Help index and the user manual,
-checking that every help topic edited since Iteration 313 is reachable
-from its tab's Help button.
+Continue clean-pass reviews: the installer's bundled manual (the copy
+under `publish`) against the committed one after the next installer
+build.
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5
