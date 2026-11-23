@@ -8421,10 +8421,29 @@ check.
 
 **Docs:** the Worklist help topic.
 
+## Iteration 306 (clean pass): every menu command against the role it needs
+
+**Reviewed:** each main-window menu command.
+- **Save and New Item:** go through `ShortcutCommand` (Iteration 282).
+- **Preferences:** opens view-only for a role that cannot change it
+  (278).
+- **Purge Database:** refuses up front (278).
+- **Open Archive:** reads for everyone and disables Restore in a
+  view-only session (279).
+- **Audit Log:** reads, and its export is the whole log and is audited
+  (267).
+- **Export Lab Configuration:** only reads, and holds no patient data.
+- **Import Lab Configuration and Load Demo Data:** refuse before the
+  file or confirmation (280).
+- **Exit, Refresh All, User Manual, Keyboard Shortcuts and About:**
+  change nothing.
+
+No new issue or gap worth fixing. All tests pass.
+
 ## Likely next tick
 
-Continue clean-pass reviews: menu commands with a role (Tools menu)
-against `RoleGate`/`AccessControl.Refusal` (Purge and the imports done;
-check Open Archive, Audit Log and exports need no role).
+Continue clean-pass reviews: buttons on the Panels tab that need a role
+(Activate, Edit, Delete, Copy, Import, Download, extra antigens) in a
+view-only session and for a Technologist.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
