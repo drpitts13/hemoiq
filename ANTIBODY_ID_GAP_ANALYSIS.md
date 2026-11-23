@@ -8964,9 +8964,25 @@ be built.
 Unlike the Analysis reload (Iteration 324), nothing here can pass for a
 result. No new issue; the full suite passes.
 
+## Iteration 326: clean review of the Worklist's failure path
+
+**Reviewed:** whether a failed refresh can leave an empty Worklist that
+reads as "nothing to do".
+- **No swallowing.** `DatabaseService.GetWorklistItems` has no `catch`.
+  Every check either contributes its items or the whole call throws.
+- **The list survives.** `WorklistViewModel.Refresh` reads the items
+  before it touches the list. A failure therefore leaves the previous
+  items and counts in place, and the application's unhandled-exception
+  handler shows the error and logs it.
+- **The Pending Work report** (`ReportService`) reads the same method,
+  so it fails visibly the same way (*Error generating report*,
+  Iteration 325).
+
+No new issue; the full suite passes.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Worklist's empty state (whether a
-failed refresh can show "nothing to do").
+Continue clean-pass reviews: the Specimens tab's status strip (Stale,
+Awaiting testing counts) after a failed load.
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
