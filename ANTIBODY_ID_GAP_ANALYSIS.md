@@ -8813,10 +8813,42 @@ No new issue; the full suite passes.
 
 No new issue; the full suite passes.
 
+## Iteration 321: a report is not issued for a specimen or lot that no longer exists
+
+**Found:** the Reports tab keeps the specimen or lot it listed. When
+that record is deleted on another workstation, `CurrentShareText`
+rebuilt the preview as "Specimen X not found." Then:
+- **Print and Copy:** they did not treat that as an error (it does not
+  start with "Error generating"). Print sent that page to the printer,
+  said *Sent … to the printer*, and `RecordPrint` wrote a
+  `report_output` audit event as if the report had been issued.
+- **Export PDF and CSV:** they did the same and said *exported
+  successfully*.
+
+**Implemented:**
+- **The check.** `ReportService.MissingSubject` says when a specimen
+  report's specimen, or a panel report's lot, no longer exists. List
+  reports ignore a stale selection.
+- **Exports.** `ExportToCsv` and `ExportToPdf` refuse before writing
+  the file or the audit event.
+- **The Reports tab.** Copy, Print, Export CSV and Export PDF check
+  first (`RefusedMissingSubject`), before the print or save dialog. The
+  tab shows *Report not issued* and reloads its lists.
+
+**Tests:** `ReportMissingSubjectTests` (6 cases):
+- an existing specimen can be issued;
+- PDF and CSV for a deleted specimen are refused, with no file and no
+  `report_output` event;
+- a deleted lot is refused;
+- a list report ignores a stale selection;
+- a source check that all four actions check first.
+
+**Docs:** the Reports help topic.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reports tab's Print and Export when
-the selected specimen was deleted on another workstation after the
-preview was built.
+Continue clean-pass reviews: the Analysis tab's Confirm and Supervisor
+Review when the specimen was deleted on another workstation after the
+tab listed it.
 
-Loop clean passes: 2/5
+Loop clean passes: 0/5

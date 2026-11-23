@@ -229,8 +229,24 @@ namespace HemoIQ.ViewModels
             return lines;
         }
 
+        /// <summary>
+        /// Refuses Copy, Print and Export when the selected specimen or lot was deleted elsewhere since the list
+        /// loaded, and reloads the list so it is no longer offered. True when refused.
+        /// </summary>
+        private bool RefusedMissingSubject()
+        {
+            if (_reportService.MissingSubject(GetReportType(), SelectedSpecimen?.AccessionNumber, SelectedPanel?.PanelId)
+                is not { } why)
+                return false;
+            MessageBox.Show(why, "Report not issued", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Refresh();
+            _main?.SetStatus(why);
+            return true;
+        }
+
         private void CopyPreview()
         {
+            if (RefusedMissingSubject()) return;
             var text = CurrentShareText();
             if (!CanSharePreview(text)) return;
             try
@@ -247,6 +263,7 @@ namespace HemoIQ.ViewModels
 
         private void PrintPreview()
         {
+            if (RefusedMissingSubject()) return;
             var text = CurrentShareText();
             if (!CanSharePreview(text)) return;
             try
@@ -293,6 +310,7 @@ namespace HemoIQ.ViewModels
 
         private void ExportCsv()
         {
+            if (RefusedMissingSubject()) return;
             var dlg = new SaveFileDialog { Filter = "CSV Files|*.csv", DefaultExt = "csv" };
             if (dlg.ShowDialog() != true) return;
             try
@@ -310,6 +328,7 @@ namespace HemoIQ.ViewModels
 
         private void ExportPdf()
         {
+            if (RefusedMissingSubject()) return;
             var dlg = new SaveFileDialog { Filter = "PDF Files|*.pdf", DefaultExt = "pdf" };
             if (dlg.ShowDialog() != true) return;
             try

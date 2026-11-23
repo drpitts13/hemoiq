@@ -1063,6 +1063,27 @@ namespace HemoIQ.Services
         public void RecordPrint(ReportType type, string? specimenId, int? panelId, string printedText) =>
             RecordReportOutput(type, "print", specimenId, panelId, null, Encoding.UTF8.GetBytes(printedText));
 
+        /// <summary>
+        /// Why a specimen or panel report cannot be issued: its specimen or lot no longer exists (deleted on another
+        /// workstation after the Reports tab listed it). Without this, a "not found" page was printed or exported,
+        /// reported as sent, and recorded in the audit log as an issued report. Null when the report can be issued.
+        /// </summary>
+        public string? MissingSubject(ReportType type, string? specimenId, int? panelId)
+        {
+            if (IsSpecimenReport(type) && specimenId != null && _db.GetSpecimen(specimenId) == null)
+                return $"Specimen {specimenId} no longer exists; it may have been deleted on another workstation. " +
+                       "The report was not printed, copied or exported.";
+            if (IsPanelReport(type) && panelId is int id && _db.GetPanel(id) == null)
+                return $"Panel #{id} no longer exists; it may have been deleted on another workstation. " +
+                       "The report was not printed, copied or exported.";
+            return null;
+        }
+
+        private void EnsureSubjectExists(ReportType type, string? specimenId, int? panelId)
+        {
+            if (MissingSubject(type, specimenId, panelId) is { } why) throw new InvalidOperationException(why);
+        }
+
         public static bool IsSpecimenReport(ReportType t) =>
             t is ReportType.SpecimenSummary or ReportType.AnalysisResults or ReportType.ClinicalIdentification;
 
@@ -1122,6 +1143,7 @@ namespace HemoIQ.Services
         public void ExportToCsv(ReportType type, string filePath,
             string? specimenId = null, int? panelId = null)
         {
+            EnsureSubjectExists(type, specimenId, panelId);
             WriteCsv(type, filePath, specimenId, panelId);
             RecordReportOutput(type, "csv", specimenId, panelId, filePath, File.ReadAllBytes(filePath));
         }
@@ -1194,6 +1216,7 @@ namespace HemoIQ.Services
         public void ExportToPdf(ReportType type, string filePath,
             string? specimenId = null, int? panelId = null)
         {
+            EnsureSubjectExists(type, specimenId, panelId);
             var text = GeneratePreviewText(type, specimenId, panelId);
             var doc = new PdfDocument();
             doc.Info.Title = type.ToString();
