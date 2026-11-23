@@ -9027,7 +9027,9 @@ Antibodies), corrected.
 Three outputs then printed the lists saved at the last Run Analysis
 exactly as if they were current:
 - the Analysis Results report;
-- the Clinical Identification report (`AppendCurrentSuspectedAndRuleouts`);
+- the Specimen Summary report (`AppendCurrentSuspectedAndRuleouts`;
+  corrected in Iteration 329, which first named the Clinical
+  Identification report here);
 - the Specimen Summary CSV.
 
 These are issued and audited outputs. Lists saved before later grades
@@ -9063,10 +9065,34 @@ is.
 
 **Docs:** the Reports help topic.
 
+## Iteration 329: Analytics reviewed; the Reports help corrected
+
+**Reviewed:** the Analytics tab when a specimen's analysis cannot be
+computed.
+- **No recomputation.** Analytics never re-runs an analysis. It reads
+  stored identifications, reactions, overrides and audit events, so a
+  failing analysis cannot drop a specimen from its figures.
+- **Its only catch.** `OverrideAnalytics` catches a `JsonException` for
+  one malformed override record, and skips that record only.
+
+**Found and fixed:** the Iteration 328 entry and the Reports help topic
+named the wrong report.
+- **Where the fallback is.** The saved-list fallback is in the Analysis
+  Results report, the Specimen Summary report
+  (`AppendCurrentSuspectedAndRuleouts`) and the Specimen Summary CSV.
+- **The clinical report.** `ClinicalIdentificationText` calls the
+  analyzer directly, so when the analysis fails the whole report fails
+  visibly. Its preview reads *Error generating report*, Copy and Print
+  stay disabled, and exports say *Export failed*. That is the safer
+  behaviour for the issued clinical report.
+- **The correction.** Both texts now say this.
+
+No code change; the full suite passes.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Analytics tab's figures when one
-specimen's analysis cannot be computed (whether that specimen is
-skipped silently).
+Continue clean-pass reviews: the Timeline's audit-event descriptions
+for actions added since Iteration 313 (whether each new refusal writes
+nothing, so no Timeline line is missing or invented).
 
 Loop clean passes: 0/5
