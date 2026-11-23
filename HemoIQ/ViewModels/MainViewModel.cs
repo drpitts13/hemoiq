@@ -189,32 +189,41 @@ namespace HemoIQ.ViewModels
                     SelectedTabIndex = 8;
                     break;
                 default:
+                    if (item.AccessionNumber != null && NotOpened(SpecimensVM.SelectSpecimen(item.AccessionNumber)))
+                        break;
                     SelectedTabIndex = 1;
-                    if (item.AccessionNumber != null)
-                        SpecimensVM.SelectSpecimen(item.AccessionNumber);
                     break;
             }
         }
 
+        // The specimen is selected before the tab is switched: when it cannot be shown, the user stays where they were
+        // and is told why, instead of landing on another patient's specimen that the tab fell back to.
         public void OpenSpecimenReactions(string? accessionNumber)
         {
+            if (accessionNumber != null && NotOpened(ReactionsVM.SelectSpecimen(accessionNumber))) return;
             SelectedTabIndex = 3;
-            if (accessionNumber != null)
-                ReactionsVM.SelectSpecimen(accessionNumber);
         }
 
         public void OpenSpecimenAnalysis(string? accessionNumber)
         {
+            if (accessionNumber != null && NotOpened(AnalysisVM.SelectSpecimen(accessionNumber))) return;
             SelectedTabIndex = 4;
-            if (accessionNumber != null)
-                AnalysisVM.SelectSpecimen(accessionNumber);
         }
 
         public void OpenSpecimenReport(string? accessionNumber, string reportType = "Clinical Identification")
         {
+            if (accessionNumber != null && NotOpened(ReportsVM.SelectSpecimen(accessionNumber, reportType))) return;
             SelectedTabIndex = 5;
-            if (accessionNumber != null)
-                ReportsVM.SelectSpecimen(accessionNumber, reportType);
+        }
+
+        /// <summary>Shows why a specimen could not be opened; true when <paramref name="problem"/> is set.</summary>
+        private bool NotOpened(string? problem)
+        {
+            if (problem == null) return false;
+            SetStatus(problem);
+            System.Windows.MessageBox.Show(problem, "Specimen not opened",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            return true;
         }
 
         public void OpenPanel(

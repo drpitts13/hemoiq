@@ -228,17 +228,22 @@ namespace HemoIQ.ViewModels
             Refresh();
         }
 
-        public void SelectSpecimen(string accessionNumber)
+        /// <summary>Selects the specimen, or returns why it cannot be shown here and leaves the selection alone.</summary>
+        public string? SelectSpecimen(string accessionNumber)
         {
-            if (_allSpecimens.Count == 0)
+            if (!_allSpecimens.Any(s => s.AccessionNumber == accessionNumber))
                 _allSpecimens = _db.GetAllSpecimens();
             var match = _allSpecimens.FirstOrDefault(s => s.AccessionNumber == accessionNumber);
-            if (match != null && !match.MatchesFilter(_specimenFilter))
+            if (match == null)
+                return SpecimenNavigation.CannotOpen(_db, accessionNumber, "Analysis", activeOnly: false)
+                    ?? $"Specimen {accessionNumber} could not be shown on the Analysis tab.";
+            if (!match.MatchesFilter(_specimenFilter))
             {
                 _specimenFilter = string.Empty;
                 OnPropertyChanged(nameof(SpecimenFilter));
             }
             ApplySpecimenFilter(accessionNumber);
+            return null;
         }
 
         public void Refresh()

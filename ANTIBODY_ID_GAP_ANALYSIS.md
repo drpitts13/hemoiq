@@ -8701,9 +8701,53 @@ workstation and nothing was saved. Nothing is written or audited.
 
 **Docs:** the Rules help topic (Edit).
 
+## Iteration 317: opening a specimen never lands on another patient
+
+**Found:** the Worklist, Search and other tabs open a specimen through
+`MainViewModel.OpenSpecimenReactions`, `OpenSpecimenAnalysis` and
+`OpenSpecimenReport`, which first switched tab and then called the
+tab's `SelectSpecimen`.
+- **The cached list.** The Reactions, Analysis and Reports tabs looked
+  the specimen up in their cached lists, loaded only when empty.
+- **Missing specimens.** A specimen could be missing from that list:
+  - deleted on another workstation;
+  - registered there after the list loaded;
+  - inactive, on the Reactions tab, which lists only active specimens.
+- **The fallback.** `ApplySpecimenFilter` then fell back to the first
+  specimen in the list: another patient's workup, opened while the
+  user expected the one they clicked.
+- **The Specimens tab** kept its previous selection without a word.
+
+**Implemented:**
+- **Reload first.** Each tab's `SelectSpecimen` reloads its list once
+  when the specimen is not in it, so a specimen registered elsewhere is
+  found.
+- **Then refuse.** If the specimen still cannot be shown, the tab
+  returns the reason from `ViewModels/SpecimenNavigation.CannotOpen`
+  and leaves its selection, and the Reports tab its report type,
+  alone. The reason is either "not found; it may have been deleted on
+  another workstation" or "inactive, so the Reactions tab does not list
+  it; reactivate it on the Specimens tab".
+- **Tab switch last.** `MainViewModel` now selects before switching
+  tab. When the tab cannot open the specimen, it shows a *Specimen not
+  opened* warning, puts the reason on the status line and stays on the
+  current tab.
+
+**Tests:** `SpecimenNavigationTests` (7 cases):
+- a deleted specimen's reason;
+- an inactive specimen is refused on Reactions only;
+- Reports keeps its selection for a missing specimen;
+- Reports finds a specimen added after the list loaded;
+- Reports keeps its report type for a missing specimen;
+- source checks that each Open method selects before switching tab and
+  stops when not opened, and that no tab's `SelectSpecimen` reaches
+  its fallback before the check.
+
+**Docs:** the Worklist help topic (Open).
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Worklist and Search tabs when an item
-they list is deleted on another workstation before it is opened.
+Continue clean-pass reviews: `PanelsViewModel.SelectPanel` when the
+panel opened from the Worklist or Search was deleted elsewhere.
 
 Loop clean passes: 0/5

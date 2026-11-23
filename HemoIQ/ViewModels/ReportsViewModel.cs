@@ -114,20 +114,28 @@ namespace HemoIQ.ViewModels
             UpdatePreview();
         }
 
-        public void SelectSpecimen(string accessionNumber, string? reportType = null)
+        /// <summary>
+        /// Selects the specimen (and report type), or returns why it cannot be shown here and leaves the selection
+        /// alone: a report previewed for another specimen would carry another patient's results.
+        /// </summary>
+        public string? SelectSpecimen(string accessionNumber, string? reportType = null)
         {
-            if (!string.IsNullOrWhiteSpace(reportType) && ReportTypes.Contains(reportType))
-                SelectedReportType = reportType;
-
-            if (_allSpecimens.Count == 0)
+            if (!_allSpecimens.Any(s => s.AccessionNumber == accessionNumber))
                 _allSpecimens = _db.GetAllSpecimens();
             var match = _allSpecimens.FirstOrDefault(s => s.AccessionNumber == accessionNumber);
-            if (match != null && !match.MatchesFilter(_specimenFilter))
+            if (match == null)
+                return SpecimenNavigation.CannotOpen(_db, accessionNumber, "Reports", activeOnly: false)
+                    ?? $"Specimen {accessionNumber} could not be shown on the Reports tab.";
+
+            if (!string.IsNullOrWhiteSpace(reportType) && ReportTypes.Contains(reportType))
+                SelectedReportType = reportType;
+            if (!match.MatchesFilter(_specimenFilter))
             {
                 _specimenFilter = string.Empty;
                 OnPropertyChanged(nameof(SpecimenFilter));
             }
             ApplySpecimenFilter(accessionNumber);
+            return null;
         }
 
         public void AnnounceStatus() =>

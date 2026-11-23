@@ -149,11 +149,18 @@ namespace HemoIQ.ViewModels
         public void AnnounceStatus() =>
             _main.SetStatus(ScreenStatus.Specimens(Specimens.Count, SelectedSpecimen?.AccessionNumber));
 
-        public void SelectSpecimen(string accessionNumber)
+        /// <summary>Selects the specimen, or returns why it cannot be shown here and leaves the selection alone.</summary>
+        public string? SelectSpecimen(string accessionNumber)
         {
+            if (!_allSpecimens.Any(s => s.AccessionNumber == accessionNumber))
+                Refresh();
             EnsureVisible(accessionNumber);
-            SelectedSpecimen = Specimens.FirstOrDefault(s => s.AccessionNumber == accessionNumber)
-                ?? SelectedSpecimen;
+            var match = Specimens.FirstOrDefault(s => s.AccessionNumber == accessionNumber);
+            if (match == null)
+                return SpecimenNavigation.CannotOpen(_db, accessionNumber, "Specimens", activeOnly: false)
+                    ?? $"Specimen {accessionNumber} could not be shown on the Specimens tab.";
+            SelectedSpecimen = match;
+            return null;
         }
 
         private void ApplyFilter(string? preferredAccession = null)
