@@ -9351,10 +9351,38 @@ parsed and checked.
 
 No new issue; the full suite passes.
 
+## Iteration 340: clean review of the Preferences numeric fields
+
+**Reviewed:** each typed number in `SettingsDialog.Save` against the
+range `LabSettings.Clamp` enforces when the file is loaded. If the two
+differed, a value the dialog accepted would be changed silently on
+the next start.
+
+| Field | Dialog accepts | `Clamp` keeps |
+|---|---|---|
+| Score threshold (point or comma) | 0.30–0.95 | 0.30–0.95 |
+| Separation cells | 0–5 | 0–5 |
+| ACS rule-outs | 1–5 | 1–5 |
+| Default rule-outs | 1–5 | 1–5 |
+| Specimen dating days | 0–14 | 0–14 |
+| Expiration warning | 1–90 | 1–90 |
+| Recent transfusion window | 1–365 | 1–365 |
+| Turnaround threshold | 1–60 | 1–60 |
+| Dating look-back | 1–365 | 1–365 |
+| RhIG passive window | 1–365 | 1–365 |
+| Maximum database size | 50–10240 MB | 50–10240 MB |
+
+- **Out-of-range values.** Each is refused with its range named, and
+  the focus goes to the field.
+- **The ID rule** is chosen from a fixed list, not typed.
+- **Hand-edited files.** A value outside these ranges in a hand-edited
+  file is clamped on load and reported (Iteration 266).
+
+No new issue; the full suite passes.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Preferences dialog's numeric fields
-(separation cells, ID rule, thresholds) for out-of-range values entered
-by keyboard.
+Continue clean-pass reviews: the Users dialog's initials and role
+fields for the same dialog-versus-storage agreement.
 
-Loop clean passes: 3/5
+Loop clean passes: 4/5
