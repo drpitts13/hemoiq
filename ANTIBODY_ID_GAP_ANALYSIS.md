@@ -9331,10 +9331,30 @@ specimen changes and after each analysis.
 
 No new issue; the full suite passes.
 
+## Iteration 339: clean review of the separation-exempt antigen list
+
+**Reviewed:** how a rule's "separation not required from" list is
+parsed and checked.
+- **Parsing.** `MultipleAntibodySeparation.ParseAntigenList` splits on
+  commas, semicolons and spaces, drops an `anti-` prefix, and builds an
+  ordinal set, so `E` and `e` stay distinct.
+- **The Rule dialog.** It refuses any name for which
+  `AntigenConstants.IsKnown` is false. Both the standard and warehouse
+  sets are ordinal. The message says names are case-sensitive.
+- **Import.** `RuleTransfer` (rule import and configuration import)
+  refuses the same names with `StringComparer.Ordinal`, line by line,
+  before anything is written.
+- **The database layer.** `NormalizeSeparationList` only tidies the
+  list. Both paths that write a rule validate before calling it, so a
+  list that silently matches nothing cannot be stored through the
+  application.
+
+No new issue; the full suite passes.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Rules tab dialog's validation for the
-separation-exempt antigen list (case-sensitive names, per the
-conventions).
+Continue clean-pass reviews: the Preferences dialog's numeric fields
+(separation cells, ID rule, thresholds) for out-of-range values entered
+by keyboard.
 
-Loop clean passes: 2/5
+Loop clean passes: 3/5
