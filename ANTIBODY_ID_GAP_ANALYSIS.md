@@ -9158,9 +9158,43 @@ one.
 
 No new issue; the full suite passes.
 
+## Iteration 333: deleting a run discards its unsaved grades cleanly
+
+**Reviewed:** compare mode after a run is deleted. `RefreshRuns`
+rebuilds `CompareRunChoices` from the reloaded runs, so a deleted run
+cannot stay the comparison run.
+
+**Found:** `DeleteRun` deleted the run but left the tab's unsaved-grades
+flag and recovery draft in place. When the deleted run held unsaved
+grades:
+- **A second question.** Reselecting the next run asked *Discard
+  unsaved reaction grades?* for grades that went with the run the user
+  had just chosen to delete.
+- **A stuck tab.** Answering No left the tab on a run that no longer
+  exists, with an empty grid.
+- **A leftover draft.** The draft stayed on disk until the next start
+  discarded it.
+
+**Implemented:**
+- **Cleaned after the delete.** After a successful delete,
+  `DeleteRun` marks the grades clean and deletes the draft before
+  selecting the next run.
+- **Said up front.** The Delete run question
+  (`ReactionsViewModel.DeleteRunQuestion`) says when unsaved grades on
+  the run are discarded too.
+- **A refused delete keeps them.** A delete that is refused (no
+  reason, locked) keeps both.
+
+**Tests:** `DeleteRunUnsavedGradesTests` (2 cases): the question names
+unsaved grades only when there are some; a source check that the flag
+and draft are cleared only after a successful delete and before the
+next run is selected.
+
+**Docs:** the Reactions help topic (Run) and the regenerated manual.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reactions tab's compare mode (two runs
-side by side) after a run is deleted from the selector.
+Continue clean-pass reviews: the Reactions tab's Clear (clear a run's
+reactions) with unsaved grades on screen, for the same flag and draft.
 
-Loop clean passes: 1/5
+Loop clean passes: 0/5

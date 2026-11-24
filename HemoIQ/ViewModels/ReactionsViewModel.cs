@@ -1248,7 +1248,7 @@ namespace HemoIQ.ViewModels
                     "Info", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
-            if (!TryGetDeletionReason(SelectedRun.RunId, $"Delete run '{SelectedRun.DisplayLabel}' and all its reactions?",
+            if (!TryGetDeletionReason(SelectedRun.RunId, DeleteRunQuestion(SelectedRun.DisplayLabel, _gradesDirty),
                     "Delete run", out var reason)) return;
             try
             {
@@ -1259,10 +1259,19 @@ namespace HemoIQ.ViewModels
                 MessageBox.Show(ex.Message, "Run not deleted", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+            // Unsaved grades went with the run the user chose to delete. Left marked unsaved, moving to the next run
+            // asked to discard them, and No left the tab on a run that no longer exists; the draft would also linger.
+            MarkGradesClean();
+            Drafts.Delete();
             Rows.Clear();
             RefreshRuns();
             _main.SetStatus("Run deleted.");
         }
+
+        /// <summary>The Delete run question; it says so when unsaved grades on the run will be discarded too.</summary>
+        public static string DeleteRunQuestion(string runLabel, bool unsavedGrades) =>
+            $"Delete run '{runLabel}' and all its reactions?" +
+            (unsavedGrades ? "\n\nThe unsaved grades on this run are discarded too." : "");
     }
 
     public class ReactionRow : BaseViewModel
