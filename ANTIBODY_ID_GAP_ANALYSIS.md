@@ -9284,9 +9284,35 @@ No button calls the raw reload any more.
 **Docs:** the Reactions help topic (Load Reactions) and the regenerated
 manual.
 
+## Iteration 337: clean review of unsaved panel edits and whole-database actions
+
+**Reviewed:** whether unsaved work survives a refresh or a database-wide
+action.
+- **Panels edit mode.** `PanelsViewModel.Refresh` (Refresh All, other
+  tabs' changes) reloads the list but `ApplyFilter` returns at once
+  while antigen edits are open, so the edit grid is never rebuilt.
+  - **Other ways out.** Selecting another lot, Show inactive and the
+    filter are held, and every other command is disabled until Save or
+    Cancel.
+  - **The Iteration 318 reload.** Opening a lot from Search reloads
+    the list only when not editing.
+- **Quitting.** `UnsavedWorkGuard.QuitWarning` names both unsaved
+  reaction grades and open panel edits, with No as the default.
+- **Purge.** It removes only confirmed specimens past the cutoff.
+  Their grades are read-only (locked), so none can be unsaved.
+- **Restore from archive.** It adds records and skips ones already
+  present.
+- **Demo data.** It is refused on a database with laboratory records.
+- **Configuration import.** It changes rules and Preferences. The
+  Reactions tab then reloads only its panel list for the same specimen
+  (Iteration 314), not the grade grid.
+
+No new issue; the full suite passes.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Panels tab's antigen edit mode against
-the same pattern (a Refresh or reload button while edits are unsaved).
+Continue clean-pass reviews: the Analysis tab's Final ID and comment
+boxes when the selected specimen changes with text typed but not
+confirmed.
 
-Loop clean passes: 0/5
+Loop clean passes: 1/5
