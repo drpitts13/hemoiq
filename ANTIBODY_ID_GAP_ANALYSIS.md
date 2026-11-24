@@ -9220,9 +9220,45 @@ some. A refused clear (no reason, locked) changes nothing.
 
 **Docs:** the Reactions help topic (Clear) and the regenerated manual.
 
+## Iteration 335: + Run no longer loses unsaved grades the user chose to keep
+
+**Found:** `ReactionsViewModel.AddRun` with unsaved grades on the
+current run did this:
+1. It created the run (`AddPanelRun`), then set `SelectedRun` to it.
+   That asked *Discard unsaved reaction grades?*.
+2. On **No** the selection stayed on the current run, but `AddRun` went
+   on to call `LoadReactions()`. That reloaded the current run from the
+   database and marked it clean, losing exactly the grades the user had
+   chosen to keep.
+3. With pre-fill on, the copied grades then landed back on the current
+   run. A grade cleared to NT stayed lost, because pre-fill skips
+   all-NT rows.
+4. The status line said the new run was added and pre-filled, while the
+   tab was still on the old run.
+
+**Implemented:** + Run is refused before the dialog opens and before
+anything is created while the current run has unsaved grades
+(`ReactionsViewModel.AddRunRefusal`).
+- **What it says.** The message names the run, says no run was added,
+  and says to save first, or reselect the run and discard the grades.
+- **Pre-fill.** It names the dialog's real option (*Pre-fill with
+  grades from the current run*) for starting the new run from those
+  grades once saved. So pre-fill now always copies saved grades.
+
+**Tests:** `AddRunUnsavedGradesTests` (3 cases):
+- the refusal's wording, including the real option label from
+  `PanelRunDialog.xaml`;
+- no refusal when nothing is unsaved;
+- a source check that the check runs before the dialog and before
+  `AddPanelRun`.
+
+**Docs:** the Reactions (Run) and Panel Run (Pre-fill) help topics,
+and the regenerated manual.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reactions tab's + Run with "copy
-grades" while unsaved grades are on screen.
+Continue clean-pass reviews: the Reactions tab's other actions that
+change the selected run or panel while grades are unsaved (compare
+mode toggle, treatment banner, panel switch).
 
 Loop clean passes: 0/5

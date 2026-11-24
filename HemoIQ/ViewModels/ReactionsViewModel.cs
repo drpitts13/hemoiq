@@ -1189,6 +1189,14 @@ namespace HemoIQ.ViewModels
         private void AddRun()
         {
             if (SelectedSpecimen == null || SelectedPanel == null) return;
+            // Switching to the new run asks to discard unsaved grades; answering No used to leave the tab on this run
+            // and then reload it from the database anyway, losing the very grades the user chose to keep.
+            if (AddRunRefusal(_gradesDirty, SelectedRun?.DisplayLabel) is { } refusal)
+            {
+                MessageBox.Show(refusal, "Run not added", MessageBoxButton.OK, MessageBoxImage.Information);
+                _main.SetStatus(refusal);
+                return;
+            }
             var dlg = new Views.Dialogs.PanelRunDialog { Owner = Application.Current.MainWindow };
             if (dlg.ShowDialog() != true) return;
 
@@ -1222,6 +1230,14 @@ namespace HemoIQ.ViewModels
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        /// <summary>Why + Run is refused before anything is created: unsaved grades on the current run. Null otherwise.</summary>
+        public static string? AddRunRefusal(bool unsavedGrades, string? currentRunLabel) =>
+            unsavedGrades
+                ? $"The grades on {currentRunLabel ?? "this run"} are not saved. Save them (or reselect the run and " +
+                  "discard them) before adding a run; no run was added. To start the new run from these grades, save " +
+                  "first, then use + Run with \"Pre-fill with grades from the current run\"."
+                : null;
 
         /// <summary>Puts grades into the grid as unsaved edits (no database write). Returns the cells filled.</summary>
         private int PrefillUnsaved(

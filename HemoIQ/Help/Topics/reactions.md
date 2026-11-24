@@ -6,7 +6,7 @@ The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cel
 
 - **Find** filters the specimen list by accession, type, phenotype, previous antibodies, notes, or final ID.
 - **Specimen** and **Panel** pick the accession and the lot. Grades load when you change specimen, panel, or run.
-- **Run** selects which set of grades you are editing. The first run is the untreated panel. **+ Run** adds a treated or adsorbed run. **Delete Run** removes the run you are viewing. If it holds unsaved grades, the question says they are discarded too; after the delete the tab moves to the next run without asking about them again. Changing the run updates the status line to name that run.
+- **Run** selects which set of grades you are editing. The first run is the untreated panel. **+ Run** adds a treated or adsorbed run. It is refused while the run you are viewing has unsaved grades: save them first (or reselect the run and discard them), so no grades are lost when the tab moves to the new run. **Delete Run** removes the run you are viewing. If it holds unsaved grades, the question says they are discarded too; after the delete the tab moves to the next run without asking about them again. Changing the run updates the status line to name that run.
 
 ## While you enter grades
 

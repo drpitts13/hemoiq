@@ -547,7 +547,7 @@ The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cel
 
 - **Find** filters the specimen list by accession, type, phenotype, previous antibodies, notes, or final ID.
 - **Specimen** and **Panel** pick the accession and the lot. Grades load when you change specimen, panel, or run.
-- **Run** selects which set of grades you are editing. The first run is the untreated panel. **+ Run** adds a treated or adsorbed run. **Delete Run** removes the run you are viewing. If it holds unsaved grades, the question says they are discarded too; after the delete the tab moves to the next run without asking about them again. Changing the run updates the status line to name that run.
+- **Run** selects which set of grades you are editing. The first run is the untreated panel. **+ Run** adds a treated or adsorbed run. It is refused while the run you are viewing has unsaved grades: save them first (or reselect the run and discard them), so no grades are lost when the tab moves to the new run. **Delete Run** removes the run you are viewing. If it holds unsaved grades, the question says they are discarded too; after the delete the tab moves to the next run without asking about them again. Changing the run updates the status line to name that run.
 
 ## While you enter grades
 
@@ -639,7 +639,7 @@ The italic note under the lists explains what the selected combination will mean
 
 **Label** is optional. Leave it blank and the application names the run from the treatments you picked. If you type a label that does not mention the treatment, the treatment is added in parentheses wherever the run is shown, for example **Repeat (Ficin-treated)**, so a report never hides that the run's cells or serum were treated.
 
-**Pre-fill with grades from the current run** is off by default and is available only for an untreated repeat (no cell or serum treatment). A treated run exists to show how the treatment changes the reactions, so its grades must be read from the treated test; copying untreated grades into it would claim the treatment changed nothing. When you use it, the grades are placed in the new run's grid as **unsaved** values, and the status line says so. Check each one against the test, change any that differ, then **Save**. Nothing is recorded until you save.
+**Pre-fill with grades from the current run** is off by default and is available only for an untreated repeat (no cell or serum treatment). A treated run exists to show how the treatment changes the reactions, so its grades must be read from the treated test; copying untreated grades into it would claim the treatment changed nothing. When you use it, the grades are placed in the new run's grid as **unsaved** values, and the status line says so. Check each one against the test, change any that differ, then **Save**. Nothing is recorded until you save. The grades copied are the current run's saved grades: **+ Run** is refused while that run has unsaved grades, so save them first.
 
 **Add Run** creates the run and selects it. **Cancel** leaves the runs unchanged. **Help** opens this chapter.
 
