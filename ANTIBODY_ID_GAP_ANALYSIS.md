@@ -9309,10 +9309,32 @@ action.
 
 No new issue; the full suite passes.
 
+## Iteration 338: clean review of unconfirmed Final ID text
+
+**Reviewed:** `AnalysisViewModel.LoadFinalCall`. It runs when the
+specimen changes and after each analysis.
+- **Confirmed specimens.** The stored identification, comment and
+  initials are shown.
+- **Unconfirmed specimens.** It re-suggests Final ID from the current
+  suspected list and ACS result, and clears the comment.
+
+**Deliberate, not a gap:**
+- **No carry-over.** Typed text never carries to another patient's
+  specimen.
+- **No stale Final ID.** A Final ID typed against an earlier result
+  cannot outlive a re-analysis that changed the suspected list. Confirm
+  also re-reads the specimen from the database before writing.
+- **The cost.** The only loss is retyping a short unconfirmed comment.
+  Nothing is recorded until Confirm ID, so no result or audit entry is
+  lost. Adding a discard prompt to every specimen change and analysis
+  would cost more than it saves.
+
+No new issue; the full suite passes.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Analysis tab's Final ID and comment
-boxes when the selected specimen changes with text typed but not
-confirmed.
+Continue clean-pass reviews: the Rules tab dialog's validation for the
+separation-exempt antigen list (case-sensitive names, per the
+conventions).
 
-Loop clean passes: 1/5
+Loop clean passes: 2/5
