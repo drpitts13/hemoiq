@@ -599,7 +599,7 @@ namespace HemoIQ.ViewModels
             _analyzer = analyzer;
             _main = main;
 
-            LoadCommand = new RelayCommand(LoadReactions,
+            LoadCommand = new RelayCommand(ReloadReactions,
                 () => SelectedSpecimen != null && SelectedRun != null);
             // Disabled in a view-only session and on a confirmed or cancelled investigation (the GradesReadOnly cases).
             SaveCommand = new RelayCommand(SaveGradesOnly,
@@ -920,6 +920,16 @@ namespace HemoIQ.ViewModels
                 Specimens.Add(sp);
             SelectedSpecimen = Specimens.FirstOrDefault(x => x.AccessionNumber == preferredAccession)
                 ?? Specimens.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// The Load Reactions button. It used to call <see cref="LoadReactions"/> directly, so one click replaced
+        /// unsaved grades with the saved ones without a word; now it asks first (No is the default) and keeps them on No.
+        /// </summary>
+        private void ReloadReactions()
+        {
+            if (!ConfirmDiscardUnsaved()) return;
+            LoadReactions();
         }
 
         private void LoadReactions()

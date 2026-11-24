@@ -9255,10 +9255,38 @@ anything is created while the current run has unsaved grades
 **Docs:** the Reactions (Run) and Panel Run (Pre-fill) help topics,
 and the regenerated manual.
 
+## Iteration 336: Load Reactions asks before replacing unsaved grades
+
+**Reviewed:** every path on the Reactions tab that reloads the grid
+(`LoadReactions`) or changes the selection while grades are unsaved.
+- **Selection setters.** The specimen, panel and run setters ask
+  (`ConfirmDiscardUnsaved`), and keep the grades on No.
+- **Compare mode.** It rebuilds only the side-by-side rows.
+- **Delete Run and Clear** discard by the user's explicit choice
+  (Iterations 333 and 334).
+- **+ Run** is refused while grades are unsaved (Iteration 335).
+
+**Found:** the **Load Reactions** button was bound straight to
+`LoadReactions`. One click replaced unsaved grades with the saved ones
+and marked them clean, with no question.
+
+**Implemented:** the button now runs `ReloadReactions`, which asks
+the same *Discard unsaved reaction grades?* question first. No is the
+default (`DestructiveConfirm`), and on No the grades stay on screen.
+No button calls the raw reload any more.
+
+**Tests:** `ReloadReactionsUnsavedTests` (3 cases):
+- the button asks before reloading;
+- the question returns at once when nothing is unsaved and otherwise
+  uses `DestructiveConfirm`;
+- no command is bound to the raw reload.
+
+**Docs:** the Reactions help topic (Load Reactions) and the regenerated
+manual.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reactions tab's other actions that
-change the selected run or panel while grades are unsaved (compare
-mode toggle, treatment banner, panel switch).
+Continue clean-pass reviews: the Panels tab's antigen edit mode against
+the same pattern (a Refresh or reload button while edits are unsaved).
 
 Loop clean passes: 0/5

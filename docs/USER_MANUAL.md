@@ -554,7 +554,7 @@ The Reactions tab is where you record IS, 37°C, AHG, and CC grades for each cel
 - **Compare** shows another run beside this one. Pick that run in the second list. Grade columns are named for the two runs. Rows that differ are highlighted, the Changed box is checked, and extra phases are included. The Changed box is display only.
 - **Hide ruled-out** hides antigen columns already ruled out for this specimen. The setting can also be turned on by default in Preferences.
 - **Show dosage** groups columns by blood-group system and marks homozygous ++, heterozygous +, or +/? when the antithetical antigen was not typed. This is display only. It does not change rule-out.
-- **Load Reactions** reloads grades from the database.
+- **Load Reactions** reloads grades from the database. If grades on screen are not saved, it first asks whether to discard them; **No** (the default) keeps them on screen.
 - **Ctrl+V** on a phase cell (IS, 37°C, AHG, CC or an extra phase) pastes grades copied from a spreadsheet, starting at the selected cell.
   - One line fills one cell, going down.
   - A single column fills the selected phase. Several columns fill the selected phase and the phases to its right, in the order they appear on screen. For example, IS, 37°C and AHG copied together, with the IS cell selected.
