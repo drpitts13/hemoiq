@@ -9380,9 +9380,32 @@ the next start.
 
 No new issue; the full suite passes.
 
+## Iteration 341: clean review of the Users dialog against storage
+
+**Reviewed:** what the Users dialog sends against what
+`DatabaseService.SaveUser` stores.
+- **The dialog.** It passes the login, initials and the chosen role
+  code, and shows any refusal in its *Users and roles* box.
+- **Initials.** `SaveUser` normalizes them with
+  `LabSettings.NormalizeInitials`, the same rule as the Preferences
+  default initials. It refuses empty initials and initials already held
+  by another active user.
+- **Role.** It refuses a role outside `UserRole`. The table also
+  CHECKs the four role codes.
+- **The last administrator.** The first active user must be an
+  Administrator, and the last active Administrator cannot be demoted or
+  deactivated.
+- **Logins.** They are stored `COLLATE NOCASE`, matching Windows logins.
+  "Jane" and "jane" are one user, so a re-save updates the record
+  rather than creating a second one.
+- **Audit.** The write is audited, and `ManageUsers` is demanded first.
+
+No new issue; the full suite passes. This is the fifth consecutive clean
+pass, so the loop stops: the branch is pushed and the installer rebuilt.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Users dialog's initials and role
-fields for the same dialog-versus-storage agreement.
+The improvement loop has stopped after five consecutive clean passes
+(Iterations 337–341). Start a new loop to resume.
 
-Loop clean passes: 4/5
+Loop clean passes: 5/5
