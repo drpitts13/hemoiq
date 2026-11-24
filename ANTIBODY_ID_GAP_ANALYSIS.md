@@ -9192,9 +9192,37 @@ next run is selected.
 
 **Docs:** the Reactions help topic (Run) and the regenerated manual.
 
+## Iteration 334: Clear reloads the run for re-entry and drops its draft
+
+**Found:** `ReactionsViewModel.ClearReactions` deleted the run's
+reactions, then emptied the grid (`Rows.Clear()`) instead of reloading
+the run.
+- **Nothing to grade.** The run and its cells remain after a clear, but
+  the tab showed no rows. Save stayed disabled until the run or
+  specimen was reselected, even though clearing is usually done to
+  re-enter grades.
+- **A leftover draft.** Unsaved grades were marked clean, but their
+  recovery draft was left on disk.
+- **The question.** It did not say that unsaved grades on screen are
+  discarded too.
+
+**Implemented:** after a successful clear the tab deletes the draft and
+reloads the run (`LoadReactions`). The run's cells come back blank,
+with the compare grid, rule-outs and entry progress rebuilt. The
+question (`ClearReactionsQuestion`) names unsaved grades when there are
+some. A refused clear (no reason, locked) changes nothing.
+
+**Tests:** `ClearReactionsReloadTests` (3 cases):
+- the question names unsaved grades only when there are some;
+- a cleared run keeps its run and cells in the database;
+- a source check that Clear deletes the draft and reloads rather than
+  empties the grid.
+
+**Docs:** the Reactions help topic (Clear) and the regenerated manual.
+
 ## Likely next tick
 
-Continue clean-pass reviews: the Reactions tab's Clear (clear a run's
-reactions) with unsaved grades on screen, for the same flag and draft.
+Continue clean-pass reviews: the Reactions tab's + Run with "copy
+grades" while unsaved grades are on screen.
 
 Loop clean passes: 0/5

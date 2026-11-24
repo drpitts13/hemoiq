@@ -1162,7 +1162,7 @@ namespace HemoIQ.ViewModels
         private void ClearReactions()
         {
             if (SelectedSpecimen == null || SelectedRun == null) return;
-            if (!TryGetDeletionReason(SelectedRun.RunId, "Clear all reactions for this run?",
+            if (!TryGetDeletionReason(SelectedRun.RunId, ClearReactionsQuestion(_gradesDirty),
                     "Clear reactions", out var reason)) return;
             try
             {
@@ -1173,15 +1173,18 @@ namespace HemoIQ.ViewModels
                 MessageBox.Show(ex.Message, "Reactions not cleared", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            SaveStatusMessage = string.Empty;
-            Rows.Clear();
-            ResetCompareRows();
-            ApplyVisibleRows();
-            RefreshRuledOutAntigens();
-            RefreshEntryProgress();
-            MarkGradesClean();
+            // Reload the run rather than empty the grid: the cleared run keeps its cells, so grades can be entered
+            // again at once (an empty grid left Save disabled until the run was reselected). Unsaved grades went with
+            // the clear, so their recovery draft goes too.
+            Drafts.Delete();
+            LoadReactions();
             _main.SetStatus("Reactions cleared.");
         }
+
+        /// <summary>The Clear question; it says so when unsaved grades on screen are discarded too.</summary>
+        public static string ClearReactionsQuestion(bool unsavedGrades) =>
+            "Clear all reactions for this run?" +
+            (unsavedGrades ? "\n\nThe unsaved grades on screen are discarded too." : "");
 
         private void AddRun()
         {
